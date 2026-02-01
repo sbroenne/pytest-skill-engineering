@@ -36,9 +36,7 @@ class TestMatrixComparison:
     @pytest.mark.parametrize("model", MODELS)
     @pytest.mark.parametrize("prompt", PROMPTS, ids=lambda p: p.name)
     @pytest.mark.asyncio
-    async def test_weather_matrix(
-        self, aitest_run, weather_server, model, prompt
-    ):
+    async def test_weather_matrix(self, aitest_run, weather_server, model, prompt):
         """Weather query across all model/prompt combinations."""
         agent = Agent(
             provider=Provider(model=f"azure/{model}"),
@@ -55,9 +53,7 @@ class TestMatrixComparison:
     @pytest.mark.parametrize("model", MODELS)
     @pytest.mark.parametrize("prompt", PROMPTS, ids=lambda p: p.name)
     @pytest.mark.asyncio
-    async def test_comparison_matrix(
-        self, aitest_run, weather_server, model, prompt
-    ):
+    async def test_comparison_matrix(self, aitest_run, weather_server, model, prompt):
         """City comparison across all model/prompt combinations."""
         agent = Agent(
             provider=Provider(model=f"azure/{model}"),
@@ -66,9 +62,7 @@ class TestMatrixComparison:
             max_turns=5,
         )
 
-        result = await aitest_run(
-            agent, "Is it warmer in Sydney or Berlin right now?"
-        )
+        result = await aitest_run(agent, "Is it warmer in Sydney or Berlin right now?")
 
         assert result.success
         # Response should answer the question

@@ -79,6 +79,8 @@ select = ["E", "F", "B", "I"]
 [tool.ruff.lint.per-file-ignores]
 # Test harnesses have long tool descriptions for LLM readability
 "src/pytest_aitest/testing/*.py" = ["E501"]
+# Test files have long descriptions and variable declarations
+"tests/**/*.py" = ["E402", "E501", "F841"]
 
 [tool.ruff.format]
 quote-style = "double"

@@ -64,6 +64,8 @@ def agent_factory(request: pytest.FixtureRequest) -> Callable[..., Agent]:
             Configured Agent instance
         """
         model = model or request.config.getoption("--aitest-model")
+        if model is None:
+            raise ValueError("Model must be specified via --aitest-model or parameter")
 
         # Use CLI defaults for rate limits if not specified
         if rpm is None:
@@ -121,6 +123,8 @@ def provider_factory(request: pytest.FixtureRequest) -> Callable[..., Provider]:
             Configured Provider instance
         """
         model = model or request.config.getoption("--aitest-model")
+        if model is None:
+            raise ValueError("Model must be specified via --aitest-model or parameter")
 
         # Use CLI defaults for rate limits if not specified
         if rpm is None:

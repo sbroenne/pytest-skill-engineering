@@ -30,9 +30,7 @@ class TestModelBenchmark:
 
     @pytest.mark.parametrize("model", MODELS)
     @pytest.mark.asyncio
-    async def test_simple_weather_query(
-        self, aitest_run, weather_server, model
-    ):
+    async def test_simple_weather_query(self, aitest_run, weather_server, model):
         """Basic weather lookup - all models should pass this."""
         agent = Agent(
             provider=Provider(model=f"azure/{model}"),
@@ -48,9 +46,7 @@ class TestModelBenchmark:
 
     @pytest.mark.parametrize("model", MODELS)
     @pytest.mark.asyncio
-    async def test_multi_city_comparison(
-        self, aitest_run, weather_server, model
-    ):
+    async def test_multi_city_comparison(self, aitest_run, weather_server, model):
         """Compare weather in two cities - tests reasoning."""
         agent = Agent(
             provider=Provider(model=f"azure/{model}"),
@@ -59,23 +55,17 @@ class TestModelBenchmark:
             max_turns=5,
         )
 
-        result = await aitest_run(
-            agent, "Which is warmer right now, Tokyo or Berlin?"
-        )
+        result = await aitest_run(agent, "Which is warmer right now, Tokyo or Berlin?")
 
         assert result.success
         # Must have called weather tools
-        assert result.tool_was_called("get_weather") or result.tool_was_called(
-            "compare_weather"
-        )
+        assert result.tool_was_called("get_weather") or result.tool_was_called("compare_weather")
         # Response should answer the question
         assert "tokyo" in result.final_response.lower()
 
     @pytest.mark.parametrize("model", MODELS)
     @pytest.mark.asyncio
-    async def test_forecast_interpretation(
-        self, aitest_run, weather_server, model
-    ):
+    async def test_forecast_interpretation(self, aitest_run, weather_server, model):
         """Forecast + interpretation - tests comprehension."""
         agent = Agent(
             provider=Provider(model=f"azure/{model}"),
@@ -84,12 +74,8 @@ class TestModelBenchmark:
             max_turns=5,
         )
 
-        result = await aitest_run(
-            agent, "Should I bring an umbrella to London this week?"
-        )
+        result = await aitest_run(agent, "Should I bring an umbrella to London this week?")
 
         assert result.success
         # Agent should check forecast or current weather
-        assert result.tool_was_called("get_weather") or result.tool_was_called(
-            "get_forecast"
-        )
+        assert result.tool_was_called("get_weather") or result.tool_was_called("get_forecast")

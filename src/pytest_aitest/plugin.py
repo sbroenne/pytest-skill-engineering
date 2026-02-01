@@ -107,12 +107,12 @@ def pytest_collection_modifyitems(
     """Auto-mark tests that use aitest fixtures."""
     for item in items:
         # Check if test uses any aitest fixtures
-        if hasattr(item, "fixturenames"):
-            aitest_fixtures = {"aitest_run", "judge", "agent_factory"}
-            if aitest_fixtures & set(item.fixturenames):
-                # Add aitest marker if not already present
-                if not any(m.name == "aitest" for m in item.iter_markers()):
-                    item.add_marker(pytest.mark.aitest)
+        fixturenames = getattr(item, "fixturenames", [])
+        aitest_fixtures = {"aitest_run", "judge", "agent_factory"}
+        if aitest_fixtures & set(fixturenames):
+            # Add aitest marker if not already present
+            if not any(m.name == "aitest" for m in item.iter_markers()):
+                item.add_marker(pytest.mark.aitest)
 
 
 @pytest.hookimpl(hookwrapper=True)
@@ -308,7 +308,7 @@ def _generate_ai_summary(config: Config, report: SuiteReport) -> str | None:
             **kwargs,
         )
 
-        return response.choices[0].message.content or ""
+        return response.choices[0].message.content or ""  # type: ignore[union-attr]
     except Exception as e:
         terminalreporter: TerminalReporter | None = config.pluginmanager.get_plugin(
             "terminalreporter"

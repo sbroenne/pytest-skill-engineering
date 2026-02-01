@@ -10,6 +10,7 @@ import time
 from typing import TYPE_CHECKING, Any, Callable
 
 import litellm
+from litellm.exceptions import RateLimitError as LiteLLMRateLimitError
 
 from pytest_aitest.core.errors import EngineTimeoutError, RateLimitError
 from pytest_aitest.core.result import AgentResult, ToolCall, Turn
@@ -266,7 +267,7 @@ class AgentEngine:
 
         try:
             return await litellm.acompletion(**kwargs)
-        except litellm.RateLimitError as e:
+        except LiteLLMRateLimitError as e:
             # Convert to our error type for consistent handling
             retry_after = getattr(e, "retry_after", None)
             raise RateLimitError(retry_after) from e

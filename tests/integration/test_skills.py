@@ -79,9 +79,7 @@ class TestSkillMetadataValidation:
 class TestSkillWithAgent:
     """Integration tests for skills with actual LLM calls."""
 
-    async def test_skill_prepends_to_system_prompt(
-        self, agent_factory, skill_factory, aitest_run
-    ):
+    async def test_skill_prepends_to_system_prompt(self, agent_factory, skill_factory, aitest_run):
         """Skill content should be prepended to agent's system prompt."""
         skill = skill_factory(SKILLS_DIR / "simple-assistant")
 

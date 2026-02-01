@@ -57,6 +57,7 @@ def echo_cli_server():
 @pytest.fixture
 def file_agent_factory(ls_cli_server, cat_cli_server):
     """Factory to create agents with file CLI tools."""
+
     def create_agent(
         deployment: str = "gpt-5-mini",
         system_prompt: str = "You are a helpful file system assistant. Use ls_execute to list files and cat_execute to read files.",
@@ -68,12 +69,14 @@ def file_agent_factory(ls_cli_server, cat_cli_server):
             system_prompt=system_prompt,
             max_turns=max_turns,
         )
+
     return create_agent
 
 
 @pytest.fixture
 def echo_agent_factory(echo_cli_server):
     """Factory to create agents with echo CLI tool."""
+
     def create_agent(
         deployment: str = "gpt-5-mini",
         system_prompt: str = "You are a helpful assistant. Use echo_execute to echo messages.",
@@ -85,6 +88,7 @@ def echo_agent_factory(echo_cli_server):
             system_prompt=system_prompt,
             max_turns=max_turns,
         )
+
     return create_agent
 
 
@@ -193,4 +197,7 @@ class TestCLIServerErrorHandling:
         assert result.tool_was_called("cat_execute") or result.tool_was_called("ls_execute")
         # Should gracefully report the error
         response_lower = result.final_response.lower()
-        assert any(word in response_lower for word in ["error", "not found", "doesn't exist", "cannot", "no such", "tried"])
+        assert any(
+            word in response_lower
+            for word in ["error", "not found", "doesn't exist", "cannot", "no such", "tried"]
+        )

@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>pytest-aitest Report - {{ report.name }}</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <style>
+/* ========== Modern CSS with custom properties, grid, flexbox, nesting ========== */
+
+/* Color System */
+:root {
+    --c-pass: #22c55e;
+    --c-fail: #ef4444;
+    --c-warn: #f59e0b;
+    --c-info: #3b82f6;
+    --c-primary: #6366f1;
+    --c-secondary: #8b5cf6;
+    
+    --c-bg: #f8fafc;
+    --c-card: #ffffff;
+    --c-border: #e2e8f0;
+    --c-text: #1e293b;
+    --c-text-light: #64748b;
+    --c-text-muted: #94a3b8;
+    
+    --shadow-sm: 0 1px 2px rgb(0 0 0 / 5%);
+    --shadow-md: 0 4px 6px rgb(0 0 0 / 7%);
+    --shadow-lg: 0 10px 15px rgb(0 0 0 / 10%);
+    
+    --radius: 8px;
+    --font: system-ui, -apple-system, sans-serif;
+    --font-mono: ui-monospace, 'Cascadia Code', 'Fira Code', monospace;
+}
+
+/* Reset & Base */
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+    font-family: var(--font);
+    background: var(--c-bg);
+    color: var(--c-text);
+    line-height: 1.6;
+    margin: 0;
+    padding: clamp(1rem, 3vw, 2rem);
+}
+
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* Header with gradient */
+.report-header {
+    background: linear-gradient(135deg, var(--c-primary) 0%, var(--c-secondary) 100%);
+    color: white;
+    padding: clamp(1.5rem, 4vw, 2.5rem);
+    border-radius: var(--radius);
+    margin-bottom: 1.5rem;
+    box-shadow: var(--shadow-lg);
+}
+
+.report-header h1 {
+    margin: 0 0 0.5rem;
+    font-size: clamp(1.5rem, 4vw, 2rem);
+    font-weight: 600;
+}
+
+.report-header .meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem 2rem;
+    font-size: 0.875rem;
+    opacity: 0.9;
+}
+
+.report-header .file-links {
+    flex-basis: 100%;
+    margin-top: 0.5rem;
+    font-size: 0.8125rem;
+    opacity: 0.85;
+}
+
+.report-header .file-links a {
+    color: white;
+    text-decoration: underline;
+}
+
+.report-header .file-links a:hover {
+    text-decoration: none;
+}
+
+/* Summary Cards Grid */
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.summary-card {
+    background: var(--c-card);
+    padding: 1.25rem;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    text-align: center;
+    border-top: 4px solid var(--c-border);
+    transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.summary-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.summary-card .value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+}
+
+.summary-card .label {
+    font-size: 0.75rem;
+    color: var(--c-text-light);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.summary-card.total { border-color: var(--c-info); }
+.summary-card.total .value { color: var(--c-info); }
+.summary-card.passed { border-color: var(--c-pass); }
+.summary-card.passed .value { color: var(--c-pass); }
+.summary-card.failed { border-color: var(--c-fail); }
+.summary-card.failed .value { color: var(--c-fail); }
+.summary-card.rate { border-color: var(--c-secondary); }
+.summary-card.rate .value { color: var(--c-secondary); }
+.summary-card.tokens { border-color: var(--c-warn); }
+.summary-card.tokens .value { color: var(--c-warn); }
+.summary-card.cost { border-color: var(--c-primary); }
+.summary-card.cost .value { color: var(--c-primary); }
+
+/* Pass Rate Progress Bar */
+.pass-rate-bar {
+    height: 6px;
+    background: var(--c-border);
+    border-radius: 3px;
+    margin-top: 0.5rem;
+    overflow: hidden;
+}
+
+.pass-rate-bar .fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--c-pass), #84cc16);
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+
+/* Section Cards */
+.section {
+    background: var(--c-card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+}
+
+.section-header {
+    background: #f8fafc;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--c-border);
+}
+
+.section-header h2 {
+    margin: 0;
+    font-size: 1.125rem;
+    font-weight: 600;
+}
+
+.section-body {
+    padding: 1.25rem;
+}
+
+/* AI Summary Markdown Styling */
+.ai-summary {
+    line-height: 1.7;
+    font-size: 0.9375rem;
+}
+
+.ai-summary h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--c-text);
+    margin: 1.25rem 0 0.5rem 0;
+    padding-bottom: 0.25rem;
+    border-bottom: 1px solid var(--c-border);
+}
+
+.ai-summary h3:first-child {
+    margin-top: 0;
+}
+
+.ai-summary p {
+    margin: 0.5rem 0;
+}
+
+.ai-summary ul, .ai-summary ol {
+    margin: 0.5rem 0;
+    padding-left: 1.5rem;
+}
+
+.ai-summary li {
+    margin: 0.25rem 0;
+}
+
+.ai-summary strong {
+    font-weight: 600;
+}
+
+.ai-summary code {
+    background: #f1f5f9;
+    padding: 0.125rem 0.375rem;
+    border-radius: 0.25rem;
+    font-size: 0.875em;
+}
+
+/* Leaderboard Table */
+.leaderboard {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.leaderboard th,
+.leaderboard td {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--c-border);
+}
+
+.leaderboard th {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--c-text-light);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.leaderboard tbody tr:hover {
+    background: #f8fafc;
+}
+
+.leaderboard .rank { width: 3rem; text-align: center; }
+.leaderboard .medal { font-size: 1.25rem; }
+.leaderboard .model-name { font-weight: 500; }
+.leaderboard .pass-rate-cell { width: 200px; }
+.leaderboard .numeric { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* Provider Badges */
+.provider-badge {
+    display: inline-block;
+    padding: 0.125rem 0.5rem;
+    border-radius: 9999px;
+    font-size: 0.625rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-left: 0.5rem;
+}
+
+.provider-badge.azure { background: #0078d4; color: white; }
+.provider-badge.openai { background: #10a37f; color: white; }
+.provider-badge.anthropic { background: #d97706; color: white; }
+.provider-badge.vertex { background: #4285f4; color: white; }
+.provider-badge.default { background: var(--c-text-light); color: white; }
+
+/* Comparison Matrix */
+.matrix-container {
+    overflow-x: auto;
+}
+
+.matrix {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+}
+
+.matrix th,
+.matrix td {
+    padding: 0.625rem 0.75rem;
+    border: 1px solid var(--c-border);
+}
+
+.matrix th {
+    background: #f8fafc;
+    font-weight: 600;
+    text-align: center;
+}
+
+.matrix .test-name {
+    text-align: left;
+    font-weight: 500;
+    max-width: 300px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.matrix .matrix-cell {
+    text-align: center;
+}
+
+.matrix .matrix-cell .status { font-size: 1.125rem; }
+.matrix .matrix-cell .metrics {
+    font-size: 0.75rem;
+    color: var(--c-text-muted);
+    margin-top: 0.25rem;
+}
+
+.matrix .cell-passed { background: #dcfce7; }
+.matrix .cell-failed { background: #fee2e2; }
+
+/* Test List */
+.test-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.test-item {
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius);
+    overflow: hidden;
+}
+
+.test-item .test-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.875rem 1rem;
+    cursor: pointer;
+    transition: background 0.1s;
+}
+
+.test-item .test-header:hover { background: #f8fafc; }
+
+.test-item .test-name {
+    flex: 1;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.test-item .test-metrics {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.8125rem;
+    color: var(--c-text-light);
+    font-variant-numeric: tabular-nums;
+}
+
+.test-item .test-details {
+    display: none;
+    padding: 1rem;
+    border-top: 1px solid var(--c-border);
+    background: #fafafa;
+}
+
+.test-item.expanded .test-details { display: block; }
+
+/* Status Badge */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.badge.passed { background: var(--c-pass); color: white; }
+.badge.failed { background: var(--c-fail); color: white; }
+.badge.skipped { background: var(--c-warn); color: white; }
+
+/* Metrics Row in Details */
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 1rem;
+    padding: 0.75rem;
+    background: white;
+    border-radius: var(--radius);
+    margin-bottom: 1rem;
+}
+
+.metrics-grid .metric-value {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--c-text);
+}
+
+.metrics-grid .metric-label {
+    font-size: 0.75rem;
+    color: var(--c-text-muted);
+}
+
+/* Conversation Turns */
+.turns {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.turn {
+    padding: 0.75rem;
+    border-radius: var(--radius);
+    background: white;
+    border-left: 3px solid var(--c-border);
+}
+
+.turn.user { border-color: var(--c-info); }
+.turn.assistant { border-color: var(--c-primary); }
+
+.turn .turn-role {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--c-text-light);
+    text-transform: uppercase;
+    margin-bottom: 0.25rem;
+}
+
+.turn .turn-content {
+    font-size: 0.875rem;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+/* Tool Calls */
+.tool-call {
+    margin-top: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    background: #f1f5f9;
+    border-radius: 4px;
+    font-size: 0.8125rem;
+}
+
+.tool-call .tool-name {
+    font-weight: 600;
+    color: var(--c-warn);
+}
+
+.tool-call .tool-args {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--c-text-light);
+    margin-top: 0.25rem;
+}
+
+.tool-call .tool-result {
+    margin-top: 0.25rem;
+    padding-top: 0.25rem;
+    border-top: 1px solid var(--c-border);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+}
+
+/* Error Message */
+.error-message {
+    padding: 0.75rem 1rem;
+    background: #fee2e2;
+    border-left: 3px solid var(--c-fail);
+    border-radius: var(--radius);
+    color: #991b1b;
+    font-size: 0.875rem;
+    margin-bottom: 1rem;
+}
+
+/* Mermaid Diagrams */
+.mermaid-container {
+    background: white;
+    border-radius: var(--radius);
+    padding: 1rem;
+    margin: 1rem 0;
+    overflow-x: auto;
+    cursor: pointer;
+    border: 1px solid var(--c-border);
+    transition: box-shadow 0.15s;
+}
+
+.mermaid-container:hover { box-shadow: var(--shadow-md); }
+
+/* Fullscreen Overlay */
+.overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgb(0 0 0 / 80%);
+    z-index: 1000;
+    padding: 2rem;
+    overflow: auto;
+}
+
+.overlay.active { display: flex; align-items: center; justify-content: center; }
+
+.overlay .overlay-content {
+    background: white;
+    border-radius: var(--radius);
+    padding: 2rem;
+    max-width: 90vw;
+    max-height: 90vh;
+    overflow: auto;
+}
+
+.overlay .overlay-close {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    background: white;
+    border: none;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    font-size: 1.25rem;
+    cursor: pointer;
+    box-shadow: var(--shadow-md);
+}
+
+.overlay .overlay-close:hover { background: #f1f5f9; }
+
+/* Responsive */
+@media (max-width: 768px) {
+    .summary-grid { grid-template-columns: repeat(2, 1fr); }
+    .test-item .test-metrics { flex-direction: column; gap: 0.25rem; }
+    .leaderboard { font-size: 0.875rem; }
+}
+
+/* Print Styles */
+@media print {
+    body { background: white; padding: 0; }
+    .report-header { box-shadow: none; }
+    .test-item .test-details { display: block; }
+    .overlay { display: none !important; }
+}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="report-header">
+            <h1>🧪 {{ report.name }}</h1>
+            <div class="meta">
+                <span>📅 {{ report.timestamp }}</span>
+                <span>⏱️ {{ "%.2f"|format(report.duration_ms / 1000) }}s total</span>
+                <span>📄 {{ report.unique_tests }} unique test{{ 's' if report.unique_tests != 1 else '' }}</span>
+                {% if flags.model_count > 0 %}
+                <span>🤖 {{ flags.model_count }} model{{ 's' if flags.model_count > 1 else '' }}</span>
+                {% endif %}
+                {% if flags.prompt_count > 0 %}
+                <span>📝 {{ flags.prompt_count }} prompt{{ 's' if flags.prompt_count > 1 else '' }}</span>
+                {% endif %}
+                {% if report.test_files %}
+                <span class="file-links">
+                    Files: {% for f in report.test_files %}<a href="{{ to_file_url(f) }}">{{ f }}</a>{{ ', ' if not loop.last else '' }}{% endfor %}
+                </span>
+                {% endif %}
+            </div>
+        </header>
+
+        <!-- Summary Cards -->
+        <section class="summary-grid">
+            <div class="summary-card total">
+                <div class="value">{{ report.total }}</div>
+                <div class="label">Total Tests</div>
+            </div>
+            <div class="summary-card passed">
+                <div class="value">{{ report.passed }}</div>
+                <div class="label">Passed</div>
+            </div>
+            <div class="summary-card failed">
+                <div class="value">{{ report.failed }}</div>
+                <div class="label">Failed</div>
+            </div>
+            <div class="summary-card rate">
+                <div class="value">{{ "%.0f"|format(report.pass_rate) }}%</div>
+                <div class="label">Pass Rate</div>
+                <div class="pass-rate-bar">
+                    <div class="fill" style="width: {{ report.pass_rate }}%"></div>
+                </div>
+            </div>
+            {% if report.token_stats.max > 0 %}
+            <div class="summary-card tokens">
+                <div class="value">{{ "{:,}".format(report.token_stats.min) }}–{{ "{:,}".format(report.token_stats.max) }}</div>
+                <div class="label">Token Range</div>
+            </div>
+            {% endif %}
+            {% if report.duration_stats.max > 0 %}
+            <div class="summary-card" style="border-color: #3b82f6;">
+                <div class="value" style="color: #3b82f6; font-size: 1.25rem;">{{ "%.1f"|format(report.duration_stats.min / 1000) }}–{{ "%.1f"|format(report.duration_stats.max / 1000) }}s</div>
+                <div class="label">Duration Range</div>
+            </div>
+            {% endif %}
+            {% if report.tool_call_count > 0 %}
+            <div class="summary-card" style="border-color: #8b5cf6;">
+                <div class="value" style="color: #8b5cf6;">{{ report.tool_call_count }}</div>
+                <div class="label">Tool Calls</div>
+            </div>
+            {% endif %}
+            {% if report.total_cost_usd > 0 %}
+            <div class="summary-card cost">
+                <div class="value">{{ format_cost(report.total_cost_usd) }}</div>
+                <div class="label">Est. Cost</div>
+            </div>
+            {% endif %}
+        </section>
+
+        <!-- AI Summary (conditional) -->
+        {% if ai_summary %}
+        <section class="section" style="border-left: 4px solid var(--c-secondary);">
+            <div class="section-header" style="background: linear-gradient(90deg, #f3e8ff, #f8fafc);">
+                <h2>🤖 AI Analysis</h2>
+            </div>
+            <div class="section-body ai-summary">{{ ai_summary | markdown }}</div>
+        </section>
+        {% endif %}
+
+        <!-- Model Leaderboard (conditional) -->
+        {% if flags.show_model_leaderboard and model_groups %}
+        <section class="section">
+            <div class="section-header">
+                <h2>🏆 Model Leaderboard</h2>
+            </div>
+            <div class="section-body">
+                <table class="leaderboard">
+                    <thead>
+                        <tr>
+                            <th class="rank">Rank</th>
+                            <th>Model</th>
+                            <th>Pass Rate</th>
+                            <th class="numeric">Passed</th>
+                            <th class="numeric">Failed</th>
+                            <th class="numeric">Tokens</th>
+                            <th class="numeric">Efficiency</th>
+                            <th class="numeric">Cost</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for group in model_groups %}
+                        <tr>
+                            <td class="rank">
+                                <span class="medal">{{ group.medal }}</span>
+                                {% if not group.medal %}{{ group.rank }}{% endif %}
+                            </td>
+                            <td>
+                                <span class="model-name">{{ group.dimension_value }}</span>
+                                <span class="provider-badge {{ get_provider(group.dimension_value) }}">{{ get_provider(group.dimension_value) }}</span>
+                            </td>
+                            <td class="pass-rate-cell">
+                                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <span style="width: 3rem;">{{ "%.0f"|format(group.pass_rate) }}%</span>
+                                    <div class="pass-rate-bar" style="flex: 1;">
+                                        <div class="fill" style="width: {{ group.pass_rate }}%"></div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="numeric" style="color: var(--c-pass);">{{ group.passed }}</td>
+                            <td class="numeric" style="color: var(--c-fail);">{{ group.failed }}</td>
+                            <td class="numeric">{{ "{:,}".format(group.total_tokens) }}</td>
+                            <td class="numeric">{% if group.efficiency != float('inf') %}{{ "{:,.0f}".format(group.efficiency) }} tok/✓{% else %}—{% endif %}</td>
+                            <td class="numeric">{{ format_cost(group.total_cost) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- Prompt Comparison (conditional) -->
+        {% if flags.show_prompt_comparison and prompt_groups and not flags.show_matrix %}
+        <section class="section">
+            <div class="section-header">
+                <h2>📝 Prompt Comparison</h2>
+            </div>
+            <div class="section-body">
+                <table class="leaderboard">
+                    <thead>
+                        <tr>
+                            <th class="rank">Rank</th>
+                            <th>Prompt</th>
+                            <th>Pass Rate</th>
+                            <th class="numeric">Passed</th>
+                            <th class="numeric">Failed</th>
+                            <th class="numeric">Tokens</th>
+                            <th class="numeric">Avg Duration</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for group in prompt_groups %}
+                        <tr>
+                            <td class="rank">
+                                <span class="medal">{{ group.medal }}</span>
+                                {% if not group.medal %}{{ group.rank }}{% endif %}
+                            </td>
+                            <td><span class="model-name">{{ group.dimension_value }}</span></td>
+                            <td class="pass-rate-cell">
+                                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <span style="width: 3rem;">{{ "%.0f"|format(group.pass_rate) }}%</span>
+                                    <div class="pass-rate-bar" style="flex: 1;">
+                                        <div class="fill" style="width: {{ group.pass_rate }}%"></div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="numeric" style="color: var(--c-pass);">{{ group.passed }}</td>
+                            <td class="numeric" style="color: var(--c-fail);">{{ group.failed }}</td>
+                            <td class="numeric">{{ "{:,}".format(group.total_tokens) }}</td>
+                            <td class="numeric">{{ "%.2f"|format(group.avg_duration_ms / 1000) }}s</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- Comparison Matrix (conditional) -->
+        {% if flags.show_matrix and matrix %}
+        <section class="section">
+            <div class="section-header">
+                <h2>📊 Comparison Matrix</h2>
+            </div>
+            <div class="section-body">
+                <div class="matrix-container">
+                    <table class="matrix">
+                        <thead>
+                            <tr>
+                                <th>Test / Prompt</th>
+                                {% for model in dimensions.models %}
+                                <th>{{ model }}</th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in matrix %}
+                            <tr>
+                                <td class="test-name">{{ row[0].prompt }}</td>
+                                {% for cell in row %}
+                                <td class="matrix-cell {{ 'cell-passed' if cell.passed else 'cell-failed' if cell.test else '' }}">
+                                    {% if cell.test %}
+                                    <div class="status">{{ '✅' if cell.passed else '❌' }}</div>
+                                    {% if cell.test.agent_result %}
+                                    <div class="metrics">
+                                        {{ "%.1f"|format(cell.test.duration_ms / 1000) }}s · 
+                                        {{ cell.test.agent_result.token_usage.get('prompt', 0) + cell.test.agent_result.token_usage.get('completion', 0) }} tok
+                                    </div>
+                                    {% endif %}
+                                    {% else %}
+                                    <span style="color: var(--c-text-muted);">—</span>
+                                    {% endif %}
+                                </td>
+                                {% endfor %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- Test Overview Table (when multiple tests) -->
+        {% if report.total > 1 %}
+        <section class="section">
+            <div class="section-header">
+                <h2>📋 Test Overview</h2>
+            </div>
+            <div class="section-body">
+                <div class="matrix-container">
+                    <table class="matrix">
+                        <thead>
+                            <tr>
+                                <th style="text-align: left;">Test Name</th>
+                                <th>Status</th>
+                                <th>Duration</th>
+                                <th>Tokens</th>
+                                <th>Tools</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for test in report.tests %}
+                            <tr class="{{ 'cell-passed' if test.is_passed else 'cell-failed' if test.is_failed else '' }}">
+                                <td class="test-name">{{ test.name }}</td>
+                                <td class="matrix-cell">
+                                    <span class="badge {{ test.outcome }}">{{ test.outcome }}</span>
+                                </td>
+                                <td class="matrix-cell">{{ "%.2f"|format(test.duration_ms / 1000) }}s</td>
+                                <td class="matrix-cell">
+                                    {% if test.agent_result %}
+                                    {{ test.agent_result.token_usage.get('prompt', 0) + test.agent_result.token_usage.get('completion', 0) }}
+                                    {% else %}—{% endif %}
+                                </td>
+                                <td class="matrix-cell">
+                                    {% if test.agent_result %}
+                                    {{ test.agent_result.all_tool_calls | length }}
+                                    {% else %}—{% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- Test List -->
+        <section class="section">
+            <div class="section-header">
+                <h2>🔍 Detailed Results</h2>
+            </div>
+            <div class="section-body">
+                <div class="test-list">
+                    {% for test in report.tests %}
+                    <div class="test-item" onclick="this.classList.toggle('expanded')">
+                        <div class="test-header">
+                            <span class="test-name">
+                                <span class="badge {{ test.outcome }}">{{ test.outcome }}</span>
+                                {{ test.name }}
+                            </span>
+                            <span class="test-metrics">
+                                <span>{{ "%.2f"|format(test.duration_ms / 1000) }}s</span>
+                                {% if test.agent_result %}
+                                <span>{{ test.agent_result.token_usage.get('prompt', 0) + test.agent_result.token_usage.get('completion', 0) }} tokens</span>
+                                <span>{{ format_cost(test.agent_result.cost_usd) }}</span>
+                                {% endif %}
+                            </span>
+                        </div>
+                        <div class="test-details">
+                            {% if test.error %}
+                            <div class="error-message">{{ test.error }}</div>
+                            {% endif %}
+
+                            {% if test.agent_result %}
+                            <div class="metrics-grid">
+                                <div class="metric">
+                                    <div class="metric-value">{{ "%.2f"|format(test.agent_result.duration_ms / 1000) }}s</div>
+                                    <div class="metric-label">Duration</div>
+                                </div>
+                                <div class="metric">
+                                    <div class="metric-value">{{ test.agent_result.token_usage.get('prompt', 0) }}</div>
+                                    <div class="metric-label">Prompt Tokens</div>
+                                </div>
+                                <div class="metric">
+                                    <div class="metric-value">{{ test.agent_result.token_usage.get('completion', 0) }}</div>
+                                    <div class="metric-label">Completion Tokens</div>
+                                </div>
+                                <div class="metric">
+                                    <div class="metric-value">{{ format_cost(test.agent_result.cost_usd) }}</div>
+                                    <div class="metric-label">Cost</div>
+                                </div>
+                                <div class="metric">
+                                    <div class="metric-value">{{ test.agent_result.all_tool_calls | length }}</div>
+                                    <div class="metric-label">Tool Calls</div>
+                                </div>
+                                <div class="metric">
+                                    <div class="metric-value">{{ test.agent_result.turns | length }}</div>
+                                    <div class="metric-label">Turns</div>
+                                </div>
+                            </div>
+
+                            {% if test.agent_result.turns %}
+                            <div class="mermaid-container" onclick="event.stopPropagation(); showDiagram(this.querySelector('.mermaid').innerHTML)">
+                                <div class="mermaid">{{ generate_mermaid(test.agent_result) }}</div>
+                            </div>
+
+                            {% if test.agent_result.final_response %}
+                            <div style="margin: 1rem 0; padding: 1rem; background: linear-gradient(135deg, #f0fdf4, #dcfce7); border-radius: var(--radius); border-left: 4px solid var(--c-pass);">
+                                <h4 style="margin: 0 0 0.5rem; font-size: 0.875rem; color: #166534;">💬 Final Output</h4>
+                                <div style="font-size: 0.9375rem; color: var(--c-text); white-space: pre-wrap;">{{ test.agent_result.final_response }}</div>
+                            </div>
+                            {% endif %}
+
+                            <details style="margin-top: 1rem;">
+                                <summary style="cursor: pointer; font-size: 0.875rem; font-weight: 500; color: var(--c-text-light);">📜 Full Conversation ({{ test.agent_result.turns | length }} turns)</summary>
+                                <div class="turns" style="margin-top: 0.75rem;">
+                                {% for turn in test.agent_result.turns %}
+                                <div class="turn {{ turn.role }}">
+                                    <div class="turn-role">{{ turn.role }}</div>
+                                    <div class="turn-content">{{ turn.content[:500] }}{{ '...' if turn.content|length > 500 else '' }}</div>
+                                    {% for tc in turn.tool_calls %}
+                                    <div class="tool-call">
+                                        <span class="tool-name">🔧 {{ tc.name }}</span>
+                                        <div class="tool-args">{{ tc.arguments | tojson }}</div>
+                                        {% if tc.result %}
+                                        <div class="tool-result">→ {{ tc.result[:200] }}{{ '...' if tc.result|length > 200 else '' }}</div>
+                                        {% endif %}
+                                        {% if tc.error %}
+                                        <div class="error-message" style="margin: 0.25rem 0 0;">{{ tc.error }}</div>
+                                        {% endif %}
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                {% endfor %}
+                                </div>
+                            </details>
+                            {% endif %}
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Fullscreen Overlay -->
+    <div class="overlay" id="overlay" onclick="hideOverlay()">
+        <button class="overlay-close" onclick="hideOverlay()">✕</button>
+        <div class="overlay-content" onclick="event.stopPropagation()">
+            <div class="mermaid" id="overlay-mermaid"></div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Mermaid
+        mermaid.initialize({ 
+            startOnLoad: true,
+            theme: 'default',
+            securityLevel: 'loose'
+        });
+
+        // Fullscreen diagram
+        function showDiagram(mermaidCode) {
+            const overlay = document.getElementById('overlay');
+            const content = document.getElementById('overlay-mermaid');
+            content.innerHTML = mermaidCode;
+            overlay.classList.add('active');
+            mermaid.run({ nodes: [content] });
+        }
+
+        function hideOverlay() {
+            document.getElementById('overlay').classList.remove('active');
+        }
+
+        // Close on Escape
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') hideOverlay();
+        });
+    </script>
+</body>
+</html>

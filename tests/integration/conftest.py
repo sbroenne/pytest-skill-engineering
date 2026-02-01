@@ -12,6 +12,7 @@ import pytest
 _env_file = Path(__file__).parents[4] / ".env"
 if _env_file.exists():
     from dotenv import load_dotenv
+
     load_dotenv(_env_file)
 
 from pytest_aitest import Agent, MCPServer, Provider, Wait
@@ -112,6 +113,7 @@ When asked about weather, ALWAYS call the appropriate tool first, then respond b
             system_prompt=system_prompt,
             max_turns=max_turns,
         )
+
     return create_agent
 
 
@@ -156,6 +158,7 @@ When asked to manage tasks, ALWAYS use the appropriate tools. After modifying ta
             system_prompt=system_prompt,
             max_turns=max_turns,
         )
+
     return create_agent
 
 
@@ -180,4 +183,5 @@ def keyvalue_agent_factory(test_mcp_server, request) -> Callable[..., Agent]:
             system_prompt=system_prompt,
             max_turns=max_turns,
         )
+
     return create_agent

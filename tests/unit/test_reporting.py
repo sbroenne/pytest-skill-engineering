@@ -78,9 +78,7 @@ class TestSuiteReport:
         assert suite.pass_rate == 100.0
 
     def test_total_tokens(self) -> None:
-        result1 = AgentResult(
-            turns=[], success=True, token_usage={"prompt": 100, "completion": 50}
-        )
+        result1 = AgentResult(turns=[], success=True, token_usage={"prompt": 100, "completion": 50})
         result2 = AgentResult(
             turns=[], success=True, token_usage={"prompt": 200, "completion": 100}
         )
@@ -243,7 +241,9 @@ class TestReportGenerator:
             failed=1,
         )
 
-    def test_generate_json(self, generator: ReportGenerator, sample_suite: SuiteReport, tmp_path: Path) -> None:
+    def test_generate_json(
+        self, generator: ReportGenerator, sample_suite: SuiteReport, tmp_path: Path
+    ) -> None:
         output = tmp_path / "report.json"
         generator.generate_json(sample_suite, output)
 
@@ -257,7 +257,9 @@ class TestReportGenerator:
         assert data["summary"]["pass_rate"] == 50.0
         assert len(data["tests"]) == 2
 
-    def test_generate_json_test_details(self, generator: ReportGenerator, sample_suite: SuiteReport, tmp_path: Path) -> None:
+    def test_generate_json_test_details(
+        self, generator: ReportGenerator, sample_suite: SuiteReport, tmp_path: Path
+    ) -> None:
         output = tmp_path / "report.json"
         generator.generate_json(sample_suite, output)
 
@@ -269,7 +271,9 @@ class TestReportGenerator:
         assert test_passed["agent_result"]["tools_called"] == ["greet"]
         assert test_failed["error"] == "AssertionError: expected True"
 
-    def test_generate_html(self, generator: ReportGenerator, sample_suite: SuiteReport, tmp_path: Path) -> None:
+    def test_generate_html(
+        self, generator: ReportGenerator, sample_suite: SuiteReport, tmp_path: Path
+    ) -> None:
         output = tmp_path / "report.html"
         generator.generate_html(sample_suite, output)
 
@@ -281,7 +285,9 @@ class TestReportGenerator:
         assert "test_failed" in html
         assert "50.0%" in html or "50%" in html  # pass rate
 
-    def test_generate_html_contains_mermaid(self, generator: ReportGenerator, sample_suite: SuiteReport, tmp_path: Path) -> None:
+    def test_generate_html_contains_mermaid(
+        self, generator: ReportGenerator, sample_suite: SuiteReport, tmp_path: Path
+    ) -> None:
         output = tmp_path / "report.html"
         generator.generate_html(sample_suite, output)
 
@@ -379,5 +385,5 @@ class TestGenerateMermaidSequence:
         mermaid = generate_mermaid_sequence(result)
 
         # Double quotes should be replaced with single quotes
-        assert "\"hello\"" not in mermaid
+        assert '"hello"' not in mermaid
         assert "'hello'" in mermaid

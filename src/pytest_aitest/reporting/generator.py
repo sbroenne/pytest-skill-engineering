@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from jinja2 import Environment, PackageLoader
+from jinja2 import Environment, FileSystemLoader
 from markupsafe import Markup
 
 from pytest_aitest.reporting.aggregator import DimensionAggregator, ReportMode
@@ -72,8 +72,12 @@ class ReportGenerator:
     """
 
     def __init__(self) -> None:
+        # Use importlib.resources to find templates directory reliably
+        import importlib.resources as resources
+
+        templates_dir = resources.files("pytest_aitest").joinpath("templates")
         self._env = Environment(
-            loader=PackageLoader("pytest_aitest", "templates"),
+            loader=FileSystemLoader(str(templates_dir)),
             autoescape=True,
         )
         self._env.filters["markdown"] = _render_markdown

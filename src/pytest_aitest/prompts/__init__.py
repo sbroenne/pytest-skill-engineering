@@ -18,7 +18,8 @@ def get_ai_summary_prompt() -> str:
     Returns:
         The system prompt text for AI summary generation.
     """
-    prompt_file = resources.files(__package__) / "ai_summary.md"
+    package = __package__ or __name__
+    prompt_file = resources.files(package) / "ai_summary.md"
     return prompt_file.read_text(encoding="utf-8")
 
 

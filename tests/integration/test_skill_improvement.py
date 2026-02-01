@@ -86,9 +86,9 @@ class TestWeatherSkillImprovement:
         assert result.success
         # WITH skill: Should ALWAYS check weather first
         assert len(result.all_tool_calls) >= 1, "Skilled agent should check weather tools"
-        assert result.tool_was_called("get_weather") or result.tool_was_called(
-            "get_forecast"
-        ), "Should call weather tool before giving advice"
+        assert result.tool_was_called("get_weather") or result.tool_was_called("get_forecast"), (
+            "Should call weather tool before giving advice"
+        )
 
         # Response should include specific temperature-based advice
         response = result.final_response.lower()
@@ -131,9 +131,9 @@ class TestWeatherSkillImprovement:
         assert result.success
 
         # Should have looked up the reference docs
-        used_references = result.tool_was_called(
-            "list_skill_references"
-        ) or result.tool_was_called("read_skill_reference")
+        used_references = result.tool_was_called("list_skill_references") or result.tool_was_called(
+            "read_skill_reference"
+        )
 
         # Response should mention UV-specific advice from the guide
         response = result.final_response.lower()
@@ -153,9 +153,7 @@ class TestTodoSkillImprovement:
         """Load the todo organizer skill."""
         return Skill.from_path(SKILLS_DIR / "todo-organizer")
 
-    async def test_baseline_may_not_verify_operations(
-        self, aitest_run, todo_agent_factory
-    ):
+    async def test_baseline_may_not_verify_operations(self, aitest_run, todo_agent_factory):
         """WITHOUT skill: LLM might not verify task operations.
 
         Baseline behavior - the agent may add tasks without confirming
@@ -178,9 +176,7 @@ class TestTodoSkillImprovement:
         # The LLM might or might not call list_tasks to verify
         print(f"Baseline verified with list_tasks: {result.tool_was_called('list_tasks')}")
 
-    async def test_skilled_always_verifies_operations(
-        self, aitest_run, agent_factory, todo_skill
-    ):
+    async def test_skilled_always_verifies_operations(self, aitest_run, agent_factory, todo_skill):
         """WITH skill: Agent ALWAYS verifies operations with list_tasks.
 
         The todo-organizer skill requires:
@@ -211,9 +207,9 @@ class TestTodoSkillImprovement:
         assert result.tool_was_called("add_task"), "Should add the task"
 
         # WITH skill: MUST verify with list_tasks after adding
-        assert result.tool_was_called(
-            "list_tasks"
-        ), "Skilled agent should verify operation with list_tasks"
+        assert result.tool_was_called("list_tasks"), (
+            "Skilled agent should verify operation with list_tasks"
+        )
 
         # Check that list_tasks was called AFTER add_task (verification pattern)
         tool_names = [tc.name for tc in result.all_tool_calls]
@@ -222,13 +218,11 @@ class TestTodoSkillImprovement:
         list_calls_after_add = [
             i for i, name in enumerate(tool_names) if name == "list_tasks" and i > last_add_idx
         ]
-        assert (
-            len(list_calls_after_add) > 0
-        ), "Should call list_tasks AFTER the final add_task to verify the operation"
+        assert len(list_calls_after_add) > 0, (
+            "Should call list_tasks AFTER the final add_task to verify the operation"
+        )
 
-    async def test_skilled_uses_consistent_list_names(
-        self, aitest_run, agent_factory, todo_skill
-    ):
+    async def test_skilled_uses_consistent_list_names(self, aitest_run, agent_factory, todo_skill):
         """WITH skill: Agent organizes tasks into appropriate categories.
 
         The skill defines standard lists: inbox, work, personal, shopping, someday
@@ -285,9 +279,7 @@ class TestTodoSkillImprovement:
         # The key behavior is that the skill teaches batching - all tasks in one interaction
         assert len(add_calls) >= 2, "Skilled agent should handle multiple tasks"
 
-    async def test_skilled_assigns_smart_priorities(
-        self, aitest_run, agent_factory, todo_skill
-    ):
+    async def test_skilled_assigns_smart_priorities(self, aitest_run, agent_factory, todo_skill):
         """WITH skill: Agent assigns priorities based on urgency signals.
 
         The skill's priority guide says:
@@ -372,16 +364,16 @@ class TestSkillComparisonSummary:
         skilled_result = await aitest_run(skilled_agent, prompt)
 
         # Compare results
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print("WEATHER SKILL COMPARISON")
-        print(f"{'='*60}")
+        print(f"{'=' * 60}")
         print(f"Baseline tool calls: {len(baseline_result.all_tool_calls)}")
         print(f"Skilled tool calls:  {len(skilled_result.all_tool_calls)}")
         print(f"Baseline checked weather: {baseline_result.tool_was_called('get_weather')}")
         print(f"Skilled checked weather:  {skilled_result.tool_was_called('get_weather')}")
-        print(f"{'='*60}\n")
+        print(f"{'=' * 60}\n")
 
         # The skilled agent should be more consistent about checking weather
-        assert skilled_result.tool_was_called(
-            "get_weather"
-        ), "Skilled agent should always check weather"
+        assert skilled_result.tool_was_called("get_weather"), (
+            "Skilled agent should always check weather"
+        )

@@ -50,16 +50,17 @@ class TestWeatherWorkflows:
         assert "paris" in response_lower
         assert "sydney" in response_lower
         # AI judge validates recommendation quality
-        assert judge(result.final_response, """
+        assert judge(
+            result.final_response,
+            """
             - Compares weather between two cities
             - Makes a recommendation for one destination
             - Justifies the choice based on weather data
-        """)
+        """,
+        )
 
     @pytest.mark.asyncio
-    async def test_packing_advice_workflow(
-        self, aitest_run, weather_agent_factory
-    ):
+    async def test_packing_advice_workflow(self, aitest_run, weather_agent_factory):
         """Check multiple cities and provide packing advice.
 
         This tests:
@@ -86,9 +87,7 @@ class TestWeatherWorkflows:
         assert any(word in response_lower for word in ["umbrella", "rain", "wet"])
 
     @pytest.mark.asyncio
-    async def test_discovery_then_query_workflow(
-        self, aitest_run, weather_agent_factory
-    ):
+    async def test_discovery_then_query_workflow(self, aitest_run, weather_agent_factory):
         """Discover available cities, then query the warmest one.
 
         This tests:
@@ -113,9 +112,7 @@ class TestWeatherWorkflows:
         assert "sydney" in result.final_response.lower()
 
     @pytest.mark.asyncio
-    async def test_comparative_analysis_three_cities(
-        self, aitest_run, weather_agent_factory
-    ):
+    async def test_comparative_analysis_three_cities(self, aitest_run, weather_agent_factory):
         """Compare weather across three cities and rank them.
 
         This tests:
@@ -133,9 +130,8 @@ class TestWeatherWorkflows:
 
         assert result.success
         # Should gather data for all three cities
-        total_calls = (
-            result.tool_call_count("get_weather")
-            + result.tool_call_count("compare_weather")
+        total_calls = result.tool_call_count("get_weather") + result.tool_call_count(
+            "compare_weather"
         )
         assert total_calls >= 2  # At minimum, needs data from 3 cities
         # Response should mention all three cities
@@ -145,9 +141,7 @@ class TestWeatherWorkflows:
         assert "new york" in response_lower
 
     @pytest.mark.asyncio
-    async def test_error_recovery_workflow(
-        self, aitest_run, weather_agent_factory
-    ):
+    async def test_error_recovery_workflow(self, aitest_run, weather_agent_factory):
         """Handle an invalid city gracefully and provide alternatives.
 
         This tests:
@@ -167,10 +161,7 @@ class TestWeatherWorkflows:
         # Should try the invalid city first
         assert result.tool_was_called("get_weather")
         # Should recover by listing cities or getting a valid city's weather
-        assert (
-            result.tool_was_called("list_cities")
-            or result.tool_call_count("get_weather") >= 2
-        )
+        assert result.tool_was_called("list_cities") or result.tool_call_count("get_weather") >= 2
 
 
 # =============================================================================
@@ -234,16 +225,17 @@ class TestTodoWorkflows:
         assert result.tool_was_called("complete_task")
         assert result.tool_was_called("list_tasks")
         # AI judge validates the workflow report
-        assert judge(result.final_response, """
+        assert judge(
+            result.final_response,
+            """
             - Confirms task was added
             - Indicates task was marked complete
             - Shows or describes the final list state
-        """)
+        """,
+        )
 
     @pytest.mark.asyncio
-    async def test_priority_management_workflow(
-        self, aitest_run, todo_agent_factory
-    ):
+    async def test_priority_management_workflow(self, aitest_run, todo_agent_factory):
         """Create tasks with different priorities and query by priority.
 
         This tests:
@@ -338,9 +330,7 @@ class TestAdvancedPatterns:
     """Tests for more complex agent behaviors."""
 
     @pytest.mark.asyncio
-    async def test_ambiguous_request_clarification(
-        self, aitest_run, weather_agent_factory
-    ):
+    async def test_ambiguous_request_clarification(self, aitest_run, weather_agent_factory):
         """Handle ambiguous requests intelligently.
 
         This tests:
@@ -362,9 +352,7 @@ class TestAdvancedPatterns:
         # 3. List available European cities
         response_lower = result.final_response.lower()
         # Should mention at least one European city (Paris, Berlin, London)
-        assert any(
-            city in response_lower for city in ["paris", "berlin", "london"]
-        )
+        assert any(city in response_lower for city in ["paris", "berlin", "london"])
 
     @pytest.mark.asyncio
     async def test_conditional_logic_workflow(self, aitest_run, todo_agent_factory):

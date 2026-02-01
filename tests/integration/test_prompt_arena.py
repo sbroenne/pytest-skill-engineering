@@ -34,9 +34,7 @@ class TestPromptArena:
 
     @pytest.mark.parametrize("prompt", PROMPTS, ids=lambda p: p.name)
     @pytest.mark.asyncio
-    async def test_weather_query(
-        self, aitest_run, weather_server, prompt
-    ):
+    async def test_weather_query(self, aitest_run, weather_server, prompt):
         """Same query, different prompts - which responds best?"""
         agent = Agent(
             provider=Provider(model="azure/gpt-5-mini"),
@@ -52,9 +50,7 @@ class TestPromptArena:
 
     @pytest.mark.parametrize("prompt", PROMPTS, ids=lambda p: p.name)
     @pytest.mark.asyncio
-    async def test_multi_step_task(
-        self, aitest_run, weather_server, prompt
-    ):
+    async def test_multi_step_task(self, aitest_run, weather_server, prompt):
         """Multi-step task - prompts may differ in efficiency."""
         agent = Agent(
             provider=Provider(model="azure/gpt-5-mini"),
@@ -70,5 +66,7 @@ class TestPromptArena:
 
         assert result.success
         # Should have gathered weather data
-        tool_calls = result.tool_call_count("get_weather") + result.tool_call_count("compare_weather")
+        tool_calls = result.tool_call_count("get_weather") + result.tool_call_count(
+            "compare_weather"
+        )
         assert tool_calls >= 1
