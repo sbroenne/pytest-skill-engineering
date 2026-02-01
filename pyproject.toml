@@ -98,10 +98,10 @@ asyncio_mode = "auto"
 # pytest-aitest configuration.
 # LLM auth is handled by LiteLLM via standard env vars (AZURE_API_BASE, OPENAI_API_KEY, etc.)
 # Rate limits match Azure gpt-5-mini deployment: 10 RPM, 10K TPM
+# Note: --aitest-summary requires LLM credentials, use explicitly when needed
 addopts = """
 --aitest-model=azure/gpt-5-mini
 --aitest-html=aitest-reports/report.html
---aitest-summary
 --aitest-rpm=10
 --aitest-tpm=10000
 """
