@@ -1,0 +1,115 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "pytest-aitest"
+version = "0.1.0"
+description = "Pytest plugin for testing AI agents with MCP and CLI servers"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.11"
+authors = [
+    { name = "Stefan Brunner" }
+]
+keywords = ["pytest", "ai", "llm", "mcp", "testing", "agents"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Framework :: Pytest",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Testing",
+]
+dependencies = [
+    "pytest>=9.0",
+    "litellm>=1.81",
+    "mcp>=1.0.0",
+    "pydantic>=2.0",
+    "jinja2>=3.1",
+    "markdown>=3.5",
+    "pytest-llm-assert>=0.2.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=9.0",
+    "pytest-cov>=6.0",
+    "pytest-asyncio>=0.24",
+    "python-dotenv>=1.2",
+    "ruff>=0.14",
+    "pyright>=1.1.408",
+    "pre-commit>=4.5",
+]
+azure = [
+    "azure-identity>=1.25",
+]
+
+[project.entry-points.pytest11]
+aitest = "pytest_aitest.plugin"
+
+[project.urls]
+Homepage = "https://github.com/sbroenne/pytest-aitest"
+Repository = "https://github.com/sbroenne/pytest-aitest"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/pytest_aitest"]
+
+[tool.hatch.build.targets.wheel.sources]
+"src" = ""
+
+[tool.hatch.build]
+include = [
+    "src/pytest_aitest/**/*.py",
+    "src/pytest_aitest/**/*.md",
+    "src/pytest_aitest/**/*.html",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "B", "I"]
+
+[tool.ruff.lint.per-file-ignores]
+# Test harnesses have long tool descriptions for LLM readability
+"src/pytest_aitest/testing/*.py" = ["E501"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.pyright]
+include = ["src"]
+pythonVersion = "3.11"
+typeCheckingMode = "basic"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+asyncio_mode = "auto"
+# pytest-aitest configuration.
+# LLM auth is handled by LiteLLM via standard env vars (AZURE_API_BASE, OPENAI_API_KEY, etc.)
+# Rate limits match Azure gpt-5-mini deployment: 10 RPM, 10K TPM
+addopts = """
+--aitest-model=azure/gpt-5-mini
+--aitest-html=aitest-reports/report.html
+--aitest-summary
+--aitest-rpm=10
+--aitest-tpm=10000
+"""
+markers = [
+    "integration: marks tests as integration tests (require LLM credentials)",
+    "aitest: AI agent tests",
+    "basic: basic usage tests (weather and todo)",
+    "benchmark: model benchmark tests (compare LLMs)",
+    "arena: prompt arena tests (compare prompts)",
+    "matrix: matrix tests (model × prompt grid)",
+]

@@ -1,0 +1,8 @@
+# Default owners for everything in the repo
+* @sbroenne
+
+# Python source code
+/src/ @sbroenne
+
+# CI/CD configuration
+/.github/ @sbroenne
