@@ -2,8 +2,8 @@
 
 This guide walks through the **hero test suite** — a comprehensive example demonstrating all pytest-aitest capabilities in a single, cohesive banking scenario.
 
-!!! tip "See the Generated Report"
-    View the [hero report](../demo/hero-report.html) to see what the output looks like.
+!!! tip "Generate the Report"
+    Run `pytest tests/showcase/ -v --aitest-html=report.html` to generate the hero report.
 
 ## The Scenario: Personal Finance Assistant
 

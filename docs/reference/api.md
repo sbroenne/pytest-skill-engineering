@@ -59,8 +59,3 @@ Auto-generated API documentation from source code.
     options:
       show_source: false
       heading_level: 3
-
-::: pytest_aitest.core.prompt.load_system_prompt
-    options:
-      show_source: false
-      heading_level: 3
