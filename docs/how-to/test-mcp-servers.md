@@ -10,14 +10,18 @@ Test your Model Context Protocol (MCP) servers by running LLM agents against the
 
 pytest-aitest uses the [official MCP Python SDK](https://github.com/modelcontextprotocol/python-sdk) to connect to MCP servers:
 
-1. **Starts** the server as a subprocess via stdio transport
+1. **Connects** to the server via stdio, SSE, or Streamable HTTP transport
 2. **Discovers tools** via MCP protocol
 3. **Routes tool calls** from the LLM to the server
 4. **Returns results** back to the LLM
 
-## Defining a Server
+## Transports
 
-Start an MCP server as a subprocess:
+pytest-aitest supports all three MCP transports.
+
+### stdio (default)
+
+Launches a local subprocess and communicates via stdin/stdout:
 
 ```python
 import pytest
@@ -31,25 +35,77 @@ def banking_server():
     )
 ```
 
+### SSE
+
+Connects to a remote server using Server-Sent Events:
+
+```python
+@pytest.fixture(scope="module")
+def remote_server():
+    return MCPServer(
+        transport="sse",
+        url="http://localhost:8000/sse",
+    )
+```
+
+### Streamable HTTP
+
+Connects to a remote server using the Streamable HTTP transport (recommended for production):
+
+```python
+@pytest.fixture(scope="module")
+def remote_server():
+    return MCPServer(
+        transport="streamable-http",
+        url="http://localhost:8000/mcp",
+    )
+```
+
+### Authentication Headers
+
+Pass headers for authenticated endpoints. Headers support `${VAR}` expansion:
+
+```python
+@pytest.fixture(scope="module")
+def authenticated_server():
+    return MCPServer(
+        transport="streamable-http",
+        url="https://mcp.example.com/mcp",
+        headers={"Authorization": "Bearer ${MCP_API_TOKEN}"},
+    )
+```
+
 ### Configuration Options
 
 ```python
+# stdio transport
 MCPServer(
-    command=["python", "-m", "server"],  # Command to start server (required)
+    command=["python", "-m", "server"],  # Command to start server
     args=["--debug"],                     # Additional arguments
     env={"API_KEY": "xxx"},               # Environment variables
     cwd="/path/to/server",                # Working directory
     wait=Wait.for_tools(["tool1"]),       # Wait condition
 )
+
+# Remote transport (SSE or streamable-http)
+MCPServer(
+    transport="streamable-http",          # "sse" or "streamable-http"
+    url="http://localhost:8000/mcp",      # Server URL
+    headers={"Authorization": "Bearer ${TOKEN}"},  # Optional headers
+    wait=Wait.for_tools(["tool1"]),       # Wait condition
+)
 ```
 
-| Option | Description | Default |
-|--------|-------------|---------|
-| `command` | Command to start the MCP server | Required |
-| `args` | Additional command-line arguments | `[]` |
-| `env` | Environment variables (supports `${VAR}` expansion) | `{}` |
-| `cwd` | Working directory | Current directory |
-| `wait` | Wait condition for server startup | `Wait.ready()` |
+| Option | Transport | Description | Default |
+|--------|-----------|-------------|----------|
+| `transport` | All | `"stdio"`, `"sse"`, or `"streamable-http"` | `"stdio"` |
+| `command` | stdio | Command to start the MCP server | Required for stdio |
+| `args` | stdio | Additional command-line arguments | `[]` |
+| `url` | sse, streamable-http | Server endpoint URL | Required for remote |
+| `headers` | sse, streamable-http | HTTP headers (supports `${VAR}` expansion) | `{}` |
+| `env` | stdio | Environment variables (supports `${VAR}` expansion) | `{}` |
+| `cwd` | stdio | Working directory | Current directory |
+| `wait` | All | Wait condition for server startup | `Wait.ready()` |
 
 ### Wait Strategies
 

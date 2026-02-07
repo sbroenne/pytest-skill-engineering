@@ -81,12 +81,14 @@ nav:
     - Test MCP Servers: how-to/test-mcp-servers.md
     - Test CLI Tools: how-to/test-cli-tools.md
     - Generate Reports: how-to/generate-reports.md
+    - CI/CD Integration: how-to/ci-cd.md
     - Visual Testing: how-to/visual-testing.md
     - Fixture Testing: how-to/fixture-testing.md
     - Complete Example: how-to/complete-example.md
   - Reference:
     - Overview: reference/index.md
     - API: reference/api.md
+    - Assertions Cookbook: reference/assertions.md
     - CLI Options: reference/cli.md
     - AgentResult: reference/result.md
     - Configuration: reference/configuration.md

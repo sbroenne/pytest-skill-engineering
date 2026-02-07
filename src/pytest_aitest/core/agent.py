@@ -7,12 +7,15 @@ import re
 import uuid
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
     from pytest_aitest.core.skill import Skill
+
+#: Supported MCP transport types.
+Transport = Literal["stdio", "sse", "streamable-http"]
 
 
 class ClarificationLevel(Enum):
@@ -137,22 +140,74 @@ class Provider:
 class MCPServer:
     """MCP server configuration.
 
+    Supports three transports:
+
+    **stdio** (default) — Launches a local subprocess and communicates via
+    stdin/stdout. Requires ``command``.
+
+    **sse** — Connects to a remote server using Server-Sent Events.
+    Requires ``url``.
+
+    **streamable-http** — Connects to a remote server using the
+    Streamable HTTP transport (recommended for production).
+    Requires ``url``.
+
     Example:
+        # stdio (default)
         MCPServer(
             command=["npx", "-y", "@modelcontextprotocol/server-filesystem"],
             args=["--directory", "/workspace"],
         )
+
+        # SSE remote server
+        MCPServer(
+            transport="sse",
+            url="http://localhost:8000/sse",
+        )
+
+        # Streamable HTTP remote server
+        MCPServer(
+            transport="streamable-http",
+            url="http://localhost:8000/mcp",
+        )
+
+        # With custom headers (e.g. auth)
+        MCPServer(
+            transport="streamable-http",
+            url="https://mcp.example.com/mcp",
+            headers={"Authorization": "Bearer ${MCP_TOKEN}"},
+        )
     """
 
-    command: list[str]
+    command: list[str] = field(default_factory=list)
     args: list[str] = field(default_factory=list)
     env: dict[str, str] = field(default_factory=dict)
     wait: Wait = field(default_factory=Wait.ready)
     cwd: str | None = None
+    transport: Transport = "stdio"
+    url: str | None = None
+    headers: dict[str, str] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         # Expand env vars in environment
         self.env = {k: _expand_env(v) or v for k, v in self.env.items()}
+        # Expand env vars in headers
+        self.headers = {k: _expand_env(v) or v for k, v in self.headers.items()}
+        # Validate transport/field combinations
+        if self.transport == "stdio":
+            if not self.command:
+                msg = "MCPServer with transport='stdio' requires 'command'"
+                raise ValueError(msg)
+            if self.url:
+                msg = "MCPServer with transport='stdio' does not use 'url'"
+                raise ValueError(msg)
+        elif self.transport in ("sse", "streamable-http"):
+            if not self.url:
+                msg = f"MCPServer with transport='{self.transport}' requires 'url'"
+                raise ValueError(msg)
+            if self.command:
+                msg = f"MCPServer with transport='{self.transport}' does not use 'command'"
+                raise ValueError(msg)
 
 
 @dataclass(slots=True)

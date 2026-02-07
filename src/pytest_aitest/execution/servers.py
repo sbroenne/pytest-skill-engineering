@@ -6,18 +6,25 @@ import asyncio
 import contextlib
 import json
 import os
-import re
 import sys
 from typing import TYPE_CHECKING, Any
 
 from pytest_aitest.core.errors import ServerStartError
 
 if TYPE_CHECKING:
+    from mcp import ClientSession
+
     from pytest_aitest.core.agent import CLIServer, MCPServer
 
 
 class MCPServerProcess:
-    """Manages a single MCP server process.
+    """Manages an MCP server connection using the MCP SDK.
+
+    Supports all three transports via the SDK's ``ClientSession``:
+
+    - **stdio** — Launches a subprocess and communicates via stdin/stdout
+    - **sse** — Connects to a remote SSE endpoint
+    - **streamable-http** — Connects to a remote Streamable HTTP endpoint
 
     Example:
         server = MCPServerProcess(mcp_config)
@@ -29,198 +36,133 @@ class MCPServerProcess:
 
     def __init__(self, config: MCPServer) -> None:
         self.config = config
-        self._process: asyncio.subprocess.Process | None = None
+        self._session: ClientSession | None = None
         self._tools: dict[str, dict[str, Any]] = {}
-        self._reader_task: asyncio.Task[None] | None = None
-        self._pending_requests: dict[int, asyncio.Future[Any]] = {}
-        self._request_id = 0
+        self._exit_stack: contextlib.AsyncExitStack | None = None
 
     async def start(self) -> None:
-        """Start the MCP server process."""
+        """Start or connect to the MCP server and discover tools."""
+        from mcp import ClientSession as _ClientSession
+
         from pytest_aitest.core.agent import WaitStrategy
 
-        env = {**os.environ, **self.config.env}
-        cmd = self.config.command + self.config.args
+        self._exit_stack = contextlib.AsyncExitStack()
+        label = self._transport_label()
 
         try:
-            self._process = await asyncio.create_subprocess_exec(
-                *cmd,
-                stdin=asyncio.subprocess.PIPE,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-                env=env,
-                cwd=self.config.cwd,
+            read_stream, write_stream = await self._open_transport()
+
+            self._session = await self._exit_stack.enter_async_context(
+                _ClientSession(read_stream, write_stream)
             )
-        except (OSError, FileNotFoundError) as e:
-            raise ServerStartError("MCP", cmd, str(e)) from e
+            await self._session.initialize()
 
-        # Start background reader
-        self._reader_task = asyncio.create_task(self._read_responses())
+            # Discover tools
+            tools_result = await self._session.list_tools()
+            for tool in tools_result.tools:
+                self._tools[tool.name] = {
+                    "name": tool.name,
+                    "description": tool.description or "",
+                    "inputSchema": tool.inputSchema,
+                }
 
-        # Wait for server to be ready based on wait strategy
-        await self._wait_for_ready()
+            # Check tools if wait strategy requires it
+            if self.config.wait.strategy == WaitStrategy.TOOLS and self.config.wait.tools:
+                missing = set(self.config.wait.tools) - set(self._tools.keys())
+                if missing:
+                    raise ServerStartError("MCP", label, f"Required tools not available: {missing}")
 
-        # Initialize and get tools
-        await self._initialize()
-        await self._list_tools()
+        except ServerStartError:
+            raise
+        except Exception as e:
+            if self._exit_stack:
+                await self._exit_stack.aclose()
+                self._exit_stack = None
+            raise ServerStartError("MCP", label, str(e)) from e
 
-        # Check tools if wait strategy requires it
-        if self.config.wait.strategy == WaitStrategy.TOOLS and self.config.wait.tools:
-            missing = set(self.config.wait.tools) - set(self._tools.keys())
-            if missing:
-                raise ServerStartError("MCP", cmd, f"Required tools not available: {missing}")
+    async def _open_transport(self) -> tuple[Any, Any]:
+        """Open the appropriate transport and return (read_stream, write_stream)."""
+        assert self._exit_stack is not None  # noqa: S101
+
+        match self.config.transport:
+            case "stdio":
+                from mcp.client.stdio import StdioServerParameters, stdio_client
+
+                cmd = self.config.command
+                params = StdioServerParameters(
+                    command=cmd[0],
+                    args=[*cmd[1:], *self.config.args],
+                    env={**os.environ, **self.config.env} if self.config.env else None,
+                    cwd=self.config.cwd,
+                )
+                streams = await self._exit_stack.enter_async_context(stdio_client(params))
+                return streams[0], streams[1]
+
+            case "sse":
+                from mcp.client.sse import sse_client
+
+                url = self.config.url
+                assert url is not None  # noqa: S101 — validated in MCPServer.__post_init__
+                streams = await self._exit_stack.enter_async_context(
+                    sse_client(url, headers=self.config.headers or None)
+                )
+                return streams[0], streams[1]
+
+            case "streamable-http":
+                import httpx
+                from mcp.client.streamable_http import streamable_http_client
+
+                url = self.config.url
+                assert url is not None  # noqa: S101 — validated in MCPServer.__post_init__
+
+                http_client: httpx.AsyncClient | None = None
+                if self.config.headers:
+                    http_client = await self._exit_stack.enter_async_context(
+                        httpx.AsyncClient(headers=self.config.headers)
+                    )
+
+                streams = await self._exit_stack.enter_async_context(
+                    streamable_http_client(url, http_client=http_client)
+                )
+                return streams[0], streams[1]
+
+            case _:
+                msg = f"Unknown transport: {self.config.transport}"
+                raise ValueError(msg)
 
     async def stop(self) -> None:
-        """Stop the MCP server process."""
-        if self._reader_task:
-            self._reader_task.cancel()
-            with contextlib.suppress(asyncio.CancelledError):
-                await self._reader_task
-
-        if self._process:
-            self._process.terminate()
-            try:
-                await asyncio.wait_for(self._process.wait(), timeout=5.0)
-            except TimeoutError:
-                self._process.kill()
-
-    async def _wait_for_ready(self) -> None:
-        """Wait for server to be ready based on wait strategy."""
-        from pytest_aitest.core.agent import WaitStrategy
-
-        wait = self.config.wait
-        timeout_s = wait.timeout_ms / 1000
-
-        match wait.strategy:
-            case WaitStrategy.READY:
-                # Just wait a brief moment for process to start
-                await asyncio.sleep(0.1)
-
-            case WaitStrategy.LOG:
-                if wait.pattern and self._process and self._process.stderr:
-                    pattern = re.compile(wait.pattern)
-                    async with asyncio.timeout(timeout_s):
-                        while True:
-                            line = await self._process.stderr.readline()
-                            if not line:
-                                break
-                            if pattern.search(line.decode()):
-                                break
-
-            case WaitStrategy.TOOLS:
-                # Tools will be checked after initialization
-                pass
-
-    async def _read_responses(self) -> None:
-        """Background task to read JSON-RPC responses."""
-        if not self._process or not self._process.stdout:
-            return
-
-        buffer = b""
-        while True:
-            try:
-                chunk = await self._process.stdout.read(4096)
-                if not chunk:
-                    break
-                buffer += chunk
-
-                # Try to parse complete JSON messages
-                while b"\n" in buffer:
-                    line, buffer = buffer.split(b"\n", 1)
-                    if not line.strip():
-                        continue
-                    try:
-                        msg = json.loads(line)
-                        if "id" in msg and msg["id"] in self._pending_requests:
-                            future = self._pending_requests.pop(msg["id"])
-                            if "error" in msg:
-                                future.set_exception(
-                                    Exception(msg["error"].get("message", "Unknown error"))
-                                )
-                            else:
-                                future.set_result(msg.get("result"))
-                    except json.JSONDecodeError:
-                        continue
-            except asyncio.CancelledError:
-                break
-
-    async def _send_request(self, method: str, params: dict[str, Any] | None = None) -> Any:
-        """Send a JSON-RPC request and wait for response."""
-        if not self._process or not self._process.stdin:
-            raise RuntimeError("Server not started")
-
-        self._request_id += 1
-        request_id = self._request_id
-
-        request = {
-            "jsonrpc": "2.0",
-            "id": request_id,
-            "method": method,
-        }
-        if params:
-            request["params"] = params
-
-        future: asyncio.Future[Any] = asyncio.get_running_loop().create_future()
-        self._pending_requests[request_id] = future
-
-        data = json.dumps(request) + "\n"
-        self._process.stdin.write(data.encode())
-        await self._process.stdin.drain()
-
-        return await asyncio.wait_for(future, timeout=30.0)
-
-    async def _send_notification(self, method: str, params: dict[str, Any] | None = None) -> None:
-        """Send a JSON-RPC notification (no response expected)."""
-        if not self._process or not self._process.stdin:
-            raise RuntimeError("Server not started")
-
-        notification: dict[str, Any] = {
-            "jsonrpc": "2.0",
-            "method": method,
-        }
-        if params:
-            notification["params"] = params
-
-        data = json.dumps(notification) + "\n"
-        self._process.stdin.write(data.encode())
-        await self._process.stdin.drain()
-
-    async def _initialize(self) -> None:
-        """Send MCP initialize request."""
-        await self._send_request(
-            "initialize",
-            {
-                "protocolVersion": "2024-11-05",
-                "capabilities": {},
-                "clientInfo": {"name": "pytest-aitest", "version": "0.1.0"},
-            },
-        )
-        await self._send_notification("notifications/initialized")
-
-    async def _list_tools(self) -> None:
-        """Get available tools from server."""
-        result = await self._send_request("tools/list")
-        for tool in result.get("tools", []):
-            self._tools[tool["name"]] = tool
+        """Stop the MCP server / disconnect from remote."""
+        if self._exit_stack:
+            await self._exit_stack.aclose()
+            self._exit_stack = None
+        self._session = None
 
     def get_tools(self) -> dict[str, dict[str, Any]]:
         """Get available tools."""
         return self._tools
 
     async def call_tool(self, name: str, arguments: dict[str, Any]) -> str:
-        """Call a tool and return result."""
-        result = await self._send_request(
-            "tools/call",
-            {
-                "name": name,
-                "arguments": arguments,
-            },
-        )
-        # MCP returns content array
-        content = result.get("content", [])
-        if content and isinstance(content, list):
-            return content[0].get("text", str(content[0]))
-        return str(result)
+        """Call a tool and return result as text."""
+        if not self._session:
+            raise RuntimeError("Server not started")
+
+        from mcp import types
+
+        result = await self._session.call_tool(name, arguments)
+
+        # Extract text from content blocks
+        if result.content:
+            for block in result.content:
+                if isinstance(block, types.TextContent):
+                    return block.text
+            return str(result.content[0])
+        return ""
+
+    def _transport_label(self) -> list[str]:
+        """Human-readable label for error messages."""
+        if self.config.transport == "stdio":
+            return self.config.command + self.config.args
+        return [self.config.transport, self.config.url or ""]
 
 
 class CLIServerProcess:
@@ -505,7 +447,11 @@ class ServerManager:
 
         # MCP server tools
         for server in self._mcp_servers:
-            server_name = getattr(server.config, "name", None) or server.config.command[-1]
+            cfg = server.config
+            if cfg.transport == "stdio":
+                server_name = getattr(cfg, "name", None) or cfg.command[-1]
+            else:
+                server_name = getattr(cfg, "name", None) or cfg.url or cfg.transport
             for name, tool_def in server.get_tools().items():
                 tools_info.append(
                     ToolInfo(

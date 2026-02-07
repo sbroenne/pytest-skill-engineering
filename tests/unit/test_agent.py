@@ -148,6 +148,9 @@ class TestMCPServer:
         assert server.env == {}
         assert server.wait.strategy.value == "ready"
         assert server.cwd is None
+        assert server.transport == "stdio"
+        assert server.url is None
+        assert server.headers == {}
 
     def test_server_with_wait_for_tools(self) -> None:
         """MCPServer with Wait.for_tools()."""
@@ -157,3 +160,71 @@ class TestMCPServer:
         )
         assert server.wait.strategy.value == "tools"
         assert server.wait.tools == ("get_balance", "transfer")
+
+    def test_sse_transport(self) -> None:
+        """MCPServer with SSE transport requires url, no command."""
+        server = MCPServer(transport="sse", url="http://localhost:8000/sse")
+        assert server.transport == "sse"
+        assert server.url == "http://localhost:8000/sse"
+        assert server.command == []
+
+    def test_streamable_http_transport(self) -> None:
+        """MCPServer with streamable-http transport requires url."""
+        server = MCPServer(
+            transport="streamable-http",
+            url="http://localhost:8000/mcp",
+            headers={"Authorization": "Bearer test-token"},
+        )
+        assert server.transport == "streamable-http"
+        assert server.url == "http://localhost:8000/mcp"
+        assert server.headers == {"Authorization": "Bearer test-token"}
+
+    def test_stdio_requires_command(self) -> None:
+        """stdio transport without command raises ValueError."""
+        import pytest
+
+        with pytest.raises(ValueError, match="requires 'command'"):
+            MCPServer(transport="stdio")
+
+    def test_stdio_rejects_url(self) -> None:
+        """stdio transport with url raises ValueError."""
+        import pytest
+
+        with pytest.raises(ValueError, match="does not use 'url'"):
+            MCPServer(command=["python"], url="http://localhost")
+
+    def test_sse_requires_url(self) -> None:
+        """SSE transport without url raises ValueError."""
+        import pytest
+
+        with pytest.raises(ValueError, match="requires 'url'"):
+            MCPServer(transport="sse")
+
+    def test_sse_rejects_command(self) -> None:
+        """SSE transport with command raises ValueError."""
+        import pytest
+
+        with pytest.raises(ValueError, match="does not use 'command'"):
+            MCPServer(transport="sse", url="http://localhost", command=["python"])
+
+    def test_streamable_http_requires_url(self) -> None:
+        """streamable-http transport without url raises ValueError."""
+        import pytest
+
+        with pytest.raises(ValueError, match="requires 'url'"):
+            MCPServer(transport="streamable-http")
+
+    def test_headers_env_expansion(self) -> None:
+        """Headers expand ${VAR} patterns from environment."""
+        import os
+
+        os.environ["TEST_MCP_TOKEN"] = "secret-123"
+        try:
+            server = MCPServer(
+                transport="sse",
+                url="http://localhost:8000/sse",
+                headers={"Authorization": "Bearer ${TEST_MCP_TOKEN}"},
+            )
+            assert server.headers["Authorization"] == "Bearer secret-123"
+        finally:
+            del os.environ["TEST_MCP_TOKEN"]
