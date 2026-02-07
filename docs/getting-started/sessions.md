@@ -32,14 +32,12 @@ weather_agent = Agent(
 class TestWeatherConversation:
     """Tests run in order, sharing conversation history."""
     
-    @pytest.mark.asyncio
     async def test_initial_query(self, aitest_run):
         """First message - establishes context."""
         result = await aitest_run(weather_agent, "What's the weather in Paris?")
         assert result.success
         assert "Paris" in result.final_response
     
-    @pytest.mark.asyncio
     async def test_followup(self, aitest_run):
         """Second message - uses context from first."""
         result = await aitest_run(weather_agent, "What about tomorrow?")
@@ -47,7 +45,6 @@ class TestWeatherConversation:
         # Agent remembers we were talking about Paris
         assert result.tool_was_called("get_forecast")
     
-    @pytest.mark.asyncio
     async def test_recommendation(self, aitest_run):
         """Third message - builds on full conversation."""
         result = await aitest_run(weather_agent, "Should I bring an umbrella?")
@@ -104,7 +101,6 @@ You can combine sessions with model comparison:
 class TestShoppingWorkflow:
     """Test the same conversation flow with different models."""
     
-    @pytest.mark.asyncio
     async def test_browse(self, aitest_run, model, shopping_server):
         agent = Agent(
             name=f"shop-{model}",
@@ -114,7 +110,6 @@ class TestShoppingWorkflow:
         result = await aitest_run(agent, "Show me running shoes")
         assert result.success
     
-    @pytest.mark.asyncio
     async def test_select(self, aitest_run, model, shopping_server):
         agent = Agent(
             name=f"shop-{model}",

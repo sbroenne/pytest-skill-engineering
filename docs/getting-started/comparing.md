@@ -36,7 +36,6 @@ agent_with_skill = Agent(
 AGENTS = [agent_brief, agent_detailed, agent_with_skill]
 
 @pytest.mark.parametrize("agent", AGENTS, ids=lambda a: a.name)
-@pytest.mark.asyncio
 async def test_weather_query(aitest_run, agent):
     """Which configuration handles weather queries best?"""
     result = await aitest_run(agent, "What's the weather in Paris?")
@@ -82,7 +81,6 @@ AGENTS = [
 
 # 2 models × 2 prompts = 4 configurations
 @pytest.mark.parametrize("agent", AGENTS, ids=lambda a: a.name)
-@pytest.mark.asyncio
 async def test_weather_query(aitest_run, agent):
     """Test MCP server with different model/prompt combinations."""
     result = await aitest_run(agent, "What's the weather in Paris?")
@@ -114,8 +112,6 @@ The report shows an **Agent Leaderboard** (auto-detected when multiple agents ar
 | gpt-4.1-detailed | 100% | 892 | $0.012 |
 
 **Winning agent:** Highest pass rate → lowest cost (tiebreaker).
-
-Use `--aitest-min-pass-rate=N` to disqualify agents below N% (default: all shown).
 
 This helps you answer:
 

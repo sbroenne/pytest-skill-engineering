@@ -9,10 +9,8 @@ This guide walks through the **hero test suite** — a comprehensive example dem
 
 The hero test uses a **Banking MCP server** that simulates a personal finance application with:
 
-- **3 accounts**: checking ($1,500), savings ($3,000), emergency ($5,000)
-- **5 budget categories**: groceries, dining, entertainment, transportation, utilities
-- **2 savings goals**: vacation ($500/$2,000), emergency fund ($5,000/$10,000)
-- **16 tools**: balance checks, transfers, expense tracking, goal contributions
+- **2 accounts**: checking ($1,500), savings ($3,000)
+- **6 tools**: `get_balance`, `get_all_balances`, `transfer`, `deposit`, `withdraw`, `get_transactions`
 
 This realistic scenario lets us test how well an LLM can understand and coordinate multiple tools.
 
@@ -51,7 +49,6 @@ The simplest tests verify the agent can use individual tools correctly.
 class TestBasicOperations:
     """Basic single-tool operations demonstrating core functionality."""
 
-    @pytest.mark.asyncio
     async def test_check_single_balance(self, aitest_run, banking_server):
         """Check balance of one account - simplest possible test."""
         agent = Agent(
@@ -81,9 +78,8 @@ Complex operations require coordinating multiple tools in sequence.
 class TestMultiToolWorkflows:
     """Complex workflows requiring coordination of multiple tools."""
 
-    @pytest.mark.asyncio
-    async def test_complete_financial_snapshot(self, aitest_run, llm_assert, banking_server):
-        """Get complete financial picture - accounts, budgets, and goals."""
+    async def test_transfer_and_verify(self, aitest_run, llm_assert, banking_server):
+        """Transfer money and verify the result with balance check."""
         agent = Agent(
             provider=Provider(model=f"azure/{DEFAULT_MODEL}"),
             mcp_servers=[banking_server],
@@ -93,25 +89,23 @@ class TestMultiToolWorkflows:
 
         result = await aitest_run(
             agent,
-            "Give me a complete financial snapshot: all account balances, "
-            "my budget status, and progress on my savings goals.",
+            "Transfer $100 from checking to savings, then show me my new balances.",
         )
 
         assert result.success
         # Should use multiple tools
-        assert result.tool_was_called("get_all_balances") or result.tool_call_count("get_balance") >= 2
-        assert result.tool_was_called("get_budgets")
-        assert result.tool_was_called("get_savings_goals")
+        assert result.tool_was_called("transfer")
+        assert result.tool_was_called("get_all_balances") or result.tool_was_called("get_balance")
         assert llm_assert(
             result.final_response,
-            "provides a comprehensive overview including balances, budgets, and goals",
+            "shows updated balances after transfer",
         )
 ```
 
 **What this tests:**
 
 - Can the LLM break down a complex request?
-- Does it call all necessary tools?
+- Does it call the right tools in sequence?
 - Does it synthesize information coherently?
 
 ## 3. Session Continuity (Multi-Turn)
@@ -119,21 +113,20 @@ class TestMultiToolWorkflows:
 Session tests verify the agent maintains context across multiple turns.
 
 ```python
-@pytest.mark.session("vacation-planning")
-class TestVacationPlanningSession:
-    """Multi-turn session: Planning and saving for a vacation.
+@pytest.mark.session("savings-planning")
+class TestSavingsPlanningSession:
+    """Multi-turn session: Planning savings transfers.
     
     Tests that the agent remembers context across turns:
-    - Turn 1: Establish "Italy trip" context
-    - Turn 2: Reference "that trip" (must remember Italy)
-    - Turn 3: Ask "what was I saving for?" (only answerable from context)
+    - Turn 1: Check balances and discuss savings plan
+    - Turn 2: Reference the plan (must remember context)
+    - Turn 3: Verify the result
     """
 
-    @pytest.mark.asyncio
-    async def test_01_establish_goal_context(self, aitest_run, llm_assert, banking_server):
-        """First turn: establish the Italy trip savings goal."""
+    async def test_01_establish_context(self, aitest_run, llm_assert, banking_server):
+        """First turn: check balances and discuss savings goals."""
         agent = Agent(
-            name="vacation-01",  # Named agent for session tracking
+            name="savings-01",
             provider=Provider(model=f"azure/{DEFAULT_MODEL}"),
             mcp_servers=[banking_server],
             system_prompt=BANKING_PROMPT_BASE,
@@ -142,18 +135,17 @@ class TestVacationPlanningSession:
 
         result = await aitest_run(
             agent,
-            "I'm planning a trip to Italy next summer! Can you check my vacation "
-            "savings goal and tell me how much more I need to save?",
+            "I want to save more money. Can you check my accounts and suggest "
+            "how much I could transfer to savings each month?",
         )
 
         assert result.success
-        assert result.tool_was_called("get_savings_goals")
+        assert result.tool_was_called("get_all_balances") or result.tool_was_called("get_balance")
 
-    @pytest.mark.asyncio
     async def test_02_reference_without_naming(self, aitest_run, llm_assert, banking_server):
-        """Second turn: reference 'that trip' without saying Italy."""
+        """Second turn: reference previous context."""
         agent = Agent(
-            name="vacation-02",
+            name="savings-02",
             provider=Provider(model=f"azure/{DEFAULT_MODEL}"),
             mcp_servers=[banking_server],
             system_prompt=BANKING_PROMPT_BASE,
@@ -162,12 +154,12 @@ class TestVacationPlanningSession:
 
         result = await aitest_run(
             agent,
-            "For that trip I mentioned, can you check my budgets and suggest "
-            "where I could cut spending to save more?",
+            "That sounds good. Let's start by moving $200 to savings right now.",
         )
 
         assert result.success
-        # Agent should remember "Italy" from previous turn
+        # Agent should remember context and execute the transfer
+        assert result.tool_was_called("transfer")
 ```
 
 **What this tests:**
@@ -186,7 +178,6 @@ BENCHMARK_MODELS = ["gpt-5-mini", "gpt-4.1-mini"]
 class TestModelComparison:
     """Compare how different models handle complex financial advice."""
 
-    @pytest.mark.asyncio
     @pytest.mark.parametrize("model", BENCHMARK_MODELS)
     async def test_financial_advice_quality(self, aitest_run, llm_assert, banking_server, model: str):
         """Compare models on providing comprehensive financial advice."""
@@ -255,7 +246,6 @@ ADVISOR_PROMPTS = load_prompts(Path(__file__).parent / "prompts")
 class TestPromptComparison:
     """Compare how different prompt styles affect financial advice."""
 
-    @pytest.mark.asyncio
     @pytest.mark.parametrize("prompt", ADVISOR_PROMPTS, ids=lambda p: p.name)
     async def test_advice_style_comparison(self, aitest_run, llm_assert, banking_server, prompt):
         """Compare concise vs detailed vs friendly advisory styles."""
@@ -268,12 +258,12 @@ class TestPromptComparison:
 
         result = await aitest_run(
             agent,
-            "I'm worried about my spending. Can you review my budgets "
-            "and give me advice on managing my finances better?",
+            "I'm worried about my spending. Can you check my accounts "
+            "and give me advice on managing my money better?",
         )
 
         assert result.success
-        assert result.tool_was_called("get_budgets")
+        assert result.tool_was_called("get_all_balances") or result.tool_was_called("get_balance")
 ```
 
 **What this tests:**
@@ -316,7 +306,6 @@ Then use it in tests:
 class TestSkillEnhancement:
     """Test how skills improve financial advice quality."""
 
-    @pytest.mark.asyncio
     async def test_with_financial_skill(
         self, aitest_run, llm_assert, banking_server, financial_advisor_skill
     ):
@@ -356,7 +345,6 @@ Test graceful recovery from invalid operations.
 class TestErrorHandling:
     """Test graceful handling of edge cases and errors."""
 
-    @pytest.mark.asyncio
     async def test_insufficient_funds_recovery(self, aitest_run, llm_assert, banking_server):
         """Agent should handle insufficient funds gracefully."""
         agent = Agent(

@@ -89,9 +89,11 @@ nav:
   - Explanation:
     - Overview: explanation/index.md
     - Agents: explanation/agents.md
-    - Architecture: explanation/architecture.md
-    - AI-Powered Reports: explanation/ai-reports.md
-    - Report Structure: explanation/report-structure.md
+    - AI Analysis: explanation/ai-reports.md
+  - Contributing:
+    - Overview: contributing/index.md
+    - Architecture: contributing/architecture.md
+    - Report Structure: contributing/report-structure.md
 
 extra:
   social:

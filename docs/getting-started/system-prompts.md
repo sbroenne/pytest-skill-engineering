@@ -68,7 +68,6 @@ from pytest_aitest import Agent, Provider, load_system_prompts
 PROMPTS = load_system_prompts(Path("prompts/"))
 
 @pytest.mark.parametrize("name,system_prompt", PROMPTS.items())
-@pytest.mark.asyncio
 async def test_weather_query(aitest_run, weather_server, name, system_prompt):
     agent = Agent(
         provider=Provider(model="azure/gpt-5-mini"),

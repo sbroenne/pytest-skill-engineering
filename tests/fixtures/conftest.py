@@ -1,8 +1,4 @@
-"""Fixtures conftest - imports from integration tests."""
+"""Fixtures conftest - Azure auth configuration for llm_assert."""
 
-# Import all fixtures from integration conftest
-from tests.integration.conftest import (  # noqa: F401
-    banking_server,
-    todo_server,
-    weather_server,
-)
+# Re-export pytest_configure so llm_assert uses Azure instead of OpenAI
+from tests.integration.conftest import pytest_configure  # noqa: F401

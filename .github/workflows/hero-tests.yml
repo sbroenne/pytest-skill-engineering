@@ -1,0 +1,102 @@
+name: Hero Tests
+
+on:
+  pull_request:
+    types: [labeled]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  id-token: write
+  checks: write
+  pull-requests: write
+
+concurrency:
+  group: hero-tests-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  hero-tests:
+    name: Hero Tests (Azure OpenAI)
+    runs-on: ubuntu-latest
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'pull_request' && github.event.label.name == 'run-hero-tests')
+    environment: hero-tests
+
+    env:
+      AZURE_API_BASE: https://stbrnner1.cognitiveservices.azure.com/
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.head_ref || github.ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          version: "latest"
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: uv sync --all-extras
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Run hero tests
+        run: |
+          uv run pytest tests/showcase/ -v \
+            --aitest-html=docs/demo/hero-report.html \
+            --junitxml=hero-results.xml \
+            -o "addopts=--aitest-summary-model=azure/gpt-5.2-chat"
+
+      - name: Publish JUnit results
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Hero Test Results
+          path: hero-results.xml
+          reporter: java-junit
+          fail-on-error: false
+
+      - name: Upload HTML report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hero-report
+          path: |
+            docs/demo/hero-report.html
+            aitest-reports/results*.json
+
+      - name: Commit updated hero report
+        uses: stefanzweifel/git-auto-commit-action@v5
+        if: always()
+        with:
+          commit_message: "ci: update hero report [skip ci]"
+          file_pattern: docs/demo/hero-report.html
+
+      - name: Remove trigger label
+        uses: actions/github-script@v7
+        if: >-
+          always() &&
+          github.event_name == 'pull_request' &&
+          github.event.label.name == 'run-hero-tests'
+        with:
+          script: |
+            await github.rest.issues.removeLabel({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              name: 'run-hero-tests'
+            });

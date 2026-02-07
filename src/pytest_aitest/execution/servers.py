@@ -279,6 +279,7 @@ class CLIServerProcess:
 
     async def _run_command(self, args: str) -> dict[str, Any]:
         """Execute the CLI command with given arguments."""
+        import shlex
         import time
 
         start_time = time.perf_counter()
@@ -288,7 +289,14 @@ class CLIServerProcess:
             full_cmd = f"{full_cmd} {args}"
 
         # Build shell command
-        if self._shell in ("powershell", "pwsh"):
+        if self._shell == "none":
+            # Direct execution: no shell wrapper.
+            # Uses shlex.split to parse the command string into proper arguments,
+            # preserving quoted strings (e.g., JSON arrays with double quotes).
+            # This avoids shell-specific quoting issues (PowerShell strips inner
+            # double quotes when passing to native commands).
+            cmd = shlex.split(full_cmd, posix=True)
+        elif self._shell in ("powershell", "pwsh"):
             shell_exe = "powershell" if self._shell == "powershell" else "pwsh"
             cmd = [shell_exe, "-NoProfile", "-NonInteractive", "-Command", full_cmd]
         elif self._shell == "cmd":

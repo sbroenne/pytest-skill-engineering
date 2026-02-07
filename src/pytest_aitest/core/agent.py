@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import re
+import uuid
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import TYPE_CHECKING
@@ -185,8 +186,12 @@ class CLIExecution:
 class Agent:
     """AI agent configuration combining provider and servers.
 
-    The Agent is the unit of comparison in pytest-aitest. Give each agent
-    a meaningful name for identification in reports.
+    The Agent is the unit of comparison in pytest-aitest. Each agent has
+    a unique ``id`` (auto-generated UUID) that flows through the entire
+    pipeline — from test execution to report rendering.
+
+    Define agents at module level and parametrize tests with them so the
+    same Agent object (same UUID) is reused across tests:
 
     Example:
         Agent(
@@ -194,15 +199,6 @@ class Agent:
             provider=Provider(model="azure/gpt-5-mini"),
             mcp_servers=[weather_server],
             system_prompt="Be concise.",
-        )
-
-    With a skill:
-        skill = Skill.from_path("skills/weather-expert")
-        Agent(
-            name="weather-expert",
-            provider=Provider(model="azure/gpt-4.1"),
-            mcp_servers=[weather_server],
-            skill=skill,  # Skill content prepended to system_prompt
         )
 
     Comparing agents:
@@ -222,9 +218,11 @@ class Agent:
 
     provider: Provider
     name: str | None = None
+    id: str = field(default_factory=lambda: str(uuid.uuid4()))
     mcp_servers: list[MCPServer] = field(default_factory=list)
     cli_servers: list[CLIServer] = field(default_factory=list)
     system_prompt: str | None = None
     max_turns: int = 10
     skill: Skill | None = None
     allowed_tools: list[str] | None = None  # Filter to specific tools (None = all)
+    system_prompt_name: str | None = None  # Label for system prompt (for report grouping)

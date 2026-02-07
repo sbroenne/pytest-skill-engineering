@@ -8,17 +8,12 @@ from pathlib import Path
 from unittest import mock
 
 from pytest_aitest.cli import (
-    _deserialize_agent_result,
-    _deserialize_test,
-    _deserialize_tool_call,
-    _deserialize_turn,
     get_config_value,
     load_config_from_pyproject,
     load_suite_report,
     main,
 )
-from pytest_aitest.core.result import AgentResult, ToolCall, Turn
-from pytest_aitest.reporting.collector import TestReport
+from pytest_aitest.reporting.collector import SuiteReport
 
 
 class TestConfigLoading:
@@ -66,200 +61,98 @@ class TestConfigLoading:
         assert result == {}
 
 
-class TestDeserializeToolCall:
-    """Tests for ToolCall deserialization."""
-
-    def test_basic_tool_call(self) -> None:
-        data = {
-            "name": "get_weather",
-            "arguments": {"city": "Paris"},
-            "result": "Sunny, 20°C",
-            "error": None,
-        }
-        tc = _deserialize_tool_call(data)
-
-        assert isinstance(tc, ToolCall)
-        assert tc.name == "get_weather"
-        assert tc.arguments == {"city": "Paris"}
-        assert tc.result == "Sunny, 20°C"
-        assert tc.error is None
-
-    def test_tool_call_with_error(self) -> None:
-        data = {
-            "name": "read_file",
-            "arguments": {"path": "/missing"},
-            "result": None,
-            "error": "File not found",
-        }
-        tc = _deserialize_tool_call(data)
-
-        assert tc.error == "File not found"
-        assert tc.result is None
-
-
-class TestDeserializeTurn:
-    """Tests for Turn deserialization."""
-
-    def test_user_turn(self) -> None:
-        data = {
-            "role": "user",
-            "content": "What's the weather?",
-            "tool_calls": [],
-        }
-        turn = _deserialize_turn(data)
-
-        assert isinstance(turn, Turn)
-        assert turn.role == "user"
-        assert turn.content == "What's the weather?"
-        assert turn.tool_calls == []
-
-    def test_assistant_turn_with_tools(self) -> None:
-        data = {
-            "role": "assistant",
-            "content": "Here's the weather",
-            "tool_calls": [
-                {"name": "get_weather", "arguments": {}, "result": "Sunny", "error": None}
-            ],
-        }
-        turn = _deserialize_turn(data)
-
-        assert turn.role == "assistant"
-        assert len(turn.tool_calls) == 1
-        assert turn.tool_calls[0].name == "get_weather"
-
-
-class TestDeserializeAgentResult:
-    """Tests for AgentResult deserialization."""
-
-    def test_successful_result(self) -> None:
-        data = {
-            "success": True,
-            "error": None,
-            "duration_ms": 1500.0,
-            "token_usage": {"prompt": 100, "completion": 50},
-            "cost_usd": 0.001,
-            "turns": [
-                {"role": "user", "content": "Hello", "tool_calls": []},
-                {"role": "assistant", "content": "Hi!", "tool_calls": []},
-            ],
-        }
-        result = _deserialize_agent_result(data)
-
-        assert isinstance(result, AgentResult)
-        assert result.success is True
-        assert result.duration_ms == 1500.0
-        assert result.token_usage == {"prompt": 100, "completion": 50}
-        assert result.cost_usd == 0.001
-        assert len(result.turns) == 2
-
-    def test_failed_result(self) -> None:
-        data = {
-            "success": False,
-            "error": "Rate limit exceeded",
-            "duration_ms": 500.0,
-            "token_usage": {},
-            "cost_usd": 0.0,
-            "turns": [],
-        }
-        result = _deserialize_agent_result(data)
-
-        assert result.success is False
-        assert result.error == "Rate limit exceeded"
-
-
-class TestDeserializeTest:
-    """Tests for TestReport deserialization."""
-
-    def test_basic_test(self) -> None:
-        data = {
-            "name": "test_example",
-            "outcome": "passed",
-            "duration_ms": 100.0,
-            "metadata": {"model": "gpt-4"},
-        }
-        test = _deserialize_test(data)
-
-        assert isinstance(test, TestReport)
-        assert test.name == "test_example"
-        assert test.outcome == "passed"
-        assert test.duration_ms == 100.0
-        assert test.metadata == {"model": "gpt-4"}
-
-    def test_test_with_agent_result(self) -> None:
-        data = {
-            "name": "test_weather",
-            "outcome": "passed",
-            "duration_ms": 5000.0,
-            "metadata": {},
-            "agent_result": {
-                "success": True,
-                "error": None,
-                "duration_ms": 4000.0,
-                "token_usage": {"prompt": 200, "completion": 100},
-                "cost_usd": 0.002,
-                "turns": [],
-            },
-        }
-        test = _deserialize_test(data)
-
-        assert test.agent_result is not None
-        assert test.agent_result.success is True
-        assert test.agent_result.cost_usd == 0.002
-
-    def test_test_with_docstring(self) -> None:
-        data = {
-            "name": "test_example",
-            "outcome": "passed",
-            "duration_ms": 100.0,
-            "metadata": {},
-            "docstring": "Test that the example works correctly.",
-        }
-        test = _deserialize_test(data)
-
-        assert test.docstring == "Test that the example works correctly."
-
-
 class TestLoadSuiteReport:
     """Tests for loading SuiteReport from JSON."""
 
-    def test_load_basic_report(self, tmp_path: Path) -> None:
+    def test_load_v2_report(self, tmp_path: Path) -> None:
         json_data = {
+            "schema_version": "3.0",
             "name": "test-suite",
             "timestamp": "2026-01-31T12:00:00Z",
             "duration_ms": 1000.0,
-            "summary": {"passed": 2, "failed": 1, "skipped": 0},
+            "passed": 2,
+            "failed": 1,
+            "skipped": 0,
             "tests": [
-                {"name": "test_a", "outcome": "passed", "duration_ms": 100.0, "metadata": {}},
-                {"name": "test_b", "outcome": "passed", "duration_ms": 200.0, "metadata": {}},
-                {"name": "test_c", "outcome": "failed", "duration_ms": 300.0, "metadata": {}},
+                {
+                    "name": "test_a",
+                    "outcome": "passed",
+                    "duration_ms": 100.0,
+                    "agent_id": "a1",
+                    "agent_name": "a1",
+                    "model": "gpt-5-mini",
+                },
+                {
+                    "name": "test_b",
+                    "outcome": "passed",
+                    "duration_ms": 200.0,
+                    "agent_id": "a1",
+                    "agent_name": "a1",
+                    "model": "gpt-5-mini",
+                },
+                {
+                    "name": "test_c",
+                    "outcome": "failed",
+                    "duration_ms": 300.0,
+                    "agent_id": "a1",
+                    "agent_name": "a1",
+                    "model": "gpt-5-mini",
+                },
             ],
         }
         json_path = tmp_path / "results.json"
         json_path.write_text(json.dumps(json_data))
 
-        report, ai_summary, _insights = load_suite_report(json_path)
+        report, insights = load_suite_report(json_path)
 
+        assert isinstance(report, SuiteReport)
         assert report.name == "test-suite"
         assert report.passed == 2
         assert report.failed == 1
         assert len(report.tests) == 3
-        assert ai_summary is None
+        assert insights is None
 
-    def test_load_report_with_ai_summary(self, tmp_path: Path) -> None:
+    def test_load_report_with_insights(self, tmp_path: Path) -> None:
         json_data = {
+            "schema_version": "3.0",
             "name": "test-suite",
             "timestamp": "2026-01-31T12:00:00Z",
             "duration_ms": 1000.0,
-            "summary": {"passed": 1, "failed": 0, "skipped": 0},
+            "passed": 1,
+            "failed": 0,
+            "skipped": 0,
             "tests": [],
-            "ai_summary": "All tests passed successfully.",
+            "insights": {
+                "markdown_summary": "All tests passed successfully.",
+                "cost_usd": 0.01,
+                "tokens_used": 500,
+                "cached": False,
+            },
         }
         json_path = tmp_path / "results.json"
         json_path.write_text(json.dumps(json_data))
 
-        report, ai_summary, _insights = load_suite_report(json_path)
+        report, insights = load_suite_report(json_path)
 
-        assert ai_summary == "All tests passed successfully."
+        assert insights is not None
+        assert insights.markdown_summary == "All tests passed successfully."
+        assert insights.cost_usd == 0.01
+
+    def test_load_legacy_format_raises(self, tmp_path: Path) -> None:
+        """Legacy format (no schema_version) is no longer supported."""
+        json_data = {
+            "name": "old-suite",
+            "timestamp": "2025-01-01",
+            "duration_ms": 100.0,
+            "tests": [],
+        }
+        json_path = tmp_path / "results.json"
+        json_path.write_text(json.dumps(json_data))
+
+        import pytest
+
+        with pytest.raises(ValueError, match="Unsupported schema version"):
+            load_suite_report(json_path)
 
 
 class TestMainCLI:
@@ -271,26 +164,60 @@ class TestMainCLI:
 
     def test_no_output_format(self, tmp_path: Path) -> None:
         json_path = tmp_path / "results.json"
-        json_path.write_text('{"name": "test", "tests": [], "summary": {}}')
+        json_path.write_text(
+            json.dumps(
+                {
+                    "schema_version": "3.0",
+                    "name": "test",
+                    "timestamp": "2026-01-01",
+                    "duration_ms": 0,
+                    "tests": [],
+                    "passed": 0,
+                    "failed": 0,
+                }
+            )
+        )
 
         result = main([str(json_path)])
         assert result == 1  # Error: no output format specified
 
     def test_summary_without_model(self, tmp_path: Path) -> None:
         json_path = tmp_path / "results.json"
-        json_path.write_text('{"name": "test", "tests": [], "summary": {}}')
+        json_path.write_text(
+            json.dumps(
+                {
+                    "schema_version": "3.0",
+                    "name": "test",
+                    "timestamp": "2026-01-01",
+                    "duration_ms": 0,
+                    "tests": [],
+                    "passed": 0,
+                    "failed": 0,
+                }
+            )
+        )
 
         result = main([str(json_path), "--html", "out.html", "--summary"])
         assert result == 1  # Error: --summary requires --summary-model
 
     def test_generate_html(self, tmp_path: Path) -> None:
         json_data = {
+            "schema_version": "3.0",
             "name": "test-suite",
             "timestamp": "2026-01-31T12:00:00Z",
             "duration_ms": 100.0,
-            "summary": {"passed": 1, "failed": 0, "skipped": 0},
+            "passed": 1,
+            "failed": 0,
+            "skipped": 0,
             "tests": [
-                {"name": "test_a", "outcome": "passed", "duration_ms": 100.0, "metadata": {}}
+                {
+                    "name": "test_a",
+                    "outcome": "passed",
+                    "duration_ms": 100.0,
+                    "agent_id": "test-agent",
+                    "agent_name": "test-agent",
+                    "model": "test-model",
+                }
             ],
         }
         json_path = tmp_path / "results.json"

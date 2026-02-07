@@ -24,8 +24,9 @@ class AgentData:
     tokens: int
     duration_s: float
     skill: str | None = None
-    prompt_name: str | None = None
+    system_prompt_name: str | None = None
     is_winner: bool = False
+    disqualified: bool = False
 
 
 @dataclass(slots=True)

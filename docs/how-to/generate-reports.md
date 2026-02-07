@@ -46,22 +46,21 @@ pytest tests/ \
 | `--aitest-html=PATH` | Generate HTML report |
 | `--aitest-json=PATH` | Custom JSON path (default: `aitest-reports/results.json`) |
 | `--aitest-summary-model=MODEL` | Model for AI insights (**required**) |
+| `--aitest-min-pass-rate=N` | Fail if pass rate below N% (e.g., `80`) |
 
 ## Report Regeneration
 
 Regenerate reports from saved JSON without re-running tests:
 
 ```bash
-# Regenerate HTML from saved JSON
+# Regenerate HTML from saved JSON (reuses existing AI insights)
 pytest-aitest-report aitest-reports/results.json \
-    --html report.html \
-    --summary-model azure/gpt-5.2-chat
+    --html report.html
 
-# Force regeneration with a different model
+# Regenerate with fresh AI insights from a different model
 pytest-aitest-report results.json \
     --html report.html \
-    --summary-model azure/gpt-4.1 \
-    --regenerate
+    --summary --summary-model azure/gpt-4.1
 ```
 
 This is useful for:
@@ -82,12 +81,6 @@ When you test multiple agents, the report shows an **Agent Leaderboard** ranking
 
 **Winning Agent = Highest pass rate → Lowest cost (tiebreaker)**
 
-Use `--aitest-min-pass-rate=N` to disqualify agents below N%:
-
-```bash
-pytest tests/ --aitest-min-pass-rate=95
-```
-
 ### Dimension Detection
 
 The AI detects *what varies* between agents to focus its analysis:
@@ -101,27 +94,16 @@ The AI detects *what varies* between agents to focus its analysis:
 
 **Winning = Highest pass rate → Lowest cost (tiebreaker)**
 
-### Threshold Filtering
-
-Disqualify agents below a minimum pass rate:
-
-```bash
-pytest tests/ --aitest-min-pass-rate=95
-```
-
-Agents below threshold are grayed out but still shown for reference.
-
 ### Leaderboard Ranking
 
 When comparing Agents, rankings are based on:
 
 1. **Pass rate** (primary) — higher is better
-2. **Efficiency** (secondary) — passes per 1K tokens
-3. **Total cost** (tiebreaker) — lower is better
+2. **Total cost** (tiebreaker) — lower is better
 
 ## AI Insights
 
-Reports include AI-powered analysis with actionable recommendations. For a detailed explanation of each insight section, see [AI-Powered Reports](../explanation/ai-reports.md).
+Reports include AI analysis with actionable recommendations. For a detailed explanation of each insight section, see [AI Analysis](../explanation/ai-reports.md).
 
 ### Recommended Models
 
@@ -140,7 +122,7 @@ Use the **most capable model you can afford** for quality analysis:
 
 ## Report Structure
 
-For details on the HTML report layout including header, leaderboard, and test details, see [Report Structure](../explanation/report-structure.md).
+For details on the HTML report layout including header, leaderboard, and test details, see [Report Structure](../contributing/report-structure.md).
 
 ## JSON Report Structure
 
@@ -227,7 +209,99 @@ pytest-aitest automatically enriches JUnit XML with agent metadata as `<property
 
 These properties enable CI dashboards to display agent metrics alongside test results.
 
-### GitHub Actions Example
+### GitHub Actions
+
+This project includes a ready-to-use hero test workflow at `.github/workflows/hero-tests.yml`.
+
+#### How It Works
+
+1. **Trigger**: Add the `run-hero-tests` label to a PR, or run manually via `workflow_dispatch`
+2. **Authentication**: Uses Azure OIDC (Workload Identity Federation) — no stored API keys
+3. **Execution**: Runs `tests/showcase/` against Azure OpenAI with AI-powered insights
+4. **Results**:
+    - **JUnit annotations** on the PR checks tab (pass/fail per test)
+    - **HTML report artifact** downloadable from the workflow run
+    - **Auto-commit** of `docs/demo/hero-report.html` back to the branch
+5. **Cleanup**: The `run-hero-tests` label is automatically removed after completion
+
+#### Workflow Overview
+
+```yaml
+# .github/workflows/hero-tests.yml (simplified)
+- name: Azure login (OIDC)
+  uses: azure/login@v2
+  with:
+    client-id: ${{ secrets.AZURE_CLIENT_ID }}
+    tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+    subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+- name: Run hero tests
+  run: |
+    uv run pytest tests/showcase/ -v \
+      --aitest-html=docs/demo/hero-report.html \
+      --junitxml=hero-results.xml \
+      -o "addopts=--aitest-summary-model=azure/gpt-5.2-chat"
+
+- name: Publish JUnit results
+  uses: dorny/test-reporter@v1
+  if: always()
+  with:
+    name: Hero Test Results
+    path: hero-results.xml
+    reporter: java-junit
+
+- name: Upload HTML report
+  uses: actions/upload-artifact@v4
+  if: always()
+  with:
+    name: hero-report
+    path: |
+      docs/demo/hero-report.html
+      aitest-reports/results*.json
+
+- name: Commit updated hero report
+  uses: stefanzweifel/git-auto-commit-action@v5
+  if: success()
+  with:
+    commit_message: "ci: update hero report [skip ci]"
+    file_pattern: docs/demo/hero-report.html
+```
+
+#### Azure OIDC Setup (One-Time)
+
+To enable the workflow, configure Workload Identity Federation in Azure:
+
+1. **Create an App Registration** in Azure Entra ID
+2. **Add a federated credential** for your GitHub repo:
+    - Issuer: `https://token.actions.githubusercontent.com`
+    - Subject: `repo:YOUR_ORG/YOUR_REPO:environment:hero-tests`
+    - Audience: `api://AzureADTokenExchange`
+3. **Grant access**: Assign `Cognitive Services OpenAI User` role on your Azure OpenAI resource
+4. **Add GitHub secrets**:
+    - `AZURE_CLIENT_ID` — App Registration client ID
+    - `AZURE_TENANT_ID` — Azure AD tenant ID
+    - `AZURE_SUBSCRIPTION_ID` — Azure subscription ID
+5. **Create GitHub environment**: Named `hero-tests` (optional, for protection rules)
+6. **Create PR label**: Add `run-hero-tests` label to the repository
+
+!!! tip "No API Keys Required"
+    OIDC uses short-lived tokens exchanged at runtime. No secrets to rotate.
+
+#### Overriding pyproject.toml Defaults
+
+The `addopts` in `pyproject.toml` sets default report paths. The workflow overrides this using pytest's `-o` flag:
+
+```bash
+# Override addopts to avoid conflict with pyproject.toml defaults
+uv run pytest tests/showcase/ -v \
+  -o "addopts=--aitest-summary-model=azure/gpt-5.2-chat" \
+  --aitest-html=docs/demo/hero-report.html \
+  --junitxml=hero-results.xml
+```
+
+#### Custom Workflow
+
+For your own tests, adapt the pattern:
 
 ```yaml
 # .github/workflows/test.yml
@@ -255,7 +329,7 @@ These properties enable CI dashboards to display agent metrics alongside test re
     reporter: java-junit
 ```
 
-### Azure Pipelines Example
+### Azure Pipelines
 
 ```yaml
 - task: PublishTestResults@2

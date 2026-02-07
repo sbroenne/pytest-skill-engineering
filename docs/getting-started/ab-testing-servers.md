@@ -37,7 +37,6 @@ AGENTS = [
 ]
 
 @pytest.mark.parametrize("agent", AGENTS, ids=lambda a: a.name)
-@pytest.mark.asyncio
 async def test_weather_query(aitest_run, agent):
     result = await aitest_run(agent, "What's the weather in Paris?")
     assert result.success
@@ -70,7 +69,6 @@ Test whether a clearer description improves tool usage:
 # get_weather: "Get current weather for a city. Example: get_weather('Paris')"
 
 @pytest.mark.parametrize("agent", [agent_v1, agent_v2], ids=["vague", "clear"])
-@pytest.mark.asyncio
 async def test_tool_discovery(aitest_run, agent):
     result = await aitest_run(agent, "I'm planning a trip. What's it like in Tokyo?")
     assert result.tool_was_called("get_weather")
@@ -115,7 +113,6 @@ Test whether a new input schema is clearer:
 # v2: Separate "city" and "country" parameters
 
 @pytest.mark.parametrize("agent", [agent_v1, agent_v2])
-@pytest.mark.asyncio
 async def test_ambiguous_query(aitest_run, agent):
     # This query is ambiguous - does the LLM handle it correctly?
     result = await aitest_run(agent, "Weather in Paris, Texas")
@@ -128,15 +125,15 @@ Test servers across multiple models to find interactions:
 
 ```python
 MODELS = ["gpt-5-mini", "gpt-4.1"]
-SERVERS = [weather_v1, weather_v2]
+SERVERS = {"v1": weather_v1, "v2": weather_v2}
 
 AGENTS = [
     Agent(
-        name=f"{server.name}-{model}",
+        name=f"{server_name}-{model}",
         provider=Provider(model=f"azure/{model}"),
         mcp_servers=[server],
     )
-    for server in SERVERS
+    for server_name, server in SERVERS.items()
     for model in MODELS
 ]
 

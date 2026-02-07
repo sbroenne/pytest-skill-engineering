@@ -39,10 +39,11 @@ from pytest_aitest.execution import AgentEngine, RetryConfig, ServerManager  # n
 
 # Reporting
 from pytest_aitest.reporting import (  # noqa: E402
-    ReportCollector,
-    ReportGenerator,
     SuiteReport,
     TestReport,
+    build_suite_report,
+    generate_html,
+    generate_json,
 )
 
 __all__ = [  # noqa: RUF022
@@ -74,10 +75,11 @@ __all__ = [  # noqa: RUF022
     "RetryConfig",
     "ServerManager",
     # Reporting
-    "ReportCollector",
-    "ReportGenerator",
     "SuiteReport",
     "TestReport",
+    "build_suite_report",
+    "generate_html",
+    "generate_json",
 ]
 
 __version__ = "0.2.0"

@@ -22,14 +22,14 @@ ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
 from pytest_aitest.cli import load_suite_report  # noqa: E402
-from pytest_aitest.reporting.generator import ReportGenerator  # noqa: E402
+from pytest_aitest.reporting.generator import generate_html as _generate_html  # noqa: E402
 
 FIXTURES_DIR = ROOT / "tests" / "fixtures" / "reports"
 # Output to docs/reports for public viewing (tracked in git)
 OUTPUT_DIR = ROOT / "docs" / "reports"
 
 
-def generate_html(json_path: Path, output_dir: Path) -> Path:
+def generate_fixture_html(json_path: Path, output_dir: Path) -> Path:
     """Generate HTML from a JSON fixture.
 
     Args:
@@ -39,13 +39,12 @@ def generate_html(json_path: Path, output_dir: Path) -> Path:
     Returns:
         Path to generated HTML file
     """
-    # Load the fixture (returns 3-tuple: report, ai_summary, insights)
-    report, ai_summary, insights = load_suite_report(json_path)
+    # Load the fixture (returns 2-tuple: report, insights)
+    report, insights = load_suite_report(json_path)
 
     # Generate HTML
     output_path = output_dir / f"{json_path.stem}.html"
-    generator = ReportGenerator()
-    generator.generate_html(report, output_path, insights=insights)
+    _generate_html(report, output_path, insights=insights)
 
     return output_path
 
@@ -95,7 +94,7 @@ def main(argv: list[str] | None = None) -> int:
     for json_path in fixtures:
         print(f"  {json_path.name}...", end=" ")
         try:
-            html_path = generate_html(json_path, args.output)
+            html_path = generate_fixture_html(json_path, args.output)
             print(f"OK -> {html_path.name}")
             generated.append(html_path)
         except Exception as e:

@@ -25,11 +25,13 @@ class TestAddJunitProperties:
         result = AgentResult(
             turns=[],
             success=True,
-            agent_name="test-agent",
-            model="gpt-5-mini",
+        )
+        agent = Agent(
+            name="test-agent",
+            provider=Provider(model="azure/gpt-5-mini"),
         )
 
-        _add_junit_properties(report, result, {})
+        _add_junit_properties(report, result, agent)
 
         props = dict(report.user_properties)
         assert props["aitest.agent.name"] == "test-agent"
@@ -49,17 +51,21 @@ class TestAddJunitProperties:
             ),
         )
 
-        _add_junit_properties(report, result, {})
+        _add_junit_properties(report, result, None)
 
         props = dict(report.user_properties)
         assert props["aitest.skill"] == "weather-expert"
 
-    def test_prompt_from_metadata(self) -> None:
-        """Test system prompt name from metadata."""
+    def test_prompt_from_agent(self) -> None:
+        """Test system prompt name from agent."""
         report = MockReport()
         result = AgentResult(turns=[], success=True)
+        agent = Agent(
+            provider=Provider(model="azure/gpt-5-mini"),
+            system_prompt_name="concise",
+        )
 
-        _add_junit_properties(report, result, {"prompt": "concise"})
+        _add_junit_properties(report, result, agent)
 
         props = dict(report.user_properties)
         assert props["aitest.prompt"] == "concise"
@@ -71,13 +77,12 @@ class TestAddJunitProperties:
             turns=[],
             success=True,
             token_usage={
-                "prompt_tokens": 1250,
-                "completion_tokens": 89,
-                "total_tokens": 1339,
+                "prompt": 1250,
+                "completion": 89,
             },
         )
 
-        _add_junit_properties(report, result, {})
+        _add_junit_properties(report, result, None)
 
         props = dict(report.user_properties)
         assert props["aitest.tokens.input"] == "1250"
@@ -93,7 +98,7 @@ class TestAddJunitProperties:
             cost_usd=0.000425,
         )
 
-        _add_junit_properties(report, result, {})
+        _add_junit_properties(report, result, None)
 
         props = dict(report.user_properties)
         assert props["aitest.cost_usd"] == "0.000425"
@@ -110,7 +115,7 @@ class TestAddJunitProperties:
             success=True,
         )
 
-        _add_junit_properties(report, result, {})
+        _add_junit_properties(report, result, None)
 
         props = dict(report.user_properties)
         assert props["aitest.turns"] == "3"
@@ -139,7 +144,7 @@ class TestAddJunitProperties:
             success=True,
         )
 
-        _add_junit_properties(report, result, {})
+        _add_junit_properties(report, result, None)
 
         props = dict(report.user_properties)
         # Should be unique and sorted
@@ -150,7 +155,7 @@ class TestAddJunitProperties:
         report = MockReport()
         result = AgentResult(turns=[], success=False, error="Timeout")
 
-        _add_junit_properties(report, result, {})
+        _add_junit_properties(report, result, None)
 
         props = dict(report.user_properties)
         assert props["aitest.success"] == "false"
@@ -165,7 +170,7 @@ class TestAddJunitProperties:
         result = AgentResult(turns=[], success=True)
 
         # Should not raise
-        _add_junit_properties(report, result, {})
+        _add_junit_properties(report, result, None)
 
     def test_full_example(self) -> None:
         """Test complete example with all fields populated."""
@@ -179,14 +184,17 @@ class TestAddJunitProperties:
                 ),
             ],
             success=True,
-            agent_name="weather-agent",
-            model="gpt-5-mini",
             skill_info=SkillInfo(name="weather-expert", description="", instruction_content=""),
-            token_usage={"prompt_tokens": 500, "completion_tokens": 50, "total_tokens": 550},
+            token_usage={"prompt": 500, "completion": 50},
             cost_usd=0.00125,
         )
+        agent = Agent(
+            name="weather-agent",
+            provider=Provider(model="azure/gpt-5-mini"),
+            system_prompt_name="detailed",
+        )
 
-        _add_junit_properties(report, result, {"prompt": "detailed"})
+        _add_junit_properties(report, result, agent)
 
         props = dict(report.user_properties)
         assert props["aitest.agent.name"] == "weather-agent"
@@ -219,7 +227,7 @@ class TestAddJunitProperties:
             ],
         )
 
-        _add_junit_properties(report, result, {}, agent)
+        _add_junit_properties(report, result, agent)
 
         props = dict(report.user_properties)
         assert props["aitest.servers"] == "weather_mcp,calendar_mcp"
@@ -233,7 +241,7 @@ class TestAddJunitProperties:
             allowed_tools=["get_weather", "get_forecast"],
         )
 
-        _add_junit_properties(report, result, {}, agent)
+        _add_junit_properties(report, result, agent)
 
         props = dict(report.user_properties)
         assert props["aitest.allowed_tools"] == "get_forecast,get_weather"
@@ -250,21 +258,21 @@ class TestAddJunitProperties:
                 ),
             ],
             success=True,
-            agent_name="weather-agent",
-            model="gpt-5-mini",
             skill_info=SkillInfo(name="weather-expert", description="", instruction_content=""),
-            token_usage={"prompt_tokens": 500, "completion_tokens": 50, "total_tokens": 550},
+            token_usage={"prompt": 500, "completion": 50},
             cost_usd=0.00125,
         )
         agent = Agent(
+            name="weather-agent",
             provider=Provider(model="azure/gpt-5-mini"),
+            system_prompt_name="detailed",
             mcp_servers=[
                 MCPServer(command=["python", "-m", "weather_mcp"], wait=Wait.ready()),
             ],
             allowed_tools=["get_weather", "get_forecast"],
         )
 
-        _add_junit_properties(report, result, {"prompt": "detailed"}, agent)
+        _add_junit_properties(report, result, agent)
 
         props = dict(report.user_properties)
         assert props["aitest.agent.name"] == "weather-agent"

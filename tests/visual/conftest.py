@@ -11,7 +11,7 @@ from pathlib import Path
 import pytest
 
 from pytest_aitest.cli import load_suite_report
-from pytest_aitest.reporting.generator import ReportGenerator
+from pytest_aitest.reporting.generator import generate_html
 
 # Mark all tests in this directory as not needing aitest fixtures
 pytestmark = pytest.mark.usefixtures()
@@ -39,9 +39,8 @@ def _ensure_html_report(fixture_name: str) -> Path:
     html_path = GENERATED_HTML_DIR / f"{fixture_name}.html"
     if not html_path.exists():
         json_path = FIXTURES_DIR / f"{fixture_name}.json"
-        report, _, insights = load_suite_report(json_path)
-        generator = ReportGenerator()
-        generator.generate_html(report, html_path, insights=insights)
+        report, insights = load_suite_report(json_path)
+        generate_html(report, html_path, insights=insights)
     return html_path
 
 

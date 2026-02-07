@@ -68,9 +68,9 @@ This project uses automated tools to maintain code quality:
 pre-commit run --all-files
 
 # Or run individual tools
-ruff check .                 # Lint ❌
+ruff check .                 # Lint
 ruff format .                # Format
-pyright src                  # Type Check ❌
+pyright src                  # Type Check
 ```
 
 ### Pre-commit Hooks
@@ -78,11 +78,9 @@ pyright src                  # Type Check ❌
 Pre-commit hooks run automatically on `git commit`. If a hook fails, fix the issues and commit again.
 
 The hooks will:
-1. **Lint ❌** (ruff) — Auto-fix linting issues where possible
+1. **Lint** (ruff) — Auto-fix linting issues where possible
 2. **Format** (ruff) — Auto-format code
-3. **Type Check ❌** (pyright) — Validate type hints
-2. **ruff-format** — Format code consistently
-3. **pyright** — Check types
+3. **Type Check** (pyright) — Validate type hints
 
 ## Running Tests
 
@@ -97,7 +95,7 @@ pytest tests/integration/ -v
 pytest -v
 ```
 
-For detailed information about the test architecture, including the four-layer testing system and test fixtures, see **[Testing Architecture](docs/testing.md)**.
+For architecture details, report structure, and developer guides, see the **[Contributing docs](https://sbroenne.github.io/pytest-aitest/contributing/)**.
 
 ### Integration Tests
 
@@ -119,17 +117,18 @@ gcloud auth application-default login
 pytest-aitest/
 ├── src/pytest_aitest/
 │   ├── __init__.py      # Package exports
-│   ├── config.py        # Configuration handling
-│   ├── engine.py        # Test execution engine
-│   ├── fixtures.py      # pytest fixtures
-│   ├── plugin.py        # pytest plugin
-│   ├── reporting.py     # Report generation
-│   ├── result.py        # Test result types
-│   └── servers.py       # MCP/CLI server handling
+│   ├── cli.py           # CLI for report regeneration
+│   ├── plugin.py        # pytest plugin hooks
+│   ├── core/            # Core types (Agent, Provider, Result, Skill)
+│   ├── execution/       # Engine, server management, skill tools
+│   ├── fixtures/        # pytest fixtures (aitest_run, factories)
+│   ├── reporting/       # Collector, aggregator, insights, generator
+│   └── templates/       # Jinja2 + Tailwind HTML report templates
 ├── tests/
-│   ├── unit/            # Unit tests (mocked LLM calls)
-│   └── integration/     # Integration tests (real LLM calls)
-├── examples/            # Example usage patterns
+│   ├── unit/            # Pure logic tests (no LLM calls)
+│   ├── integration/     # Integration tests (real LLM calls)
+│   └── showcase/        # Hero report generation
+├── docs/                # MkDocs documentation
 ├── pyproject.toml       # Project configuration
 └── .pre-commit-config.yaml
 ```

@@ -9,8 +9,8 @@ Validate agent behavior using `AgentResult` properties and methods.
 | `success` | `bool` | Did the agent complete without errors? |
 | `final_response` | `str` | The agent's final text response |
 | `turns` | `list[Turn]` | All execution turns |
-| `duration_ms` | `int` | Total execution time |
-| `token_usage` | `TokenUsage` | Prompt/completion/total tokens |
+| `duration_ms` | `float` | Total execution time |
+| `token_usage` | `dict[str, int]` | Prompt and completion token counts |
 | `cost_usd` | `float` | Estimated cost in USD |
 | `error` | `str \| None` | Error message if failed |
 
@@ -147,16 +147,12 @@ uv add pytest-llm-assert
 ```
 
 ```python
-from pytest_llm_assert import LLMAssert
-
-judge = LLMAssert(model="azure/gpt-5-mini")
-
-@pytest.mark.asyncio
-async def test_response_quality(aitest_run, agent):
+async def test_response_quality(aitest_run, agent, llm_assert):
+    """Use the llm_assert fixture for semantic validation."""
     result = await aitest_run(agent, "What's the weather in Paris?")
     
     assert result.success
-    assert judge(result.final_response, "mentions weather conditions")
+    assert llm_assert(result.final_response, "mentions weather conditions")
 ```
 
 ## Complete Examples
@@ -164,7 +160,6 @@ async def test_response_quality(aitest_run, agent):
 ### Testing Tool Selection
 
 ```python
-@pytest.mark.asyncio
 async def test_correct_tool_selection(aitest_run, agent):
     result = await aitest_run(agent, "What's the weather in Paris?")
     
@@ -179,7 +174,6 @@ async def test_correct_tool_selection(aitest_run, agent):
 ### Testing Multi-Step Workflow
 
 ```python
-@pytest.mark.asyncio
 async def test_trip_planning(aitest_run, agent):
     result = await aitest_run(
         agent,

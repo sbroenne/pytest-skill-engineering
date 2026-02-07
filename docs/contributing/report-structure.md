@@ -77,7 +77,7 @@ Features:
 - **Toggle button** — Collapse/expand the section
 - **Markdown styling** — Headers, lists, code blocks, etc.
 
-For details on what the AI analyzes and how insights are generated, see [AI-Powered Reports](ai-reports.md).
+For details on what the AI analyzes and how insights are generated, see [AI Analysis](../explanation/ai-reports.md).
 
 ## 3. Agent Leaderboard
 

@@ -21,7 +21,7 @@ Then just `pytest tests/` — reports are generated automatically.
 | `--aitest-summary-model=MODEL` | Model for AI insights | Yes (for reports) |
 | `--aitest-html=PATH` | Generate HTML report | No |
 | `--aitest-json=PATH` | Custom JSON path | No (default: `aitest-reports/results.json`) |
-| `--aitest-min-pass-rate=N` | Disqualify agents below N% pass rate | No (default: 0) |
+| `--aitest-min-pass-rate=N` | Fail if overall pass rate below N% | No |
 
 ### CLI Examples
 
@@ -30,12 +30,6 @@ Then just `pytest tests/` — reports are generated automatically.
 pytest tests/ \
     --aitest-summary-model=azure/gpt-5.2-chat \
     --aitest-html=report.html
-
-# With threshold: only consider agents with ≥95% pass rate
-pytest tests/ \
-    --aitest-summary-model=azure/gpt-5.2-chat \
-    --aitest-html=report.html \
-    --aitest-min-pass-rate=95
 
 # With JSON output
 pytest tests/ \
@@ -54,34 +48,23 @@ pytest-aitest-report <json-file> [options]
 
 | Option | Description | Required |
 |--------|-------------|----------|
-| `--html PATH` | Generate HTML report | No |
-| `--summary-model MODEL` | Model for AI insights | Yes* |
-| `--regenerate` | Force regeneration of AI insights | No |
+| `--html PATH` | Generate HTML report | Yes |
+| `--summary` | Generate AI-powered summary | No |
+| `--summary-model MODEL` | Model for AI insights | Required with `--summary` |
 
-\* Required if JSON has placeholder insights. Can also be set via `AITEST_SUMMARY_MODEL` env var or `pyproject.toml`.
+`--summary-model` can also be set via `AITEST_SUMMARY_MODEL` env var or `[tool.pytest-aitest-report]` in `pyproject.toml`.
 
 ### Examples
 
 ```bash
-# Regenerate HTML (if JSON already has real insights)
+# Regenerate HTML from existing JSON (uses insights already in JSON)
 pytest-aitest-report results.json --html report.html
 
-# Generate with AI analysis (required if JSON has placeholder insights)
+# Generate with fresh AI analysis
 pytest-aitest-report results.json \
     --html report.html \
+    --summary \
     --summary-model azure/gpt-5.2-chat
-
-# Multiple formats
-pytest-aitest-report results.json \
-    --html report.html \
-    --md report.md \
-    --summary-model azure/gpt-5.2-chat
-
-# Force fresh AI analysis with different model
-pytest-aitest-report results.json \
-    --html report.html \
-    --summary-model azure/gpt-4.1 \
-    --regenerate
 ```
 
 ## Environment Variables

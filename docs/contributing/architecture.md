@@ -87,7 +87,7 @@ Every turn is recorded in the `AgentResult`:
 result = await aitest_run(agent, "What's the weather?")
 
 result.turns          # List of all conversation turns
-result.tool_calls     # All tool calls made
+result.all_tool_calls # All tool calls made
 result.final_response # The LLM's final text response
 result.success        # True if completed without errors
 ```

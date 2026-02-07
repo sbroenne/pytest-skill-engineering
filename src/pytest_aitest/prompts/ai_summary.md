@@ -74,7 +74,7 @@ Use these sections as needed (skip sections with no content):
 
 [For each prompt variant - skip if single prompt worked well:]
 
-### prompt_name (effective/mixed/ineffective)
+### system_prompt_name (effective/mixed/ineffective)
 - **Token count:** N
 - **Problem:** [What's wrong - too verbose? missing instructions? confusing?]
 - **Suggested change:** [Exact text to add/remove/replace]
@@ -122,6 +122,7 @@ Use these sections as needed (skip sections with no content):
 
 ### Recommendation
 - **Compare by**: pass rate → **cost** (primary metric) → response quality
+- **Disqualified agents**: If a minimum pass rate threshold is specified, agents below it are disqualified. Never recommend a disqualified agent for deployment. Mention them as disqualified in the Alternatives section.
 - **Emphasize cost over tokens**: Cost is what matters for ranking - mention cost first, then tokens
   - ✅ Good: "Achieves 100% pass rate at 60% lower cost (~65% fewer tokens)"
   - ❌ Bad: "Achieves 100% pass rate at 65% lower token usage and cost"

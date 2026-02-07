@@ -121,7 +121,6 @@ agent_with_skill = Agent(
 AGENTS = [agent_without_skill, agent_with_skill]
 
 @pytest.mark.parametrize("agent", AGENTS, ids=lambda a: a.name)
-@pytest.mark.asyncio
 async def test_clothing_recommendation(aitest_run, agent):
     """Does the skill improve clothing recommendations?"""
     result = await aitest_run(

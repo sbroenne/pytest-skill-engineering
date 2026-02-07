@@ -8,14 +8,12 @@ import pytest
 
 from pytest_aitest.core.result import AgentResult, ToolCall, Turn
 from pytest_aitest.reporting import (
-    ReportCollector,
-    ReportGenerator,
     SuiteReport,
     TestReport,
+    build_suite_report,
+    generate_html,
     generate_mermaid_sequence,
-    generate_session_mermaid,
 )
-from pytest_aitest.reporting.aggregator import SessionGroup
 
 
 class TestTestReport:
@@ -136,50 +134,18 @@ class TestSuiteReport:
         stats = suite.token_stats
         assert stats == {"min": 0, "max": 0, "avg": 0}
 
-    def test_cost_stats(self) -> None:
-        results = [
-            AgentResult(turns=[], success=True, cost_usd=0.01),
-            AgentResult(turns=[], success=True, cost_usd=0.02),
-            AgentResult(turns=[], success=True, cost_usd=0.03),
-        ]
-        suite = SuiteReport(
-            name="suite",
-            timestamp="2026-01-31T00:00:00Z",
-            duration_ms=1000.0,
-            tests=[
-                TestReport(name=f"t{i}", outcome="passed", duration_ms=100.0, agent_result=r)
-                for i, r in enumerate(results)
-            ],
-            passed=3,
-        )
-        stats = suite.cost_stats
-        assert stats["min"] == pytest.approx(0.01)
-        assert stats["max"] == pytest.approx(0.03)
-        assert stats["avg"] == pytest.approx(0.02)
 
-    def test_cost_stats_empty(self) -> None:
-        suite = SuiteReport(name="suite", timestamp="2026-01-31T00:00:00Z", duration_ms=0.0)
-        stats = suite.cost_stats
-        assert stats == {"min": 0.0, "max": 0.0, "avg": 0.0}
-
-
-class TestReportCollector:
-    """Tests for ReportCollector."""
-
-    def test_add_test(self) -> None:
-        collector = ReportCollector()
-        report = TestReport(name="test_foo", outcome="passed", duration_ms=100.0)
-        collector.add_test(report)
-        assert len(collector.tests) == 1
-        assert collector.tests[0].name == "test_foo"
+class TestBuildSuiteReport:
+    """Tests for build_suite_report function."""
 
     def test_build_suite_report(self) -> None:
-        collector = ReportCollector()
-        collector.add_test(TestReport(name="t1", outcome="passed", duration_ms=100.0))
-        collector.add_test(TestReport(name="t2", outcome="failed", duration_ms=200.0))
-        collector.add_test(TestReport(name="t3", outcome="skipped", duration_ms=50.0))
+        tests = [
+            TestReport(name="t1", outcome="passed", duration_ms=100.0),
+            TestReport(name="t2", outcome="failed", duration_ms=200.0),
+            TestReport(name="t3", outcome="skipped", duration_ms=50.0),
+        ]
 
-        suite = collector.build_suite_report("my-suite")
+        suite = build_suite_report(tests, "my-suite")
 
         assert suite.name == "my-suite"
         assert suite.passed == 1
@@ -190,19 +156,14 @@ class TestReportCollector:
         assert len(suite.tests) == 3
 
     def test_build_suite_report_empty(self) -> None:
-        collector = ReportCollector()
-        suite = collector.build_suite_report("empty")
+        suite = build_suite_report([], "empty")
 
         assert suite.name == "empty"
         assert suite.total == 0
 
 
 class TestReportGenerator:
-    """Tests for ReportGenerator."""
-
-    @pytest.fixture
-    def generator(self) -> ReportGenerator:
-        return ReportGenerator()
+    """Tests for generate_html/generate_json."""
 
     @pytest.fixture
     def sample_suite(self) -> SuiteReport:
@@ -230,23 +191,27 @@ class TestReportGenerator:
                     outcome="passed",
                     duration_ms=200.0,
                     agent_result=result,
+                    agent_id="test-agent",
+                    agent_name="test-agent",
+                    model="test-model",
                 ),
                 TestReport(
                     name="test_failed",
                     outcome="failed",
                     duration_ms=300.0,
                     error="AssertionError: expected True",
+                    agent_id="test-agent",
+                    agent_name="test-agent",
+                    model="test-model",
                 ),
             ],
             passed=1,
             failed=1,
         )
 
-    def test_generate_html(
-        self, generator: ReportGenerator, sample_suite: SuiteReport, tmp_path: Path
-    ) -> None:
+    def test_generate_html(self, sample_suite: SuiteReport, tmp_path: Path) -> None:
         output = tmp_path / "report.html"
-        generator.generate_html(sample_suite, output)
+        generate_html(sample_suite, output)
 
         assert output.exists()
         html = output.read_text(encoding="utf-8")
@@ -258,20 +223,14 @@ class TestReportGenerator:
         assert "2 tests" in html or "1 Failed" in html  # summary stats shown differently now
 
     def test_generate_html_contains_mermaid(
-        self, generator: ReportGenerator, sample_suite: SuiteReport, tmp_path: Path
+        self, sample_suite: SuiteReport, tmp_path: Path
     ) -> None:
         output = tmp_path / "report.html"
-        generator.generate_html(sample_suite, output)
+        generate_html(sample_suite, output)
 
         html = output.read_text(encoding="utf-8")
         # Should contain Mermaid sequence diagram
         assert "sequenceDiagram" in html or "mermaid" in html.lower()
-
-    def test_format_cost(self) -> None:
-        assert ReportGenerator._format_cost(0) == "N/A"
-        assert ReportGenerator._format_cost(0.001) == "$0.001000"
-        assert ReportGenerator._format_cost(0.01) == "$0.0100"
-        assert ReportGenerator._format_cost(1.5) == "$1.5000"
 
 
 class TestGenerateMermaidSequence:
@@ -361,104 +320,6 @@ class TestGenerateMermaidSequence:
         assert "'hello'" in mermaid
 
 
-class TestGenerateSessionMermaid:
-    """Tests for generate_session_mermaid function."""
-
-    def test_empty_session_returns_empty_string(self) -> None:
-        session = SessionGroup(name="Empty", tests=[], is_session=True)
-        mermaid = generate_session_mermaid(session)
-        assert mermaid == ""
-
-    def test_basic_session_flow(self) -> None:
-        result1 = AgentResult(
-            turns=[
-                Turn(role="user", content="Hello there"),
-                Turn(role="assistant", content="Hi!"),
-            ],
-            success=True,
-        )
-        result2 = AgentResult(
-            turns=[
-                Turn(role="user", content="Follow up question"),
-                Turn(role="assistant", content="Response"),
-            ],
-            success=True,
-            session_context_count=2,
-        )
-        test1 = TestReport(
-            name="file.py::TestClass::test_step1",
-            outcome="passed",
-            duration_ms=100.0,
-            agent_result=result1,
-        )
-        test2 = TestReport(
-            name="file.py::TestClass::test_step2",
-            outcome="passed",
-            duration_ms=150.0,
-            agent_result=result2,
-        )
-        session = SessionGroup(name="TestClass", tests=[test1, test2], is_session=True)
-
-        mermaid = generate_session_mermaid(session)
-
-        assert "sequenceDiagram" in mermaid
-        assert "participant T0 as test_step1" in mermaid
-        assert "participant T1 as test_step2" in mermaid
-        assert "participant Agent" in mermaid
-        assert "T0->>Agent" in mermaid
-        assert "T1->>Agent" in mermaid
-        assert "Note over T0,T1" in mermaid
-
-    def test_session_with_tool_calls(self) -> None:
-        result = AgentResult(
-            turns=[
-                Turn(role="user", content="Do something"),
-                Turn(
-                    role="assistant",
-                    content="Done",
-                    tool_calls=[
-                        ToolCall(name="tool1", arguments={"x": 1}, result="ok"),
-                        ToolCall(name="tool2", arguments={"y": 2}, result="ok"),
-                    ],
-                ),
-            ],
-            success=True,
-        )
-        test = TestReport(
-            name="file.py::TestClass::test_with_tools",
-            outcome="passed",
-            duration_ms=100.0,
-            agent_result=result,
-        )
-        session = SessionGroup(name="TestClass", tests=[test], is_session=True)
-
-        mermaid = generate_session_mermaid(session)
-
-        assert "Response (2 tool calls)" in mermaid
-
-    def test_session_without_tool_calls(self) -> None:
-        result = AgentResult(
-            turns=[
-                Turn(role="user", content="Hi"),
-                Turn(role="assistant", content="Hello"),
-            ],
-            success=True,
-        )
-        test = TestReport(
-            name="file.py::TestClass::test_no_tools",
-            outcome="passed",
-            duration_ms=100.0,
-            agent_result=result,
-        )
-        session = SessionGroup(name="TestClass", tests=[test], is_session=True)
-
-        mermaid = generate_session_mermaid(session)
-
-        # Should show "Response" without tool call count
-        assert "Agent-->>T0: Response" in mermaid
-        assert "tool calls" not in mermaid
-
-
 @pytest.mark.skip(reason="Template v3 uses Agent Leaderboard instead of Model Leaderboard")
 class TestModelRankingSortOrder:
     """Tests for model leaderboard sorting logic.
@@ -468,10 +329,6 @@ class TestModelRankingSortOrder:
     2. Cost (ascending) - lower cost wins when pass rates are equal
     3. Name (ascending) - alphabetical tiebreaker
     """
-
-    @pytest.fixture
-    def generator(self) -> ReportGenerator:
-        return ReportGenerator()
 
     def _make_report_with_models(self, model_stats: list[dict]) -> SuiteReport:
         """Create a report with specific model statistics.
@@ -498,7 +355,9 @@ class TestModelRankingSortOrder:
                         outcome="passed",
                         duration_ms=100.0,
                         agent_result=result,
-                        metadata={"model": model},
+                        agent_id=model,
+                        agent_name=model,
+                        model=model,
                     )
                 )
             for i in range(failed):
@@ -513,7 +372,9 @@ class TestModelRankingSortOrder:
                         outcome="failed",
                         duration_ms=100.0,
                         agent_result=result,
-                        metadata={"model": model},
+                        agent_id=model,
+                        agent_name=model,
+                        model=model,
                     )
                 )
 
@@ -526,7 +387,7 @@ class TestModelRankingSortOrder:
             failed=sum(s.get("failed", 0) for s in model_stats),
         )
 
-    def test_higher_pass_rate_wins(self, generator: ReportGenerator, tmp_path: Path):
+    def test_higher_pass_rate_wins(self, tmp_path: Path):
         """Model with higher pass rate should rank first."""
         report = self._make_report_with_models(
             [
@@ -536,7 +397,7 @@ class TestModelRankingSortOrder:
         )
 
         output = tmp_path / "report.html"
-        generator.generate_html(report, output)
+        generate_html(report, output)
         html = output.read_text(encoding="utf-8")
 
         # Find the leaderboard section
@@ -547,7 +408,7 @@ class TestModelRankingSortOrder:
         # In the leaderboard, model-b (100%) should come before model-a (80%)
         assert leaderboard_html.index("model-b") < leaderboard_html.index("model-a")
 
-    def test_lower_cost_wins_when_pass_rate_equal(self, generator: ReportGenerator, tmp_path: Path):
+    def test_lower_cost_wins_when_pass_rate_equal(self, tmp_path: Path):
         """When pass rates are equal, lower cost should win."""
         report = self._make_report_with_models(
             [
@@ -557,7 +418,7 @@ class TestModelRankingSortOrder:
         )
 
         output = tmp_path / "report.html"
-        generator.generate_html(report, output)
+        generate_html(report, output)
         html = output.read_text(encoding="utf-8")
 
         # Find the leaderboard section
@@ -568,9 +429,7 @@ class TestModelRankingSortOrder:
         # gpt-5-mini (cheaper) should come before gpt-4.1 when both are 100%
         assert leaderboard_html.index("gpt-5-mini") < leaderboard_html.index("gpt-4.1")
 
-    def test_alphabetical_when_pass_rate_and_cost_equal(
-        self, generator: ReportGenerator, tmp_path: Path
-    ):
+    def test_alphabetical_when_pass_rate_and_cost_equal(self, tmp_path: Path):
         """When pass rate and cost are equal, alphabetical order wins."""
         report = self._make_report_with_models(
             [
@@ -580,7 +439,7 @@ class TestModelRankingSortOrder:
         )
 
         output = tmp_path / "report.html"
-        generator.generate_html(report, output)
+        generate_html(report, output)
         html = output.read_text(encoding="utf-8")
 
         # Find the leaderboard section
@@ -591,7 +450,7 @@ class TestModelRankingSortOrder:
         # model-a should come before model-z alphabetically
         assert leaderboard_html.index("model-a") < leaderboard_html.index("model-z")
 
-    def test_real_world_scenario_ai_summary_match(self, generator: ReportGenerator, tmp_path: Path):
+    def test_real_world_scenario_ai_summary_match(self, tmp_path: Path):
         """Test the real-world scenario from the bug report.
 
         Both models at 100%, but gpt-5-mini is cheaper and should win.
@@ -605,7 +464,7 @@ class TestModelRankingSortOrder:
         )
 
         output = tmp_path / "report.html"
-        generator.generate_html(report, output)
+        generate_html(report, output)
         html = output.read_text(encoding="utf-8")
 
         # Find the leaderboard section

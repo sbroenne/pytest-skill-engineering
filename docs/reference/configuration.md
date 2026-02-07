@@ -77,13 +77,15 @@ provider = Provider(
 from pytest_aitest import Agent, Provider, MCPServer
 
 agent = Agent(
-    provider=Provider(model=\"azure/gpt-5-mini\"),
+    provider=Provider(model="azure/gpt-5-mini"),
     mcp_servers=[server],               # MCP servers
     cli_servers=[cli],                  # CLI servers (optional)
-    system_prompt=\"You are...\",         # System prompt (optional)
+    system_prompt="You are...",         # System prompt (optional)
     skill=my_skill,                     # Agent Skill (optional)
     max_turns=10,                       # Max tool-call rounds
-    name=\"my-agent\",                    # Identifier for reports (optional)    allowed_tools=["tool1", "tool2"],   # Filter tools (optional, reduces tokens))
+    name="my-agent",                    # Identifier for reports (optional)
+    allowed_tools=["tool1", "tool2"],   # Filter tools (optional, reduces tokens)
+)
 ```
 
 ## MCP Server Configuration
@@ -125,7 +127,6 @@ See [Test CLI Tools](../how-to/test-cli-tools.md) for complete options.
 The main fixture for running tests:
 
 ```python
-@pytest.mark.asyncio
 async def test_weather(aitest_run):
     agent = Agent(
         name="weather",

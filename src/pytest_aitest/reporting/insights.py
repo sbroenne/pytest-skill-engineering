@@ -6,6 +6,7 @@ import hashlib
 import json
 import logging
 import time
+from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -17,6 +18,22 @@ from pytest_aitest.core.auth import get_azure_ad_token_provider
 if TYPE_CHECKING:
     from pytest_aitest.core.result import SkillInfo, ToolInfo
     from pytest_aitest.reporting.collector import SuiteReport
+
+
+@dataclass(slots=True)
+class InsightsResult:
+    """Result of AI insights generation.
+
+    Contains the markdown analysis and metadata about the generation.
+    """
+
+    markdown_summary: str
+    model: str
+    tokens_used: int = 0
+    cost_usd: float = 0.0
+    duration_ms: float = 0.0
+    cached: bool = False
+
 
 _logger = logging.getLogger(__name__)
 
@@ -37,9 +54,21 @@ def _build_analysis_input(
     tool_info: list[ToolInfo],
     skill_info: list[SkillInfo],
     prompts: dict[str, str],
+    *,
+    min_pass_rate: int | None = None,
 ) -> str:
     """Build the complete analysis input with all context."""
     sections = []
+
+    # Pass rate threshold
+    if min_pass_rate is not None:
+        sections.append(f"## Minimum Pass Rate Threshold: {min_pass_rate}%\n")
+        sections.append(
+            f"Agents with pass rate below {min_pass_rate}% are **disqualified**. "
+            "Exclude disqualified agents from your Recommendation. "
+            "Do not recommend a disqualified agent for deployment. "
+            "Still analyze their failures in the Failure Analysis section.\n"
+        )
 
     # Test results summary
     sections.append("## Test Results\n")
@@ -52,11 +81,11 @@ def _build_analysis_input(
             sections.append(f"- Error: {test.error}")
         if test.agent_result:
             ar = test.agent_result
-            # Include agent identity for this specific test
-            if ar.agent_name:
-                sections.append(f"- Agent: {ar.agent_name}")
-            if ar.model:
-                sections.append(f"- Model: {ar.model}")
+            # Include agent identity for this specific test (from TestReport, not AgentResult)
+            if test.agent_name:
+                sections.append(f"- Agent: {test.agent_name}")
+            if test.model:
+                sections.append(f"- Model: {test.model}")
             if ar.skill_info:
                 sections.append(f"- Skill: {ar.skill_info.name}")
             sections.append(f"- Duration: {ar.duration_ms:.0f}ms")
@@ -140,16 +169,6 @@ def _get_results_hash(suite_report: SuiteReport) -> str:
     return hashlib.sha256(content.encode()).hexdigest()[:16]
 
 
-def create_placeholder_insights() -> str:
-    """Create placeholder insights for internal use only.
-
-    Note: AI analysis is mandatory for report generation, so this
-    should only be used internally (e.g., in model converter for
-    backwards compatibility with old fixtures).
-    """
-    return "*AI analysis pending - run with `--aitest-summary-model` to generate.*"
-
-
 async def generate_insights(
     suite_report: SuiteReport,
     tool_info: list[ToolInfo] | None = None,
@@ -157,7 +176,8 @@ async def generate_insights(
     prompts: dict[str, str] | None = None,
     model: str = "azure/gpt-5-mini",
     cache_dir: Path | None = None,
-) -> tuple[str, dict[str, Any]]:
+    min_pass_rate: int | None = None,
+) -> InsightsResult:
     """Generate AI insights markdown from test results.
 
     Args:
@@ -167,9 +187,10 @@ async def generate_insights(
         prompts: Prompt variants by name (optional)
         model: LiteLLM model to use for analysis
         cache_dir: Directory for caching results (optional)
+        min_pass_rate: Minimum pass rate threshold for disqualifying agents
 
     Returns:
-        Tuple of (AIInsights, AnalysisMetadata)
+        InsightsResult with markdown summary and generation metadata.
 
     Raises:
         InsightsGenerationError: If AI analysis fails after retries
@@ -183,15 +204,13 @@ async def generate_insights(
     if cache_path and cache_path.exists():
         try:
             cached = json.loads(cache_path.read_text())
-            return (
-                cached.get("insights", ""),  # Plain markdown string
-                {
-                    "model": cached.get("model"),
-                    "tokens_used": cached.get("tokens_used"),
-                    "cost_usd": cached.get("cost_usd"),
-                    "duration_ms": cached.get("duration_ms"),
-                    "cached": True,
-                },
+            return InsightsResult(
+                markdown_summary=cached.get("insights", ""),
+                model=cached.get("model", model),
+                tokens_used=cached.get("tokens_used", 0),
+                cost_usd=cached.get("cost_usd", 0.0),
+                duration_ms=cached.get("duration_ms", 0.0),
+                cached=True,
             )
         except Exception:
             _logger.debug("Cache invalid, regenerating insights", exc_info=True)
@@ -205,6 +224,7 @@ async def generate_insights(
         tool_info=tool_info or [],
         skill_info=skill_info or [],
         prompts=prompts or {},
+        min_pass_rate=min_pass_rate,
     )
 
     full_prompt = f"{prompt_template}\n\n---\n\n# Test Data\n\n{analysis_input}"
@@ -244,19 +264,12 @@ async def generate_insights(
             markdown_content = response.choices[0].message.content or ""  # type: ignore[union-attr]
 
             duration_ms = (time.perf_counter() - start_time) * 1000
-            metadata = {
-                "model": model,
-                "tokens_used": total_tokens,
-                "cost_usd": total_cost,
-                "duration_ms": duration_ms,
-                "cached": False,
-            }
 
             # Save to cache
             if cache_path:
                 cache_path.parent.mkdir(parents=True, exist_ok=True)
                 cache_data = {
-                    "insights": markdown_content,  # Plain markdown string
+                    "insights": markdown_content,
                     "model": model,
                     "tokens_used": total_tokens,
                     "cost_usd": total_cost,
@@ -264,8 +277,14 @@ async def generate_insights(
                 }
                 cache_path.write_text(json.dumps(cache_data))
 
-            # Return markdown string directly, not dict
-            return markdown_content, metadata
+            return InsightsResult(
+                markdown_summary=markdown_content,
+                model=model,
+                tokens_used=total_tokens,
+                cost_usd=total_cost,
+                duration_ms=duration_ms,
+                cached=False,
+            )
 
         except RateLimitError as e:
             if attempt < 2:

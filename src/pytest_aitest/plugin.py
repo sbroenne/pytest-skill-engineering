@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any
 
 import pytest
 
-from pytest_aitest.reporting import ReportCollector, ReportGenerator, TestReport
+from pytest_aitest.reporting import TestReport, build_suite_report, generate_html, generate_json
 
 if TYPE_CHECKING:
     from _pytest.config import Config
@@ -17,11 +17,14 @@ if TYPE_CHECKING:
     from _pytest.reports import TestReport as PytestTestReport
     from _pytest.terminal import TerminalReporter
 
+    from pytest_aitest.core.agent import Agent
+    from pytest_aitest.core.result import AgentResult
     from pytest_aitest.reporting import SuiteReport
+    from pytest_aitest.reporting.insights import InsightsResult
 
 
-# Key for storing report collector in config
-COLLECTOR_KEY = pytest.StashKey[ReportCollector]()
+# Key for storing test reports in config
+COLLECTOR_KEY = pytest.StashKey[list[TestReport]]()
 # Key for storing session messages for @pytest.mark.session
 SESSION_MESSAGES_KEY = pytest.StashKey[dict[str, list[dict[str, Any]]]]()
 # Export for use in fixtures
@@ -147,6 +150,17 @@ def pytest_addoption(parser: Parser) -> None:
         default=None,
         help="Generate JSON report to given path (e.g., results.json)",
     )
+    group.addoption(
+        "--aitest-min-pass-rate",
+        metavar="N",
+        type=int,
+        default=None,
+        help=(
+            "Minimum pass rate threshold (0-100). If the overall pass rate falls below "
+            "this percentage, the test session exits with failure. "
+            "Example: --aitest-min-pass-rate=80"
+        ),
+    )
 
 
 def pytest_configure(config: Config) -> None:
@@ -166,60 +180,10 @@ def pytest_configure(config: Config) -> None:
         "Tests with the same session name share conversation history automatically.",
     )
 
-    # Always initialize report collector - JSON is always generated
-    config.stash[COLLECTOR_KEY] = ReportCollector()
+    # Always initialize report collection - JSON is always generated
+    config.stash[COLLECTOR_KEY] = []
     # Initialize session message storage
     config.stash[SESSION_MESSAGES_KEY] = {}
-
-
-def _extract_metadata_from_nodeid(nodeid: str) -> dict[str, Any]:
-    """Extract model and prompt from parametrized test node ID.
-
-    Parses test names like 'test_foo[gpt-5-mini-PROMPT_V1]' to extract:
-    - model: gpt-5-mini
-    - prompt: PROMPT_V1
-    """
-    import re
-
-    metadata: dict[str, Any] = {}
-
-    # Extract parameters from node ID: test_foo[param1-param2] -> "param1-param2"
-    match = re.search(r"\[([^\]]+)\]", nodeid)
-    if not match:
-        return metadata
-
-    params_str = match.group(1)
-
-    # Model patterns - use negative lookahead to stop before PROMPT_
-    # Note: Order matters - more specific patterns first (gpt-4o before gpt-4)
-    model_patterns = [
-        r"gpt-\d+(?:\.\d+)?o(?:-(?!PROMPT)\w+)*",  # gpt-4o, gpt-4o-mini
-        r"gpt-\d+(?:\.\d+)?(?:-(?!PROMPT)\w+)*",  # gpt-4, gpt-4-turbo, gpt-5-mini
-        r"o\d+-(?!PROMPT)\w+",  # o1-mini, o1-preview, o3-mini
-        r"claude-\d+(?:\.\d+)?(?:-(?!PROMPT)\w+)*",  # claude-3-opus, claude-3.5-sonnet
-        r"gemini-\d+(?:\.\d+)?(?:-(?!PROMPT)\w+)*",  # gemini-1.5-pro
-        r"mistral-(?!PROMPT)\w+",  # mistral-large
-        r"llama-?\d*(?:\.\d+)?(?:-(?!PROMPT)\w+)*",  # llama-3.1-70b
-        r"deepseek-(?!PROMPT)\w+",  # deepseek-chat
-        r"qwen-?\d*(?:\.\d+)?(?:-(?!PROMPT)\w+)*",  # qwen-2.5-72b
-        r"command-r(?:-(?!PROMPT)\w+)?",  # command-r-plus
-    ]
-    model_pattern = re.compile("|".join(f"({p})" for p in model_patterns), re.IGNORECASE)
-    model_match = model_pattern.search(params_str)
-    if model_match:
-        metadata["model"] = model_match.group(0)
-
-    # Prompt patterns (from DimensionAggregator)
-    prompt_patterns = [
-        r"PROMPT_\w+",  # PROMPT_V1, PROMPT_CONCISE
-        r"prompt_\w+",  # prompt_v1, prompt_concise
-    ]
-    prompt_pattern = re.compile("|".join(f"({p})" for p in prompt_patterns))
-    prompt_match = prompt_pattern.search(params_str)
-    if prompt_match:
-        metadata["prompt"] = prompt_match.group(0)
-
-    return metadata
 
 
 def pytest_collection_modifyitems(
@@ -231,7 +195,7 @@ def pytest_collection_modifyitems(
     for item in items:
         # Check if test uses any aitest fixtures
         fixturenames = getattr(item, "fixturenames", [])
-        aitest_fixtures = {"aitest_run", "agent_factory"}
+        aitest_fixtures = {"aitest_run"}
         if (aitest_fixtures & set(fixturenames)) and not any(
             m.name == "aitest" for m in item.iter_markers()
         ):
@@ -249,8 +213,8 @@ def pytest_runtest_makereport(item: Item, call: Any) -> Any:
         return
 
     # Check if reporting is enabled
-    collector = item.config.stash.get(COLLECTOR_KEY, None)
-    if collector is None:
+    tests = item.config.stash.get(COLLECTOR_KEY, None)
+    if tests is None:
         return
 
     # Skip if marked to exclude from report
@@ -265,23 +229,14 @@ def pytest_runtest_makereport(item: Item, call: Any) -> Any:
     if agent_result is None:
         return
 
+    # Get agent identity directly from the Agent object stashed by the fixture
+    agent = getattr(item, "_aitest_agent", None)
+
     # Get test function docstring if available
     docstring = None
     func = getattr(item, "function", None)
     if func is not None and func.__doc__:
         docstring = func.__doc__
-
-    # Build metadata from agent_result (source of truth) with fallback to parsing
-    metadata = _extract_metadata_from_nodeid(item.nodeid)
-
-    # Override with actual values from agent_result if available
-    if agent_result:
-        if agent_result.agent_name:
-            metadata["agent_name"] = agent_result.agent_name
-        if agent_result.model:
-            metadata["model"] = agent_result.model
-        if agent_result.skill_info:
-            metadata["skill"] = agent_result.skill_info.name
 
     # Extract assertions recorded by the llm_assert fixture
     assertions = getattr(item, "_aitest_assertions", [])
@@ -305,7 +260,18 @@ def pytest_runtest_makereport(item: Item, call: Any) -> Any:
             else:
                 error_msg = error_text
 
-    # Create test report
+    # Build agent identity from the Agent object
+    def _display_model(model: str) -> str:
+        """Strip provider prefix for display (azure/gpt-5-mini → gpt-5-mini)."""
+        return model.split("/")[-1] if "/" in model else model
+
+    agent_id = agent.id if agent else ""
+    model = _display_model(agent.provider.model) if agent else ""
+    agent_name = agent.name or model if agent else ""
+    system_prompt_name = agent.system_prompt_name if agent else None
+    skill_name = agent.skill.name if agent and agent.skill else None
+
+    # Create test report with typed identity fields
     test_report = TestReport(
         name=item.nodeid,
         outcome=report.outcome,
@@ -314,21 +280,23 @@ def pytest_runtest_makereport(item: Item, call: Any) -> Any:
         error=error_msg,
         assertions=assertions,
         docstring=docstring,
-        metadata=metadata,
+        agent_id=agent_id,
+        agent_name=agent_name,
+        model=model,
+        system_prompt_name=system_prompt_name,
+        skill_name=skill_name,
     )
 
-    collector.add_test(test_report)
+    tests.append(test_report)
 
     # Enrich JUnit XML with agent metadata (user_properties → <property> elements)
-    agent = getattr(item, "_aitest_agent", None)
-    _add_junit_properties(report, agent_result, metadata, agent)
+    _add_junit_properties(report, agent_result, agent)
 
 
 def _add_junit_properties(
     report: PytestTestReport,
-    agent_result: Any,
-    metadata: dict[str, str],
-    agent: Any | None = None,
+    agent_result: AgentResult,
+    agent: Agent | None = None,
 ) -> None:
     """Add agent metadata to pytest report for JUnit XML output.
 
@@ -350,19 +318,19 @@ def _add_junit_properties(
 
     props = []
 
-    # Agent identity
-    if agent_result.agent_name:
-        props.append(("aitest.agent.name", agent_result.agent_name))
-    if agent_result.model:
-        props.append(("aitest.model", agent_result.model))
+    # Agent identity (from Agent object)
+    if agent:
+        model = agent.provider.model
+        display_model = model.split("/")[-1] if "/" in model else model
+        agent_name = agent.name or display_model
+        props.append(("aitest.agent.name", agent_name))
+        props.append(("aitest.model", display_model))
+        if agent.system_prompt_name:
+            props.append(("aitest.prompt", agent.system_prompt_name))
 
     # Skill
     if agent_result.skill_info:
         props.append(("aitest.skill", agent_result.skill_info.name))
-
-    # System prompt name (from metadata, if available)
-    if metadata.get("prompt"):
-        props.append(("aitest.prompt", metadata["prompt"]))
 
     # MCP servers (from agent config)
     if agent and agent.mcp_servers:
@@ -383,14 +351,15 @@ def _add_junit_properties(
 
     # Token usage
     if agent_result.token_usage:
-        if "prompt_tokens" in agent_result.token_usage:
-            props.append(("aitest.tokens.input", str(agent_result.token_usage["prompt_tokens"])))
-        if "completion_tokens" in agent_result.token_usage:
-            props.append(
-                ("aitest.tokens.output", str(agent_result.token_usage["completion_tokens"]))
-            )
-        if "total_tokens" in agent_result.token_usage:
-            props.append(("aitest.tokens.total", str(agent_result.token_usage["total_tokens"])))
+        prompt = agent_result.token_usage.get("prompt", 0)
+        completion = agent_result.token_usage.get("completion", 0)
+        if prompt:
+            props.append(("aitest.tokens.input", str(prompt)))
+        if completion:
+            props.append(("aitest.tokens.output", str(completion)))
+        total = prompt + completion
+        if total:
+            props.append(("aitest.tokens.total", str(total)))
 
     # Cost
     if agent_result.cost_usd > 0:
@@ -416,15 +385,16 @@ def _add_junit_properties(
 
 
 def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
-    """Generate reports at end of test session."""
+    """Generate reports and enforce minimum pass rate at end of test session."""
     config = session.config
-    collector = config.stash.get(COLLECTOR_KEY, None)
+    tests = config.stash.get(COLLECTOR_KEY, None)
 
-    if collector is None or not collector.tests:
+    if tests is None or not tests:
         return
 
     html_path = config.getoption("--aitest-html")
     json_path = config.getoption("--aitest-json")
+    min_pass_rate: int | None = config.getoption("--aitest-min-pass-rate")
 
     # Extract suite docstring from first test's parent class/module
     suite_docstring = None
@@ -443,7 +413,8 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
 
     # Build suite report first (to get the test name for default filenames)
     default_dir = Path("aitest-reports")
-    suite_report = collector.build_suite_report(
+    suite_report = build_suite_report(
+        tests,
         name=session.name or "pytest-aitest",
         suite_docstring=suite_docstring,
     )
@@ -456,8 +427,6 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
         "report.html", test_name=suite_report.name, default_dir=default_dir
     )
 
-    generator = ReportGenerator()
-
     # Generate AI insights if HTML report requested OR summary model specified
     summary_model = config.getoption("--aitest-summary-model")
     insights = None
@@ -467,7 +436,7 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
     # Always generate JSON report (to default or custom path)
     json_output_path = Path(json_path) if json_path else default_json_path
     json_output_path.parent.mkdir(parents=True, exist_ok=True)
-    generator.generate_json(suite_report, json_output_path, insights=insights)
+    generate_json(suite_report, json_output_path, insights=insights)
     _log_report_path(config, "JSON", json_output_path)
 
     # Generate HTML report (use default timestamped name if not specified)
@@ -478,8 +447,29 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
     if insights is None:
         insights = _generate_structured_insights(config, suite_report, required=True)
 
-    generator.generate_html(suite_report, html_output_path, insights=insights)
+    generate_html(suite_report, html_output_path, insights=insights, min_pass_rate=min_pass_rate)
     _log_report_path(config, "HTML", html_output_path)
+
+    # Enforce minimum pass rate threshold
+    if min_pass_rate is not None:
+        actual_rate = suite_report.pass_rate
+        terminalreporter: TerminalReporter | None = config.pluginmanager.get_plugin(
+            "terminalreporter"
+        )
+        if actual_rate < min_pass_rate:
+            if terminalreporter:
+                terminalreporter.write_line(
+                    f"\naitest: FAILED - pass rate {actual_rate:.1f}% "
+                    f"is below minimum threshold {min_pass_rate}% "
+                    f"({suite_report.passed}/{suite_report.total} passed)",
+                    red=True,
+                    bold=True,
+                )
+            session.exitstatus = pytest.ExitCode.TESTS_FAILED
+        elif terminalreporter:
+            terminalreporter.write_line(
+                f"\naitest: pass rate {actual_rate:.1f}% meets minimum threshold {min_pass_rate}%",
+            )
 
 
 def _log_report_path(config: Config, format_name: str, path: Path) -> None:
@@ -491,10 +481,8 @@ def _log_report_path(config: Config, format_name: str, path: Path) -> None:
 
 def _generate_structured_insights(
     config: Config, report: SuiteReport, *, required: bool = False
-) -> Any:
+) -> InsightsResult | None:
     """Generate structured AI insights from test results.
-
-    Uses the new insights generation system with structured output.
 
     Args:
         config: pytest config
@@ -502,7 +490,7 @@ def _generate_structured_insights(
         required: If True, raise error when model not configured (for report generation)
 
     Returns:
-        AIInsights object or None if generation fails/skipped.
+        InsightsResult or None if generation fails/skipped.
 
     Raises:
         pytest.UsageError: If required=True and model not configured.
@@ -545,55 +533,38 @@ def _generate_structured_insights(
 
                 # Collect effective system prompts as prompt variants
                 effective_prompt = getattr(test.agent_result, "effective_system_prompt", "")
-                if effective_prompt and test.metadata:
-                    prompt_name = test.metadata.get("prompt", "default")
-                    if prompt_name not in prompts:
-                        prompts[prompt_name] = effective_prompt
+                if effective_prompt:
+                    prompt_label = test.system_prompt_name or "default"
+                    if prompt_label not in prompts:
+                        prompts[prompt_label] = effective_prompt
 
         # Generate insights using async function
-        async def _run() -> tuple[Any, Any]:
+        async def _run() -> InsightsResult:
             return await generate_insights(
                 suite_report=report,
                 tool_info=tool_info,
                 skill_info=skill_info,
                 prompts=prompts,
                 model=model,
+                min_pass_rate=config.getoption("--aitest-min-pass-rate"),
             )
 
         # Use asyncio.run() instead of deprecated get_event_loop().run_until_complete()
-        markdown_summary, metadata = asyncio.run(_run())
+        result = asyncio.run(_run())
 
         # Log generation stats
         terminalreporter: TerminalReporter | None = config.pluginmanager.get_plugin(
             "terminalreporter"
         )
         if terminalreporter:
-            tokens_used = (
-                metadata.get("tokens_used") if isinstance(metadata, dict) else metadata.tokens_used
-            )
-            cost_usd = metadata.get("cost_usd") if isinstance(metadata, dict) else metadata.cost_usd
-            cached = metadata.get("cached") if isinstance(metadata, dict) else metadata.cached
-
-            tokens_str = f"{tokens_used:,}" if tokens_used else "N/A"
-            cost_str = f"${cost_usd:.4f}" if cost_usd else "N/A"
-            cached_str = " (cached)" if cached else ""
+            tokens_str = f"{result.tokens_used:,}" if result.tokens_used else "N/A"
+            cost_str = f"${result.cost_usd:.4f}" if result.cost_usd else "N/A"
+            cached_str = " (cached)" if result.cached else ""
             terminalreporter.write_line(
                 f"\nAI Insights generated{cached_str}: {tokens_str} tokens, {cost_str}"
             )
 
-        # Return dict with both summary and metadata
-        return {
-            "markdown_summary": markdown_summary,
-            "cost_usd": metadata.get("cost_usd")
-            if isinstance(metadata, dict)
-            else getattr(metadata, "cost_usd", None),
-            "tokens_used": metadata.get("tokens_used")
-            if isinstance(metadata, dict)
-            else getattr(metadata, "tokens_used", None),
-            "cached": metadata.get("cached")
-            if isinstance(metadata, dict)
-            else getattr(metadata, "cached", False),
-        }
+        return result
 
     except pytest.UsageError:
         # Re-raise configuration errors

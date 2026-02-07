@@ -6,22 +6,14 @@ Test your Model Context Protocol (MCP) servers by running LLM agents against the
 
 pytest-aitest uses the [official MCP Python SDK](https://github.com/modelcontextprotocol/python-sdk) to connect to MCP servers:
 
-1. **Connects** to the server (local subprocess or remote endpoint)
+1. **Starts** the server as a subprocess via stdio transport
 2. **Discovers tools** via MCP protocol
 3. **Routes tool calls** from the LLM to the server
 4. **Returns results** back to the LLM
 
-All three MCP transports are supported:
+## Defining a Server
 
-| Transport | Use Case |
-|-----------|----------|
-| **stdio** | Local subprocess (default) |
-| **SSE** | Remote HTTP server (Server-Sent Events) |
-| **Streamable HTTP** | Remote HTTP server (bidirectional) |
-
-## Local Servers (Subprocess)
-
-The most common pattern — start an MCP server as a subprocess:
+Start an MCP server as a subprocess:
 
 ```python
 import pytest
@@ -44,7 +36,6 @@ MCPServer(
     env={"API_KEY": "xxx"},               # Environment variables
     cwd="/path/to/server",                # Working directory
     wait=Wait.for_tools(["tool1"]),       # Wait condition
-    name="my-server",                     # Name for reports (auto-derived if omitted)
 )
 ```
 
@@ -55,7 +46,6 @@ MCPServer(
 | `env` | Environment variables (supports `${VAR}` expansion) | `{}` |
 | `cwd` | Working directory | Current directory |
 | `wait` | Wait condition for server startup | `Wait.ready()` |
-| `name` | Server name for reports | Derived from command |
 
 ### Wait Strategies
 
@@ -113,69 +103,6 @@ def api_server():
     )
 ```
 
-## Remote Servers (SSE / HTTP)
-
-Connect to MCP servers running remotely via **SSE** or **Streamable HTTP** transports:
-
-```python
-from pytest_aitest import MCPServer, MCPTransport
-
-@pytest.fixture(scope="module")
-def remote_server():
-    return MCPServer(
-        url="http://localhost:8080/sse",
-        name="my-remote-server",
-    )
-```
-
-### Transports
-
-**SSE (Server-Sent Events)** — Default for remote servers:
-
-```python
-MCPServer(
-    url="http://localhost:8080/sse",
-    transport=MCPTransport.SSE,  # Auto-detected if omitted
-)
-```
-
-**Streamable HTTP** — Newer bidirectional protocol:
-
-```python
-MCPServer(
-    url="https://api.example.com/mcp",
-    transport=MCPTransport.STREAMABLE_HTTP,
-)
-```
-
-### Authentication
-
-Pass headers for authentication:
-
-```python
-@pytest.fixture(scope="module")
-def authenticated_server():
-    return MCPServer(
-        url="https://api.example.com/mcp",
-        headers={
-            "Authorization": "Bearer ${API_TOKEN}",  # Env var expansion
-            "X-Custom-Header": "value",
-        },
-    )
-```
-
-### Configuration Options
-
-| Option | Description | Default |
-|--------|-------------|---------|
-| `url` | Server endpoint URL | Required |
-| `transport` | `MCPTransport.SSE` or `MCPTransport.STREAMABLE_HTTP` | Auto-detected |
-| `headers` | HTTP headers (supports `${VAR}` expansion) | `{}` |
-| `name` | Server name for reports | Derived from URL |
-
-!!! note "Local vs Remote"
-    `MCPServer` accepts either `command` (local subprocess) or `url` (remote endpoint), not both.
-
 ## Complete Example
 
 ```python
@@ -199,7 +126,6 @@ def weather_agent(weather_server):
         max_turns=5,
     )
 
-@pytest.mark.asyncio
 async def test_weather_query(aitest_run, weather_agent):
     result = await aitest_run(weather_agent, "What's the weather in Paris?")
     
@@ -237,9 +163,7 @@ def assistant_agent(weather_server, calendar_server):
     )
 ```
 
-## Advanced Features
-
-### Filtering Tools
+## Filtering Tools
 
 Use `allowed_tools` on the Agent to limit which tools are exposed to the LLM. This reduces token usage and focuses the agent.
 
@@ -255,28 +179,6 @@ def balance_agent(banking_server):
         system_prompt="You check account balances.",
     )
 ```
-
-### MCP Prompts and Resources
-
-The MCP protocol also supports **prompts** (reusable templates) and **resources** (exposed data). Enable discovery with:
-
-```python
-MCPServer(
-    command=["python", "-m", "my_server"],
-    discover_prompts=True,   # Enable prompts/list
-    discover_resources=True,  # Enable resources/list
-)
-```
-
-When enabled, the agent gets virtual tools:
-
-| Feature | Virtual Tools |
-|---------|---------------|
-| Prompts | `list_mcp_prompts`, `get_mcp_prompt` |
-| Resources | `list_mcp_resources`, `read_mcp_resource` |
-
-!!! tip "Most MCP servers only use tools"
-    Prompts and resources are less common. Only enable discovery if your server uses them — it adds startup latency and token overhead.
 
 ## Troubleshooting
 
@@ -307,22 +209,5 @@ Increase the timeout:
 MCPServer(
     command=["python", "-m", "slow_server"],
     wait=Wait.for_tools(["tool"], timeout_ms=120000),  # 2 minutes
-)
-```
-
-### Remote Connection Failed
-
-Verify the server is running and the URL is correct:
-
-```bash
-curl http://localhost:8080/sse
-```
-
-For authenticated endpoints, check that environment variables are set:
-
-```python
-MCPServer(
-    url="https://api.example.com/mcp",
-    headers={"Authorization": "Bearer ${API_TOKEN}"},  # Requires API_TOKEN env var
 )
 ```

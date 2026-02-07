@@ -40,7 +40,7 @@ The Agent is the **test harness** that bundles an LLM with the configuration you
 | Component | Required | Example |
 |-----------|----------|---------|
 | Provider | ✓ | `Provider(model="azure/gpt-5-mini")` |
-| MCP Servers | ✓ | `MCPServer(command=["python", "server.py"])` |
+| MCP Servers | Optional | `MCPServer(command=["python", "server.py"])` |
 | System Prompt | Optional | `"Be concise and direct."` |
 | Skill | Optional | `Skill.from_path("skills/weather")` |
 
@@ -59,7 +59,6 @@ weather_server = MCPServer(command=["python", "weather_mcp.py"])
 PROMPTS = load_system_prompts(Path("prompts/"))
 
 @pytest.mark.parametrize("prompt_name,system_prompt", PROMPTS.items())
-@pytest.mark.asyncio
 async def test_weather(aitest_run, prompt_name, system_prompt):
     agent = Agent(
         provider=Provider(model="azure/gpt-5-mini"),
@@ -84,12 +83,6 @@ The report shows:
 1. **Pass rate** (primary) — 100% beats 95%, always
 2. **Cost** (tiebreaker) — Among equal pass rates, cheaper wins
 
-Use `--aitest-min-pass-rate=N` to disqualify agents below N%:
-
-```bash
-pytest tests/ --aitest-min-pass-rate=95
-```
-
 ## Dimension Detection
 
 The AI analysis detects *what varies* between agents to provide targeted feedback:
@@ -112,7 +105,6 @@ MODELS = ["azure/gpt-5-mini", "azure/gpt-4.1"]
 weather_server = MCPServer(command=["python", "weather_mcp.py"])
 
 @pytest.mark.parametrize("model", MODELS)
-@pytest.mark.asyncio
 async def test_with_model(aitest_run, model):
     agent = Agent(
         provider=Provider(model=model),
@@ -132,7 +124,6 @@ PROMPTS = load_system_prompts(Path("prompts/"))
 weather_server = MCPServer(command=["python", "weather_mcp.py"])
 
 @pytest.mark.parametrize("prompt_name,system_prompt", PROMPTS.items())
-@pytest.mark.asyncio
 async def test_with_prompt(aitest_run, prompt_name, system_prompt):
     agent = Agent(
         provider=Provider(model="azure/gpt-5-mini"),
@@ -152,7 +143,6 @@ weather_server = MCPServer(command=["python", "weather_mcp.py"])
 
 @pytest.mark.parametrize("model", MODELS)
 @pytest.mark.parametrize("prompt_name,system_prompt", PROMPTS.items())
-@pytest.mark.asyncio
 async def test_combinations(aitest_run, model, prompt_name, system_prompt):
     agent = Agent(
         provider=Provider(model=f"azure/{model}"),
@@ -167,4 +157,4 @@ async def test_combinations(aitest_run, model, prompt_name, system_prompt):
 
 - [Comparing Configurations](../getting-started/comparing.md) — More comparison patterns
 - [A/B Testing Servers](../getting-started/ab-testing-servers.md) — Test server versions
-- [AI-Powered Reports](ai-reports.md) — What the AI evaluation produces
+- [AI Analysis](ai-reports.md) — What the AI evaluation produces

@@ -4,7 +4,16 @@ Test your AI agents using pre-built fixture test suites with semantic, tool, and
 
 ## Overview
 
-Fixture tests demonstrate best practices for comprehensive AI agent validation. Located in `tests/fixtures/generate_scenarios.py`, they include:
+Fixture tests demonstrate best practices for comprehensive AI agent validation. Each scenario is a separate file in `tests/fixtures/`:
+
+| File | Agents | Purpose |
+|------|--------|---------|
+| `scenario_01_single_agent.py` | 1 | Basic report, no comparison UI |
+| `scenario_02_multi_agent.py` | 2 | Leaderboard, comparison |
+| `scenario_03_sessions.py` | 2 | Session grouping + comparison |
+| `scenario_04_agent_selector.py` | 3 | Agent selector UI |
+
+They demonstrate:
 
 - **Semantic Assertions** — AI validates response quality
 - **Tool Argument Assertions** — Verify correct parameters passed
@@ -16,123 +25,101 @@ Fixture tests demonstrate best practices for comprehensive AI agent validation. 
 ## Running Fixture Tests
 
 ```bash
-# Run all fixture tests
-pytest tests/fixtures/generate_scenarios.py -v
+# Run a specific scenario
+pytest tests/fixtures/scenario_01_single_agent.py -v
 
-# Run single test class
-pytest tests/fixtures/generate_scenarios.py::TestSingleAgent -v
+# Run a single test
+pytest tests/fixtures/scenario_01_single_agent.py::test_simple_weather_query -v
 
-# Run single test
-pytest tests/fixtures/generate_scenarios.py::TestSingleAgent::test_simple_weather_query -v
+# Generate fixture JSON report
+pytest tests/fixtures/scenario_01_single_agent.py -v \
+    --aitest-json=tests/fixtures/reports/01_single_agent.json
 
-# Generate fixture reports
-pytest tests/fixtures/generate_scenarios.py --aitest-json=tests/fixtures/reports/01_single_agent.json
+# Run all fixtures
+pytest tests/fixtures/ -v
 ```
 
 ## Test Suites
 
-### 1. TestSingleAgent (4 tests)
+### 1. Single Agent (4 tests)
 
-Single agent configuration demonstrating various assertion types.
+`scenario_01_single_agent.py` — one agent, multiple prompts:
 
 ```python
-class TestSingleAgent:
-    async def test_simple_weather_query(self, aitest_run, weather_server, llm_assert):
-        """Simple query using one tool call."""
-        result = await aitest_run(agent, "What's the weather in Berlin?")
-        
-        # Semantic assertion (AI validation)
-        assert llm_assert(result.final_response, "provides current temperature and conditions")
-        
-        # Tool assertions
-        assert result.tool_was_called("get_weather")
-        city = result.tool_call_arg("get_weather", "city")
-        assert city.lower() == "berlin"
-        
-        # Cost assertion
-        assert result.cost_usd < 0.01
+agent = Agent(
+    name="weather-agent",
+    provider=Provider(model="azure/gpt-5-mini", rpm=10, tpm=10000),
+    mcp_servers=[weather_server],
+    system_prompt=WEATHER_PROMPT,
+)
+
+async def test_simple_weather_query(aitest_run, llm_assert):
+    result = await aitest_run(agent, "What's the weather in Paris?")
+    assert result.success
+    assert result.tool_was_called("get_weather")
+    assert llm_assert(result.final_response, "mentions the temperature")
+    assert result.cost_usd < 0.05
 ```
 
-**Tests:**
-- `test_simple_weather_query` — Single tool call, semantic assertion
-- `test_forecast_query` — Multi-day forecast with comparison
-- `test_city_comparison` — Multiple tools, tool count verification
-- `test_expected_failure` — Intentional failure to test error display
+**Tests:** `test_simple_weather_query`, `test_forecast_query`, `test_city_comparison`, `test_expected_failure`
 
-### 2. TestTwoAgents (6 tests)
+### 2. Two Agents (6 tests)
 
-Compare two different models on same queries.
+`scenario_02_multi_agent.py` — define agents once, parametrize tests:
 
 ```python
-class TestTwoAgents:
-    @pytest.mark.parametrize("model", ["gpt-5-mini", "gpt-4.1-mini"])
-    async def test_simple_weather(self, aitest_run, weather_server, model):
-        """Same test with different models."""
-        agent = Agent(
-            provider=Provider(model=f"azure/{model}"),
-            mcp_servers=[weather_server],
-            # ...
-        )
-        result = await aitest_run(agent, "What's the weather in London?")
-        
-        # Semantic assertion for response quality
-        assert llm_assert(result.final_response, "mentions London weather conditions")
+AGENTS = [
+    Agent(name="gpt-5-mini", provider=Provider(model="azure/gpt-5-mini"), ...),
+    Agent(name="gpt-4.1-mini", provider=Provider(model="azure/gpt-4.1-mini"), ...),
+]
+
+@pytest.mark.parametrize("agent", AGENTS, ids=lambda a: a.name)
+async def test_simple_weather(aitest_run, agent, llm_assert):
+    result = await aitest_run(agent, "What's the weather in London?")
+    assert result.success
 ```
 
-Each test runs on both models — AI-powered reports auto-generate leaderboard.
+Each test runs on both models — AI analysis auto-generates leaderboard.
 
-### 3. TestMultiAgentSessions (6 tests)
+### 3. Sessions (6 tests)
 
-Multi-turn conversation maintaining context across agent calls.
+`scenario_03_sessions.py` — multi-turn conversation with context:
 
 ```python
-@pytest.mark.session("savings-planning")
-class TestMultiAgentSessions:
-    async def test_01_establish_context(self, aitest_run, banking_agent):
-        """First turn: establish context."""
-        result = await aitest_run(
-            banking_agent,
-            "I want to save more. Check my accounts and suggest monthly transfers."
-        )
-        
+@pytest.mark.session("banking-workflow")
+class TestBankingWorkflow:
+    @pytest.mark.parametrize("agent", AGENTS, ids=lambda a: a.name)
+    async def test_check_balance(self, aitest_run, agent, llm_assert):
+        result = await aitest_run(agent, "What's my checking account balance?")
         assert result.success
-        assert result.tool_was_called("get_all_balances")
-        assert llm_assert(result.final_response, "provides savings suggestion")
-    
-    async def test_02_reference_previous(self, aitest_run, banking_agent):
-        """Second turn: agent remembers context from test_01."""
-        result = await aitest_run(banking_agent, "Let's transfer $200 to savings.")
-        
-        assert result.tool_was_called("transfer")
-        
-    async def test_03_verify_result(self, aitest_run, banking_agent):
-        """Third turn: verify the transfer worked."""
-        result = await aitest_run(banking_agent, "Show me my new savings balance.")
-        
         assert result.tool_was_called("get_balance")
+
+    @pytest.mark.parametrize("agent", AGENTS, ids=lambda a: a.name)
+    async def test_transfer_funds(self, aitest_run, agent, llm_assert):
+        result = await aitest_run(agent, "Transfer $100 from checking to savings")
+        assert result.is_session_continuation
 ```
 
 The `@pytest.mark.session` marker ensures tests share agent state.
 
-### 4. TestAgentSelector (6 tests)
+### 4. Agent Selector (6 tests)
 
-Three agents demonstrating agent selector UI in reports.
+`scenario_04_agent_selector.py` — three agents for selector UI:
 
 ```python
-class TestAgentSelector:
-    @pytest.mark.parametrize("model", ["gpt-5-mini", "gpt-4.1-mini", "gpt-5-mini+skill"])
-    async def test_weather_query(self, aitest_run, weather_server, model):
-        """Run same test with 3 different configurations."""
-        agent = Agent(
-            provider=Provider(model=...),
-            skill=skill if "skill" in model else None,
-            # ...
-        )
-        result = await aitest_run(agent, "What's the weather in Berlin?")
-        assert result.success
+AGENTS = [
+    Agent(name="gpt-5-mini", ...),
+    Agent(name="gpt-4.1-mini", ...),
+    Agent(name="gpt-5-mini+skill", ..., skill=WEATHER_SKILL),
+]
+
+@pytest.mark.parametrize("agent", AGENTS, ids=lambda a: a.name)
+async def test_weather_query(aitest_run, agent, llm_assert):
+    result = await aitest_run(agent, "What's the weather in Berlin?")
+    assert result.success
 ```
 
-With 3 agents, the report includes an interactive agent selector allowing users to pick any 2 for comparison.
+With 3+ agents, the report includes an interactive agent selector.
 
 ## Assertion Patterns
 
@@ -141,8 +128,7 @@ With 3 agents, the report includes an interactive agent selector allowing users 
 Validate response quality using AI judgment:
 
 ```python
-from pytest_llm_assert import llm_assert
-
+# llm_assert is a pytest fixture — just add it to your test function signature
 # Does response mention expected content?
 assert llm_assert(result.final_response, "provides temperature in Celsius and Fahrenheit")
 
@@ -196,7 +182,7 @@ assert total_tokens < 5000
 Running fixture tests generates JSON and HTML reports:
 
 ```bash
-pytest tests/fixtures/generate_scenarios.py::TestSingleAgent -v \
+pytest tests/fixtures/scenario_01_single_agent.py -v \
     --aitest-json=tests/fixtures/reports/01_single_agent.json \
     --aitest-html=docs/reports/01_single_agent.html
 
@@ -218,16 +204,15 @@ Reports include:
 Generate reports for all 4 fixture suites:
 
 ```bash
-# Run and generate all fixture reports
-pytest tests/fixtures/generate_scenarios.py -v \
-    --aitest-summary-model=azure/gpt-5.2-chat \
-    --aitest-html=docs/reports/fixtures-report.html
-
-# Or individually
-pytest tests/fixtures/generate_scenarios.py::TestSingleAgent --aitest-json=reports/01.json
-pytest tests/fixtures/generate_scenarios.py::TestTwoAgents --aitest-json=reports/02.json
-pytest tests/fixtures/generate_scenarios.py::TestMultiAgentSessions --aitest-json=reports/03.json
-pytest tests/fixtures/generate_scenarios.py::TestAgentSelector --aitest-json=reports/04.json
+# Generate each fixture individually
+pytest tests/fixtures/scenario_01_single_agent.py -v \
+    --aitest-json=tests/fixtures/reports/01_single_agent.json
+pytest tests/fixtures/scenario_02_multi_agent.py -v \
+    --aitest-json=tests/fixtures/reports/02_multi_agent.json
+pytest tests/fixtures/scenario_03_sessions.py -v \
+    --aitest-json=tests/fixtures/reports/03_multi_agent_sessions.json
+pytest tests/fixtures/scenario_04_agent_selector.py -v \
+    --aitest-json=tests/fixtures/reports/04_agent_selector.json
 ```
 
 Then regenerate HTML from all JSONs:

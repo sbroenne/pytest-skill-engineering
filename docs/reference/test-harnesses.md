@@ -55,7 +55,6 @@ def weather_agent(weather_server):
         mcp_servers=[weather_server],
     )
 
-@pytest.mark.asyncio
 async def test_weather(aitest_run, weather_agent):
     result = await aitest_run(
         weather_agent,
@@ -125,7 +124,6 @@ def todo_agent(todo_server):
         system_prompt="You are a task management assistant.",
     )
 
-@pytest.mark.asyncio
 async def test_add_and_complete(aitest_run, todo_agent):
     result = await aitest_run(
         todo_agent,
@@ -175,6 +173,8 @@ Stateful banking service for multi-turn session testing.
 | `get_balance` | Get balance for one account |
 | `get_all_balances` | Get balances for all accounts |
 | `transfer` | Move money between accounts |
+| `deposit` | Deposit money into an account |
+| `withdraw` | Withdraw money from an account |
 | `get_transactions` | View transaction history |
 
 ### Initial State
@@ -201,7 +201,6 @@ def banking_server():
 class TestBankingWorkflow:
     """Tests share conversation context via session decorator."""
 
-    @pytest.mark.asyncio
     async def test_check_balance(self, aitest_run, banking_server):
         agent = Agent(
             name="banking",
@@ -213,7 +212,6 @@ class TestBankingWorkflow:
         result = await aitest_run(agent, "What's my checking balance?")
         assert result.tool_was_called("get_balance")
 
-    @pytest.mark.asyncio
     async def test_transfer_funds(self, aitest_run, banking_server):
         agent = Agent(
             name="banking",
@@ -252,7 +250,7 @@ print(result.value["total_formatted"])  # "$4,500.00"
 
 ```python
 from dataclasses import dataclass
-from pytest_aitest.testing.store import ToolResult
+from pytest_aitest.testing.types import ToolResult
 
 @dataclass
 class MyStore:
@@ -312,7 +310,6 @@ def create_my_server(store: MyStore | None = None):
 def my_server():
     return create_my_server()
 
-@pytest.mark.asyncio
 async def test_my_tool(aitest_run, agent_with_my_server):
     result = await aitest_run(agent_with_my_server, "Use my tool")
     assert result.tool_was_called("my_tool")

@@ -72,6 +72,7 @@ class TestDimensionDetection:
             ),
             mcp_servers=[weather_server],
             system_prompt=system_prompt,
+            system_prompt_name=prompt_name,
             max_turns=DEFAULT_MAX_TURNS,
         )
 

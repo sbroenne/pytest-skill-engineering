@@ -41,7 +41,6 @@ agent = Agent(
     mcp_servers=[weather_server],
 )
 
-@pytest.mark.asyncio
 async def test_weather_query(aitest_run):
     """Verify the LLM can use get_weather correctly."""
     result = await aitest_run(agent, "What's the weather in Paris?")
@@ -82,7 +81,7 @@ Then just run pytest:
 pytest tests/
 ```
 
-AI-powered reports are generated automatically. See [Configuration](../reference/configuration.md) for details.
+AI analysis is included automatically. See [Configuration](../reference/configuration.md) for details.
 
 The report shows:
 

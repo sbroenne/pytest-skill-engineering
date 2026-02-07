@@ -234,7 +234,7 @@ def _scripts_section(ctx: ReportContext) -> Node:
                 "name": a.name,
                 "pass_rate": a.pass_rate,
                 "skill": a.skill,
-                "prompt_name": a.prompt_name,
+                "prompt_name": a.system_prompt_name,
             }
             for a in ctx.agents
         ]

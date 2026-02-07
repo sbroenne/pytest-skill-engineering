@@ -170,14 +170,12 @@ def git_agent(git_server):
         max_turns=5,
     )
 
-@pytest.mark.asyncio
 async def test_git_status(aitest_run, git_agent):
     result = await aitest_run(git_agent, "What's the repo status?")
     
     assert result.success
     assert result.tool_was_called("git_execute")
 
-@pytest.mark.asyncio
 async def test_git_log(aitest_run, git_agent):
     result = await aitest_run(git_agent, "Show me the last 3 commits")
     

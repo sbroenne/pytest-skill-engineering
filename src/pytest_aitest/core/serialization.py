@@ -10,50 +10,19 @@ if TYPE_CHECKING:
 
 
 def serialize_dataclass(obj: Any) -> Any:
-    """Convert dataclass to dict recursively, handling special types."""
+    """Convert dataclass to dict recursively, handling special types.
+
+    Excludes private fields (prefixed with _) from serialization.
+    """
     if is_dataclass(obj) and not isinstance(obj, type):
         data = asdict(obj)  # type: ignore[arg-type]
-        return {k: serialize_dataclass(v) for k, v in data.items()}
+        return {k: serialize_dataclass(v) for k, v in data.items() if not k.startswith("_")}
     elif isinstance(obj, (list, tuple)):
         return [serialize_dataclass(item) for item in obj]
     elif isinstance(obj, dict):
         return {k: serialize_dataclass(v) for k, v in obj.items()}
     else:
         # For enums, strings, numbers, etc.
-        return obj
-
-
-class DictWithAttrAccess(dict):
-    """Dict that allows attribute access to keys for backward compatibility."""
-
-    def __getattr__(self, key: str) -> Any:
-        try:
-            return self[key]
-        except KeyError as err:
-            raise AttributeError(
-                f"'{type(self).__name__}' object has no attribute '{key}'"
-            ) from err
-
-    def __setattr__(self, key: str, value: Any) -> None:
-        self[key] = value
-
-
-def to_dict_with_attr(obj: Any) -> Any:
-    """Convert dataclass to dict with attribute access support."""
-    if is_dataclass(obj) and not isinstance(obj, type):
-        data = asdict(obj)  # type: ignore[arg-type]
-        result = DictWithAttrAccess()
-        for k, v in data.items():
-            result[k] = to_dict_with_attr(v)
-        return result
-    elif isinstance(obj, (list, tuple)):
-        return [to_dict_with_attr(item) for item in obj]
-    elif isinstance(obj, dict):
-        result = DictWithAttrAccess()
-        for k, v in obj.items():
-            result[k] = to_dict_with_attr(v)
-        return result
-    else:
         return obj
 
 
@@ -106,9 +75,14 @@ def deserialize_suite_report(data: dict[str, Any]) -> SuiteReport:
                 token_usage=ar_data.get("token_usage", {}),
                 cost_usd=ar_data.get("cost_usd", 0.0),
                 session_context_count=ar_data.get("session_context_count", 0),
-                agent_name=ar_data.get("agent_name", ""),
-                model=ar_data.get("model", ""),
             )
+
+        # Read identity from typed fields
+        agent_id = test_data.get("agent_id", "")
+        agent_name = test_data.get("agent_name", "")
+        model = test_data.get("model", "")
+        system_prompt_name = test_data.get("system_prompt_name")
+        skill_name = test_data.get("skill_name")
 
         # Reconstruct test report
         test_report = TestReport(
@@ -118,8 +92,12 @@ def deserialize_suite_report(data: dict[str, Any]) -> SuiteReport:
             agent_result=agent_result,
             error=test_data.get("error"),
             assertions=test_data.get("assertions", []),
-            metadata=test_data.get("metadata", {}),
             docstring=test_data.get("docstring"),
+            agent_id=agent_id,
+            agent_name=agent_name,
+            model=model,
+            system_prompt_name=system_prompt_name,
+            skill_name=skill_name,
         )
         tests.append(test_report)
 
