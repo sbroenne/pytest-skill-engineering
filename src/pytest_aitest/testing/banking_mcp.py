@@ -2,6 +2,11 @@
 
 Run as: python -m pytest_aitest.testing.banking_mcp
 
+Supports all three transports:
+- stdio (default): ``python -m pytest_aitest.testing.banking_mcp``
+- streamable-http: ``python -m pytest_aitest.testing.banking_mcp --transport streamable-http --port 8080``
+- sse: ``python -m pytest_aitest.testing.banking_mcp --transport sse --port 8080``
+
 This server maintains state across calls, enabling tests for:
 - Multi-turn conversations where account balances change
 - Session-based workflows (check → transfer → verify)
@@ -10,107 +15,133 @@ This server maintains state across calls, enabling tests for:
 
 from __future__ import annotations
 
-import asyncio
+import argparse
 import json
-import sys
-from typing import Any
+
+from mcp.server.fastmcp import FastMCP
 
 from pytest_aitest.testing.banking import BankingService
 
+# ---------------------------------------------------------------------------
+# Server & service
+# ---------------------------------------------------------------------------
 
-class BankingMCPServer:
-    """MCP stdio server wrapping the banking service.
+mcp = FastMCP("pytest-aitest-banking-server")
+_service = BankingService()
 
-    The banking service is stateful - balances persist and change
-    across tool calls within the same server process.
+# ---------------------------------------------------------------------------
+# Tools – thin wrappers that delegate to BankingService
+# ---------------------------------------------------------------------------
+
+
+@mcp.tool()
+def get_balance(account: str) -> str:
+    """Get the current balance for a specific account.
+
+    Args:
+        account: Account name (e.g. "checking" or "savings").
     """
+    result = _service.get_balance(account)
+    if result.success:
+        return json.dumps(result.value)
+    return f"Error: {result.error}"
 
-    def __init__(self) -> None:
-        self.service = BankingService()
-        self.running = True
 
-    async def handle_request(self, request: dict[str, Any]) -> dict[str, Any] | None:
-        """Handle a JSON-RPC request."""
-        method = request.get("method", "")
-        req_id = request.get("id")
-        params = request.get("params", {})
+@mcp.tool()
+def get_all_balances() -> str:
+    """Get balances for all accounts at once."""
+    result = _service.get_all_balances()
+    if result.success:
+        return json.dumps(result.value)
+    return f"Error: {result.error}"
 
-        if method == "initialize":
-            return {
-                "jsonrpc": "2.0",
-                "id": req_id,
-                "result": {
-                    "protocolVersion": "2024-11-05",
-                    "capabilities": {"tools": {}},
-                    "serverInfo": {
-                        "name": "pytest-aitest-banking-server",
-                        "version": "1.0.0",
-                    },
-                },
-            }
 
-        if method == "notifications/initialized":
-            return None
+@mcp.tool()
+def transfer(from_account: str, to_account: str, amount: float) -> str:
+    """Transfer money between accounts.
 
-        if method == "tools/list":
-            return {
-                "jsonrpc": "2.0",
-                "id": req_id,
-                "result": {"tools": self.service.get_tool_schemas()},
-            }
+    Args:
+        from_account: Source account name.
+        to_account: Destination account name.
+        amount: Amount to transfer (positive number).
+    """
+    result = _service.transfer(from_account, to_account, amount)
+    if result.success:
+        return json.dumps(result.value)
+    return f"Error: {result.error}"
 
-        if method == "tools/call":
-            tool_name = params.get("name", "")
-            arguments = params.get("arguments", {})
 
-            result = await self.service.call_tool_async(tool_name, arguments)
+@mcp.tool()
+def deposit(account: str, amount: float) -> str:
+    """Deposit money into an account.
 
-            if result.success:
-                content = [{"type": "text", "text": json.dumps(result.value)}]
-                return {
-                    "jsonrpc": "2.0",
-                    "id": req_id,
-                    "result": {"content": content, "isError": False},
-                }
-            else:
-                content = [{"type": "text", "text": result.error}]
-                return {
-                    "jsonrpc": "2.0",
-                    "id": req_id,
-                    "result": {"content": content, "isError": True},
-                }
+    Args:
+        account: Account name.
+        amount: Amount to deposit (positive number).
+    """
+    result = _service.deposit(account, amount)
+    if result.success:
+        return json.dumps(result.value)
+    return f"Error: {result.error}"
 
-        return {
-            "jsonrpc": "2.0",
-            "id": req_id,
-            "error": {"code": -32601, "message": f"Method not found: {method}"},
-        }
 
-    def run_sync(self) -> None:
-        """Run the stdio server using newline-delimited JSON."""
-        for line in sys.stdin:
-            line = line.strip()
-            if not line:
-                continue
+@mcp.tool()
+def withdraw(account: str, amount: float) -> str:
+    """Withdraw money from an account.
 
-            try:
-                request = json.loads(line)
-                response = asyncio.run(self.handle_request(request))
+    Args:
+        account: Account name.
+        amount: Amount to withdraw (positive number).
+    """
+    result = _service.withdraw(account, amount)
+    if result.success:
+        return json.dumps(result.value)
+    return f"Error: {result.error}"
 
-                if response is not None:
-                    sys.stdout.write(json.dumps(response) + "\n")
-                    sys.stdout.flush()
 
-            except json.JSONDecodeError as e:
-                print(f"JSON decode error: {e}", file=sys.stderr)
-            except Exception as e:
-                print(f"Error: {e}", file=sys.stderr)
+@mcp.tool()
+def get_transactions(account: str | None = None, limit: int = 10) -> str:
+    """View transaction history.
+
+    Args:
+        account: Optional account name to filter by.
+        limit: Maximum number of transactions to return (default 10).
+    """
+    result = _service.get_transactions(account=account, limit=limit)
+    if result.success:
+        return json.dumps(result.value)
+    return f"Error: {result.error}"
+
+
+# ---------------------------------------------------------------------------
+# Entry point
+# ---------------------------------------------------------------------------
 
 
 def main() -> None:
-    """Entry point for the banking MCP server."""
-    server = BankingMCPServer()
-    server.run_sync()
+    """Parse args and run the server with the chosen transport."""
+    parser = argparse.ArgumentParser(description="Banking MCP server")
+    parser.add_argument(
+        "--transport",
+        choices=["stdio", "sse", "streamable-http"],
+        default="stdio",
+    )
+    parser.add_argument("--port", type=int, default=8080)
+    parser.add_argument("--host", default="127.0.0.1")
+    args = parser.parse_args()
+
+    # Configure host/port via FastMCP settings
+    mcp.settings.host = args.host
+    mcp.settings.port = args.port
+
+    if args.transport == "stdio":
+        mcp.run(transport="stdio")
+    elif args.transport == "sse":
+        mcp.run(transport="sse")
+    elif args.transport == "streamable-http":
+        mcp.settings.stateless_http = True
+        mcp.settings.json_response = True
+        mcp.run(transport="streamable-http")
 
 
 if __name__ == "__main__":

@@ -55,6 +55,28 @@ jobs:
       - name: Run pyright
         run: uv run pyright src/pytest_aitest/
 
+  mcp-servers:
+    name: MCP Server Validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          version: "latest"
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: uv sync --all-extras
+
+      - name: Test MCP servers (no LLM)
+        run: uv run pytest tests/unit/test_mcp_servers.py -v --tb=short
+
   test:
     name: Test (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest

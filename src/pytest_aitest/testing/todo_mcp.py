@@ -1,107 +1,154 @@
 """Todo MCP server for integration testing.
 
 Run as: python -m pytest_aitest.testing.todo_mcp
+
+Supports all three transports:
+- stdio (default): ``python -m pytest_aitest.testing.todo_mcp``
+- streamable-http: ``python -m pytest_aitest.testing.todo_mcp --transport streamable-http --port 8080``
+- sse: ``python -m pytest_aitest.testing.todo_mcp --transport sse --port 8080``
 """
 
 from __future__ import annotations
 
-import asyncio
+import argparse
 import json
-import sys
-from typing import Any
+
+from mcp.server.fastmcp import FastMCP
 
 from pytest_aitest.testing.todo import TodoStore
 
+# ---------------------------------------------------------------------------
+# Server & service
+# ---------------------------------------------------------------------------
 
-class TodoMCPServer:
-    """MCP stdio server wrapping the todo store."""
+mcp = FastMCP("pytest-aitest-todo-server")
+_store = TodoStore()
 
-    def __init__(self) -> None:
-        self.store = TodoStore()
-        self.running = True
+# ---------------------------------------------------------------------------
+# Tools – thin wrappers that delegate to TodoStore
+# ---------------------------------------------------------------------------
 
-    async def handle_request(self, request: dict[str, Any]) -> dict[str, Any] | None:
-        """Handle a JSON-RPC request."""
-        method = request.get("method", "")
-        req_id = request.get("id")
-        params = request.get("params", {})
 
-        if method == "initialize":
-            return {
-                "jsonrpc": "2.0",
-                "id": req_id,
-                "result": {
-                    "protocolVersion": "2024-11-05",
-                    "capabilities": {"tools": {}},
-                    "serverInfo": {
-                        "name": "pytest-aitest-todo-server",
-                        "version": "1.0.0",
-                    },
-                },
-            }
+@mcp.tool()
+def add_task(title: str, list: str = "default", priority: str = "normal") -> str:
+    """Add a new task to a todo list.
 
-        if method == "notifications/initialized":
-            return None
+    Args:
+        title: The task description (e.g., 'Buy groceries', 'Call dentist').
+        list: Which list to add to (e.g., 'shopping', 'work', 'personal'). Default: 'default'.
+        priority: Task priority ('low', 'normal', 'high'). Default: 'normal'.
+    """
+    result = _store.add_task(title, list, priority)
+    if result.success:
+        return json.dumps(result.value)
+    return f"Error: {result.error}"
 
-        if method == "tools/list":
-            return {
-                "jsonrpc": "2.0",
-                "id": req_id,
-                "result": {"tools": self.store.get_tool_schemas()},
-            }
 
-        if method == "tools/call":
-            tool_name = params.get("name", "")
-            arguments = params.get("arguments", {})
+@mcp.tool()
+def complete_task(task_id: str) -> str:
+    """Mark a task as completed/done.
 
-            result = await self.store.call_tool_async(tool_name, arguments)
+    Args:
+        task_id: The ID of the task to complete.
+    """
+    result = _store.complete_task(task_id)
+    if result.success:
+        return json.dumps(result.value)
+    return f"Error: {result.error}"
 
-            if result.success:
-                content = [{"type": "text", "text": json.dumps(result.value)}]
-                return {
-                    "jsonrpc": "2.0",
-                    "id": req_id,
-                    "result": {"content": content, "isError": False},
-                }
-            else:
-                content = [{"type": "text", "text": result.error}]
-                return {
-                    "jsonrpc": "2.0",
-                    "id": req_id,
-                    "result": {"content": content, "isError": True},
-                }
 
-        return {
-            "jsonrpc": "2.0",
-            "id": req_id,
-            "error": {"code": -32601, "message": f"Method not found: {method}"},
-        }
+@mcp.tool()
+def uncomplete_task(task_id: str) -> str:
+    """Mark a completed task as not done (reopen it).
 
-    def run_sync(self) -> None:
-        """Run the stdio server using newline-delimited JSON."""
-        for line in sys.stdin:
-            line = line.strip()
-            if not line:
-                continue
+    Args:
+        task_id: The ID of the task to reopen.
+    """
+    result = _store.uncomplete_task(task_id)
+    if result.success:
+        return json.dumps(result.value)
+    return f"Error: {result.error}"
 
-            try:
-                request = json.loads(line)
-                response = asyncio.run(self.handle_request(request))
 
-                if response is not None:
-                    sys.stdout.write(json.dumps(response) + "\n")
-                    sys.stdout.flush()
+@mcp.tool()
+def delete_task(task_id: str) -> str:
+    """Delete/remove a task permanently.
 
-            except json.JSONDecodeError as e:
-                print(f"JSON decode error: {e}", file=sys.stderr)
-            except Exception as e:
-                print(f"Error: {e}", file=sys.stderr)
+    Args:
+        task_id: The ID of the task to delete.
+    """
+    result = _store.delete_task(task_id)
+    if result.success:
+        return json.dumps(result.value)
+    return f"Error: {result.error}"
+
+
+@mcp.tool()
+def list_tasks(list: str | None = None, show_completed: bool = True) -> str:
+    """List all tasks, optionally filtered by list name or completion status.
+
+    Args:
+        list: Filter by list name (e.g., 'shopping'). Omit for all lists.
+        show_completed: Include completed tasks? Default: true.
+    """
+    result = _store.list_tasks(list, show_completed)
+    if result.success:
+        return json.dumps(result.value)
+    return f"Error: {result.error}"
+
+
+@mcp.tool()
+def get_lists() -> str:
+    """Get all available todo list names."""
+    result = _store.get_lists()
+    if result.success:
+        return json.dumps(result.value)
+    return f"Error: {result.error}"
+
+
+@mcp.tool()
+def set_priority(task_id: str, priority: str) -> str:
+    """Change the priority of a task.
+
+    Args:
+        task_id: The ID of the task.
+        priority: New priority level ('low', 'normal', 'high').
+    """
+    result = _store.set_priority(task_id, priority)
+    if result.success:
+        return json.dumps(result.value)
+    return f"Error: {result.error}"
+
+
+# ---------------------------------------------------------------------------
+# Entry point
+# ---------------------------------------------------------------------------
 
 
 def main() -> None:
-    """Entry point."""
-    server = TodoMCPServer()
-    server.run_sync()
+    """Parse args and run the server with the chosen transport."""
+    parser = argparse.ArgumentParser(description="Todo MCP server")
+    parser.add_argument(
+        "--transport",
+        choices=["stdio", "sse", "streamable-http"],
+        default="stdio",
+    )
+    parser.add_argument("--port", type=int, default=8080)
+    parser.add_argument("--host", default="127.0.0.1")
+    args = parser.parse_args()
+
+    # Configure host/port via FastMCP settings
+    mcp.settings.host = args.host
+    mcp.settings.port = args.port
+
+    if args.transport == "stdio":
+        mcp.run(transport="stdio")
+    elif args.transport == "sse":
+        mcp.run(transport="sse")
+    elif args.transport == "streamable-http":
+        mcp.settings.stateless_http = True
+        mcp.settings.json_response = True
+        mcp.run(transport="streamable-http")
 
 
 if __name__ == "__main__":
