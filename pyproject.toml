@@ -81,6 +81,8 @@ include = [
     "src/pytest_aitest/**/*.py",
     "src/pytest_aitest/**/*.md",
     "src/pytest_aitest/**/*.html",
+    "src/pytest_aitest/**/*.css",
+    "src/pytest_aitest/**/*.js",
 ]
 
 [tool.ruff]
