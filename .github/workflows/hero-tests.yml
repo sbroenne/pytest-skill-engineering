@@ -80,7 +80,7 @@ jobs:
             aitest-reports/results*.json
 
       - name: Commit updated hero report
-        uses: stefanzweifel/git-auto-commit-action@v5
+        uses: stefanzweifel/git-auto-commit-action@v7
         if: always()
         with:
           commit_message: "ci: update hero report [skip ci]"
