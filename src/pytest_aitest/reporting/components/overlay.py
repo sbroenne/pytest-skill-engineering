@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from htpy import Node, button, div, style
+from markupsafe import Markup
 
 
 def overlay() -> Node:
@@ -57,7 +58,7 @@ def overlay() -> Node:
         )[div(".mermaid", id="hover-mermaid"),],
         # Styles for overlay behavior
         style[
-            """
+            Markup("""
 #overlay.active { display: flex !important; }
 #diagram-hover-popup.active { display: block !important; }
 
@@ -69,6 +70,6 @@ def overlay() -> Node:
     height: auto;
     min-height: 60vh;
 }
-"""
+""")
         ],
     ]

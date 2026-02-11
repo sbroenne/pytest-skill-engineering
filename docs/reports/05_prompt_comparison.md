@@ -1,18 +1,23 @@
+
 # pytest-aitest
 
 > **6** tests | **6** passed | **0** failed | **100%** pass rate  
-> Duration: 67.9s | Cost: $0.0066 | Tokens: 910–3,452  
+> Duration: 67.9s | Cost: 🧪 $-0.018319 · 🤖 $0.0249 · 💰 $0.006595 | Tokens: 910–3,452  
 > February 07, 2026 at 07:36 PM
 
 *Prompt comparison — same model, different system prompts.*
 
+
 ## Agent Leaderboard
 
-| # | Agent | Pass Rate | Cost | Tokens | Duration |
-|---|-------|-----------|------|--------|----------|
-| 1 | gpt-5-mini + concise 🏆 | 100% (2/2) | $0.0007 | 1,956 | 19.3s |
-| 2 | gpt-5-mini + structured | 100% (2/2) | $0.0028 | 3,067 | 23.4s |
-| 3 | gpt-5-mini + detailed | 100% (2/2) | $0.0031 | 4,523 | 25.2s |
+
+|#|Agent|Tests|Pass Rate|Tokens|Cost|Duration|
+| :---: | :--- | :---: | :---: | ---: | ---: | ---: |
+|🥇|gpt-5-mini + concise 🏆|2/2|100%|1,956|$0.000727|19.3s|
+|🥈|gpt-5-mini + structured|2/2|100%|3,067|$0.002753|23.4s|
+|🥉|gpt-5-mini + detailed|2/2|100%|4,523|$0.003115|25.2s|
+
+
 
 ## AI Analysis
 
@@ -136,14 +141,17 @@ This clarification would discourage unnecessary pre/post calls in prompts like *
 
 These changes further amplify the cost advantage of the **concise** prompt without affecting correctness.
 
+
 ## Test Results
 
+
 ### tests/fixtures/scenario_05_prompt_comparison.py
+
 
 #### ✅ Balance query — tests how prompt style affects response form…
 
 <details>
-<summary>✅ gpt-5-mini + concise — 11.8s, 910 tokens, $0.0003</summary>
+<summary>✅ gpt-5-mini + concise — 11.8s · 910 tokens · 3 turns · $0.000296</summary>
 
 **Assertions:**
 
@@ -151,9 +159,11 @@ These changes further amplify the cost advantage of the **concise** prompt witho
 
 **Tool Calls:**
 
-| Tool | Status | Args |
-|------|--------|------|
-| `get_balance` | ✅ | account='checking' |
+
+|Tool|Status|Args|
+| :--- | :---: | :--- |
+|`get_balance`|✅|account='checking'|
+
 
 **Response:**
 
@@ -174,7 +184,7 @@ sequenceDiagram
 </details>
 
 <details>
-<summary>✅ gpt-5-mini + detailed — 7.7s, 1,071 tokens, $0.0005</summary>
+<summary>✅ gpt-5-mini + detailed — 7.7s · 1,071 tokens · 3 turns · $0.000485</summary>
 
 **Assertions:**
 
@@ -182,9 +192,11 @@ sequenceDiagram
 
 **Tool Calls:**
 
-| Tool | Status | Args |
-|------|--------|------|
-| `get_balance` | ✅ | account='checking' |
+
+|Tool|Status|Args|
+| :--- | :---: | :--- |
+|`get_balance`|✅|account='checking'|
+
 
 **Response:**
 
@@ -205,7 +217,7 @@ sequenceDiagram
 </details>
 
 <details>
-<summary>✅ gpt-5-mini + structured — 6.9s, 1,047 tokens, $0.0005</summary>
+<summary>✅ gpt-5-mini + structured — 6.9s · 1,047 tokens · 3 turns · $0.000472</summary>
 
 **Assertions:**
 
@@ -213,16 +225,18 @@ sequenceDiagram
 
 **Tool Calls:**
 
-| Tool | Status | Args |
-|------|--------|------|
-| `get_balance` | ✅ | account='checking' |
+
+|Tool|Status|Args|
+| :--- | :---: | :--- |
+|`get_balance`|✅|account='checking'|
+
 
 **Response:**
 
 > 💰 Account: checking
-📊 Balance: $1,500.00
-📋 Action: Retrieved balance
-✅ Status: success
+> 📊 Balance: $1,500.00
+> 📋 Action: Retrieved balance
+> ✅ Status: success
 
 ```mermaid
 sequenceDiagram
@@ -238,10 +252,11 @@ sequenceDiagram
 
 </details>
 
+
 #### ✅ Transfer with explanation — tests prompt impact on response …
 
 <details>
-<summary>✅ gpt-5-mini + concise — 7.6s, 1,046 tokens, $0.0004</summary>
+<summary>✅ gpt-5-mini + concise — 7.6s · 1,046 tokens · 3 turns · $0.000431</summary>
 
 **Assertions:**
 
@@ -249,18 +264,20 @@ sequenceDiagram
 
 **Tool Calls:**
 
-| Tool | Status | Args |
-|------|--------|------|
-| `transfer` | ✅ | from_account='checking', to_account='savings', amount=300 |
+
+|Tool|Status|Args|
+| :--- | :---: | :--- |
+|`transfer`|✅|from_account='checking', to_account='savings', amount=300|
+
 
 **Response:**
 
 > Done — transferred $300.00 from checking to savings.
-
-Checking new balance: $1,200.00
-Savings new balance: $3,300.00
-
-What happened: $300.00 was debited from your checking and credited to your savings. Transaction ID TX0001.
+> 
+> Checking new balance: $1,200.00
+> Savings new balance: $3,300.00
+> 
+> What happened: $300.00 was debited from your checking and credited to your savings. Transaction ID TX0001.
 
 ```mermaid
 sequenceDiagram
@@ -277,7 +294,7 @@ sequenceDiagram
 </details>
 
 <details>
-<summary>✅ gpt-5-mini + detailed — 17.5s, 3,452 tokens, $0.0026</summary>
+<summary>✅ gpt-5-mini + detailed — 17.5s · 3,452 tokens · 5 turns · $0.002631</summary>
 
 **Assertions:**
 
@@ -285,35 +302,37 @@ sequenceDiagram
 
 **Tool Calls:**
 
-| Tool | Status | Args |
-|------|--------|------|
-| `get_all_balances` | ✅ |  |
-| `transfer` | ✅ | from_account='checking', to_account='savings', amount=300 |
-| `get_all_balances` | ✅ |  |
+
+|Tool|Status|Args|
+| :--- | :---: | :--- |
+|`get_all_balances`|✅||
+|`transfer`|✅|from_account='checking', to_account='savings', amount=300|
+|`get_all_balances`|✅||
+
 
 **Response:**
 
 > Here’s what I did and what happened.
-
-Current balances (before the transfer)
-- Checking: $1,500.00
-- Savings: $3,000.00
-- Total across accounts: $4,500.00
-
-Requested action
-- Transfer $300.00 from checking to savings.
-
-Transfer details and result
-- Amount transferred: $300.00
-- From account: checking
-- To account: savings
-- Transaction ID: TX0001
-- Status: Successful
-
-Balances after the transfer
-- Checking: $1,200.00 (was $1,500.00)
-- Savings: $3,300.00 (was $3,000.00)
-- Total across accounts: $
+> 
+> Current balances (before the transfer)
+> - Checking: $1,500.00
+> - Savings: $3,000.00
+> - Total across accounts: $4,500.00
+> 
+> Requested action
+> - Transfer $300.00 from checking to savings.
+> 
+> Transfer details and result
+> - Amount transferred: $300.00
+> - From account: checking
+> - To account: savings
+> - Transaction ID: TX0001
+> - Status: Successful
+> 
+> Balances after the transfer
+> - Checking: $1,200.00 (was $1,500.00)
+> - Savings: $3,300.00 (was $3,000.00)
+> - Total across accounts: $
 
 ```mermaid
 sequenceDiagram
@@ -334,7 +353,7 @@ sequenceDiagram
 </details>
 
 <details>
-<summary>✅ gpt-5-mini + structured — 16.5s, 2,020 tokens, $0.0023</summary>
+<summary>✅ gpt-5-mini + structured — 16.5s · 2,020 tokens · 3 turns · $0.002281</summary>
 
 **Assertions:**
 
@@ -342,23 +361,25 @@ sequenceDiagram
 
 **Tool Calls:**
 
-| Tool | Status | Args |
-|------|--------|------|
-| `transfer` | ✅ | from_account='checking', to_account='savings', amount=300 |
+
+|Tool|Status|Args|
+| :--- | :---: | :--- |
+|`transfer`|✅|from_account='checking', to_account='savings', amount=300|
+
 
 **Response:**
 
 > 💰 Account: checking
-📊 Balance: $1,200.00
-📋 Action: Transferred $300.00 out to savings (TX0001)
-✅ Status: success
-
-💰 Account: savings
-📊 Balance: $3,300.00
-📋 Action: Received $300.00 transfer from checking (TX0001)
-✅ Status: success
-
-What happened: I moved $300.00 from your checking account into your savings account. The transfer debited checking and credited savings immediately, resulting in the balances shown above. Transaction ID TX0001 confirms the successful transfer. If you’d like, I can sho
+> 📊 Balance: $1,200.00
+> 📋 Action: Transferred $300.00 out to savings (TX0001)
+> ✅ Status: success
+> 
+> 💰 Account: savings
+> 📊 Balance: $3,300.00
+> 📋 Action: Received $300.00 transfer from checking (TX0001)
+> ✅ Status: success
+> 
+> What happened: I moved $300.00 from your checking account into your savings account. The transfer debited checking and credited savings immediately, resulting in the balances shown above. Transaction ID TX0001 confirms the successful transfer. If you’d like, I can sho
 
 ```mermaid
 sequenceDiagram
@@ -373,7 +394,5 @@ sequenceDiagram
 ```
 
 </details>
-
----
 
 *Generated by [pytest-aitest](https://github.com/sbroenne/pytest-aitest) on February 07, 2026 at 07:36 PM*

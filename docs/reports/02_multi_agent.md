@@ -1,17 +1,22 @@
+
 # pytest-aitest
 
 > **6** tests | **5** passed | **1** failed | **83%** pass rate  
-> Duration: 55.8s | Cost: $0.0046 | Tokens: 738–2,232  
+> Duration: 55.8s | Cost: 🧪 $-0.015492 · 🤖 $0.0201 · 💰 $0.004565 | Tokens: 738–2,232  
 > February 07, 2026 at 07:20 PM
 
 *Two agents compared side-by-side.*
 
+
 ## Agent Leaderboard
 
-| # | Agent | Pass Rate | Cost | Tokens | Duration |
-|---|-------|-----------|------|--------|----------|
-| 1 | gpt-5-mini 🏆 | 100% (3/3) | $0.0033 | 4,589 | 35.3s |
-| 2 | gpt-4.1-mini | 67% (2/3) | $0.0013 | 2,495 | 20.5s |
+
+|#|Agent|Tests|Pass Rate|Tokens|Cost|Duration|
+| :---: | :--- | :---: | :---: | ---: | ---: | ---: |
+|🥇|gpt-5-mini 🏆|3/3|100%|4,589|$0.003314|35.3s|
+|🥈|gpt-4.1-mini|2/3|67%|2,495|$0.001251|20.5s|
+
+
 
 ## AI Analysis
 
@@ -106,14 +111,17 @@ Never make up balances or account data.
 
 This optimization is optional but would further reduce costs on negative paths without affecting correctness.
 
+
 ## Test Results
 
+
 ### tests/fixtures/scenario_02_multi_agent.py
+
 
 #### ✅ Basic balance query — all agents should pass.
 
 <details>
-<summary>✅ gpt-5-mini — 11.0s, 922 tokens, $0.0003</summary>
+<summary>✅ gpt-5-mini — 11.0s · 922 tokens · 3 turns · $0.000320</summary>
 
 **Assertions:**
 
@@ -121,9 +129,11 @@ This optimization is optional but would further reduce costs on negative paths w
 
 **Tool Calls:**
 
-| Tool | Status | Args |
-|------|--------|------|
-| `get_balance` | ✅ | account='checking' |
+
+|Tool|Status|Args|
+| :--- | :---: | :--- |
+|`get_balance`|✅|account='checking'|
+
 
 **Response:**
 
@@ -144,7 +154,7 @@ sequenceDiagram
 </details>
 
 <details>
-<summary>✅ gpt-4.1-mini — 6.9s, 738 tokens, $0.0003</summary>
+<summary>✅ gpt-4.1-mini — 6.9s · 738 tokens · 3 turns · $0.000344</summary>
 
 **Assertions:**
 
@@ -152,9 +162,11 @@ sequenceDiagram
 
 **Tool Calls:**
 
-| Tool | Status | Args |
-|------|--------|------|
-| `get_balance` | ✅ | account='checking' |
+
+|Tool|Status|Args|
+| :--- | :---: | :--- |
+|`get_balance`|✅|account='checking'|
+
 
 **Response:**
 
@@ -174,10 +186,11 @@ sequenceDiagram
 
 </details>
 
+
 #### ✅ Transfer with verification — tests multi-step tool use.
 
 <details>
-<summary>✅ gpt-5-mini — 10.0s, 1,435 tokens, $0.0010</summary>
+<summary>✅ gpt-5-mini — 10.0s · 1,435 tokens · 3 turns · $0.001018</summary>
 
 **Assertions:**
 
@@ -185,21 +198,23 @@ sequenceDiagram
 
 **Tool Calls:**
 
-| Tool | Status | Args |
-|------|--------|------|
-| `transfer` | ✅ | from_account='checking', to_account='savings', amount=100 |
-| `get_all_balances` | ✅ |  |
+
+|Tool|Status|Args|
+| :--- | :---: | :--- |
+|`transfer`|✅|from_account='checking', to_account='savings', amount=100|
+|`get_all_balances`|✅||
+
 
 **Response:**
 
 > Done — I transferred $100 from checking to savings.
-
-Current balances:
-- Checking: $1,400.00
-- Savings: $3,100.00
-Total across accounts: $4,500.00
-
-What else can I do for you?
+> 
+> Current balances:
+> - Checking: $1,400.00
+> - Savings: $3,100.00
+> Total across accounts: $4,500.00
+> 
+> What else can I do for you?
 
 ```mermaid
 sequenceDiagram
@@ -218,7 +233,7 @@ sequenceDiagram
 </details>
 
 <details>
-<summary>✅ gpt-4.1-mini — 8.1s, 992 tokens, $0.0005</summary>
+<summary>✅ gpt-4.1-mini — 8.1s · 992 tokens · 3 turns · $0.000526</summary>
 
 **Assertions:**
 
@@ -226,20 +241,22 @@ sequenceDiagram
 
 **Tool Calls:**
 
-| Tool | Status | Args |
-|------|--------|------|
-| `transfer` | ✅ | from_account='checking', to_account='savings', amount=100 |
-| `get_all_balances` | ✅ |  |
+
+|Tool|Status|Args|
+| :--- | :---: | :--- |
+|`transfer`|✅|from_account='checking', to_account='savings', amount=100|
+|`get_all_balances`|✅||
+
 
 **Response:**
 
 > I have successfully transferred $100 from your checking account to your savings account. 
-
-Your updated balances are:
-- Checking: $1,400.00
-- Savings: $3,100.00
-
-Is there anything else you would like to do?
+> 
+> Your updated balances are:
+> - Checking: $1,400.00
+> - Savings: $3,100.00
+> 
+> Is there anything else you would like to do?
 
 ```mermaid
 sequenceDiagram
@@ -257,10 +274,11 @@ sequenceDiagram
 
 </details>
 
-#### ❌ Insufficient funds — tests error recovery.
+
+#### ❌ Insufficient funds — tests error recovery. ⚡
 
 <details>
-<summary>✅ gpt-5-mini — 14.3s, 2,232 tokens, $0.0020</summary>
+<summary>✅ gpt-5-mini — 14.3s · 2,232 tokens · 4 turns · $0.001975</summary>
 
 **Assertions:**
 
@@ -268,25 +286,27 @@ sequenceDiagram
 
 **Tool Calls:**
 
-| Tool | Status | Args |
-|------|--------|------|
-| `withdraw` | ✅ | account='checking', amount=50000 |
-| `get_all_balances` | ✅ |  |
+
+|Tool|Status|Args|
+| :--- | :---: | :--- |
+|`withdraw`|✅|account='checking', amount=50000|
+|`get_all_balances`|✅||
+
 
 **Response:**
 
 > I can’t withdraw $50,000 — your checking account has insufficient funds.
-
-Current balances:
-- Checking: $1,500.00
-- Savings: $3,000.00
-- Total across accounts: $4,500.00
-
-Options I can do for you now:
-- Withdraw the available $1,500 from checking (proceed now).
-- Transfer up to $3,000 from savings into checking, then withdraw (you’d still only be able to withdraw up to $4,500 total).
-- Transfer the full $3,000 from savings to checking and withdraw the full $4,500.
-- Arrange a deposit or external
+> 
+> Current balances:
+> - Checking: $1,500.00
+> - Savings: $3,000.00
+> - Total across accounts: $4,500.00
+> 
+> Options I can do for you now:
+> - Withdraw the available $1,500 from checking (proceed now).
+> - Transfer up to $3,000 from savings into checking, then withdraw (you’d still only be able to withdraw up to $4,500 total).
+> - Transfer the full $3,000 from savings to checking and withdraw the full $4,500.
+> - Arrange a deposit or external
 
 ```mermaid
 sequenceDiagram
@@ -305,13 +325,15 @@ sequenceDiagram
 </details>
 
 <details>
-<summary>❌ gpt-4.1-mini — 5.5s, 765 tokens, $0.0004</summary>
+<summary>❌ gpt-4.1-mini — 5.5s · 765 tokens · 3 turns · $0.000380</summary>
 
 **Tool Calls:**
 
-| Tool | Status | Args |
-|------|--------|------|
-| `get_balance` | ✅ | account='checking' |
+
+|Tool|Status|Args|
+| :--- | :---: | :--- |
+|`get_balance`|✅|account='checking'|
+
 
 **Error:** `      AssertionError: assert False
        +  where False = tool_was_called('withdraw')
@@ -334,7 +356,5 @@ sequenceDiagram
 ```
 
 </details>
-
----
 
 *Generated by [pytest-aitest](https://github.com/sbroenne/pytest-aitest) on February 07, 2026 at 07:20 PM*

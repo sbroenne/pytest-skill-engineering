@@ -1,18 +1,23 @@
+
 # pytest-aitest
 
 > **6** tests | **5** passed | **1** failed | **83%** pass rate  
-> Duration: 75.7s | Cost: $0.0091 | Tokens: 377–3,235  
+> Duration: 75.7s | Cost: 🧪 $-0.008804 · 🤖 $0.0179 · 💰 $0.009104 | Tokens: 377–3,235  
 > February 07, 2026 at 07:22 PM
 
 *Three agents for testing the agent selector UI.*
 
+
 ## Agent Leaderboard
 
-| # | Agent | Pass Rate | Cost | Tokens | Duration |
-|---|-------|-----------|------|--------|----------|
-| 1 | gpt-5-mini 🏆 | 100% (2/2) | $0.0037 | 3,448 | 31.1s |
-| 2 | gpt-5-mini + financial-advisor | 100% (2/2) | $0.0048 | 4,908 | 33.3s |
-| 3 | gpt-4.1-mini | 50% (1/2) | $0.0005 | 1,113 | 11.3s |
+
+|#|Agent|Tests|Pass Rate|Tokens|Cost|Duration|
+| :---: | :--- | :---: | :---: | ---: | ---: | ---: |
+|🥇|gpt-5-mini 🏆|2/2|100%|3,448|$0.003737|31.1s|
+|🥈|gpt-5-mini + financial-advisor|2/2|100%|4,908|$0.004823|33.3s|
+|🥉|gpt-4.1-mini|1/2|50%|1,113|$0.000544|11.3s|
+
+
 
 ## AI Analysis
 
@@ -89,14 +94,17 @@ Overall, tools are well-defined and correctly used by compliant agents. Tool sel
    - Change: Add explicit requirement to fetch balances before advice (see prompt fix above).
    - Impact: Prevents tool-miss failures, eliminating retries and failed tests (saves ~$0.0002 per failure).
 
+
 ## Test Results
 
+
 ### tests/fixtures/scenario_04_agent_selector.py
+
 
 #### ✅ Basic balance query — all agents should pass.
 
 <details>
-<summary>✅ gpt-5-mini — 11.1s, 922 tokens, $0.0003</summary>
+<summary>✅ gpt-5-mini — 11.1s · 922 tokens · 3 turns · $0.000320</summary>
 
 **Assertions:**
 
@@ -104,9 +112,11 @@ Overall, tools are well-defined and correctly used by compliant agents. Tool sel
 
 **Tool Calls:**
 
-| Tool | Status | Args |
-|------|--------|------|
-| `get_balance` | ✅ | account='checking' |
+
+|Tool|Status|Args|
+| :--- | :---: | :--- |
+|`get_balance`|✅|account='checking'|
+
 
 **Response:**
 
@@ -127,7 +137,7 @@ sequenceDiagram
 </details>
 
 <details>
-<summary>✅ gpt-4.1-mini — 6.9s, 736 tokens, $0.0003</summary>
+<summary>✅ gpt-4.1-mini — 6.9s · 736 tokens · 3 turns · $0.000341</summary>
 
 **Assertions:**
 
@@ -135,9 +145,11 @@ sequenceDiagram
 
 **Tool Calls:**
 
-| Tool | Status | Args |
-|------|--------|------|
-| `get_balance` | ✅ | account='checking' |
+
+|Tool|Status|Args|
+| :--- | :---: | :--- |
+|`get_balance`|✅|account='checking'|
+
 
 **Response:**
 
@@ -158,7 +170,7 @@ sequenceDiagram
 </details>
 
 <details>
-<summary>✅ gpt-5-mini + financial-advisor — 8.5s, 1,673 tokens, $0.0009</summary>
+<summary>✅ gpt-5-mini + financial-advisor — 8.5s · 1,673 tokens · 3 turns · $0.000905</summary>
 
 **Assertions:**
 
@@ -166,18 +178,20 @@ sequenceDiagram
 
 **Tool Calls:**
 
-| Tool | Status | Args |
-|------|--------|------|
-| `get_balance` | ✅ | account='checking' |
+
+|Tool|Status|Args|
+| :--- | :---: | :--- |
+|`get_balance`|✅|account='checking'|
+
 
 **Response:**
 
 > Your checking account balance is $1,500.00.
-
-Would you like me to:
-- Show your savings balance or recent transactions?
-- Transfer money between accounts or deposit/withdraw?
-- Help set up a budget or savings plan (emergency fund recommendations)?
+> 
+> Would you like me to:
+> - Show your savings balance or recent transactions?
+> - Transfer money between accounts or deposit/withdraw?
+> - Help set up a budget or savings plan (emergency fund recommendations)?
 
 ```mermaid
 sequenceDiagram
@@ -193,10 +207,11 @@ sequenceDiagram
 
 </details>
 
-#### ❌ Financial advice — tests differentiation between agents (ski…
+
+#### ❌ Financial advice — tests differentiation between agents (ski… ⚡
 
 <details>
-<summary>✅ gpt-5-mini — 20.1s, 2,526 tokens, $0.0034</summary>
+<summary>✅ gpt-5-mini — 20.1s · 2,526 tokens · 3 turns · $0.003418</summary>
 
 **Assertions:**
 
@@ -204,20 +219,22 @@ sequenceDiagram
 
 **Tool Calls:**
 
-| Tool | Status | Args |
-|------|--------|------|
-| `get_all_balances` | ✅ |  |
+
+|Tool|Status|Args|
+| :--- | :---: | :--- |
+|`get_all_balances`|✅||
+
 
 **Response:**
 
 > I pulled your balances: checking $1,500 and savings $3,000 (total $4,500).
-
-I can give a useful recommendation, but to tailor it I need a couple quick facts:
-- Rough monthly living expenses (rent/mortgage, utilities, food, transport)
-- Any upcoming big payments (car, vacation, home down payment) in the next 12 months
-- Whether you have high‑interest debt or want to invest/retire sooner
-
-Until then, here are clear, practical options you can choose from (I won’t move any money unless you ask me to
+> 
+> I can give a useful recommendation, but to tailor it I need a couple quick facts:
+> - Rough monthly living expenses (rent/mortgage, utilities, food, transport)
+> - Any upcoming big payments (car, vacation, home down payment) in the next 12 months
+> - Whether you have high‑interest debt or want to invest/retire sooner
+> 
+> Until then, here are clear, practical options you can choose from (I won’t move any money unless you ask me to
 
 ```mermaid
 sequenceDiagram
@@ -234,7 +251,7 @@ sequenceDiagram
 </details>
 
 <details>
-<summary>❌ gpt-4.1-mini — 4.5s, 377 tokens, $0.0002</summary>
+<summary>❌ gpt-4.1-mini — 4.5s · 377 tokens · 2 turns · $0.000202</summary>
 
 **Error:** `      AssertionError: assert (False or False)
        +  where False = tool_was_called('get_all_balances')
@@ -259,7 +276,7 @@ sequenceDiagram
 </details>
 
 <details>
-<summary>✅ gpt-5-mini + financial-advisor — 24.8s, 3,235 tokens, $0.0039</summary>
+<summary>✅ gpt-5-mini + financial-advisor — 24.8s · 3,235 tokens · 3 turns · $0.003919</summary>
 
 **Assertions:**
 
@@ -267,19 +284,21 @@ sequenceDiagram
 
 **Tool Calls:**
 
-| Tool | Status | Args |
-|------|--------|------|
-| `get_all_balances` | ✅ |  |
+
+|Tool|Status|Args|
+| :--- | :---: | :--- |
+|`get_all_balances`|✅||
+
 
 **Response:**
 
 > Thanks — I checked your accounts: you have $1,500 in checking and $3,000 in savings for a total of $4,500.
-
-High-level recommendations (priority order)
-1. Emergency fund first — 3–6 months of your essential expenses kept in savings (separate, ideally in a high‑yield savings account).
-2. Pay down any high‑interest debt (credit cards, payday loans) once you have at least a small emergency buffer.
-3. Contribute to retirement, at least enough to get any employer match.
-4. Other goals (vacation, home
+> 
+> High-level recommendations (priority order)
+> 1. Emergency fund first — 3–6 months of your essential expenses kept in savings (separate, ideally in a high‑yield savings account).
+> 2. Pay down any high‑interest debt (credit cards, payday loans) once you have at least a small emergency buffer.
+> 3. Contribute to retirement, at least enough to get any employer match.
+> 4. Other goals (vacation, home
 
 ```mermaid
 sequenceDiagram
@@ -294,7 +313,5 @@ sequenceDiagram
 ```
 
 </details>
-
----
 
 *Generated by [pytest-aitest](https://github.com/sbroenne/pytest-aitest) on February 07, 2026 at 07:22 PM*

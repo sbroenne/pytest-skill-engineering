@@ -1,17 +1,22 @@
+
 # pytest-aitest
 
 > **4** tests | **3** passed | **1** failed | **75%** pass rate  
-> Duration: 72.1s | Cost: $0.0102 | Tokens: 1,286–2,169  
+> Duration: 72.1s | Cost: 🧪 $-0.010241 · 🤖 $0.0205 · 💰 $0.0102 | Tokens: 1,286–2,169  
 > February 07, 2026 at 07:39 PM
 
 *Skill improvement — baseline vs skilled agent.*
 
+
 ## Agent Leaderboard
 
-| # | Agent | Pass Rate | Cost | Tokens | Duration |
-|---|-------|-----------|------|--------|----------|
-| 1 | baseline 🏆 | 100% (2/2) | $0.0046 | 3,455 | 37.7s |
-| 2 | with-financial-skill | 50% (1/2) | $0.0056 | 3,975 | 34.4s |
+
+|#|Agent|Tests|Pass Rate|Tokens|Cost|Duration|
+| :---: | :--- | :---: | :---: | ---: | ---: | ---: |
+|🥇|baseline 🏆|2/2|100%|3,455|$0.004625|37.7s|
+|🥈|with-financial-skill|1/2|50%|3,975|$0.005622|34.4s|
+
+
 
 ## AI Analysis
 
@@ -124,14 +129,17 @@ Overall, tools are clear and functional. The issue observed is **agent hesitatio
 
 
 
+
 ## Test Results
+
 
 ### tests/fixtures/scenario_07_skill_improvement.py
 
-#### ❌ Ask for allocation advice — skilled agent should apply 50/30…
+
+#### ❌ Ask for allocation advice — skilled agent should apply 50/30… ⚡
 
 <details>
-<summary>✅ baseline — 23.9s, 2,169 tokens, $0.0028</summary>
+<summary>✅ baseline — 23.9s · 2,169 tokens · 3 turns · $0.002759</summary>
 
 **Assertions:**
 
@@ -139,17 +147,19 @@ Overall, tools are clear and functional. The issue observed is **agent hesitatio
 
 **Tool Calls:**
 
-| Tool | Status | Args |
-|------|--------|------|
-| `get_all_balances` | ✅ |  |
+
+|Tool|Status|Args|
+| :--- | :---: | :--- |
+|`get_all_balances`|✅||
+
 
 **Response:**
 
 > Right now you have $4,500 total: $1,500 in checking and $3,000 in savings. How you should split it depends on your goals and monthly cash flow. A few quick questions that will let me give a specific plan:
-- How much are your typical monthly living expenses (rent/mortgage, bills, food, transport)?
-- Any upcoming large expenses in the next 6–12 months (car repair, vacation, tuition, down payment)?
-- Do you have high‑interest debt (credit cards) you’re paying down?
-- Do you feel comfortable with th
+> - How much are your typical monthly living expenses (rent/mortgage, bills, food, transport)?
+> - Any upcoming large expenses in the next 6–12 months (car repair, vacation, tuition, down payment)?
+> - Do you have high‑interest debt (credit cards) you’re paying down?
+> - Do you feel comfortable with th
 
 ```mermaid
 sequenceDiagram
@@ -166,7 +176,7 @@ sequenceDiagram
 </details>
 
 <details>
-<summary>❌ with-financial-skill — 17.7s, 1,983 tokens, $0.0028</summary>
+<summary>❌ with-financial-skill — 17.7s · 1,983 tokens · 2 turns · $0.002804</summary>
 
 **Error:** `      AssertionError: assert (False or False)
        +  where False = tool_was_called('get_all_balances')
@@ -177,12 +187,12 @@ sequenceDiagram
 **Response:**
 
 > I can help — to give specific transfers I’ll need a little info. Quick question first: do you want general guidance, or do you want me to look up your current balances and suggest exact transfers now?
-
-Below is a short, practical plan you can use right away plus what I’ll do if you want me to check your accounts.
-
-High-level rules (my priorities)
-- Emergency fund first: build 3–6 months of essential expenses in savings before other big goals.
-- Follow 50/30/20 as a baseline: 50% needs, 30% wants
+> 
+> Below is a short, practical plan you can use right away plus what I’ll do if you want me to check your accounts.
+> 
+> High-level rules (my priorities)
+> - Emergency fund first: build 3–6 months of essential expenses in savings before other big goals.
+> - Follow 50/30/20 as a baseline: 50% needs, 30% wants
 
 ```mermaid
 sequenceDiagram
@@ -196,10 +206,11 @@ sequenceDiagram
 
 </details>
 
+
 #### ✅ Ask about savings — skilled agent should mention emergency f…
 
 <details>
-<summary>✅ baseline — 13.8s, 1,286 tokens, $0.0019</summary>
+<summary>✅ baseline — 13.8s · 1,286 tokens · 2 turns · $0.001865</summary>
 
 **Assertions:**
 
@@ -208,15 +219,15 @@ sequenceDiagram
 **Response:**
 
 > Great — here are practical, high-impact ways to save more, plus a couple quick options I can help with right away.
-
-High-level principles
-- Automate it: set up automatic transfers to savings right after payday so you “pay yourself first.”
-- Make goals specific: name the goal, amount, and date (e.g., $3,600 in 12 months = $300/month).
-- Reduce friction: simplify accounts and automate categorization so saving feels effortless.
-
-Concrete steps you can start today
-1. Set a clear goal
-   - Emergency 
+> 
+> High-level principles
+> - Automate it: set up automatic transfers to savings right after payday so you “pay yourself first.”
+> - Make goals specific: name the goal, amount, and date (e.g., $3,600 in 12 months = $300/month).
+> - Reduce friction: simplify accounts and automate categorization so saving feels effortless.
+> 
+> Concrete steps you can start today
+> 1. Set a clear goal
+>    - Emergency 
 
 ```mermaid
 sequenceDiagram
@@ -231,7 +242,7 @@ sequenceDiagram
 </details>
 
 <details>
-<summary>✅ with-financial-skill — 16.7s, 1,992 tokens, $0.0028</summary>
+<summary>✅ with-financial-skill — 16.7s · 1,992 tokens · 2 turns · $0.002818</summary>
 
 **Assertions:**
 
@@ -240,12 +251,12 @@ sequenceDiagram
 **Response:**
 
 > Great — want practical, doable steps. Here’s a short, actionable plan you can start today plus specific tactics to speed up saving.
-
-Top priorities (in order)
-1. Build an emergency fund equal to 3–6 months of your essential monthly expenses. This comes first.
-2. After your emergency fund, pay down any high‑interest debt (credit cards, payday, some personal loans).
-3. Make sure you’re getting any employer retirement match (this is “free money”).
-4. Then save for other goals (house, vacation) and 
+> 
+> Top priorities (in order)
+> 1. Build an emergency fund equal to 3–6 months of your essential monthly expenses. This comes first.
+> 2. After your emergency fund, pay down any high‑interest debt (credit cards, payday, some personal loans).
+> 3. Make sure you’re getting any employer retirement match (this is “free money”).
+> 4. Then save for other goals (house, vacation) and 
 
 ```mermaid
 sequenceDiagram
@@ -258,7 +269,5 @@ sequenceDiagram
 ```
 
 </details>
-
----
 
 *Generated by [pytest-aitest](https://github.com/sbroenne/pytest-aitest) on February 07, 2026 at 07:39 PM*

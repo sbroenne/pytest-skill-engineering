@@ -61,7 +61,7 @@ def _html_head(report: ReportMetadata) -> Node:
             rel="stylesheet",
         ),
         script(src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"),
-        style[css_content],
+        style[Markup(css_content)],
     ]
 
 

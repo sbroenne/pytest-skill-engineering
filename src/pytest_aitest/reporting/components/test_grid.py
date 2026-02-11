@@ -269,9 +269,10 @@ def _test_group(
 def _grid_styles() -> Node:
     """CSS for test grid behavior."""
     from htpy import style
+    from markupsafe import Markup
 
     return style[
-        """
+        Markup("""
 .test-group.collapsed .group-content {
     display: none;
 }
@@ -284,7 +285,7 @@ def _grid_styles() -> Node:
 .test-detail.hidden {
     display: none;
 }
-"""
+""")
     ]
 
 

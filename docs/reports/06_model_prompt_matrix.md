@@ -1,23 +1,28 @@
+
 # pytest-aitest
 
 > **8** tests | **8** passed | **0** failed | **100%** pass rate  
-> Duration: 64.0s | Cost: $0.0039 | Tokens: 706–2,629  
+> Duration: 64.0s | Cost: 🧪 $-0.014118 · 🤖 $0.0180 · 💰 $0.003920 | Tokens: 706–2,629  
 > February 07, 2026 at 07:38 PM
 
 *2×2 matrix: 2 models × 2 prompts = 4 agent configurations.*
 
+
 ## Agent Leaderboard
 
-| # | Agent | Pass Rate | Cost | Tokens | Duration |
-|---|-------|-----------|------|--------|----------|
-| 1 | gpt-5-mini + concise 🏆 | 100% (1/1) | $0.0003 | 894 | 6.6s |
-| 2 | gpt-4.1-mini + concise | 100% (1/1) | $0.0003 | 706 | 6.4s |
-| 3 | gpt-5-mini + detailed | 100% (1/1) | $0.0003 | 913 | 12.3s |
-| 4 | gpt-4.1-mini + detailed | 100% (1/1) | $0.0003 | 718 | 6.8s |
-| 5 | gpt-4.1-mini + concise | 100% (1/1) | $0.0004 | 783 | 6.2s |
-| 6 | gpt-5-mini + concise | 100% (1/1) | $0.0004 | 988 | 6.7s |
-| 7 | gpt-4.1-mini + detailed | 100% (1/1) | $0.0006 | 1,229 | 7.2s |
-| 8 | gpt-5-mini + detailed | 100% (1/1) | $0.0013 | 2,629 | 11.8s |
+
+|#|Agent|Tests|Pass Rate|Tokens|Cost|Duration|
+| :---: | :--- | :---: | :---: | ---: | ---: | ---: |
+|🥇|gpt-5-mini + concise 🏆|1/1|100%|894|$0.000299|6.6s|
+|🥈|gpt-4.1-mini + concise|1/1|100%|706|$0.000317|6.4s|
+|🥉|gpt-5-mini + detailed|1/1|100%|913|$0.000333|12.3s|
+|4|gpt-4.1-mini + detailed|1/1|100%|718|$0.000334|6.8s|
+|5|gpt-4.1-mini + concise|1/1|100%|783|$0.000356|6.2s|
+|6|gpt-5-mini + concise|1/1|100%|988|$0.000364|6.7s|
+|7|gpt-4.1-mini + detailed|1/1|100%|1,229|$0.000574|7.2s|
+|8|gpt-5-mini + detailed|1/1|100%|2,629|$0.001342|11.8s|
+
+
 
 ## AI Analysis
 
@@ -106,14 +111,17 @@ Overall, tools are clear and consistently used correctly. Models reliably select
 
 This optimization compounds with prompt changes to further lower end-to-end test cost.
 
+
 ## Test Results
 
+
 ### Session: 2×2 matrix: 2 models × 2 prompts = 4 agent configurations.
+
 
 #### ✅ Balance query across all model × prompt permutations.
 
 <details>
-<summary>✅ gpt-5-mini + detailed — 12.3s, 913 tokens, $0.0003</summary>
+<summary>✅ gpt-5-mini + detailed — 12.3s · 913 tokens · 3 turns · $0.000333</summary>
 
 **Assertions:**
 
@@ -121,9 +129,11 @@ This optimization compounds with prompt changes to further lower end-to-end test
 
 **Tool Calls:**
 
-| Tool | Status | Args |
-|------|--------|------|
-| `get_balance` | ✅ | account='checking' |
+
+|Tool|Status|Args|
+| :--- | :---: | :--- |
+|`get_balance`|✅|account='checking'|
+
 
 **Response:**
 
@@ -144,7 +154,7 @@ sequenceDiagram
 </details>
 
 <details>
-<summary>✅ gpt-4.1-mini + detailed — 6.8s, 718 tokens, $0.0003</summary>
+<summary>✅ gpt-4.1-mini + detailed — 6.8s · 718 tokens · 3 turns · $0.000334</summary>
 
 **Assertions:**
 
@@ -152,9 +162,11 @@ sequenceDiagram
 
 **Tool Calls:**
 
-| Tool | Status | Args |
-|------|--------|------|
-| `get_balance` | ✅ | account='checking' |
+
+|Tool|Status|Args|
+| :--- | :---: | :--- |
+|`get_balance`|✅|account='checking'|
+
 
 **Response:**
 
@@ -175,7 +187,7 @@ sequenceDiagram
 </details>
 
 <details>
-<summary>✅ gpt-5-mini + concise — 6.6s, 894 tokens, $0.0003</summary>
+<summary>✅ gpt-5-mini + concise — 6.6s · 894 tokens · 3 turns · $0.000299</summary>
 
 **Assertions:**
 
@@ -183,9 +195,11 @@ sequenceDiagram
 
 **Tool Calls:**
 
-| Tool | Status | Args |
-|------|--------|------|
-| `get_balance` | ✅ | account='checking' |
+
+|Tool|Status|Args|
+| :--- | :---: | :--- |
+|`get_balance`|✅|account='checking'|
+
 
 **Response:**
 
@@ -206,7 +220,7 @@ sequenceDiagram
 </details>
 
 <details>
-<summary>✅ gpt-4.1-mini + concise — 6.4s, 706 tokens, $0.0003</summary>
+<summary>✅ gpt-4.1-mini + concise — 6.4s · 706 tokens · 3 turns · $0.000317</summary>
 
 **Assertions:**
 
@@ -214,9 +228,11 @@ sequenceDiagram
 
 **Tool Calls:**
 
-| Tool | Status | Args |
-|------|--------|------|
-| `get_balance` | ✅ | account='checking' |
+
+|Tool|Status|Args|
+| :--- | :---: | :--- |
+|`get_balance`|✅|account='checking'|
+
 
 **Response:**
 
@@ -236,10 +252,11 @@ sequenceDiagram
 
 </details>
 
+
 #### ✅ Transfer workflow across all permutations.
 
 <details>
-<summary>✅ gpt-5-mini + detailed — 11.8s, 2,629 tokens, $0.0013</summary>
+<summary>✅ gpt-5-mini + detailed — 11.8s · 2,629 tokens · 5 turns · $0.001342</summary>
 
 **Assertions:**
 
@@ -247,23 +264,25 @@ sequenceDiagram
 
 **Tool Calls:**
 
-| Tool | Status | Args |
-|------|--------|------|
-| `get_all_balances` | ✅ |  |
-| `transfer` | ✅ | from_account='checking', to_account='savings', amount=100 |
-| `get_all_balances` | ✅ |  |
+
+|Tool|Status|Args|
+| :--- | :---: | :--- |
+|`get_all_balances`|✅||
+|`transfer`|✅|from_account='checking', to_account='savings', amount=100|
+|`get_all_balances`|✅||
+
 
 **Response:**
 
 > Done — I transferred $100.00 from your checking to savings.
-
-Updated balances:
-- Checking: $1,400.00
-- Savings: $3,100.00
-
-Transaction ID: TX0001
-
-Would you like a receipt emailed to you or anything else I can do?
+> 
+> Updated balances:
+> - Checking: $1,400.00
+> - Savings: $3,100.00
+> 
+> Transaction ID: TX0001
+> 
+> Would you like a receipt emailed to you or anything else I can do?
 
 ```mermaid
 sequenceDiagram
@@ -284,7 +303,7 @@ sequenceDiagram
 </details>
 
 <details>
-<summary>✅ gpt-4.1-mini + detailed — 7.2s, 1,229 tokens, $0.0006</summary>
+<summary>✅ gpt-4.1-mini + detailed — 7.2s · 1,229 tokens · 4 turns · $0.000574</summary>
 
 **Assertions:**
 
@@ -292,10 +311,12 @@ sequenceDiagram
 
 **Tool Calls:**
 
-| Tool | Status | Args |
-|------|--------|------|
-| `get_balance` | ✅ | account='checking' |
-| `transfer` | ✅ | from_account='checking', to_account='savings', amount=100 |
+
+|Tool|Status|Args|
+| :--- | :---: | :--- |
+|`get_balance`|✅|account='checking'|
+|`transfer`|✅|from_account='checking', to_account='savings', amount=100|
+
 
 **Response:**
 
@@ -318,7 +339,7 @@ sequenceDiagram
 </details>
 
 <details>
-<summary>✅ gpt-5-mini + concise — 6.7s, 988 tokens, $0.0004</summary>
+<summary>✅ gpt-5-mini + concise — 6.7s · 988 tokens · 3 turns · $0.000364</summary>
 
 **Assertions:**
 
@@ -326,9 +347,11 @@ sequenceDiagram
 
 **Tool Calls:**
 
-| Tool | Status | Args |
-|------|--------|------|
-| `transfer` | ✅ | from_account='checking', to_account='savings', amount=100 |
+
+|Tool|Status|Args|
+| :--- | :---: | :--- |
+|`transfer`|✅|from_account='checking', to_account='savings', amount=100|
+
 
 **Response:**
 
@@ -349,7 +372,7 @@ sequenceDiagram
 </details>
 
 <details>
-<summary>✅ gpt-4.1-mini + concise — 6.2s, 783 tokens, $0.0004</summary>
+<summary>✅ gpt-4.1-mini + concise — 6.2s · 783 tokens · 3 turns · $0.000356</summary>
 
 **Assertions:**
 
@@ -357,9 +380,11 @@ sequenceDiagram
 
 **Tool Calls:**
 
-| Tool | Status | Args |
-|------|--------|------|
-| `transfer` | ✅ | from_account='checking', to_account='savings', amount=100 |
+
+|Tool|Status|Args|
+| :--- | :---: | :--- |
+|`transfer`|✅|from_account='checking', to_account='savings', amount=100|
+
 
 **Response:**
 
@@ -378,7 +403,5 @@ sequenceDiagram
 ```
 
 </details>
-
----
 
 *Generated by [pytest-aitest](https://github.com/sbroenne/pytest-aitest) on February 07, 2026 at 07:38 PM*
