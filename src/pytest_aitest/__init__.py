@@ -40,6 +40,9 @@ from pytest_aitest.core import (  # noqa: E402
 # Execution
 from pytest_aitest.execution import AgentEngine, RetryConfig, ServerManager  # noqa: E402
 
+# Hooks (for plugin extensibility)
+from pytest_aitest.hooks import AitestHookSpec  # noqa: E402
+
 # Reporting
 from pytest_aitest.reporting import (  # noqa: E402
     SuiteReport,
@@ -86,6 +89,8 @@ __all__ = [  # noqa: RUF022
     "build_suite_report",
     "generate_html",
     "generate_json",
+    # Hooks
+    "AitestHookSpec",
 ]
 
 from importlib.metadata import version as _get_version  # noqa: E402

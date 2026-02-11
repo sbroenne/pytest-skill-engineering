@@ -128,12 +128,15 @@ def _load_v2_report(
     return suite_report, insights
 
 
-def generate_ai_summary(report: SuiteReport, model: str) -> InsightsResult:
+def generate_ai_summary(
+    report: SuiteReport, model: str, *, analysis_prompt: str | None = None
+) -> InsightsResult:
     """Generate AI insights for the report.
 
     Args:
         report: The suite report to summarize
         model: LiteLLM model string (e.g., azure/gpt-4.1)
+        analysis_prompt: Custom analysis prompt text (optional)
 
     Returns:
         InsightsResult with markdown summary and metadata
@@ -149,6 +152,7 @@ def generate_ai_summary(report: SuiteReport, model: str) -> InsightsResult:
             skill_info=[],
             prompts={},
             model=model,
+            analysis_prompt=analysis_prompt,
         )
 
     return asyncio.run(_run())
@@ -194,6 +198,14 @@ def main(argv: list[str] | None = None) -> int:
         "Can also be set via AITEST_SUMMARY_MODEL env var or pyproject.toml.",
     )
 
+    parser.add_argument(
+        "--analysis-prompt",
+        metavar="PATH",
+        type=Path,
+        help="Path to a custom analysis prompt file for AI insights. "
+        "Overrides the built-in prompt.",
+    )
+
     args = parser.parse_args(argv)
 
     # Resolve summary-model with config precedence
@@ -229,9 +241,20 @@ def main(argv: list[str] | None = None) -> int:
     # Generate AI summary if requested
     insights = existing_insights
     if args.summary:
+        # Load custom analysis prompt if provided
+        custom_prompt = None
+        if args.analysis_prompt:
+            if not args.analysis_prompt.exists():
+                print(
+                    f"Error: Analysis prompt file not found: {args.analysis_prompt}",
+                    file=sys.stderr,
+                )
+                return 1
+            custom_prompt = args.analysis_prompt.read_text(encoding="utf-8")
+
         print(f"Generating AI summary with {summary_model}...")
         try:
-            insights = generate_ai_summary(report, summary_model)
+            insights = generate_ai_summary(report, summary_model, analysis_prompt=custom_prompt)
             print("AI summary generated successfully.")
         except Exception as e:
             print(f"Warning: Failed to generate AI summary: {e}", file=sys.stderr)

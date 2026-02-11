@@ -143,6 +143,17 @@ def pytest_addoption(parser: Parser) -> None:
         ),
     )
 
+    # Custom analysis prompt file
+    group.addoption(
+        "--aitest-analysis-prompt",
+        metavar="PATH",
+        default=None,
+        help=(
+            "Path to a custom analysis prompt file for AI insights. "
+            "Overrides the built-in prompt and any plugin-provided prompt."
+        ),
+    )
+
     # Report options
     group.addoption(
         "--aitest-html",
@@ -177,6 +188,11 @@ def pytest_addoption(parser: Parser) -> None:
 
 def pytest_configure(config: Config) -> None:
     """Configure the aitest plugin."""
+    # Register custom hookspecs so downstream plugins can extend behavior
+    from pytest_aitest.hooks import AitestHookSpec
+
+    config.pluginmanager.add_hookspecs(AitestHookSpec)
+
     # Register markers
     config.addinivalue_line(
         "markers",
@@ -522,6 +538,28 @@ def _log_report_path(config: Config, format_name: str, path: Path) -> None:
         terminalreporter.write_line(f"aitest {format_name} report: {path}")
 
 
+def _resolve_analysis_prompt(config: Config) -> str | None:
+    """Resolve the analysis prompt from CLI option, plugin hook, or default.
+
+    Priority: CLI option > plugin hook > None (let insights.py use built-in).
+    """
+    # 1. CLI option takes highest precedence
+    prompt_path = config.getoption("--aitest-analysis-prompt", default=None)
+    if prompt_path:
+        path = Path(prompt_path)
+        if not path.exists():
+            raise pytest.UsageError(f"Analysis prompt file not found: {path}")
+        return path.read_text(encoding="utf-8")
+
+    # 2. Plugin hook (firstresult=True — first non-None wins)
+    result = config.pluginmanager.hook.pytest_aitest_analysis_prompt(config=config)
+    if result:
+        return result
+
+    # 3. Fall back to built-in default (None signals insights.py to use its default)
+    return None
+
+
 def _generate_structured_insights(
     config: Config, report: SuiteReport, *, required: bool = False
 ) -> InsightsResult | None:
@@ -582,6 +620,8 @@ def _generate_structured_insights(
                         prompts[prompt_label] = effective_prompt
 
         # Generate insights using async function
+        analysis_prompt = _resolve_analysis_prompt(config)
+
         async def _run() -> InsightsResult:
             return await generate_insights(
                 suite_report=report,
@@ -590,6 +630,7 @@ def _generate_structured_insights(
                 prompts=prompts,
                 model=model,
                 min_pass_rate=config.getoption("--aitest-min-pass-rate"),
+                analysis_prompt=analysis_prompt,
             )
 
         # Use asyncio.run() instead of deprecated get_event_loop().run_until_complete()

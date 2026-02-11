@@ -199,6 +199,7 @@ async def generate_insights(
     model: str = "azure/gpt-5-mini",
     cache_dir: Path | None = None,
     min_pass_rate: int | None = None,
+    analysis_prompt: str | None = None,
 ) -> InsightsResult:
     """Generate AI insights markdown from test results.
 
@@ -210,6 +211,9 @@ async def generate_insights(
         model: LiteLLM model to use for analysis
         cache_dir: Directory for caching results (optional)
         min_pass_rate: Minimum pass rate threshold for disqualifying agents
+        analysis_prompt: Custom analysis prompt text. If None, uses the built-in
+            default from prompts/ai_summary.md. Downstream plugins can provide
+            domain-specific prompts via the ``pytest_aitest_analysis_prompt`` hook.
 
     Returns:
         InsightsResult with markdown summary and generation metadata.
@@ -238,7 +242,7 @@ async def generate_insights(
             _logger.debug("Cache invalid, regenerating insights", exc_info=True)
 
     # Build prompt - LLM returns markdown directly
-    prompt_template = _load_analysis_prompt()
+    prompt_template = analysis_prompt if analysis_prompt else _load_analysis_prompt()
 
     # Build analysis input
     analysis_input = _build_analysis_input(
