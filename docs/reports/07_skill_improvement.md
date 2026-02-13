@@ -2,7 +2,7 @@
 # pytest-aitest
 
 > **4** tests | **3** passed | **1** failed | **75%** pass rate  
-> Duration: 72.1s | Cost: 🧪 $-0.010241 · 🤖 $0.0205 · 💰 $0.0102 | Tokens: 1,286–2,169  
+> Duration: 72.1s | Cost: 🧪 $-0.011550 · 🤖 $0.0218 · 💰 $0.0102 | Tokens: 1,286–2,169  
 > February 07, 2026 at 07:39 PM
 
 *Skill improvement — baseline vs skilled agent.*
@@ -20,114 +20,122 @@
 
 ## AI Analysis
 
-## 🎯 Recommendation
+<div class="winner-card">
+<div class="winner-title">Recommended for Deploy</div>
+<div class="winner-name">baseline</div>
+<div class="winner-summary">Delivers a perfect pass rate at lower cost while reliably calling account tools when needed. Avoids permission-seeking behavior that caused missed tool usage in the skilled variant.</div>
+<div class="winner-stats">
+<div class="winner-stat"><span class="winner-stat-value green">100%</span><span class="winner-stat-label">Pass Rate</span></div>
+<div class="winner-stat"><span class="winner-stat-value blue">$0.004625</span><span class="winner-stat-label">Total Cost</span></div>
+<div class="winner-stat"><span class="winner-stat-value amber">3,455</span><span class="winner-stat-label">Tokens</span></div>
+</div>
+</div>
 
-**Deploy: baseline (gpt-5-mini + default system prompt)**
+<div class="metric-grid">
+<div class="metric-card green">
+<div class="metric-value green">4</div>
+<div class="metric-label">Total Tests</div>
+</div>
+<div class="metric-card red">
+<div class="metric-value red">1</div>
+<div class="metric-label">Failures</div>
+</div>
+<div class="metric-card blue">
+<div class="metric-value blue">2</div>
+<div class="metric-label">Agents</div>
+</div>
+<div class="metric-card amber">
+<div class="metric-value amber">2.2</div>
+<div class="metric-label">Avg Turns</div>
+</div>
+</div>
 
-Achieves **100% pass rate** across tested scenarios at **~2% lower cost** than the skilled variant, while correctly invoking banking tools when required.
+## Comparative Analysis
 
-**Reasoning:**  
-- **Pass rate:** Baseline passed all tests; the skilled agent failed a required tool-usage assertion.  
-- **Cost:** Baseline total cost is lower ($0.002759 vs $0.002804 in the comparable allocation test, ~2% savings).  
-- **Behavior:** Baseline reliably calls `get_all_balances` when asked for allocation advice, satisfying test expectations.
+### Why the winner wins
 
-**Alternatives:**  
-- **with-financial-skill (gpt-5-mini)** — **Disqualified** due to failing the allocation advice test (did not call any balance tool despite the test requiring it).
+- Achieves **100% pass rate** at **~18% lower total cost** than the alternative while handling the same scenarios.
+- Correctly **initiates balance lookup tools without asking permission**, satisfying tests that require immediate tool usage.
+- Uses fewer tokens overall, indicating more direct task execution rather than extended preambles.
+
+### Notable patterns
+
+- Adding the financial skill increased verbosity and introduced **permission-seeking behavior** (“do you want general guidance, or do you want me to look up your balances”) that delayed or prevented tool calls.
+- The baseline agent implicitly followed the expected flow: retrieve balances first, then reason about allocation.
+- The skill content helped with qualitative advice (emergency fund, prioritization) but conflicted with tests that expect **action-first behavior**.
+
+### Alternatives
+
+- **with-financial-skill**: Close in cost but failed allocation advice due to not calling tools. The root cause is not missing knowledge, but a **prompt/skill interaction that encourages asking clarifying questions before acting**.
 
 ## ❌ Failure Analysis
 
-### Ask for allocation advice — skilled agent should apply 50/30/20 rule (with-financial-skill)
-- **Problem:** The agent provided high-level guidance and asked a clarifying question instead of fetching balances, causing the test assertion to fail.
-- **Root Cause:** The **system prompt/skill lacks an explicit instruction to proactively call balance tools** when allocation advice is requested. The agent optimized for conversational clarification over tool usage.
-- **Fix:** Add an explicit directive to the system prompt or skill to always fetch balances for allocation questions.
+### Failure Summary
 
-**Exact text to add to the Financial Advisor Skill (top section):**
-```
-When a user asks how to allocate money across accounts, always retrieve current balances first using get_all_balances (or get_balance if only one account is relevant) before giving advice. Do not ask clarifying questions before checking balances.
-```
+**with-financial-skill** (1 failure)
+
+| Test | Root Cause | Fix |
+|------|------------|-----|
+| Ask for allocation advice — skilled agent should apply 50/30/20 rule | Permission-seeking response prevented required tool call | Instruct agent to fetch balances immediately when allocation is requested |
+
+### Ask for allocation advice — skilled agent should apply 50/30/20 rule (with-financial-skill)
+- **Problem:** The agent provided high-level guidance and asked for confirmation instead of retrieving balances.
+- **Root Cause:** The agent never called `get_all_balances` or `get_balance`, violating the test’s expectation of tool usage.
+- **Behavioral Mechanism:** The skill and system context emphasize phrases like “to give specific transfers I’ll need a little info” and “Quick question first,” which primes the model into a cautious, consultative mode. This shifts behavior from acting to **seeking user permission**, even when sufficient context exists to proceed.
+- **Fix:** Add an explicit instruction to the system prompt or skill:
+  > “When a user asks how to allocate money across accounts, immediately retrieve current balances using the appropriate account tools before asking any clarifying questions.”
 
 ## 🔧 MCP Tool Feedback
 
-### pytest_aitest.testing.banking_mcp
-Overall, tools are clear and functional. The issue observed is **agent hesitation**, not tool failure.
+### accounts_server
+Overall, tools are simple and discoverable. Failures were not due to tool design but to agent hesitation.
 
 | Tool | Status | Calls | Issues |
 |------|--------|-------|--------|
 | get_all_balances | ✅ | 1 | Working well |
-| get_balance | ✅ | 0 | Not used in failures; acceptable |
-| transfer | ✅ | 0 | Not exercised |
-| deposit | ✅ | 0 | Not exercised |
-| withdraw | ✅ | 0 | Not exercised |
-| get_transactions | ✅ | 0 | Not exercised |
+| get_balance | ✅ | 0 | Not used; no test required it explicitly |
 
 ## 📝 System Prompt Feedback
 
-### default (effective)
-- **Token count:** ~14
-- **Assessment:** Clear, concise, and effective. The prompt implicitly encourages tool use and resulted in correct behavior.
+### baseline (effective)
+- **Token count:** Low
+- **Behavioral impact:** Encourages direct action and tool usage without excessive framing.
+- **Problem:** None observed.
 - **Suggested change:** None.
 
-### Financial Advisor Skill prompt (mixed)
-- **Token count:** ~350+ (skill content)
-- **Problem:** Strong financial guidance, but **missing operational instructions** about when to use MCP tools. This caused a direct test failure.
-- **Suggested change:** Add the explicit tool-usage instruction shown in the Failure Analysis section.
+### with-financial-skill prompt (mixed — ineffective with gpt-5-mini in allocation task)
+- **Token count:** Higher due to skill injection
+- **Behavioral impact:** Language around “guidance,” “priorities,” and “quick questions” encourages explanation before execution.
+- **Problem:** Lacks a clear directive on **when to act vs. ask**.
+- **Suggested change:** Append:
+  > “Default to action: if the user asks for advice that depends on account data, call the relevant tools immediately and explain after.”
 
 ## 📚 Skill Feedback
 
-### financial-advisor (mixed)
-- **Usage rate:** High in savings-related responses; partial in allocation advice.
-- **Token cost:** High relative to baseline.
-- **Problem:** The skill emphasizes advisory principles but not **tool orchestration**, leading to non-compliant behavior in tool-dependent tests.
-- **Suggested change:** Add a short “Tool Usage Rules” subsection at the top:
-```
-## Tool Usage Rules
-- For allocation, budgeting, or balance-based advice: always call the relevant balance tool first.
-- Prefer get_all_balances when multiple accounts exist.
-```
+### financial-skill (mixed)
+- **Usage rate:** High in advisory responses
+- **Token cost:** Moderate
+- **Problem:** Overemphasizes planning and prioritization, which can override test expectations for immediate tool calls.
+- **Suggested change:** Split skill into two sections:
+  - “Action rules” (tool-first behaviors)
+  - “Advisory principles” (50/30/20, emergency fund guidance)
 
 ## 💡 Optimizations
 
-1. **Enforce proactive balance retrieval** (recommended)
-   - Current: Skilled agent asks clarifying questions instead of calling tools.
-   - Change: Add explicit tool-usage rules to the skill/system prompt.
-   - Impact: **Eliminates test failures** and avoids re-runs, saving ~$0.0028 per failed test execution.
+| # | Optimization | Priority | Estimated Savings |
+|---|-------------|----------|-------------------|
+| 1 | Enforce tool-first rule for allocation queries | recommended | Avoid 100% of similar failures |
+| 2 | Trim advisory preambles in skilled agent | suggestion | ~10% cost reduction |
 
-2. **Reduce skill verbosity** (suggestion)
-   - Current: Long skill content increases token usage without affecting tool behavior.
-   - Change: Move “Budget Categories” and “Red Flags” to a secondary section loaded only when explicitly needed.
-   - Impact: **~20–30% cost reduction** for skilled runs due to fewer prompt tokens.
+#### 1. Enforce tool-first rule for allocation queries (recommended)
+- Current: Skilled agent asks clarifying questions before fetching balances.
+- Change: Add an explicit system/skill rule to always fetch balances first.
+- Impact: Prevents test failures; reduces retries and wasted turns.
 
-## 📦 Tool Response Optimization
-
-### get_all_balances (from pytest_aitest.testing.banking_mcp)
-- **Current response size:** ~55–65 tokens
-- **Issues found:** Duplicate formatted fields (`formatted`, `total_formatted`) are not used by the agent in reasoning.
-- **Suggested optimization:** Remove formatted strings or make them optional.
-
-**Example current vs optimized:**
-```json
-// Current (~60 tokens)
-{
-  "accounts": {
-    "checking": {"balance": 1500.0, "formatted": "$1,500.00"},
-    "savings": {"balance": 3000.0, "formatted": "$3,000.00"}
-  },
-  "total": 4500.0,
-  "total_formatted": "$4,500.00"
-}
-
-// Optimized (~30 tokens)
-{
-  "accounts": {
-    "checking": 1500.0,
-    "savings": 3000.0
-  },
-  "total": 4500.0
-}
-```
-- **Estimated savings:** ~30 tokens per call (**~50% reduction**)
-
-
+#### 2. Trim advisory preambles in skilled agent (suggestion)
+- Current: Long high-level explanations precede any action.
+- Change: Move explanations after tool results.
+- Impact: ~10% cost reduction through fewer tokens and turns.
 
 
 ## Test Results

@@ -2,7 +2,7 @@
 # pytest-aitest
 
 > **4** tests | **3** passed | **1** failed | **75%** pass rate  
-> Duration: 37.2s | Cost: 🧪 $-0.021317 · 🤖 $0.0235 · 💰 $0.002150 | Tokens: 509–1,322  
+> Duration: 37.2s | Cost: 🧪 $-0.016434 · 🤖 $0.0186 · 💰 $0.002150 | Tokens: 509–1,322  
 > February 07, 2026 at 07:19 PM
 
 *Single agent tests - basic report without comparison UI.*
@@ -13,125 +13,113 @@
 
 ## AI Analysis
 
-## 🎯 Recommendation
+<div class="winner-card">
+<div class="winner-title">Recommended for Deploy</div>
+<div class="winner-name">banking-agent</div>
+<div class="winner-summary">Reliable single-agent setup that passes core banking workflows with correct tool usage at very low cost. One failure is attributable to an artificially strict turn limit, not tool or prompt correctness.</div>
+<div class="winner-stats">
+<div class="winner-stat"><span class="winner-stat-value amber">75%</span><span class="winner-stat-label">Pass Rate</span></div>
+<div class="winner-stat"><span class="winner-stat-value blue">$0.002150</span><span class="winner-stat-label">Total Cost</span></div>
+<div class="winner-stat"><span class="winner-stat-value amber">3,786</span><span class="winner-stat-label">Tokens</span></div>
+</div>
+</div>
 
-**Deploy: banking-agent (gpt-5-mini, default prompt)**
-
-**Reasoning:** Achieves a 75% pass rate (3/4) at very low cost ($0.002151 total across all tests). All core single-step banking actions (balance, transfer, transactions) pass reliably and use tools correctly. The only failure is due to a configured turn limit, not tool misuse or model behavior.
-
-**Alternatives:** None — only one configuration tested.
+<div class="metric-grid">
+<div class="metric-card green">
+<div class="metric-value green">4</div>
+<div class="metric-label">Total Tests</div>
+</div>
+<div class="metric-card red">
+<div class="metric-value red">1</div>
+<div class="metric-label">Failures</div>
+</div>
+<div class="metric-card blue">
+<div class="metric-value blue">1</div>
+<div class="metric-label">Agents</div>
+</div>
+<div class="metric-card amber">
+<div class="metric-value amber">2.8</div>
+<div class="metric-label">Avg Turns</div>
+</div>
+</div>
 
 ## ❌ Failure Analysis
 
+### Failure Summary
+
+**banking-agent** (1 failure)
+
+| Test | Root Cause | Fix |
+|------|------------|-----|
+| Test that fails due to turn limit — for report variety. | max_turns=1 prevents multi-step execution | Increase turn limit or allow tool chaining in one turn |
+
 ### Test that fails due to turn limit — for report variety. (banking-agent)
-- **Problem:** The agent could not complete a multi-step request (check balances → transfer → show updated balances → show transactions) because the test enforces `max_turns=1`.
-- **Root Cause:** Test configuration limits the session to a single turn, but the user request explicitly requires multiple tool calls and responses. The agent correctly initiated the first step (`get_all_balances`) but was blocked before completing the sequence.
-- **Fix:** Increase allowed turns for this test.
-  - **Exact change:** Set `max_turns` from `1` to `4` (or higher) for this test case.
-  - **Alternative fix (if max_turns must remain 1):** Split into separate tests:
-    1. “Check all balances — should pass”
-    2. “Transfer $500 from checking to savings — should pass”
-    3. “Show updated balances and transaction history — should pass”
+- **Problem:** The user requested a compound workflow: check balances, transfer funds, then show updated balances and transaction history.
+- **Root Cause:** The test enforces `max_turns=1`, but the workflow inherently requires multiple tool calls and at least one follow-up response. The agent correctly initiated the first step (`get_all_balances`) but was cut off before completing the sequence.
+- **Behavioral Mechanism:** Not prompt-induced. The failure is caused by the test harness constraint, not by hesitation or permission-seeking language in the system prompt.
+- **Fix:** Increase the test configuration to `max_turns >= 3`, or refactor the test to assert partial progress when `max_turns=1`.
 
 ## 🔧 MCP Tool Feedback
 
-### pytest_aitest.testing.banking_mcp
-Overall, tools are discoverable and used correctly. Naming is clear and aligned with user intents.
+### banking-mcp
+Overall, tools are clearly named and correctly invoked. The agent consistently selects the right tool without confusion.
 
 | Tool | Status | Calls | Issues |
 |------|--------|-------|--------|
 | get_balance | ✅ | 1 | Working well |
 | transfer | ✅ | 1 | Working well |
 | get_transactions | ✅ | 1 | Working well |
-| get_all_balances | ⚠️ | 1 | Tool works, but multi-step usage blocked by test turn limit |
-| deposit | ✅ | 0 | Not exercised in tests |
-| withdraw | ✅ | 0 | Not exercised in tests |
-
-## 📝 System Prompt Feedback
-
-### default (mixed)
-- **Token count:** ~24 tokens
-- **Problem:** The prompt does not address multi-step planning or constraints like turn limits. In multi-action requests, the agent attempts to proceed sequentially, which conflicts with tests that cap turns.
-- **Suggested change:** Add an explicit instruction to batch tool usage when possible.
-  - **Exact text to append:**
-    ```
-    If a user request requires multiple actions and turn limits may apply, plan all required tool calls up front and execute them in the minimum number of turns.
-    ```
+| get_all_balances | ✅ | 1 | Working well |
 
 ## 💡 Optimizations
 
-1. **Align test turn limits with realistic user tasks** (recommended)
-   - Current: Complex, multi-action requests are tested with `max_turns=1`.
-   - Change: Allow 3–4 turns for composite banking workflows or decompose them into atomic tests.
-   - Impact: Prevents false negatives; improves effective pass rate from 75% to 100% with no additional model cost.
+| # | Optimization | Priority | Estimated Savings |
+|---|-------------|----------|-------------------|
+| 1 | Increase turn limit for compound tasks | recommended | Prevents 25% test failure rate |
+| 2 | Trim verbose assistant follow-ups | suggestion | ~10–15% token reduction |
 
-2. **Reduce verbose assistant follow-ups** (suggestion)
-   - Current: Assistant frequently asks multiple follow-up questions after completing tasks.
-   - Change: Add instruction to ask at most one follow-up question or offer a concise menu.
-   - Impact: Minor cost reduction (~5–10% fewer tokens per test).
+#### 1. Increase turn limit for compound tasks (recommended)
+- Current: Complex requests are tested with `max_turns=1`, causing premature failure.
+- Change: Set `max_turns` to at least 3 for workflows involving multiple tool calls.
+- Impact: Eliminates the only observed failure without increasing per-test cost.
+
+#### 2. Trim verbose assistant follow-ups (suggestion)
+- Current: After successful tool calls, the assistant offers multiple optional next steps, adding tokens.
+- Change: Replace multi-option follow-ups with a single concise question, e.g., “Anything else I can help with?”
+- Impact: ~10–15% cost reduction through fewer output tokens.
 
 ## 📦 Tool Response Optimization
 
-### get_balance (from pytest_aitest.testing.banking_mcp)
-- **Current response size:** ~18 tokens
-- **Issues found:** Redundant formatted string duplicates numeric balance.
-- **Suggested optimization:** Omit `formatted` and let the assistant format.
-- **Estimated savings:** ~6 tokens per call (~33% reduction)
+### transfer (from banking-mcp)
+- **Current response size:** ~70–80 tokens
+- **Issues found:** Includes redundant formatted fields and a human-readable message that the assistant restates anyway.
+- **Suggested optimization:** Remove `message` and pre-formatted fields when not required by tests.
+- **Estimated savings:** ~25 tokens per call (~30% reduction)
 
 **Example current vs optimized:**
 ```json
-// Current (~18 tokens)
-{"account":"checking","balance":1500.0,"formatted":"$1,500.00"}
-
-// Optimized (~12 tokens)
-{"account":"checking","balance":1500.0}
-```
-
-### transfer (from pytest_aitest.testing.banking_mcp)
-- **Current response size:** ~45 tokens
-- **Issues found:** Both `message` and formatted fields duplicate information already present in structured fields.
-- **Suggested optimization:** Remove `message` and `amount_formatted`.
-- **Estimated savings:** ~15 tokens per call (~33% reduction)
-
-**Example current vs optimized:**
-```json
-// Current (~45 tokens)
+// Current (~75 tokens)
 {
-  "transaction_id":"TX0001",
-  "type":"transfer",
-  "from_account":"checking",
-  "to_account":"savings",
-  "amount":200,
-  "amount_formatted":"$200.00",
-  "new_balance_from":1300.0,
-  "new_balance_to":3200.0,
-  "message":"Successfully transferred $200.00 from checking to savings."
+  "transaction_id": "TX0001",
+  "type": "transfer",
+  "from_account": "checking",
+  "to_account": "savings",
+  "amount": 200,
+  "amount_formatted": "$200.00",
+  "new_balance_from": 1300.0,
+  "new_balance_to": 3200.0,
+  "message": "Successfully transferred $200.00 from checking to savings."
 }
 
-// Optimized (~30 tokens)
+// Optimized (~50 tokens)
 {
-  "transaction_id":"TX0001",
-  "from_account":"checking",
-  "to_account":"savings",
-  "amount":200,
-  "new_balance_from":1300.0,
-  "new_balance_to":3200.0
+  "transaction_id": "TX0001",
+  "from_account": "checking",
+  "to_account": "savings",
+  "amount": 200,
+  "new_balance_from": 1300.0,
+  "new_balance_to": 3200.0
 }
-```
-
-### get_transactions (from pytest_aitest.testing.banking_mcp)
-- **Current response size:** ~14 tokens
-- **Issues found:** Includes `filter: null`, which is unused.
-- **Suggested optimization:** Omit null fields.
-- **Estimated savings:** ~2 tokens per call (~14% reduction)
-
-**Example current vs optimized:**
-```json
-// Current (~14 tokens)
-{"transactions":[],"count":0,"filter":null}
-
-// Optimized (~12 tokens)
-{"transactions":[],"count":0}
 ```
 
 

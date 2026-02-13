@@ -70,6 +70,102 @@ def _build_analysis_input(
             "Still analyze their failures in the Failure Analysis section.\n"
         )
 
+    # Pre-computed agent statistics for AI accuracy
+    agent_agg: dict[str, dict[str, Any]] = {}
+    for test in suite_report.tests:
+        aid = test.agent_id
+        if not aid:
+            continue
+        if aid not in agent_agg:
+            agent_agg[aid] = {
+                "name": test.agent_name or test.model or "unknown",
+                "passed": 0,
+                "failed": 0,
+                "total": 0,
+                "cost": 0.0,
+                "tokens": 0,
+                "turn_counts": [],
+            }
+        agg = agent_agg[aid]
+        agg["total"] += 1
+        if test.outcome == "passed":
+            agg["passed"] += 1
+        else:
+            agg["failed"] += 1
+        if test.agent_result:
+            agg["cost"] += test.agent_result.cost_usd or 0
+            usage = test.agent_result.token_usage or {}
+            agg["tokens"] += usage.get("prompt", 0) + usage.get("completion", 0)
+            agg["turn_counts"].append(len(test.agent_result.turns))
+
+    if agent_agg:
+        # Rank: pass_rate desc → total tests desc → cost_per_test asc
+        ranked = sorted(
+            agent_agg.items(),
+            key=lambda item: (
+                -(item[1]["passed"] / max(item[1]["total"], 1) * 100),
+                -item[1]["total"],
+                item[1]["cost"] / max(item[1]["total"], 1),
+            ),
+        )
+
+        # Aggregate stats
+        all_turn_counts: list[int] = []
+        for v in agent_agg.values():
+            all_turn_counts.extend(v["turn_counts"])
+        avg_turns = sum(all_turn_counts) / len(all_turn_counts) if all_turn_counts else 0
+
+        sections.append("## Pre-computed Agent Statistics\n")
+        sections.append(
+            "Use these exact numbers in your Winner Card, metric cards, "
+            "and Comparative Analysis. "
+            "Do NOT re-derive statistics from raw test data — "
+            "these are authoritative.\n"
+        )
+
+        sections.append("**Aggregate Stats:**")
+        sections.append(f"- Total Test Executions: {suite_report.total}")
+        sections.append(f"- Passed: {suite_report.passed}")
+        sections.append(f"- Failed: {suite_report.failed}")
+        sections.append(f"- Agent Configurations: {len(agent_agg)}")
+        sections.append(f"- Avg Turns per Test: {avg_turns:.1f}")
+        sections.append("")
+
+        # Winner determination
+        winner_name = None
+        for _aid, st in ranked:
+            rate = st["passed"] / max(st["total"], 1) * 100
+            is_dq = min_pass_rate is not None and rate < min_pass_rate
+            if not is_dq:
+                winner_name = st["name"]
+                sections.append(f"**Winner:** {st['name']}")
+                sections.append(f"- Pass Rate: {rate:.0f}%")
+                sections.append(f"- Tests: {st['passed']}/{st['total']}")
+                sections.append(f"- Cost: ${st['cost']:.6f}")
+                sections.append(f"- Tokens: {st['tokens']:,}")
+                sections.append("")
+                break
+
+        # All agents ranked
+        sections.append("**All Agents (ranked):**\n")
+        sections.append("| Rank | Agent | Pass Rate | Tests | Cost | Tokens | Status |")
+        sections.append("|------|-------|-----------|-------|------|--------|--------|")
+        for rank, (_aid, st) in enumerate(ranked, 1):
+            rate = st["passed"] / max(st["total"], 1) * 100
+            is_dq = min_pass_rate is not None and rate < min_pass_rate
+            if st["name"] == winner_name:
+                status = "✅ Winner"
+            elif is_dq:
+                status = "⛔ Disqualified"
+            else:
+                status = ""
+            sections.append(
+                f"| {rank} | {st['name']} | {rate:.0f}% | "
+                f"{st['passed']}/{st['total']} | ${st['cost']:.6f} | "
+                f"{st['tokens']:,} | {status} |"
+            )
+        sections.append("")
+
     # Test results summary
     sections.append("## Test Results\n")
     for test in suite_report.tests:

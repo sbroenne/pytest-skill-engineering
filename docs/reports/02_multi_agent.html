@@ -721,6 +721,198 @@ a:hover {
   color: var(--color-text-light);
 }
 
+/* ==================== AI Summary Visualizations ==================== */
+
+/* --- Winner Spotlight Card --- */
+.winner-card {
+  position: relative;
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.12) 0%, rgba(64, 81, 181, 0.10) 50%, rgba(82, 108, 254, 0.08) 100%);
+  border: 1px solid rgba(34, 197, 94, 0.35);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin-bottom: 1rem;
+  overflow: hidden;
+}
+.winner-card::before {
+  content: '';
+  position: absolute;
+  top: -60%;
+  right: -20%;
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, rgba(34, 197, 94, 0.10) 0%, transparent 70%);
+  pointer-events: none;
+}
+.winner-card::after {
+  content: '🏆';
+  position: absolute;
+  top: 14px;
+  right: 18px;
+  font-size: 1.4rem;
+  opacity: 0.7;
+}
+.winner-title {
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-green);
+  margin-bottom: 2px;
+  font-weight: 600;
+}
+.winner-name {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 4px;
+  letter-spacing: -0.02em;
+}
+.winner-summary {
+  font-size: 0.8rem;
+  color: var(--color-text);
+  line-height: 1.4;
+  max-width: 88%;
+}
+.winner-stats {
+  display: flex;
+  gap: 20px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+.winner-stat {
+  display: flex;
+  flex-direction: column;
+}
+.winner-stat-value {
+  font-size: 1.1rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.winner-stat-value.green { color: var(--color-green); }
+.winner-stat-value.blue { color: var(--color-blue); }
+.winner-stat-value.amber { color: var(--color-yellow); }
+.winner-stat-label {
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-muted);
+  margin-top: 1px;
+}
+
+/* --- Metric Cards (compact dashboard) --- */
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 8px;
+  margin-bottom: 1rem;
+}
+.metric-card {
+  background-color: var(--color-surface-elevated);
+  border-radius: 6px;
+  padding: 12px 10px;
+  text-align: center;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  position: relative;
+  overflow: hidden;
+}
+.metric-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+}
+.metric-card.green { border-color: rgba(34, 197, 94, 0.25); }
+.metric-card.green::before { background: linear-gradient(90deg, var(--color-green), rgba(34, 197, 94, 0.3)); }
+.metric-card.blue { border-color: rgba(96, 165, 250, 0.25); }
+.metric-card.blue::before { background: linear-gradient(90deg, var(--color-blue), rgba(96, 165, 250, 0.3)); }
+.metric-card.red { border-color: rgba(248, 113, 113, 0.25); }
+.metric-card.red::before { background: linear-gradient(90deg, var(--color-red), rgba(248, 113, 113, 0.3)); }
+.metric-card.amber { border-color: rgba(250, 204, 21, 0.25); }
+.metric-card.amber::before { background: linear-gradient(90deg, var(--color-yellow), rgba(250, 204, 21, 0.3)); }
+.metric-value {
+  font-size: 1.4rem;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 2px;
+}
+.metric-value.green { color: var(--color-green); }
+.metric-value.blue  { color: var(--color-blue); }
+.metric-value.red   { color: var(--color-red); }
+.metric-value.amber { color: var(--color-yellow); }
+.metric-label {
+  font-size: 0.6rem;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* --- Pass Rate Bars (compact) --- */
+.progress-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 5px 0;
+}
+.progress-agent {
+  width: 100px;
+  font-size: 0.75rem;
+  color: var(--color-text-light);
+  text-align: right;
+  flex-shrink: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.progress-track {
+  flex: 1;
+  background-color: rgba(255, 255, 255, 0.04);
+  border-radius: 4px;
+  height: 18px;
+  overflow: hidden;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+.progress-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 600ms cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+.progress-fill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 50%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.15) 0%, transparent 100%);
+  border-radius: 4px 4px 0 0;
+}
+.progress-fill.green { background: linear-gradient(90deg, #22c55e, #4ade80); }
+.progress-fill.blue  { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
+.progress-fill.amber { background: linear-gradient(90deg, #d97706, #facc15); }
+.progress-fill.red   { background: linear-gradient(90deg, #dc2626, #f87171); }
+.progress-pct {
+  width: 42px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-text-light);
+  text-align: right;
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Constrain Mermaid chart size inside AI insights */
+.markdown-content pre.mermaid {
+  background-color: transparent;
+  border: none;
+  padding: 0;
+  max-width: 500px;
+  margin-bottom: 0.75rem;
+}
+
 /* ==================== Agent Selector ==================== */
 .agent-chip {
   cursor: pointer;
@@ -775,31 +967,84 @@ a:hover {
   height: auto;
   min-height: 60vh;
 }
-</style></head><body class="bg-surface text-text min-h-screen"><div class="max-w-6xl mx-auto px-6 py-8"><header class="report-header mb-8"><div class="flex justify-between items-start gap-4 mb-4"><div class="flex-1"><h1 class="text-2xl font-medium mb-1">Two agents compared side-by-side.</h1></div><div class="status-failed"><span>✗</span><span>1 Failed</span></div></div><div class="flex flex-wrap gap-x-6 gap-y-1 py-3 border-t border-white/10 text-sm"><span class="opacity-70">February 07, 2026 at 07:20 PM</span><span>📄 <span class="text-text-light hover:text-blue-400 cursor-pointer" title="tests/fixtures/scenario_02_multi_agent.py">scenario_02_multi_agent.py</span></span><span class="tabular-nums">6 tests</span><span class="tabular-nums">55.8s</span><span class="tabular-nums" title="Token range (min-max per test)">738–2,232 tok</span><span class="tabular-nums" title="Test execution cost">🧪 $-0.015492</span><span class="tabular-nums" title="AI analysis cost">🤖 $0.0201</span><span class="tabular-nums font-semibold" title="Total cost">💰 $0.004565</span></div></header><section class="mb-8"><div class="ai-insights"><div class="ai-insights-header"><span>🤖</span><span>AI Analysis</span><button class="ml-auto text-text-muted hover:text-text-light text-sm" onclick="this.closest(&#39;.ai-insights&#39;).querySelector(&#39;.card-body&#39;).classList.toggle(&#39;hidden&#39;)">Toggle</button></div><div class="card-body"><div class="markdown-content"><h2>🎯 Recommendation</h2>
-<p><strong>Deploy: gpt-5-mini with default system prompt</strong></p>
-<p>Achieves <strong>100% pass rate</strong> across all tests with correct tool usage, at the cost of <strong>higher spend</strong> but <strong>zero functional failures</strong>.</p>
-<p><strong>Reasoning:</strong><br />
-- <strong>Pass rate:</strong> gpt-5-mini passed <strong>3/3 tests (100%)</strong>, while gpt-4.1-mini passed <strong>2/3 (67%)</strong> and is therefore disqualified for deployment.<br />
-- <strong>Cost:</strong> gpt-5-mini cost <strong>$0.00331 total</strong>, versus <strong>$0.00125 total</strong> for gpt-4.1-mini. Despite being ~<strong>165% more expensive</strong>, gpt-5-mini is the <strong>only configuration that meets correctness requirements</strong>.<br />
-- <strong>Response quality:</strong> gpt-5-mini consistently followed the instruction to <em>always use tools</em>, including attempting the <code>withdraw</code> tool even when the action would fail.</p>
-<p><strong>Alternatives:</strong><br />
-- <strong>gpt-4.1-mini (disqualified):</strong> ~62% lower cost, but fails the insufficient funds test by skipping the required <code>withdraw</code> tool call, violating test expectations and system prompt constraints.</p>
-<h2>❌ Failure Analysis</h2>
-<h3>Insufficient funds — tests error recovery. (gpt-4.1-mini)</h3>
+</style></head><body class="bg-surface text-text min-h-screen"><div class="max-w-6xl mx-auto px-6 py-8"><header class="report-header mb-8"><div class="flex justify-between items-start gap-4 mb-4"><div class="flex-1"><h1 class="text-2xl font-medium mb-1">Two agents compared side-by-side.</h1></div><div class="status-failed"><span>✗</span><span>1 Failed</span></div></div><div class="flex flex-wrap gap-x-6 gap-y-1 py-3 border-t border-white/10 text-sm"><span class="opacity-70">February 07, 2026 at 07:20 PM</span><span>📄 <span class="text-text-light hover:text-blue-400 cursor-pointer" title="tests/fixtures/scenario_02_multi_agent.py">scenario_02_multi_agent.py</span></span><span class="tabular-nums">6 tests</span><span class="tabular-nums">55.8s</span><span class="tabular-nums" title="Token range (min-max per test)">738–2,232 tok</span><span class="tabular-nums" title="Test execution cost">🧪 $-0.019128</span><span class="tabular-nums" title="AI analysis cost">🤖 $0.0237</span><span class="tabular-nums font-semibold" title="Total cost">💰 $0.004565</span></div></header><section class="mb-8"><div class="ai-insights"><div class="ai-insights-header"><span>🤖</span><span>AI Analysis</span><button class="ml-auto text-text-muted hover:text-text-light text-sm" onclick="this.closest(&#39;.ai-insights&#39;).querySelector(&#39;.card-body&#39;).classList.toggle(&#39;hidden&#39;)">Toggle</button></div><div class="card-body"><div class="markdown-content"><div class="winner-card">
+<div class="winner-title">Recommended for Deploy</div>
+<div class="winner-name">gpt-5-mini</div>
+<div class="winner-summary">Achieves a 100% pass rate while correctly executing multi-step tool flows and error recovery. Slightly higher cost than the alternative, but the only configuration that consistently follows the required tool-first behavior in failure scenarios.</div>
+<div class="winner-stats">
+<div class="winner-stat"><span class="winner-stat-value green">100%</span><span class="winner-stat-label">Pass Rate</span></div>
+<div class="winner-stat"><span class="winner-stat-value blue">$0.003314</span><span class="winner-stat-label">Total Cost</span></div>
+<div class="winner-stat"><span class="winner-stat-value amber">4,589</span><span class="winner-stat-label">Tokens</span></div>
+</div>
+</div>
+
+<div class="metric-grid">
+<div class="metric-card green">
+<div class="metric-value green">6</div>
+<div class="metric-label">Total Tests</div>
+</div>
+<div class="metric-card red">
+<div class="metric-value red">1</div>
+<div class="metric-label">Failures</div>
+</div>
+<div class="metric-card blue">
+<div class="metric-value blue">2</div>
+<div class="metric-label">Agents</div>
+</div>
+<div class="metric-card amber">
+<div class="metric-value amber">3.2</div>
+<div class="metric-label">Avg Turns</div>
+</div>
+</div>
+
+<h2>Comparative Analysis</h2>
+<h3>Why the winner wins</h3>
 <ul>
-<li><strong>Problem:</strong> The agent did not call the <code>withdraw</code> tool when asked to withdraw $50,000, causing the test assertion <code>tool_was_called('withdraw')</code> to fail.</li>
-<li><strong>Root Cause:</strong> The model pre-validated the balance using <code>get_balance</code> and short-circuited the workflow, opting to explain the failure in natural language instead of attempting the withdrawal. This contradicts both the <strong>system prompt</strong> (“Always use tools”) and the test’s expectation that error handling occurs via the tool.</li>
-<li><strong>Fix:</strong> Strengthen the system prompt to explicitly require attempting the requested action tool even if failure is expected.</li>
+<li><strong>Only agent with correct error-path tool usage:</strong> gpt-5-mini is the only configuration that attempted the <code>withdraw</code> tool even when funds were insufficient, satisfying the test’s requirement to exercise error recovery logic.</li>
+<li><strong>Reliable multi-step chaining:</strong> Successfully chains <code>transfer → get_all_balances</code> without hesitation or re-asking the user, matching the intended MCP workflow.</li>
+<li><strong>Higher correctness outweighs marginal cost:</strong> Although gpt-4.1-mini is cheaper in absolute terms, its 67% pass rate makes it unsuitable for deployment where correctness is mandatory.</li>
 </ul>
-<p><strong>Exact system prompt change:</strong></p>
-<pre><code>You are a helpful banking assistant.
-Use the available tools to manage accounts and transactions.
-Always use tools for requested actions, even if you expect them to fail (e.g., insufficient funds).
-Never make up balances or account data.
-</code></pre>
+<h3>Notable patterns</h3>
+<ul>
+<li><strong>Cheaper model avoided “failing” tools:</strong> gpt-4.1-mini inferred insufficiency from <code>get_balance</code> and responded conversationally instead of calling <code>withdraw</code>, indicating a bias toward helpful explanation over tool execution.</li>
+<li><strong>Error tests expose prompt–model interaction:</strong> The insufficient-funds scenario is the only place where the models diverge, suggesting that tool-error paths are the critical discriminator.</li>
+</ul>
+<h3>Alternatives</h3>
+<ul>
+<li><strong>gpt-4.1-mini:</strong> Lower total cost, but failed a core error-recovery test because it did not call the required tool. Not recommended unless the prompt is adjusted to force tool invocation on withdrawal intents.</li>
+</ul>
+<h2>❌ Failure Analysis</h2>
+<h3>Failure Summary</h3>
+<p><strong>gpt-4.1-mini</strong> (1 failure)</p>
+<table>
+<thead>
+<tr>
+<th>Test</th>
+<th>Root Cause</th>
+<th>Fix</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Insufficient funds — tests error recovery</td>
+<td>Model chose to explain insufficiency instead of invoking <code>withdraw</code></td>
+<td>Update system prompt to mandate calling <code>withdraw</code> for any withdrawal request, even if funds appear insufficient</td>
+</tr>
+</tbody>
+</table>
+<h3>Insufficient funds — tests error recovery (gpt-4.1-mini)</h3>
+<ul>
+<li><strong>Problem:</strong> The agent responded with a balance explanation and options without ever calling the <code>withdraw</code> tool.</li>
+<li><strong>Root Cause:</strong> The model inferred the failure outcome after calling <code>get_balance</code> and optimized for a helpful natural-language response rather than executing the requested action via the tool.</li>
+<li><strong>Behavioral Mechanism:</strong> The absence of explicit language like “always attempt the requested banking action via tools” allows the model to short-circuit. Phrases implying helpfulness or user guidance (e.g., offering alternatives) prime it to stop after explanation instead of acting.</li>
+<li><strong>Fix:</strong> Add an explicit instruction to the system prompt:  <blockquote>
+<p>“For any user request to withdraw funds, you MUST call the <code>withdraw</code> tool exactly once, even if you expect it to fail due to insufficient funds.”</p>
+</blockquote>
+</li>
+</ul>
 <h2>🔧 MCP Tool Feedback</h2>
-<h3>pytest_aitest.testing.banking_mcp</h3>
-<p>Overall, tools are clear and consistently used. Error behavior is surfaced correctly to the agent.</p>
+<h3>banking_server</h3>
+<p>Overall, tools are discoverable and consistently named. Error responses are clear, enabling the agent to recover and explain outcomes.</p>
 <table>
 <thead>
 <tr>
@@ -832,69 +1077,74 @@ Never make up balances or account data.
 <td>withdraw</td>
 <td>✅</td>
 <td>1</td>
-<td>Error handling works as intended</td>
-</tr>
-<tr>
-<td>deposit</td>
-<td>✅</td>
-<td>0</td>
-<td>Not exercised</td>
-</tr>
-<tr>
-<td>get_transactions</td>
-<td>✅</td>
-<td>0</td>
-<td>Not exercised</td>
+<td>Error surfaced correctly</td>
 </tr>
 </tbody>
 </table>
-<p>No description rewrites required; tool naming and schemas are unambiguous.</p>
-<h2>📝 System Prompt Feedback</h2>
-<h3>default (mixed effectiveness)</h3>
-<ul>
-<li><strong>Token count:</strong> ~27 tokens</li>
-<li><strong>Problem:</strong> The instruction “Always use tools” is underspecified for failure scenarios. gpt-4.1-mini interpreted it as “use tools to fetch data,” not “attempt the requested action.”</li>
-<li><strong>Suggested change:</strong> Add explicit guidance for error paths.</li>
-</ul>
-<p><strong>Exact replacement:</strong></p>
-<pre><code>You are a helpful banking assistant.
-Use the available tools to manage accounts and transactions.
-Always use tools for requested actions, even if you expect them to fail (for example, insufficient funds).
-Never make up balances or account data.
-</code></pre>
 <h2>💡 Optimizations</h2>
-<ol>
-<li><strong>Clarify mandatory action-tool usage</strong> (recommended)</li>
-<li>Current: Prompt allows models to short-circuit actions based on reasoning.</li>
-<li>Change: Explicitly require calling the action tool (<code>withdraw</code>, <code>transfer</code>, etc.) whenever the user requests an action.</li>
-<li>
-<p>Impact: Eliminates action-skipping failures; prevents disqualification of lower-cost models, potentially enabling <strong>&gt;60% cost reduction</strong> if gpt-4.1-mini becomes compliant.</p>
-</li>
-<li>
-<p><strong>Reduce verbose recovery messaging</strong> (suggestion)</p>
-</li>
-<li>Current: gpt-5-mini produces long option lists after failures (e.g., insufficient funds), increasing token usage.</li>
-<li>Change: Limit recovery suggestions to 1–2 concise options unless the user asks for details.</li>
-<li>Impact: ~10–15% cost reduction on failure-path interactions.</li>
-</ol>
-<h2>📦 Tool Response Optimization</h2>
-<h3>withdraw (from pytest_aitest.testing.banking_mcp)</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Optimization</th>
+<th>Priority</th>
+<th>Estimated Savings</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Force tool-first behavior for withdrawals</td>
+<td>recommended</td>
+<td>Prevents 33% failure rate</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Trim unused fields from balance responses</td>
+<td>suggestion</td>
+<td>~15% token reduction</td>
+</tr>
+</tbody>
+</table>
+<h4>1. Force tool-first behavior for withdrawals (recommended)</h4>
 <ul>
-<li><strong>Current response size:</strong> ~20–25 tokens (error string)</li>
-<li><strong>Issues found:</strong> Error is plain text; agent does not need full sentence phrasing.</li>
-<li><strong>Suggested optimization:</strong> Return a compact, structured error object.</li>
+<li>Current: Models may infer failure from balances and skip calling <code>withdraw</code>.</li>
+<li>Change: Explicitly require a <code>withdraw</code> tool call for any withdrawal intent.</li>
+<li>Impact: Eliminates the observed failure mode; improves pass rate from 67% to 100% for gpt-4.1-mini.</li>
+</ul>
+<h4>2. Trim unused fields from balance responses (suggestion)</h4>
+<ul>
+<li>Current: Tools return both raw and formatted totals that are not always referenced.</li>
+<li>Change: Remove aggregate totals when per-account balances are sufficient.</li>
+<li>Impact: ~15% token reduction in multi-balance responses.</li>
+</ul>
+<h2>📦 Tool Response Optimization</h2>
+<h3>get_all_balances (from banking_server)</h3>
+<ul>
+<li><strong>Current response size:</strong> ~80 tokens</li>
+<li><strong>Issues found:</strong> Includes <code>total</code> and <code>total_formatted</code> even when the agent only lists per-account balances.</li>
+<li><strong>Suggested optimization:</strong> Make totals optional via a parameter (e.g., <code>include_total=false</code>).</li>
+<li><strong>Estimated savings:</strong> ~15 tokens per call (~18% reduction)</li>
 </ul>
 <p><strong>Example current vs optimized:</strong></p>
-<pre><code class="language-json">// Current (~22 tokens)
-&quot;Insufficient funds. checking has $1,500.00.&quot;
+<pre><code class="language-json">// Current (~80 tokens)
+{
+  &quot;accounts&quot;: {
+    &quot;checking&quot;: {&quot;balance&quot;: 1400.0, &quot;formatted&quot;: &quot;$1,400.00&quot;},
+    &quot;savings&quot;: {&quot;balance&quot;: 3100.0, &quot;formatted&quot;: &quot;$3,100.00&quot;}
+  },
+  &quot;total&quot;: 4500.0,
+  &quot;total_formatted&quot;: &quot;$4,500.00&quot;
+}
 
-// Optimized (~10 tokens)
-{&quot;error&quot;:&quot;INSUFFICIENT_FUNDS&quot;,&quot;balance&quot;:1500}
-</code></pre>
-<ul>
-<li><strong>Estimated savings:</strong> ~12 tokens per failed call (~50% reduction)</li>
-</ul>
-<p>This optimization is optional but would further reduce costs on negative paths without affecting correctness.</p></div></div></div></section><section class="mb-8"><h2 class="section-title">🏆 Agent Leaderboard</h2><div class="card overflow-hidden"><table class="leaderboard-table"><thead><tr><th class="w-10"></th><th>Agent</th><th class="text-center">Tests</th><th class="text-center">Pass Rate</th><th class="text-right">Tokens</th><th class="text-right">Cost</th><th class="text-right">Duration</th></tr></thead><tbody><tr class="winner-row"><td class="text-center text-xl">🥇</td><td><div class="font-medium text-text-light"><span>gpt-5-mini</span></div></td><td class="text-center tabular-nums"><span class="text-green-400">3</span>/<span class="text-text-muted">3</span></td><td class="text-center"><span class="text-green-400 font-semibold tabular-nums">100%</span></td><td class="text-right tabular-nums text-text-muted">4,589</td><td class="text-right tabular-nums text-text-muted">$0.003314</td><td class="text-right tabular-nums text-text-muted">35.3s</td></tr><tr><td class="text-center text-xl">🥈</td><td><div class="font-medium text-text-light"><span>gpt-4.1-mini</span></div></td><td class="text-center tabular-nums"><span class="text-green-400">2</span>/<span class="text-text-muted">3</span></td><td class="text-center"><span class="text-red-400 font-semibold tabular-nums">67%</span></td><td class="text-right tabular-nums text-text-muted">2,495</td><td class="text-right tabular-nums text-text-muted">$0.001251</td><td class="text-right tabular-nums text-text-muted">20.5s</td></tr></tbody></table></div></section><section class="mb-8"><h2 class="section-title">📋 Test Results</h2><div class="mb-4 flex items-center justify-between"><div class="flex gap-2"><button class="filter-btn active" data-filter="all" onclick="filterTests(&#39;all&#39;)">All</button><button class="filter-btn " data-filter="diff" onclick="filterTests(&#39;diff&#39;)">Differences ⚡</button><button class="filter-btn " data-filter="failed" onclick="filterTests(&#39;failed&#39;)">Failed ❌</button></div><div class="text-sm text-text-muted"><span id="visible-count">6</span> / 6 tests</div></div><div class="space-y-4" id="test-groups"><div class="card overflow-hidden test-group" data-group-type="standalone"><div class="group-header px-5 py-3 bg-surface-elevated border-b border-white/10 flex justify-between items-center cursor-pointer" onclick="toggleGroup(this.parentElement)"><div class="flex items-center gap-3"><span class="text-lg">📋</span><span class="font-medium text-text-light">tests/fixtures/scenario_02_multi_agent.py</span><span class="text-sm text-text-muted">(3 tests)</span></div><div class="flex items-center gap-4"><div class="text-sm text-green-400">3/3</div><div class="text-sm text-red-400">2/3</div><span class="text-text-muted transition-transform duration-200 expand-icon">▼</span></div></div><div class="group-content"><div class="test-row border-b border-white/5" data-test-id="test_check_balance" data-has-diff="false" data-has-failed="false"><div class="px-5 py-3 hover:bg-white/[0.02] cursor-pointer transition-colors" onclick="toggleTestDetail(this.parentElement)"><div class="flex items-center justify-between"><div class="flex items-center gap-3 min-w-0 flex-1"><span class="text-green-400">✅</span><span class="text-text-light truncate">Basic balance query — all agents should pass.</span></div><div class="flex items-center gap-4 text-sm text-text-muted"><span class="tabular-nums" title="Total tokens across selected agents">Total 1,660 tok</span><span class="text-text-muted">·</span><span class="tabular-nums" title="Total cost across selected agents">Total $0.000664</span><span class="text-text-muted">·</span><span class="tabular-nums" title="Token difference between selected agents (%difference)">Δ +25%</span><span class="text-text-muted">·</span><span class="tabular-nums" title="Duration difference between selected agents (%difference)">Δ +59%</span><span class="text-text-muted">·</span><span class="tabular-nums" title="Cost difference between selected agents (%difference)">Δ +8%</span></div></div><div class="flex gap-4 mt-2 pl-8"><div class="agent-result-item flex items-center gap-2 text-xs " data-agent-id="ad04b52d-294a-4161-8599-76d9323acea5"><span class="text-text-muted">gpt-5-mini:</span><span class="text-green-400">✅</span><span class="text-text-muted tabular-nums">11.0s</span></div><div class="agent-result-item flex items-center gap-2 text-xs " data-agent-id="6d7e2109-b028-4314-86b9-6a6c03758c2a"><span class="text-text-muted">gpt-4.1-mini:</span><span class="text-green-400">✅</span><span class="text-text-muted tabular-nums">6.9s</span></div></div></div><div class="test-detail hidden border-t border-white/10 bg-surface-elevated"><div class="comparison-grid grid gap-4 p-5" style="grid-template-columns: repeat(2, 1fr);"><div class="comparison-column  border-l-[3px] border-green-500" data-agent-id="ad04b52d-294a-4161-8599-76d9323acea5"><div class="flex items-center justify-between mb-4"><div class="font-medium text-text-light">gpt-5-mini</div><span class="px-2 py-0.5 rounded text-xs font-medium bg-green-500/15 text-green-400">passed</span></div><div class="space-y-2 mb-4"><div class="grid grid-cols-4 gap-2 p-3 bg-surface-elevated rounded-material text-center"><div><div class="text-sm font-medium text-text-light tabular-nums">11.01s</div><div class="text-xs text-text-muted">duration</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">3</div><div class="text-xs text-text-muted">turns</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">1</div><div class="text-xs text-text-muted">tools</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">922</div><div class="text-xs text-text-muted">tokens</div></div></div><div class="grid grid-cols-4 gap-2 p-3 bg-surface-elevated rounded-material text-center"><div><div class="text-sm font-medium text-text-light tabular-nums">$0.000320</div><div class="text-xs text-text-muted">cost</div></div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>📊</span><span>Sequence</span></div><div class="p-3 bg-surface-code rounded-material border border-white/5 cursor-pointer hover:border-primary/30 transition-colors" onclick="event.stopPropagation(); showDiagram(this.dataset.mermaidCode);" data-mermaid-code="sequenceDiagram
+// Optimized (~65 tokens)
+{
+  &quot;accounts&quot;: {
+    &quot;checking&quot;: {&quot;formatted&quot;: &quot;$1,400.00&quot;},
+    &quot;savings&quot;: {&quot;formatted&quot;: &quot;$3,100.00&quot;}
+  }
+}
+</code></pre></div></div></div></section><section class="mb-8"><h2 class="section-title">🏆 Agent Leaderboard</h2><div class="card overflow-hidden"><table class="leaderboard-table"><thead><tr><th class="w-10"></th><th>Agent</th><th class="text-center">Tests</th><th class="text-center">Pass Rate</th><th class="text-right">Tokens</th><th class="text-right">Cost</th><th class="text-right">Duration</th></tr></thead><tbody><tr class="winner-row"><td class="text-center text-xl">🥇</td><td><div class="font-medium text-text-light"><span>gpt-5-mini</span></div></td><td class="text-center tabular-nums"><span class="text-green-400">3</span>/<span class="text-text-muted">3</span></td><td class="text-center"><span class="text-green-400 font-semibold tabular-nums">100%</span></td><td class="text-right tabular-nums text-text-muted">4,589</td><td class="text-right tabular-nums text-text-muted">$0.003314</td><td class="text-right tabular-nums text-text-muted">35.3s</td></tr><tr><td class="text-center text-xl">🥈</td><td><div class="font-medium text-text-light"><span>gpt-4.1-mini</span></div></td><td class="text-center tabular-nums"><span class="text-green-400">2</span>/<span class="text-text-muted">3</span></td><td class="text-center"><span class="text-red-400 font-semibold tabular-nums">67%</span></td><td class="text-right tabular-nums text-text-muted">2,495</td><td class="text-right tabular-nums text-text-muted">$0.001251</td><td class="text-right tabular-nums text-text-muted">20.5s</td></tr></tbody></table></div></section><section class="mb-8"><h2 class="section-title">📋 Test Results</h2><div class="mb-4 flex items-center justify-between"><div class="flex gap-2"><button class="filter-btn active" data-filter="all" onclick="filterTests(&#39;all&#39;)">All</button><button class="filter-btn " data-filter="diff" onclick="filterTests(&#39;diff&#39;)">Differences ⚡</button><button class="filter-btn " data-filter="failed" onclick="filterTests(&#39;failed&#39;)">Failed ❌</button></div><div class="text-sm text-text-muted"><span id="visible-count">6</span> / 6 tests</div></div><div class="space-y-4" id="test-groups"><div class="card overflow-hidden test-group" data-group-type="standalone"><div class="group-header px-5 py-3 bg-surface-elevated border-b border-white/10 flex justify-between items-center cursor-pointer" onclick="toggleGroup(this.parentElement)"><div class="flex items-center gap-3"><span class="text-lg">📋</span><span class="font-medium text-text-light">tests/fixtures/scenario_02_multi_agent.py</span><span class="text-sm text-text-muted">(3 tests)</span></div><div class="flex items-center gap-4"><div class="text-sm text-green-400">3/3</div><div class="text-sm text-red-400">2/3</div><span class="text-text-muted transition-transform duration-200 expand-icon">▼</span></div></div><div class="group-content"><div class="test-row border-b border-white/5" data-test-id="test_check_balance" data-has-diff="false" data-has-failed="false"><div class="px-5 py-3 hover:bg-white/[0.02] cursor-pointer transition-colors" onclick="toggleTestDetail(this.parentElement)"><div class="flex items-center justify-between"><div class="flex items-center gap-3 min-w-0 flex-1"><span class="text-green-400">✅</span><span class="text-text-light truncate">Basic balance query — all agents should pass.</span></div><div class="flex items-center gap-4 text-sm text-text-muted"><span class="tabular-nums" title="Total tokens across selected agents">Total 1,660 tok</span><span class="text-text-muted">·</span><span class="tabular-nums" title="Total cost across selected agents">Total $0.000664</span><span class="text-text-muted">·</span><span class="tabular-nums" title="Token difference between selected agents (%difference)">Δ +25%</span><span class="text-text-muted">·</span><span class="tabular-nums" title="Duration difference between selected agents (%difference)">Δ +59%</span><span class="text-text-muted">·</span><span class="tabular-nums" title="Cost difference between selected agents (%difference)">Δ +8%</span></div></div><div class="flex gap-4 mt-2 pl-8"><div class="agent-result-item flex items-center gap-2 text-xs " data-agent-id="ad04b52d-294a-4161-8599-76d9323acea5"><span class="text-text-muted">gpt-5-mini:</span><span class="text-green-400">✅</span><span class="text-text-muted tabular-nums">11.0s</span></div><div class="agent-result-item flex items-center gap-2 text-xs " data-agent-id="6d7e2109-b028-4314-86b9-6a6c03758c2a"><span class="text-text-muted">gpt-4.1-mini:</span><span class="text-green-400">✅</span><span class="text-text-muted tabular-nums">6.9s</span></div></div></div><div class="test-detail hidden border-t border-white/10 bg-surface-elevated"><div class="comparison-grid grid gap-4 p-5" style="grid-template-columns: repeat(2, 1fr);"><div class="comparison-column  border-l-[3px] border-green-500" data-agent-id="ad04b52d-294a-4161-8599-76d9323acea5"><div class="flex items-center justify-between mb-4"><div class="font-medium text-text-light">gpt-5-mini</div><span class="px-2 py-0.5 rounded text-xs font-medium bg-green-500/15 text-green-400">passed</span></div><div class="space-y-2 mb-4"><div class="grid grid-cols-4 gap-2 p-3 bg-surface-elevated rounded-material text-center"><div><div class="text-sm font-medium text-text-light tabular-nums">11.01s</div><div class="text-xs text-text-muted">duration</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">3</div><div class="text-xs text-text-muted">turns</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">1</div><div class="text-xs text-text-muted">tools</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">922</div><div class="text-xs text-text-muted">tokens</div></div></div><div class="grid grid-cols-4 gap-2 p-3 bg-surface-elevated rounded-material text-center"><div><div class="text-sm font-medium text-text-light tabular-nums">$0.000320</div><div class="text-xs text-text-muted">cost</div></div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>📊</span><span>Sequence</span></div><div class="p-3 bg-surface-code rounded-material border border-white/5 cursor-pointer hover:border-primary/30 transition-colors" onclick="event.stopPropagation(); showDiagram(this.dataset.mermaidCode);" data-mermaid-code="sequenceDiagram
     participant User
     participant Agent
     participant Tools

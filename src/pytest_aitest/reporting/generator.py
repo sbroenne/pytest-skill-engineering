@@ -307,7 +307,9 @@ def _build_agents(
             )
         )
 
-    agents.sort(key=lambda a: (a.disqualified, -a.pass_rate, a.cost, a.id))
+    agents.sort(
+        key=lambda a: (a.disqualified, -a.pass_rate, -a.total, a.cost / max(a.total, 1), a.id)
+    )
 
     for i, agent in enumerate(agents):
         if not agent.disqualified:

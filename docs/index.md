@@ -59,26 +59,9 @@ This is **test-driven development for AI interfaces**: write a test, watch it fa
 
 AI analyzes your test results and tells you **what to fix**, not just what failed. It generates [interactive HTML reports](explanation/ai-analysis.md#sample-reports) with agent leaderboards, comparison tables, and sequence diagrams.
 
-???+ example "Sample AI Analysis — actual output comparing 2 LLM models"
+![AI Analysis — winner recommendation, metrics, and comparative analysis](assets/images/ai_analysis.png)
 
-    **🎯 Recommendation**
-
-    **Deploy: gpt-4.1-mini** (default prompt)
-
-    Achieves **100% pass rate at ~55–70% lower cost** than gpt-5-mini, with equal tool correctness and acceptable response quality.
-
-    - **Balance check:** $0.000297 (vs $0.000342 — 13% cheaper)
-    - **Transfer:** $0.000575 (vs $0.001508 — 62% cheaper)
-    - **Multi-step:** $0.000501 (vs $0.001785 — 72% cheaper)
-
-    **🔧 MCP Tool Feedback**
-
-    | Tool | Status | Calls | Issue |
-    |------|--------|-------|-------|
-    | `get_balance` | ✅ | 6 | Working well |
-    | `transfer` | ✅ | 2 | Working well |
-    | `get_all_balances` | ✅ | 1 | Consider strengthening description |
-    | `get_transactions` | ⚠️ | 0 | Not exercised |
+[See a full sample report →](demo/hero-report.html){ .md-button }
 
     **Suggested improvement for `get_all_balances`:**
 

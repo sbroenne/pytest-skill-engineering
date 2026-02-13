@@ -721,6 +721,198 @@ a:hover {
   color: var(--color-text-light);
 }
 
+/* ==================== AI Summary Visualizations ==================== */
+
+/* --- Winner Spotlight Card --- */
+.winner-card {
+  position: relative;
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.12) 0%, rgba(64, 81, 181, 0.10) 50%, rgba(82, 108, 254, 0.08) 100%);
+  border: 1px solid rgba(34, 197, 94, 0.35);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin-bottom: 1rem;
+  overflow: hidden;
+}
+.winner-card::before {
+  content: '';
+  position: absolute;
+  top: -60%;
+  right: -20%;
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, rgba(34, 197, 94, 0.10) 0%, transparent 70%);
+  pointer-events: none;
+}
+.winner-card::after {
+  content: '🏆';
+  position: absolute;
+  top: 14px;
+  right: 18px;
+  font-size: 1.4rem;
+  opacity: 0.7;
+}
+.winner-title {
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-green);
+  margin-bottom: 2px;
+  font-weight: 600;
+}
+.winner-name {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 4px;
+  letter-spacing: -0.02em;
+}
+.winner-summary {
+  font-size: 0.8rem;
+  color: var(--color-text);
+  line-height: 1.4;
+  max-width: 88%;
+}
+.winner-stats {
+  display: flex;
+  gap: 20px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+.winner-stat {
+  display: flex;
+  flex-direction: column;
+}
+.winner-stat-value {
+  font-size: 1.1rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.winner-stat-value.green { color: var(--color-green); }
+.winner-stat-value.blue { color: var(--color-blue); }
+.winner-stat-value.amber { color: var(--color-yellow); }
+.winner-stat-label {
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-muted);
+  margin-top: 1px;
+}
+
+/* --- Metric Cards (compact dashboard) --- */
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 8px;
+  margin-bottom: 1rem;
+}
+.metric-card {
+  background-color: var(--color-surface-elevated);
+  border-radius: 6px;
+  padding: 12px 10px;
+  text-align: center;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  position: relative;
+  overflow: hidden;
+}
+.metric-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+}
+.metric-card.green { border-color: rgba(34, 197, 94, 0.25); }
+.metric-card.green::before { background: linear-gradient(90deg, var(--color-green), rgba(34, 197, 94, 0.3)); }
+.metric-card.blue { border-color: rgba(96, 165, 250, 0.25); }
+.metric-card.blue::before { background: linear-gradient(90deg, var(--color-blue), rgba(96, 165, 250, 0.3)); }
+.metric-card.red { border-color: rgba(248, 113, 113, 0.25); }
+.metric-card.red::before { background: linear-gradient(90deg, var(--color-red), rgba(248, 113, 113, 0.3)); }
+.metric-card.amber { border-color: rgba(250, 204, 21, 0.25); }
+.metric-card.amber::before { background: linear-gradient(90deg, var(--color-yellow), rgba(250, 204, 21, 0.3)); }
+.metric-value {
+  font-size: 1.4rem;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 2px;
+}
+.metric-value.green { color: var(--color-green); }
+.metric-value.blue  { color: var(--color-blue); }
+.metric-value.red   { color: var(--color-red); }
+.metric-value.amber { color: var(--color-yellow); }
+.metric-label {
+  font-size: 0.6rem;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* --- Pass Rate Bars (compact) --- */
+.progress-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 5px 0;
+}
+.progress-agent {
+  width: 100px;
+  font-size: 0.75rem;
+  color: var(--color-text-light);
+  text-align: right;
+  flex-shrink: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.progress-track {
+  flex: 1;
+  background-color: rgba(255, 255, 255, 0.04);
+  border-radius: 4px;
+  height: 18px;
+  overflow: hidden;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+.progress-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 600ms cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+.progress-fill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 50%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.15) 0%, transparent 100%);
+  border-radius: 4px 4px 0 0;
+}
+.progress-fill.green { background: linear-gradient(90deg, #22c55e, #4ade80); }
+.progress-fill.blue  { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
+.progress-fill.amber { background: linear-gradient(90deg, #d97706, #facc15); }
+.progress-fill.red   { background: linear-gradient(90deg, #dc2626, #f87171); }
+.progress-pct {
+  width: 42px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-text-light);
+  text-align: right;
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Constrain Mermaid chart size inside AI insights */
+.markdown-content pre.mermaid {
+  background-color: transparent;
+  border: none;
+  padding: 0;
+  max-width: 500px;
+  margin-bottom: 0.75rem;
+}
+
 /* ==================== Agent Selector ==================== */
 .agent-chip {
   cursor: pointer;
@@ -775,27 +967,65 @@ a:hover {
   height: auto;
   min-height: 60vh;
 }
-</style></head><body class="bg-surface text-text min-h-screen"><div class="max-w-6xl mx-auto px-6 py-8"><header class="report-header mb-8"><div class="flex justify-between items-start gap-4 mb-4"><div class="flex-1"><h1 class="text-2xl font-medium mb-1">Single agent tests - basic report without comparison UI.</h1></div><div class="status-failed"><span>✗</span><span>1 Failed</span></div></div><div class="flex flex-wrap gap-x-6 gap-y-1 py-3 border-t border-white/10 text-sm"><span class="opacity-70">February 07, 2026 at 07:19 PM</span><span>📄 <span class="text-text-light hover:text-blue-400 cursor-pointer" title="tests/fixtures/scenario_01_single_agent.py">scenario_01_single_agent.py</span></span><span class="tabular-nums">4 tests</span><span class="tabular-nums">37.2s</span><span class="tabular-nums" title="Token range (min-max per test)">509–1,322 tok</span><span class="tabular-nums" title="Test execution cost">🧪 $-0.021317</span><span class="tabular-nums" title="AI analysis cost">🤖 $0.0235</span><span class="tabular-nums font-semibold" title="Total cost">💰 $0.002150</span></div></header><section class="mb-8"><div class="ai-insights"><div class="ai-insights-header"><span>🤖</span><span>AI Analysis</span><button class="ml-auto text-text-muted hover:text-text-light text-sm" onclick="this.closest(&#39;.ai-insights&#39;).querySelector(&#39;.card-body&#39;).classList.toggle(&#39;hidden&#39;)">Toggle</button></div><div class="card-body"><div class="markdown-content"><h2>🎯 Recommendation</h2>
-<p><strong>Deploy: banking-agent (gpt-5-mini, default prompt)</strong></p>
-<p><strong>Reasoning:</strong> Achieves a 75% pass rate (3/4) at very low cost ($0.002151 total across all tests). All core single-step banking actions (balance, transfer, transactions) pass reliably and use tools correctly. The only failure is due to a configured turn limit, not tool misuse or model behavior.</p>
-<p><strong>Alternatives:</strong> None — only one configuration tested.</p>
+</style></head><body class="bg-surface text-text min-h-screen"><div class="max-w-6xl mx-auto px-6 py-8"><header class="report-header mb-8"><div class="flex justify-between items-start gap-4 mb-4"><div class="flex-1"><h1 class="text-2xl font-medium mb-1">Single agent tests - basic report without comparison UI.</h1></div><div class="status-failed"><span>✗</span><span>1 Failed</span></div></div><div class="flex flex-wrap gap-x-6 gap-y-1 py-3 border-t border-white/10 text-sm"><span class="opacity-70">February 07, 2026 at 07:19 PM</span><span>📄 <span class="text-text-light hover:text-blue-400 cursor-pointer" title="tests/fixtures/scenario_01_single_agent.py">scenario_01_single_agent.py</span></span><span class="tabular-nums">4 tests</span><span class="tabular-nums">37.2s</span><span class="tabular-nums" title="Token range (min-max per test)">509–1,322 tok</span><span class="tabular-nums" title="Test execution cost">🧪 $-0.016434</span><span class="tabular-nums" title="AI analysis cost">🤖 $0.0186</span><span class="tabular-nums font-semibold" title="Total cost">💰 $0.002150</span></div></header><section class="mb-8"><div class="ai-insights"><div class="ai-insights-header"><span>🤖</span><span>AI Analysis</span><button class="ml-auto text-text-muted hover:text-text-light text-sm" onclick="this.closest(&#39;.ai-insights&#39;).querySelector(&#39;.card-body&#39;).classList.toggle(&#39;hidden&#39;)">Toggle</button></div><div class="card-body"><div class="markdown-content"><div class="winner-card">
+<div class="winner-title">Recommended for Deploy</div>
+<div class="winner-name">banking-agent</div>
+<div class="winner-summary">Reliable single-agent setup that passes core banking workflows with correct tool usage at very low cost. One failure is attributable to an artificially strict turn limit, not tool or prompt correctness.</div>
+<div class="winner-stats">
+<div class="winner-stat"><span class="winner-stat-value amber">75%</span><span class="winner-stat-label">Pass Rate</span></div>
+<div class="winner-stat"><span class="winner-stat-value blue">$0.002150</span><span class="winner-stat-label">Total Cost</span></div>
+<div class="winner-stat"><span class="winner-stat-value amber">3,786</span><span class="winner-stat-label">Tokens</span></div>
+</div>
+</div>
+
+<div class="metric-grid">
+<div class="metric-card green">
+<div class="metric-value green">4</div>
+<div class="metric-label">Total Tests</div>
+</div>
+<div class="metric-card red">
+<div class="metric-value red">1</div>
+<div class="metric-label">Failures</div>
+</div>
+<div class="metric-card blue">
+<div class="metric-value blue">1</div>
+<div class="metric-label">Agents</div>
+</div>
+<div class="metric-card amber">
+<div class="metric-value amber">2.8</div>
+<div class="metric-label">Avg Turns</div>
+</div>
+</div>
+
 <h2>❌ Failure Analysis</h2>
+<h3>Failure Summary</h3>
+<p><strong>banking-agent</strong> (1 failure)</p>
+<table>
+<thead>
+<tr>
+<th>Test</th>
+<th>Root Cause</th>
+<th>Fix</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Test that fails due to turn limit — for report variety.</td>
+<td>max_turns=1 prevents multi-step execution</td>
+<td>Increase turn limit or allow tool chaining in one turn</td>
+</tr>
+</tbody>
+</table>
 <h3>Test that fails due to turn limit — for report variety. (banking-agent)</h3>
 <ul>
-<li><strong>Problem:</strong> The agent could not complete a multi-step request (check balances → transfer → show updated balances → show transactions) because the test enforces <code>max_turns=1</code>.</li>
-<li><strong>Root Cause:</strong> Test configuration limits the session to a single turn, but the user request explicitly requires multiple tool calls and responses. The agent correctly initiated the first step (<code>get_all_balances</code>) but was blocked before completing the sequence.</li>
-<li><strong>Fix:</strong> Increase allowed turns for this test.</li>
-<li><strong>Exact change:</strong> Set <code>max_turns</code> from <code>1</code> to <code>4</code> (or higher) for this test case.</li>
-<li><strong>Alternative fix (if max_turns must remain 1):</strong> Split into separate tests:<ol>
-<li>“Check all balances — should pass”</li>
-<li>“Transfer $500 from checking to savings — should pass”</li>
-<li>“Show updated balances and transaction history — should pass”</li>
-</ol>
-</li>
+<li><strong>Problem:</strong> The user requested a compound workflow: check balances, transfer funds, then show updated balances and transaction history.</li>
+<li><strong>Root Cause:</strong> The test enforces <code>max_turns=1</code>, but the workflow inherently requires multiple tool calls and at least one follow-up response. The agent correctly initiated the first step (<code>get_all_balances</code>) but was cut off before completing the sequence.</li>
+<li><strong>Behavioral Mechanism:</strong> Not prompt-induced. The failure is caused by the test harness constraint, not by hesitation or permission-seeking language in the system prompt.</li>
+<li><strong>Fix:</strong> Increase the test configuration to <code>max_turns &gt;= 3</code>, or refactor the test to assert partial progress when <code>max_turns=1</code>.</li>
 </ul>
 <h2>🔧 MCP Tool Feedback</h2>
-<h3>pytest_aitest.testing.banking_mcp</h3>
-<p>Overall, tools are discoverable and used correctly. Naming is clear and aligned with user intents.</p>
+<h3>banking-mcp</h3>
+<p>Overall, tools are clearly named and correctly invoked. The agent consistently selects the right tool without confusion.</p>
 <table>
 <thead>
 <tr>
@@ -826,107 +1056,80 @@ a:hover {
 </tr>
 <tr>
 <td>get_all_balances</td>
-<td>⚠️</td>
+<td>✅</td>
 <td>1</td>
-<td>Tool works, but multi-step usage blocked by test turn limit</td>
-</tr>
-<tr>
-<td>deposit</td>
-<td>✅</td>
-<td>0</td>
-<td>Not exercised in tests</td>
-</tr>
-<tr>
-<td>withdraw</td>
-<td>✅</td>
-<td>0</td>
-<td>Not exercised in tests</td>
+<td>Working well</td>
 </tr>
 </tbody>
 </table>
-<h2>📝 System Prompt Feedback</h2>
-<h3>default (mixed)</h3>
-<ul>
-<li><strong>Token count:</strong> ~24 tokens</li>
-<li><strong>Problem:</strong> The prompt does not address multi-step planning or constraints like turn limits. In multi-action requests, the agent attempts to proceed sequentially, which conflicts with tests that cap turns.</li>
-<li><strong>Suggested change:</strong> Add an explicit instruction to batch tool usage when possible.</li>
-<li><strong>Exact text to append:</strong>
-    <code>If a user request requires multiple actions and turn limits may apply, plan all required tool calls up front and execute them in the minimum number of turns.</code></li>
-</ul>
 <h2>💡 Optimizations</h2>
-<ol>
-<li><strong>Align test turn limits with realistic user tasks</strong> (recommended)</li>
-<li>Current: Complex, multi-action requests are tested with <code>max_turns=1</code>.</li>
-<li>Change: Allow 3–4 turns for composite banking workflows or decompose them into atomic tests.</li>
-<li>
-<p>Impact: Prevents false negatives; improves effective pass rate from 75% to 100% with no additional model cost.</p>
-</li>
-<li>
-<p><strong>Reduce verbose assistant follow-ups</strong> (suggestion)</p>
-</li>
-<li>Current: Assistant frequently asks multiple follow-up questions after completing tasks.</li>
-<li>Change: Add instruction to ask at most one follow-up question or offer a concise menu.</li>
-<li>Impact: Minor cost reduction (~5–10% fewer tokens per test).</li>
-</ol>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Optimization</th>
+<th>Priority</th>
+<th>Estimated Savings</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Increase turn limit for compound tasks</td>
+<td>recommended</td>
+<td>Prevents 25% test failure rate</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Trim verbose assistant follow-ups</td>
+<td>suggestion</td>
+<td>~10–15% token reduction</td>
+</tr>
+</tbody>
+</table>
+<h4>1. Increase turn limit for compound tasks (recommended)</h4>
+<ul>
+<li>Current: Complex requests are tested with <code>max_turns=1</code>, causing premature failure.</li>
+<li>Change: Set <code>max_turns</code> to at least 3 for workflows involving multiple tool calls.</li>
+<li>Impact: Eliminates the only observed failure without increasing per-test cost.</li>
+</ul>
+<h4>2. Trim verbose assistant follow-ups (suggestion)</h4>
+<ul>
+<li>Current: After successful tool calls, the assistant offers multiple optional next steps, adding tokens.</li>
+<li>Change: Replace multi-option follow-ups with a single concise question, e.g., “Anything else I can help with?”</li>
+<li>Impact: ~10–15% cost reduction through fewer output tokens.</li>
+</ul>
 <h2>📦 Tool Response Optimization</h2>
-<h3>get_balance (from pytest_aitest.testing.banking_mcp)</h3>
+<h3>transfer (from banking-mcp)</h3>
 <ul>
-<li><strong>Current response size:</strong> ~18 tokens</li>
-<li><strong>Issues found:</strong> Redundant formatted string duplicates numeric balance.</li>
-<li><strong>Suggested optimization:</strong> Omit <code>formatted</code> and let the assistant format.</li>
-<li><strong>Estimated savings:</strong> ~6 tokens per call (~33% reduction)</li>
+<li><strong>Current response size:</strong> ~70–80 tokens</li>
+<li><strong>Issues found:</strong> Includes redundant formatted fields and a human-readable message that the assistant restates anyway.</li>
+<li><strong>Suggested optimization:</strong> Remove <code>message</code> and pre-formatted fields when not required by tests.</li>
+<li><strong>Estimated savings:</strong> ~25 tokens per call (~30% reduction)</li>
 </ul>
 <p><strong>Example current vs optimized:</strong></p>
-<pre><code class="language-json">// Current (~18 tokens)
-{&quot;account&quot;:&quot;checking&quot;,&quot;balance&quot;:1500.0,&quot;formatted&quot;:&quot;$1,500.00&quot;}
-
-// Optimized (~12 tokens)
-{&quot;account&quot;:&quot;checking&quot;,&quot;balance&quot;:1500.0}
-</code></pre>
-<h3>transfer (from pytest_aitest.testing.banking_mcp)</h3>
-<ul>
-<li><strong>Current response size:</strong> ~45 tokens</li>
-<li><strong>Issues found:</strong> Both <code>message</code> and formatted fields duplicate information already present in structured fields.</li>
-<li><strong>Suggested optimization:</strong> Remove <code>message</code> and <code>amount_formatted</code>.</li>
-<li><strong>Estimated savings:</strong> ~15 tokens per call (~33% reduction)</li>
-</ul>
-<p><strong>Example current vs optimized:</strong></p>
-<pre><code class="language-json">// Current (~45 tokens)
+<pre><code class="language-json">// Current (~75 tokens)
 {
-  &quot;transaction_id&quot;:&quot;TX0001&quot;,
-  &quot;type&quot;:&quot;transfer&quot;,
-  &quot;from_account&quot;:&quot;checking&quot;,
-  &quot;to_account&quot;:&quot;savings&quot;,
-  &quot;amount&quot;:200,
-  &quot;amount_formatted&quot;:&quot;$200.00&quot;,
-  &quot;new_balance_from&quot;:1300.0,
-  &quot;new_balance_to&quot;:3200.0,
-  &quot;message&quot;:&quot;Successfully transferred $200.00 from checking to savings.&quot;
+  &quot;transaction_id&quot;: &quot;TX0001&quot;,
+  &quot;type&quot;: &quot;transfer&quot;,
+  &quot;from_account&quot;: &quot;checking&quot;,
+  &quot;to_account&quot;: &quot;savings&quot;,
+  &quot;amount&quot;: 200,
+  &quot;amount_formatted&quot;: &quot;$200.00&quot;,
+  &quot;new_balance_from&quot;: 1300.0,
+  &quot;new_balance_to&quot;: 3200.0,
+  &quot;message&quot;: &quot;Successfully transferred $200.00 from checking to savings.&quot;
 }
 
-// Optimized (~30 tokens)
+// Optimized (~50 tokens)
 {
-  &quot;transaction_id&quot;:&quot;TX0001&quot;,
-  &quot;from_account&quot;:&quot;checking&quot;,
-  &quot;to_account&quot;:&quot;savings&quot;,
-  &quot;amount&quot;:200,
-  &quot;new_balance_from&quot;:1300.0,
-  &quot;new_balance_to&quot;:3200.0
+  &quot;transaction_id&quot;: &quot;TX0001&quot;,
+  &quot;from_account&quot;: &quot;checking&quot;,
+  &quot;to_account&quot;: &quot;savings&quot;,
+  &quot;amount&quot;: 200,
+  &quot;new_balance_from&quot;: 1300.0,
+  &quot;new_balance_to&quot;: 3200.0
 }
-</code></pre>
-<h3>get_transactions (from pytest_aitest.testing.banking_mcp)</h3>
-<ul>
-<li><strong>Current response size:</strong> ~14 tokens</li>
-<li><strong>Issues found:</strong> Includes <code>filter: null</code>, which is unused.</li>
-<li><strong>Suggested optimization:</strong> Omit null fields.</li>
-<li><strong>Estimated savings:</strong> ~2 tokens per call (~14% reduction)</li>
-</ul>
-<p><strong>Example current vs optimized:</strong></p>
-<pre><code class="language-json">// Current (~14 tokens)
-{&quot;transactions&quot;:[],&quot;count&quot;:0,&quot;filter&quot;:null}
-
-// Optimized (~12 tokens)
-{&quot;transactions&quot;:[],&quot;count&quot;:0}
 </code></pre></div></div></div></section><section class="mb-8"><h2 class="section-title">📋 Test Results</h2><div class="mb-4 flex items-center justify-between"><div class="flex gap-2"><button class="filter-btn active" data-filter="all" onclick="filterTests(&#39;all&#39;)">All</button><button class="filter-btn " data-filter="failed" onclick="filterTests(&#39;failed&#39;)">Failed ❌</button></div><div class="text-sm text-text-muted"><span id="visible-count">4</span> / 4 tests</div></div><div class="space-y-4" id="test-groups"><div class="card overflow-hidden test-group" data-group-type="standalone"><div class="group-header px-5 py-3 bg-surface-elevated border-b border-white/10 flex justify-between items-center cursor-pointer" onclick="toggleGroup(this.parentElement)"><div class="flex items-center gap-3"><span class="text-lg">📋</span><span class="font-medium text-text-light">tests/fixtures/scenario_01_single_agent.py</span><span class="text-sm text-text-muted">(4 tests)</span></div><div class="flex items-center gap-4"><span class="text-text-muted transition-transform duration-200 expand-icon">▼</span></div></div><div class="group-content"><div class="test-row border-b border-white/5" data-test-id="test_check_balance" data-has-diff="false" data-has-failed="false"><div class="px-5 py-3 hover:bg-white/[0.02] cursor-pointer transition-colors" onclick="toggleTestDetail(this.parentElement)"><div class="flex items-center justify-between"><div class="flex items-center gap-3 min-w-0 flex-1"><span class="text-green-400">✅</span><span class="text-text-light truncate">Basic balance check — should pass.</span></div><div class="flex items-center gap-4 text-sm text-text-muted"><span class="tabular-nums">13.7s</span><span class="text-text-muted">·</span><span class="tabular-nums">1🔧</span><span class="text-text-muted">·</span><span class="tabular-nums">931 tok</span><span class="text-text-muted">·</span><span class="tabular-nums">$0.000338</span></div></div></div><div class="test-detail hidden border-t border-white/10 bg-surface-elevated"><div class="comparison-grid grid gap-4 p-5" style="grid-template-columns: repeat(1, 1fr);"><div class="comparison-column  border-l-[3px] border-green-500" data-agent-id="8fa82e98-35c0-4a0d-b3c3-8f81e3669c46"><div class="flex items-center justify-between mb-4"><div class="font-medium text-text-light">banking-agent</div><span class="px-2 py-0.5 rounded text-xs font-medium bg-green-500/15 text-green-400">passed</span></div><div class="space-y-2 mb-4"><div class="grid grid-cols-4 gap-2 p-3 bg-surface-elevated rounded-material text-center"><div><div class="text-sm font-medium text-text-light tabular-nums">13.73s</div><div class="text-xs text-text-muted">duration</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">3</div><div class="text-xs text-text-muted">turns</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">1</div><div class="text-xs text-text-muted">tools</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">931</div><div class="text-xs text-text-muted">tokens</div></div></div><div class="grid grid-cols-4 gap-2 p-3 bg-surface-elevated rounded-material text-center"><div><div class="text-sm font-medium text-text-light tabular-nums">$0.000338</div><div class="text-xs text-text-muted">cost</div></div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>📊</span><span>Sequence</span></div><div class="p-3 bg-surface-code rounded-material border border-white/5 cursor-pointer hover:border-primary/30 transition-colors" onclick="event.stopPropagation(); showDiagram(this.dataset.mermaidCode);" data-mermaid-code="sequenceDiagram
     participant User
     participant Agent

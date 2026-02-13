@@ -43,9 +43,9 @@ If the test fails, your tool descriptions need work — not your code. This is *
 
 ## AI Analysis
 
-AI analyzes your results and tells you **what to fix**: which model to deploy, how to improve tool descriptions, where to cut costs. [See a sample report →](https://sbroenne.github.io/pytest-aitest/reports/05_hero.html)
+AI analyzes your results and tells you **what to fix**: which model to deploy, how to improve tool descriptions, where to cut costs. [See a sample report →](https://sbroenne.github.io/pytest-aitest/demo/hero-report.html)
 
-> **Deploy: gpt-5-mini** — Highest pass rate at ~4–6x lower cost than gpt-4.1. gpt-4.1 disqualified due to failed core transfer test and session-planning failure.
+![AI Analysis — winner recommendation, metrics, and comparative analysis](screenshots/ai_analysis.png)
 
 ## Quick Start
 

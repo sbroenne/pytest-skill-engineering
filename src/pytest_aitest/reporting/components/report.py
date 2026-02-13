@@ -149,11 +149,25 @@ def _report_header(report: ReportMetadata) -> Node:
 
 
 def _render_markdown(text: str) -> Markup:
-    """Convert markdown to HTML."""
+    """Convert markdown to HTML.
+
+    Mermaid fenced code blocks (```mermaid) are converted to
+    ``<pre class="mermaid">`` so that Mermaid.js renders them as diagrams.
+    """
+    import re
+
     try:
         import markdown
 
         html_text = markdown.markdown(text, extensions=["extra"])
+        # Convert <pre><code class="language-mermaid">…</code></pre> to
+        # <pre class="mermaid">…</pre> so Mermaid.js picks them up.
+        html_text = re.sub(
+            r'<pre><code class="language-mermaid">(.*?)</code></pre>',
+            r'<pre class="mermaid">\1</pre>',
+            html_text,
+            flags=re.DOTALL,
+        )
         return Markup(html_text)
     except ImportError:
         import html as html_module
