@@ -329,6 +329,10 @@ def _extract_tool_result(messages: list[ModelMessage], tool_call_id: str | None)
     For BinaryContent (images), extracts bytes and media_type and sets a
     human-readable text summary like "[image/png, 12345 bytes]".
     For sequences with mixed content, extracts text and image parts separately.
+
+    PydanticAI moves binary content from ToolReturnPart to a companion
+    UserPromptPart in the same ModelRequest (with "See file <id>" placeholder
+    in the ToolReturnPart). We check both locations.
     """
     if not tool_call_id:
         return _ToolResult()
@@ -337,7 +341,16 @@ def _extract_tool_result(messages: list[ModelMessage], tool_call_id: str | None)
         if isinstance(msg, ModelRequest):
             for part in msg.parts:
                 if isinstance(part, ToolReturnPart) and part.tool_call_id == tool_call_id:
-                    return _process_tool_content(part.content)
+                    result = _process_tool_content(part.content)
+                    # If no image found in ToolReturnPart, check companion
+                    # UserPromptPart in the same message (PydanticAI moves
+                    # binary content there with "This is file <id>:" prefix)
+                    if result.image_content is None:
+                        image = _extract_companion_image(msg)
+                        if image is not None:
+                            result.image_content = image.image_content
+                            result.image_media_type = image.image_media_type
+                    return result
     return _ToolResult()
 
 
@@ -353,6 +366,29 @@ def _process_tool_content(content: Any) -> _ToolResult:
 
     # Default: stringify
     return _ToolResult(text=str(content))
+
+
+def _extract_companion_image(msg: ModelRequest) -> _ToolResult | None:
+    """Extract binary image from a companion UserPromptPart in the same message.
+
+    PydanticAI moves binary content (BinaryImage) from tool returns into a
+    UserPromptPart with content like ["This is file <id>:", BinaryImage(...)].
+    This function scans the message for such parts.
+    """
+    for part in msg.parts:
+        if isinstance(part, UserPromptPart):
+            content = part.content
+            if isinstance(content, (list, tuple)):
+                for item in content:
+                    if isinstance(item, MULTI_MODAL_CONTENT_TYPES):
+                        result = _process_multimodal(item)
+                        if result.image_content is not None:
+                            return result
+            elif isinstance(content, MULTI_MODAL_CONTENT_TYPES):
+                result = _process_multimodal(content)
+                if result.image_content is not None:
+                    return result
+    return None
 
 
 def _process_multimodal(content: Any) -> _ToolResult:

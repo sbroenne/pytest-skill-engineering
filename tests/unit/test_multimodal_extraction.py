@@ -161,3 +161,62 @@ class TestExtractToolResult:
 
         result = _extract_tool_result(messages, "nonexistent")
         assert result.text is None
+
+    def test_companion_image_in_user_prompt(self) -> None:
+        """Extracts image from companion UserPromptPart when PydanticAI moves binary content.
+
+        PydanticAI replaces BinaryImage in ToolReturnPart.content with
+        "See file <id>" and stores the actual image in a companion
+        UserPromptPart in the same ModelRequest.
+        """
+        from pydantic_ai.messages import (
+            BinaryImage,
+            ModelRequest,
+            ToolReturnPart,
+            UserPromptPart,
+        )
+
+        image_bytes = b"\x89PNG" + b"\x00" * 100
+        messages = [
+            ModelRequest(
+                parts=[
+                    ToolReturnPart(
+                        tool_name="screenshot",
+                        content=["See file abc123", "Screenshot: A1:F20 (800x600px)"],
+                        tool_call_id="call_img",
+                    ),
+                    UserPromptPart(
+                        content=[
+                            "This is file abc123:",
+                            BinaryImage(data=image_bytes, media_type="image/png"),
+                        ]
+                    ),
+                ]
+            )
+        ]
+
+        result = _extract_tool_result(messages, "call_img")
+        assert result.image_content == image_bytes
+        assert result.image_media_type == "image/png"
+        # Text should contain the original "See file" content
+        assert "See file" in (result.text or "")
+
+    def test_companion_image_no_user_prompt(self) -> None:
+        """Returns no image when ToolReturnPart has 'See file' but no companion UserPromptPart."""
+        from pydantic_ai.messages import ModelRequest, ToolReturnPart
+
+        messages = [
+            ModelRequest(
+                parts=[
+                    ToolReturnPart(
+                        tool_name="screenshot",
+                        content="See file abc123",
+                        tool_call_id="call_noimg",
+                    ),
+                ]
+            )
+        ]
+
+        result = _extract_tool_result(messages, "call_noimg")
+        assert result.text == "See file abc123"
+        assert result.image_content is None
