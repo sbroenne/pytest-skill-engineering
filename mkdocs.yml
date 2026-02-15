@@ -84,6 +84,7 @@ nav:
     - Generate Reports: how-to/generate-reports.md
     - CI/CD Integration: how-to/ci-cd.md
     - Visual Testing: how-to/visual-testing.md
+    - Image Assertions: how-to/image-assertions.md
     - Fixture Testing: how-to/fixture-testing.md
     - Complete Example: how-to/complete-example.md
   - Reference:

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import base64
 from dataclasses import asdict, is_dataclass
 from typing import TYPE_CHECKING, Any
 
@@ -13,14 +14,25 @@ def serialize_dataclass(obj: Any) -> Any:
     """Convert dataclass to dict recursively, handling special types.
 
     Excludes private fields (prefixed with _) from serialization.
+    Encodes bytes fields as base64 strings.
     """
     if is_dataclass(obj) and not isinstance(obj, type):
         data = asdict(obj)  # type: ignore[arg-type]
-        return {k: serialize_dataclass(v) for k, v in data.items() if not k.startswith("_")}
+        result = {}
+        for k, v in data.items():
+            if k.startswith("_"):
+                continue
+            if isinstance(v, bytes):
+                result[k] = base64.b64encode(v).decode("ascii")
+            else:
+                result[k] = serialize_dataclass(v)
+        return result
     elif isinstance(obj, (list, tuple)):
         return [serialize_dataclass(item) for item in obj]
     elif isinstance(obj, dict):
         return {k: serialize_dataclass(v) for k, v in obj.items()}
+    elif isinstance(obj, bytes):
+        return base64.b64encode(obj).decode("ascii")
     else:
         # For enums, strings, numbers, etc.
         return obj
@@ -48,6 +60,11 @@ def deserialize_suite_report(data: dict[str, Any]) -> SuiteReport:
                 # Reconstruct tool calls
                 tool_calls = []
                 for tc_data in turn_data.get("tool_calls", []):
+                    # Decode base64 image content if present
+                    image_content = None
+                    if tc_data.get("image_content"):
+                        image_content = base64.b64decode(tc_data["image_content"])
+
                     tool_calls.append(
                         ToolCall(
                             name=tc_data["name"],
@@ -55,6 +72,8 @@ def deserialize_suite_report(data: dict[str, Any]) -> SuiteReport:
                             result=tc_data.get("result"),
                             error=tc_data.get("error"),
                             duration_ms=tc_data.get("duration_ms"),
+                            image_content=image_content,
+                            image_media_type=tc_data.get("image_media_type"),
                         )
                     )
 

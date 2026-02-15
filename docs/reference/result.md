@@ -108,6 +108,36 @@ for call in calls:
     print(f"Result: {call.result}")
 ```
 
+### tool_images_for
+
+Get all images returned by a specific tool:
+
+```python
+screenshots = result.tool_images_for("screenshot")
+
+for img in screenshots:
+    print(f"Type: {img.media_type}, Size: {len(img.data)} bytes")
+```
+
+Returns a list of `ImageContent` objects. Each has:
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `data` | `bytes` | Raw image bytes |
+| `media_type` | `str` | MIME type (e.g., `"image/png"`) |
+
+## ToolCall Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `name` | `str` | Tool name |
+| `arguments` | `dict` | Arguments passed to the tool |
+| `result` | `str \| None` | Text result (or description for images) |
+| `error` | `str \| None` | Error message if failed |
+| `duration_ms` | `float \| None` | Call duration |
+| `image_content` | `bytes \| None` | Raw image data (if tool returned image) |
+| `image_media_type` | `str \| None` | Image MIME type (if tool returned image) |
+
 ## Output Assertions
 
 ### Check Response Content

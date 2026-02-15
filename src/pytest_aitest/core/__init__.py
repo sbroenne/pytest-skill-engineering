@@ -15,6 +15,7 @@ from pytest_aitest.core.prompt import Prompt, load_prompt, load_prompts, load_sy
 from pytest_aitest.core.result import (
     AgentResult,
     ClarificationStats,
+    ImageContent,
     SkillInfo,
     ToolCall,
     ToolInfo,
@@ -32,6 +33,7 @@ __all__ = [
     "ClarificationLevel",
     "ClarificationStats",
     "EngineTimeoutError",
+    "ImageContent",
     "MCPServer",
     "Prompt",
     "Provider",

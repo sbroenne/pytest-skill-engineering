@@ -454,6 +454,8 @@ def _extract_test_result_fields(
                             error=tc.error,
                             args=tc.arguments,
                             result=tc.result,
+                            image_content=tc.image_content,
+                            image_media_type=tc.image_media_type,
                         )
                     )
 

@@ -7,6 +7,23 @@ from typing import Any
 
 
 @dataclass(slots=True)
+class ImageContent:
+    """Binary image data returned by a tool call.
+
+    Example:
+        screenshots = result.tool_images_for("screenshot")
+        assert len(screenshots) > 0
+        assert screenshots[-1].media_type == "image/png"
+    """
+
+    data: bytes
+    media_type: str  # e.g. "image/png"
+
+    def __repr__(self) -> str:
+        return f"ImageContent({self.media_type}, {len(self.data)} bytes)"
+
+
+@dataclass(slots=True)
 class ToolCall:
     """A tool call made by the agent."""
 
@@ -15,11 +32,14 @@ class ToolCall:
     result: str | None = None
     error: str | None = None
     duration_ms: float | None = None
+    image_content: bytes | None = None
+    image_media_type: str | None = None
 
     def __repr__(self) -> str:
         status = "error" if self.error else "ok"
         timing = f", {self.duration_ms:.1f}ms" if self.duration_ms else ""
-        return f"ToolCall({self.name}, {status}{timing})"
+        image = ", image" if self.image_content else ""
+        return f"ToolCall({self.name}, {status}{timing}{image})"
 
 
 @dataclass(slots=True)
@@ -214,6 +234,26 @@ class AgentResult:
         if calls:
             return calls[0].arguments.get(arg_name)
         return None
+
+    def tool_images_for(self, name: str) -> list[ImageContent]:
+        """Get all images returned by a specific tool.
+
+        Args:
+            name: Name of the tool (e.g., "screenshot")
+
+        Returns:
+            List of ImageContent objects from tool calls that returned images.
+
+        Example:
+            screenshots = result.tool_images_for("screenshot")
+            assert len(screenshots) > 0
+            assert screenshots[-1].media_type == "image/png"
+        """
+        return [
+            ImageContent(data=c.image_content, media_type=c.image_media_type or "image/png")
+            for c in self.tool_calls_for(name)
+            if c.image_content is not None
+        ]
 
     @property
     def asked_for_clarification(self) -> bool:

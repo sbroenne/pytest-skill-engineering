@@ -60,18 +60,49 @@ class _RecordingLLMAssert:
         return getattr(self._inner, name)
 
 
+class _RecordingLLMAssertImage:
+    """Wrapper that records LLM image assertions for report rendering."""
+
+    def __init__(self, inner: Any, store: list[dict[str, Any]]) -> None:
+        self._inner = inner
+        self._store = store
+
+    def __call__(self, image: Any, criterion: str, **kwargs: Any) -> Any:
+        result = self._inner(image, criterion, **kwargs)
+        self._store.append(
+            {
+                "type": "llm_image",
+                "passed": bool(result),
+                "message": result.criterion,
+                "details": result.reasoning,
+            }
+        )
+        return result
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self._inner, name)
+
+
 @pytest.hookimpl(hookwrapper=True)
 def pytest_pyfunc_call(pyfuncitem: Item) -> Any:
-    """Wrap llm_assert fixture values before test function execution."""
+    """Wrap llm_assert and llm_assert_image fixture values before test function execution."""
     funcargs = getattr(pyfuncitem, "funcargs", {})
+
+    # Ensure assertion store exists
+    store = getattr(pyfuncitem, "_aitest_assertions", None)
+    if store is None:
+        store = []
+        pyfuncitem._aitest_assertions = store  # type: ignore[attr-defined]
+
+    # Wrap llm_assert
     llm_assert = funcargs.get("llm_assert")
     if llm_assert is not None and not isinstance(llm_assert, _RecordingLLMAssert):
-        store = getattr(pyfuncitem, "_aitest_assertions", None)
-        if store is None:
-            store = []
-            pyfuncitem._aitest_assertions = store  # type: ignore[attr-defined]
-
         pyfuncitem.funcargs["llm_assert"] = _RecordingLLMAssert(llm_assert, store)  # type: ignore[index]
+
+    # Wrap llm_assert_image
+    llm_assert_image = funcargs.get("llm_assert_image")
+    if llm_assert_image is not None and not isinstance(llm_assert_image, _RecordingLLMAssertImage):
+        pyfuncitem.funcargs["llm_assert_image"] = _RecordingLLMAssertImage(llm_assert_image, store)  # type: ignore[index]
 
     yield
 
@@ -205,6 +236,17 @@ def pytest_addoption(parser: Parser) -> None:
         help=(
             "Model for llm_assert semantic assertions. "
             "Defaults to --aitest-summary-model if set, otherwise openai/gpt-5-mini."
+        ),
+    )
+
+    # Vision model for llm_assert_image fixture
+    group.addoption(
+        "--llm-vision-model",
+        default=None,
+        help=(
+            "Vision-capable model for llm_assert_image assertions. "
+            "Defaults to --llm-model if not set. "
+            "Use a model that supports image input (e.g., gpt-4o, claude-sonnet-4)."
         ),
     )
 

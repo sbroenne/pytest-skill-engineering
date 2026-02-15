@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from htpy import Node, code, div, span
+import base64
+
+from htpy import Node, code, div, img, span
 from markupsafe import Markup
 
 from .agent_leaderboard import format_cost
@@ -80,11 +82,28 @@ def _tool_call_item(tc: ToolCallData) -> Node:
         display_error = tc.error[:40] + ("..." if len(tc.error) > 40 else "")
         error_node = span(".text-xs.text-red-400.truncate", title=tc.error)[display_error]
 
-    return div(class_=f"flex items-center gap-2 text-sm p-2 rounded {bg_class}")[
+    # Image thumbnail for tools that returned images
+    image_node = None
+    if tc.image_content and tc.image_media_type:
+        b64 = base64.b64encode(tc.image_content).decode("ascii")
+        data_uri = f"data:{tc.image_media_type};base64,{b64}"
+        image_node = img(
+            src=data_uri,
+            alt="Tool result image",
+            style="max-width: 200px; max-height: 150px; border-radius: 4px; margin-top: 4px;",
+            class_="cursor-pointer",
+        )
+
+    call_row = div(class_=f"flex items-center gap-2 text-sm p-2 rounded {bg_class}")[
         span(class_=status_class)[status_icon],
         code(".tool-name")[tc.name],
         error_node,
     ]
+
+    if image_node:
+        return div[call_row, div(".pl-8.pb-1")[image_node]]
+
+    return call_row
 
 
 def _tool_calls_section(result: TestResultData) -> Node | None:

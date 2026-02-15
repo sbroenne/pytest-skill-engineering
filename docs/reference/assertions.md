@@ -152,6 +152,41 @@ async def test_response_quality(aitest_run, agent, llm_assert):
     )
 ```
 
+## Image Assertions
+
+### Check if images were returned
+
+```python
+screenshots = result.tool_images_for("screenshot")
+assert len(screenshots) > 0
+assert screenshots[-1].media_type == "image/png"
+assert len(screenshots[-1].data) > 1000  # Reasonable size
+```
+
+### AI-graded image evaluation
+
+Use the `llm_assert_image` fixture to have a vision LLM evaluate an image:
+
+```python
+async def test_chart_quality(aitest_run, agent, llm_assert_image):
+    result = await aitest_run(agent, "Create a bar chart")
+    screenshots = result.tool_images_for("screenshot")
+    assert llm_assert_image(
+        screenshots[-1],
+        "shows a bar chart with labeled axes"
+    )
+```
+
+### Image properties
+
+```python
+screenshots = result.tool_images_for("screenshot")
+for img in screenshots:
+    print(f"Type: {img.media_type}, Size: {len(img.data)} bytes")
+```
+
+See the [Image Assertions guide](../how-to/image-assertions.md) for complete documentation.
+
 ## Performance Assertions
 
 ### Max duration

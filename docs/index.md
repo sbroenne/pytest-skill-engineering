@@ -105,6 +105,7 @@ async def test_balance_check(aitest_run):
 - **Multi-Turn Sessions** — Test conversations that build on context
 - **Agent Skills** — Add domain knowledge following [agentskills.io](https://agentskills.io)
 - **AI Analysis** — Tells you what to fix, not just what failed
+- **Image Assertions** — AI-graded visual evaluation of screenshots and visual tool output
 
 ## Installation
 

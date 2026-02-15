@@ -36,6 +36,8 @@ class ToolCallData:
     error: str | None = None
     args: dict[str, Any] | None = None
     result: str | None = None
+    image_content: bytes | None = None
+    image_media_type: str | None = None
 
 
 @dataclass(slots=True)

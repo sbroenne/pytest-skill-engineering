@@ -11,11 +11,13 @@ import json
 import logging
 import os
 import time
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
 from pydantic_ai import Agent as PydanticAgent
 from pydantic_ai.mcp import MCPServerSSE, MCPServerStdio, MCPServerStreamableHTTP
 from pydantic_ai.messages import (
+    MULTI_MODAL_CONTENT_TYPES,
     ModelMessage,
     ModelRequest,
     ModelResponse,
@@ -290,13 +292,15 @@ def _extract_turns(messages: list[ModelMessage]) -> list[Turn]:
                         arguments = part.args if isinstance(part.args, dict) else {}
 
                     # Find matching ToolReturnPart in subsequent messages
-                    result_text = _find_tool_result(messages, part.tool_call_id)
+                    tool_result = _extract_tool_result(messages, part.tool_call_id)
 
                     tool_calls.append(
                         ToolCall(
                             name=part.tool_name,
                             arguments=arguments,
-                            result=result_text,
+                            result=tool_result.text,
+                            image_content=tool_result.image_content,
+                            image_media_type=tool_result.image_media_type,
                         )
                     )
                 elif isinstance(part, TextPart):
@@ -309,17 +313,89 @@ def _extract_turns(messages: list[ModelMessage]) -> list[Turn]:
     return turns
 
 
-def _find_tool_result(messages: list[ModelMessage], tool_call_id: str | None) -> str | None:
-    """Find the result of a tool call by its ID in the message history."""
+@dataclass
+class _ToolResult:
+    """Extracted tool result with optional image content."""
+
+    text: str | None = None
+    image_content: bytes | None = None
+    image_media_type: str | None = None
+
+
+def _extract_tool_result(messages: list[ModelMessage], tool_call_id: str | None) -> _ToolResult:
+    """Extract the result of a tool call by its ID, handling multimodal content.
+
+    For text/JSON content, returns text as before.
+    For BinaryContent (images), extracts bytes and media_type and sets a
+    human-readable text summary like "[image/png, 12345 bytes]".
+    For sequences with mixed content, extracts text and image parts separately.
+    """
     if not tool_call_id:
-        return None
+        return _ToolResult()
 
     for msg in messages:
         if isinstance(msg, ModelRequest):
             for part in msg.parts:
                 if isinstance(part, ToolReturnPart) and part.tool_call_id == tool_call_id:
-                    return str(part.content)
-    return None
+                    return _process_tool_content(part.content)
+    return _ToolResult()
+
+
+def _process_tool_content(content: Any) -> _ToolResult:
+    """Process tool return content, extracting text and image data."""
+    # Check for multimodal content types (BinaryContent, ImageUrl, etc.)
+    if isinstance(content, MULTI_MODAL_CONTENT_TYPES):
+        return _process_multimodal(content)
+
+    # Sequences may contain mixed text + images
+    if isinstance(content, (list, tuple)):
+        return _process_sequence(content)
+
+    # Default: stringify
+    return _ToolResult(text=str(content))
+
+
+def _process_multimodal(content: Any) -> _ToolResult:
+    """Process a single multimodal content item."""
+    from pydantic_ai.messages import BinaryContent
+
+    if isinstance(content, BinaryContent):
+        size = len(content.data)
+        media = str(content.media_type)
+        return _ToolResult(
+            text=f"[{media}, {size} bytes]",
+            image_content=content.data,
+            image_media_type=media,
+        )
+
+    # Other multimodal types (ImageUrl, AudioUrl, etc.)
+    return _ToolResult(text=str(content))
+
+
+def _process_sequence(content: list[Any] | tuple[Any, ...]) -> _ToolResult:
+    """Process a sequence of content items, extracting text and first image."""
+    text_parts: list[str] = []
+    image_content: bytes | None = None
+    image_media_type: str | None = None
+
+    for item in content:
+        if isinstance(item, MULTI_MODAL_CONTENT_TYPES):
+            result = _process_multimodal(item)
+            if result.image_content and image_content is None:
+                image_content = result.image_content
+                image_media_type = result.image_media_type
+            if result.text:
+                text_parts.append(result.text)
+        elif isinstance(item, str):
+            text_parts.append(item)
+        else:
+            text_parts.append(str(item))
+
+    return _ToolResult(
+        text="\n".join(text_parts) if text_parts else None,
+        image_content=image_content,
+        image_media_type=image_media_type,
+    )
 
 
 def extract_tool_info_from_messages(messages: list[ModelMessage]) -> list[str]:
