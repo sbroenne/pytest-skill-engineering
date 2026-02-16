@@ -152,6 +152,51 @@ async def test_response_quality(aitest_run, agent, llm_assert):
     )
 ```
 
+## Multi-Dimension Scoring
+
+Use the `llm_score` fixture for rubric-based evaluation across multiple dimensions:
+
+```python
+from pytest_aitest import ScoringDimension, assert_score
+
+RUBRIC = [
+    ScoringDimension("accuracy", "Correct and factual content"),
+    ScoringDimension("completeness", "Covers all requested topics"),
+    ScoringDimension("clarity", "Well-organized and readable"),
+]
+
+async def test_output_quality(aitest_run, agent, llm_score):
+    result = await aitest_run(agent, "Explain retry patterns")
+    scores = llm_score(result.final_response, RUBRIC)
+    assert_score(scores, min_total=10)  # 10/15
+```
+
+### Threshold variants
+
+```python
+# Percentage threshold
+assert_score(scores, min_pct=0.7)  # 70% of max
+
+# Per-dimension minimums
+assert_score(scores, min_dimensions={"accuracy": 4, "completeness": 3})
+
+# Combined
+assert_score(scores, min_total=10, min_dimensions={"accuracy": 4})
+```
+
+### Weighted dimensions
+
+```python
+RUBRIC = [
+    ScoringDimension("accuracy", "Factual correctness", weight=2.0),
+    ScoringDimension("style", "Writing quality", weight=0.5),
+]
+scores = llm_score(content, RUBRIC)
+print(scores.weighted_score)  # 0.0-1.0 weighted average
+```
+
+See the [Multi-Dimension Scoring guide](../how-to/multi-dimension-scoring.md) for full details.
+
 ## Image Assertions
 
 ### Check if images were returned

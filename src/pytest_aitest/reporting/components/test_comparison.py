@@ -4,8 +4,7 @@ from __future__ import annotations
 
 import base64
 
-from htpy import Node, code, div, img, span
-from markupsafe import Markup
+from htpy import Node, button, code, div, img, span
 
 from .agent_leaderboard import format_cost
 from .types import AgentData, AssertionData, TestData, TestResultData, ToolCallData
@@ -50,24 +49,22 @@ def _metrics_row(result: TestResultData) -> Node:
 
 
 def _mermaid_diagram(result: TestResultData) -> Node | None:
-    """Render the sequence diagram section."""
+    """Render a button that opens the sequence diagram in fullscreen overlay."""
     if not result.mermaid:
         return None
 
-    diagram_cls = (
-        "p-3 bg-surface-code rounded-material border border-white/5 "
-        "cursor-pointer hover:border-primary/30 transition-colors"
+    btn_cls = (
+        "inline-flex items-center gap-2 px-3 py-1.5 text-sm "
+        "bg-surface-code rounded-material border border-white/10 "
+        "cursor-pointer hover:border-primary/30 hover:bg-primary/5 transition-colors "
+        "text-text-muted hover:text-text-light"
     )
     return div(".mb-4")[
-        div(".text-sm.font-medium.text-text-light.mb-3.flex.items-center.gap-2")[
-            span["📊"],
-            span["Sequence"],
-        ],
-        div(
-            class_=diagram_cls,
+        button(
+            class_=btn_cls,
             onclick="event.stopPropagation(); showDiagram(this.dataset.mermaidCode);",
             data_mermaid_code=result.mermaid,
-        )[div(".mermaid.text-xs")[Markup(result.mermaid)],],
+        )[span["📊"], span["View Sequence Diagram"]],
     ]
 
 
@@ -144,6 +141,73 @@ def _assertions_section(result: TestResultData) -> Node | None:
             span["Assertions"],
         ],
         div(".space-y-2")[[_assertion_item(a) for a in result.assertions]],
+    ]
+
+
+def _scores_section(result: TestResultData) -> Node | None:
+    """Render the LLM scores section with dimension bars."""
+    if not result.scores:
+        return None
+
+    all_dims: list[Node] = []
+    for score in result.scores:
+        dim_items: list[Node] = []
+        for dim in score.dimensions:
+            pct = dim.score / dim.max_score * 100 if dim.max_score > 0 else 0
+            # Color gradient: green for high, yellow for mid, red for low
+            if pct >= 70:
+                fill_color = "var(--color-green)"
+            elif pct >= 40:
+                fill_color = "var(--color-yellow, #facc15)"
+            else:
+                fill_color = "var(--color-red)"
+
+            weight_label = f" (w={dim.weight})" if dim.weight != 1.0 else ""
+
+            dim_items.append(
+                div(".score-dimension.mb-2")[
+                    div(".flex.items-center.justify-between.text-xs.mb-1")[
+                        span(".text-text-light")[f"{dim.name}{weight_label}"],
+                        span(".text-text-muted.tabular-nums")[f"{dim.score}/{dim.max_score}"],
+                    ],
+                    div(".score-track")[
+                        div(
+                            ".score-fill",
+                            style=f"width: {pct:.0f}%; background: {fill_color};",
+                        ),
+                    ],
+                ]
+            )
+
+        # Overall score summary
+        overall = div(
+            ".flex.items-center.justify-between.p-2.bg-surface-elevated.rounded-material.mt-2.mb-3"
+        )[
+            span(".text-sm.text-text-light")["Overall"],
+            span(".text-sm.font-medium.text-text.tabular-nums")[
+                f"{score.total}/{score.max_total} ({score.weighted_score:.0%})"
+            ],
+        ]
+
+        # Reasoning
+        reasoning_node = None
+        if score.reasoning:
+            reasoning_node = div(
+                ".text-xs.text-text-muted.p-2.bg-surface-code.rounded-material.mb-3",
+                style="white-space: pre-wrap;",
+            )[score.reasoning]
+
+        all_dims.extend(dim_items)
+        all_dims.append(overall)
+        if reasoning_node:
+            all_dims.append(reasoning_node)
+
+    return div(".mb-4")[
+        div(".text-sm.font-medium.text-text-light.mb-3.flex.items-center.gap-2")[
+            span["📊"],
+            span["Scores"],
+        ],
+        div[all_dims],
     ]
 
 
@@ -245,6 +309,7 @@ def _result_content(result: TestResultData) -> Node:
         _mermaid_diagram(result),
         _tool_calls_section(result),
         _assertions_section(result),
+        _scores_section(result),
         _response_section(result),
         _error_section(result),
     ]

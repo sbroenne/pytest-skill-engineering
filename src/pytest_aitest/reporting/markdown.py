@@ -57,6 +57,7 @@ def _report_header(report: ReportMetadata) -> str:
     test_run_cost = report.total_cost_usd
     if report.analysis_cost_usd:
         test_run_cost -= report.analysis_cost_usd
+    test_run_cost = max(test_run_cost, 0.0)
 
     cost_parts = [f"🧪 {format_cost(test_run_cost)}"]
     if report.analysis_cost_usd:
@@ -253,6 +254,38 @@ def _test_result_detail(
             icon = "✅" if a.passed else "❌"
             parts.append(f"- {icon} `{a.type}`: {a.message}")
         parts.append("")
+
+    # Scores
+    if result.scores:
+        parts.append("**Scores:**")
+        parts.append("")
+        for score in result.scores:
+            header = ["Dimension", "Score", "Max", "Pct", "Weight"]
+            rows_s: list[list[str]] = [header]
+            for dim in score.dimensions:
+                pct = dim.score / dim.max_score * 100 if dim.max_score > 0 else 0
+                rows_s.append(
+                    [
+                        dim.name,
+                        str(dim.score),
+                        str(dim.max_score),
+                        f"{pct:.0f}%",
+                        f"{dim.weight}",
+                    ]
+                )
+            table_s = Table().create_table(
+                columns=len(header),
+                rows=len(rows_s),
+                text=[cell for row in rows_s for cell in row],
+                text_align=["left", "right", "right", "right", "right"],
+            )
+            parts.append(table_s)
+            parts.append(
+                f"Overall: **{score.total}/{score.max_total}** ({score.weighted_score:.0%})"
+            )
+            if score.reasoning:
+                parts.append(f"\n> {score.reasoning}")
+            parts.append("")
 
     # Iteration breakdown (when --aitest-iterations produced multiple runs)
     if result.iterations:

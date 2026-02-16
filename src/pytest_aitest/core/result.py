@@ -275,6 +275,37 @@ class AgentResult:
             return 0
         return self.clarification_stats.count
 
+    @property
+    def tool_context(self) -> str:
+        """Summarise tool calls and their results as plain text.
+
+        Use this as the ``context`` argument for ``llm_score`` so the judge
+        can see what tools were called and what data they returned.
+
+        Example::
+
+            score = llm_score(
+                result.final_response,
+                TOOL_QUALITY_RUBRIC,
+                context=result.tool_context,
+            )
+        """
+        calls = self.all_tool_calls
+        if not calls:
+            return "No tools were called."
+        lines: list[str] = []
+        for i, call in enumerate(calls, 1):
+            lines.append(f"## Tool call {i}: {call.name}")
+            if call.arguments:
+                args = ", ".join(f"{k}={v!r}" for k, v in call.arguments.items())
+                lines.append(f"Arguments: {args}")
+            if call.error:
+                lines.append(f"Error: {call.error}")
+            elif call.result:
+                lines.append(f"Result: {call.result}")
+            lines.append("")
+        return "\n".join(lines)
+
     def __repr__(self) -> str:
         status = "SUCCESS" if self.success else f"FAILED: {self.error}"
         tools = ", ".join(sorted(self.tool_names_called)) or "none"

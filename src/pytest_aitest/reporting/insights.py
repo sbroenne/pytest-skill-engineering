@@ -11,6 +11,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+from pytest_aitest.execution.cost import estimate_cost, models_without_pricing
+
 if TYPE_CHECKING:
     from pytest_aitest.core.result import SkillInfo, ToolInfo
     from pytest_aitest.reporting.collector import SuiteReport
@@ -64,6 +66,18 @@ def _build_analysis_input(
             "Exclude disqualified agents from your Recommendation. "
             "Do not recommend a disqualified agent for deployment. "
             "Still analyze their failures in the Failure Analysis section.\n"
+        )
+
+    # Pricing completeness — warn AI when cost data is unreliable
+    if models_without_pricing:
+        models_list = ", ".join(sorted(models_without_pricing))
+        sections.append("## ⚠️ Incomplete Pricing Data\n")
+        sections.append(
+            f"The following models have **no pricing data**: {models_list}\n\n"
+            "Cost values for these models are $0.00 and **do not reflect reality**. "
+            "Do NOT use cost as a ranking factor or mention cost savings/comparisons. "
+            "Focus your analysis on pass rate, tool usage, and response quality instead. "
+            "In the Winner Card, omit cost or mark it as 'N/A (pricing unavailable)'.\n"
         )
 
     # Pre-computed agent statistics for AI accuracy (grouped by agent name)
@@ -242,6 +256,20 @@ def _build_analysis_input(
                 if len(ar.effective_system_prompt) > 300:
                     prompt_excerpt += "..."
                 sections.append(f"- System prompt: {prompt_excerpt}")
+            # Include LLM score data when available
+            if test.assertions:
+                for assertion in test.assertions:
+                    if assertion.get("type") == "llm_score":
+                        total = assertion.get("total", 0)
+                        max_total = assertion.get("max_total", 0)
+                        pct = assertion.get("weighted_score", 0)
+                        sections.append(f"- LLM Score: {total}/{max_total} ({pct:.0%})")
+                        dims = assertion.get("dimensions", [])
+                        for d in dims:
+                            sections.append(f"  - {d['name']}: {d['score']}/{d['max_score']}")
+                        reasoning = assertion.get("details", "")
+                        if reasoning:
+                            sections.append(f"  - Reasoning: {reasoning[:300]}")
             # Include conversation
             sections.append("\n**Conversation:**")
             for turn in ar.turns:
@@ -412,7 +440,10 @@ async def generate_insights(
 
             # Track usage
             usage = result.usage()
-            total_tokens = (usage.input_tokens or 0) + (usage.output_tokens or 0)
+            input_tokens = usage.input_tokens or 0
+            output_tokens = usage.output_tokens or 0
+            total_tokens = input_tokens + output_tokens
+            insights_cost = estimate_cost(model, input_tokens, output_tokens)
 
             markdown_content = result.output
             duration_ms = (time.perf_counter() - start_time) * 1000
@@ -424,7 +455,7 @@ async def generate_insights(
                     "insights": markdown_content,
                     "model": model,
                     "tokens_used": total_tokens,
-                    "cost_usd": 0.0,
+                    "cost_usd": insights_cost,
                     "duration_ms": duration_ms,
                 }
                 cache_path.write_text(json.dumps(cache_data))
@@ -433,7 +464,7 @@ async def generate_insights(
                 markdown_summary=markdown_content,
                 model=model,
                 tokens_used=total_tokens,
-                cost_usd=0.0,
+                cost_usd=insights_cost,
                 duration_ms=duration_ms,
                 cached=False,
             )

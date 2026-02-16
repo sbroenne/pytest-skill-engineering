@@ -8,6 +8,7 @@ from pytest_aitest.fixtures.factories import skill_factory
 from pytest_aitest.fixtures.iteration import _aitest_iteration
 from pytest_aitest.fixtures.llm_assert import llm_assert
 from pytest_aitest.fixtures.llm_assert_image import llm_assert_image
+from pytest_aitest.fixtures.llm_score import llm_score
 from pytest_aitest.fixtures.run import _aitest_auto_cleanup, aitest_run
 
 __all__ = [
@@ -16,5 +17,6 @@ __all__ = [
     "aitest_run",
     "llm_assert",
     "llm_assert_image",
+    "llm_score",
     "skill_factory",
 ]

@@ -225,20 +225,27 @@ def adapt_result(
     pydantic_result: AgentRunResult[str],
     *,
     start_time: float,
+    model: str,
     available_tools: list[ToolInfo],
     skill_info: SkillInfo | None,
     effective_system_prompt: str,
     session_context_count: int = 0,
 ) -> AgentResult:
     """Convert PydanticAI AgentRunResult into our AgentResult for reporting."""
+    from pytest_aitest.execution.cost import estimate_cost
+
     duration_ms = (time.perf_counter() - start_time) * 1000
 
     # Extract usage
     usage = pydantic_result.usage()
+    input_tokens = usage.input_tokens or 0
+    output_tokens = usage.output_tokens or 0
     token_usage = {
-        "prompt": usage.input_tokens,
-        "completion": usage.output_tokens,
+        "prompt": input_tokens,
+        "completion": output_tokens,
     }
+
+    cost_usd = estimate_cost(model, input_tokens, output_tokens)
 
     # Convert messages to our Turn format
     turns = _extract_turns(pydantic_result.all_messages())
@@ -251,7 +258,7 @@ def adapt_result(
         success=True,
         duration_ms=duration_ms,
         token_usage=token_usage,
-        cost_usd=0.0,  # PydanticAI doesn't provide cost; computed later if needed
+        cost_usd=cost_usd,
         _messages=raw_messages,
         session_context_count=session_context_count,
         available_tools=available_tools,

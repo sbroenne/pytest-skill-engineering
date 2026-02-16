@@ -41,6 +41,13 @@ from pytest_aitest.core import (  # noqa: E402
 # Execution
 from pytest_aitest.execution import AgentEngine  # noqa: E402
 
+# Scoring
+from pytest_aitest.fixtures.llm_score import (  # noqa: E402
+    ScoreResult,
+    ScoringDimension,
+    assert_score,
+)
+
 # Hooks (for plugin extensibility)
 from pytest_aitest.hooks import AitestHookSpec  # noqa: E402
 
@@ -91,6 +98,10 @@ __all__ = [  # noqa: RUF022
     "generate_json",
     # Hooks
     "AitestHookSpec",
+    # Scoring
+    "ScoreResult",
+    "ScoringDimension",
+    "assert_score",
 ]
 
 from importlib.metadata import version as _get_version  # noqa: E402

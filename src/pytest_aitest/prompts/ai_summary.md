@@ -135,7 +135,9 @@ Use these sections as needed (skip sections with no content):
 | tool_name | ✅/⚠️/❌ | N | [Issue or "Working well"] |
 
 **Suggested rewrite for `tool_name`:** (if needed)
-> [Exact new description that disambiguates from similar tools]
+> [Exact new description — signature with types and return shape]
+>
+> Reason: [Why this rewrite improves discoverability or reduces ambiguity]
 
 ## 📝 System Prompt Feedback
 
@@ -157,7 +159,7 @@ Use these sections as needed (skip sections with no content):
 - **Problem:** [Issue - bloated? never referenced? wrong format?]
 - **Suggested change:** [Specific restructuring]
 
-## 💡 Optimizations
+## �💡 Optimizations
 
 [Cross-cutting improvements - skip if none. ALWAYS use a table:]
 
@@ -196,7 +198,7 @@ Use these sections as needed (skip sections with no content):
 ## Analysis Guidelines
 
 ### Recommendation
-- **Compare by**: pass rate → **iteration pass rate (when present)** → **cost** (primary metric) → response quality
+- **Compare by**: pass rate → **iteration pass rate (when present)** → **LLM score (when present)** → **cost** (primary metric) → response quality
 - **Use pre-computed statistics**: The input includes a "Pre-computed Agent Statistics" section with exact per-agent numbers and a designated winner. Use these numbers verbatim in your Winner Card and metric cards. Do NOT re-derive statistics from raw test data.
 - **Disqualified agents**: Only agents explicitly marked "⛔ Disqualified" in the Pre-computed Agent Statistics are disqualified. **Never invent disqualifications** — if an agent has no "⛔ Disqualified" status in the ranked table, it is NOT disqualified regardless of its pass rate. Never recommend a disqualified agent for deployment. Mention them as disqualified in the Alternatives section. **Always attribute the root cause** — e.g., "disqualified because the system prompt caused permission-seeking behavior", not just "disqualified due to 0% pass rate" or "failure to call tools". The reader needs to know WHY.
 - **Emphasize cost over tokens**: Cost is what matters for ranking - mention cost first, then tokens
@@ -297,3 +299,4 @@ Use these sections as needed (skip sections with no content):
 14. **Prompt labels must be model-specific** — Never label a system prompt as globally "ineffective" or globally "effective" when it was tested with multiple models and produced different outcomes. If `gpt-5-mini + detailed` failed but `gpt-4.1 + detailed` passed, the prompt is "mixed" — effective with gpt-4.1, ineffective with gpt-5-mini. The same applies to the Optimizations section: do not say "restrict [prompt] usage" if it works correctly with some models.
 15. **Bullet lists need a blank line before them** — In markdown, a list must be preceded by a blank line to render correctly. NEVER put a bullet list directly after a `**bold label:**` on the next line — the markdown parser will collapse them into a single paragraph. Use `####` headings instead of bold labels when you need a label followed by a list.
 16. **Iteration awareness** — When iteration data is present ("Iter Pass Rate" in Pre-computed Agent Statistics), factor consistency into your recommendation. An agent with 100% pass rate at 5/5 iterations is more reliable than one with 100% pass rate at 3/5 iterations. Flag tests with <100% iteration pass rate as **flaky** in your analysis. When no iteration data is present, skip all iteration-related analysis.
+17. **Score awareness** — When LLM score data is present (`LLM Score: X/Y (Z%)`), mention the weighted score in the Winner Card summary and note any dimensions below 70% in the analysis. When no score data exists, skip all score-related commentary.

@@ -156,6 +156,7 @@ class AgentEngine:
             agent_result = adapt_result(
                 result,
                 start_time=start_time,
+                model=self.agent.provider.model,
                 available_tools=self._available_tools,
                 skill_info=self._skill_info,
                 effective_system_prompt=self._effective_system_prompt,

@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "pytest-aitest"
-version = "0.3.3"
+version = "0.4.0"
 description = "Pytest plugin for testing AI agents with MCP and CLI servers"
 readme = "README.md"
 license = { text = "MIT" }
@@ -35,6 +35,7 @@ dependencies = [
     "azure-identity>=1.25",
     "pydantic-ai>=1.59.0",
     "pydantic-evals>=0.3",
+    "litellm>=1.81.12",
 ]
 
 [project.optional-dependencies]

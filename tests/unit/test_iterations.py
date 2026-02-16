@@ -196,7 +196,7 @@ class TestExtractTestResultFields:
 
     def test_extracts_tool_calls(self) -> None:
         test = _make_test_report(agent_result=_make_agent_result_with_tools())
-        tool_calls, _, _, _, _, _ = _extract_test_result_fields(test)
+        tool_calls, _, _, _, _, _, _ = _extract_test_result_fields(test)
         assert len(tool_calls) == 1
         assert tool_calls[0].name == "get_balance"
         assert tool_calls[0].success is True
@@ -208,7 +208,7 @@ class TestExtractTestResultFields:
                 {"type": "semantic", "passed": False, "message": "bad response"},
             ]
         )
-        _, assertions, _, _, _, _ = _extract_test_result_fields(test)
+        _, assertions, _, _, _, _, _ = _extract_test_result_fields(test)
         assert len(assertions) == 2
         assert assertions[0].type == "tool_called"
         assert assertions[0].passed is True
@@ -216,30 +216,32 @@ class TestExtractTestResultFields:
 
     def test_extracts_turn_count(self) -> None:
         test = _make_test_report(agent_result=_make_agent_result_with_tools())
-        _, _, turn_count, _, _, _ = _extract_test_result_fields(test)
+        _, _, _, turn_count, _, _, _ = _extract_test_result_fields(test)
         assert turn_count == 3  # user + tool_call + final assistant
 
     def test_extracts_tokens(self) -> None:
         test = _make_test_report(
             agent_result=_make_agent_result(prompt_tokens=500, completion_tokens=200)
         )
-        _, _, _, tokens, _, _ = _extract_test_result_fields(test)
+        _, _, _, _, tokens, _, _ = _extract_test_result_fields(test)
         assert tokens == 700
 
     def test_generates_mermaid(self) -> None:
         test = _make_test_report(agent_result=_make_agent_result_with_tools())
-        _, _, _, _, mermaid, _ = _extract_test_result_fields(test)
+        _, _, _, _, _, mermaid, _ = _extract_test_result_fields(test)
         assert mermaid is not None
         assert "sequenceDiagram" in mermaid
 
     def test_extracts_final_response(self) -> None:
         test = _make_test_report(agent_result=_make_agent_result_with_tools())
-        _, _, _, _, _, final_resp = _extract_test_result_fields(test)
+        _, _, _, _, _, _, final_resp = _extract_test_result_fields(test)
         assert final_resp == "Your balance is $1,500."
 
     def test_handles_no_agent_result(self) -> None:
         test = TestReport(name="test_foo", outcome="passed", duration_ms=100.0, agent_result=None)
-        tool_calls, _, turn_count, tokens, mermaid, final_resp = _extract_test_result_fields(test)
+        tool_calls, _, _, turn_count, tokens, mermaid, final_resp = _extract_test_result_fields(
+            test
+        )
         assert tool_calls == []
         assert turn_count == 0
         assert tokens == 0

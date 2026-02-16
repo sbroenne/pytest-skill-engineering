@@ -51,6 +51,27 @@ class AssertionData:
 
 
 @dataclass(slots=True)
+class ScoreDimensionData:
+    """Data for a single scored dimension."""
+
+    name: str
+    score: int
+    max_score: int
+    weight: float = 1.0
+
+
+@dataclass(slots=True)
+class ScoreData:
+    """Aggregated LLM score data for a test result."""
+
+    dimensions: list[ScoreDimensionData]
+    total: int
+    max_total: int
+    weighted_score: float
+    reasoning: str
+
+
+@dataclass(slots=True)
 class IterationData:
     """Stats for a single iteration of a repeated test."""
 
@@ -84,6 +105,7 @@ class TestResultData:
     final_response: str | None = None
     error: str | None = None
     assertions: list[AssertionData] = field(default_factory=list)
+    scores: list[ScoreData] = field(default_factory=list)
     iterations: list[IterationData] = field(default_factory=list)
     iteration_pass_rate: float | None = None
 
@@ -133,6 +155,7 @@ class ReportMetadata:
     test_files: list[str] = field(default_factory=list)
     token_min: int = 0
     token_max: int = 0
+    models_without_pricing: list[str] = field(default_factory=list)
 
 
 @dataclass(slots=True)

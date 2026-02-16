@@ -37,6 +37,7 @@
   /* Semantic colors */
   --color-green: #4ade80;
   --color-yellow: #facc15;
+  --color-amber: #fbbf24;
   --color-red: #f87171;
   --color-blue: #60a5fa;
 
@@ -526,6 +527,19 @@ a:hover {
   line-height: 1.25rem;
   border: 1px solid rgba(239, 68, 68, 0.3);
 }
+.status-warning {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  background-color: rgba(251, 191, 36, 0.15);
+  color: var(--color-amber);
+  font-weight: 500;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  border: 1px solid rgba(251, 191, 36, 0.3);
+}
 
 /* ==================== Cards ==================== */
 .card {
@@ -894,6 +908,23 @@ a:hover {
 .progress-fill.blue  { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
 .progress-fill.amber { background: linear-gradient(90deg, #d97706, #facc15); }
 .progress-fill.red   { background: linear-gradient(90deg, #dc2626, #f87171); }
+
+/* ── Score dimension bars ── */
+.score-track {
+  width: 100%;
+  background-color: rgba(255, 255, 255, 0.04);
+  border-radius: 4px;
+  height: 8px;
+  overflow: hidden;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+.score-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 600ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.score-dimension { line-height: 1.4; }
+
 .progress-pct {
   width: 42px;
   font-size: 0.8rem;

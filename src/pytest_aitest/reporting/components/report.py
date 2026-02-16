@@ -74,6 +74,16 @@ def _status_badge(report: ReportMetadata) -> Node | None:
     return None
 
 
+def _pricing_badge(report: ReportMetadata) -> Node | None:
+    """Render a warning badge when models lack pricing data."""
+    if not report.models_without_pricing:
+        return None
+    models = ", ".join(report.models_without_pricing)
+    count = len(report.models_without_pricing)
+    label = f"{count} Model{'' if count == 1 else 's'} Missing Pricing"
+    return div(".status-warning", title=f"No pricing data for: {models}")[span["⚠"], span[label]]
+
+
 def _report_header(report: ReportMetadata) -> Node:
     """Render the report header section."""
     display_title = report.suite_docstring or report.name or "Test Report"
@@ -83,6 +93,7 @@ def _report_header(report: ReportMetadata) -> Node:
     test_run_cost = report.total_cost_usd
     if report.analysis_cost_usd:
         test_run_cost -= report.analysis_cost_usd
+    test_run_cost = max(test_run_cost, 0.0)
 
     # Create test file links
     file_links = []
@@ -142,7 +153,10 @@ def _report_header(report: ReportMetadata) -> Node:
     return header(".report-header.mb-8")[
         div(".flex.justify-between.items-start.gap-4.mb-4")[
             div(".flex-1")[h1(".text-2xl.font-medium.mb-1")[display_title],],
-            _status_badge(report),
+            div(".flex.gap-2.items-start")[
+                _pricing_badge(report),
+                _status_badge(report),
+            ],
         ],
         div(".flex.flex-wrap.gap-x-6.gap-y-1.py-3.border-t.border-white/10.text-sm")[*header_items],
     ]

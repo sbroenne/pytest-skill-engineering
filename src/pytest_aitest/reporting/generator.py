@@ -17,6 +17,8 @@ from pytest_aitest.reporting.components.types import (
     IterationData,
     ReportContext,
     ReportMetadata,
+    ScoreData,
+    ScoreDimensionData,
     TestData,
     TestGroupData,
     TestResultData,
@@ -203,6 +205,8 @@ def _build_report_context(
     token_min = token_stats.get("min", 0)
     token_max = token_stats.get("max", 0)
 
+    from pytest_aitest.execution.cost import models_without_pricing
+
     report_meta = ReportMetadata(
         name=report.name,
         timestamp=timestamp_str,
@@ -210,12 +214,13 @@ def _build_report_context(
         failed=report.failed,
         total=report.total,
         duration_ms=report.duration_ms or 0,
-        total_cost_usd=report.total_cost_usd or 0,
+        total_cost_usd=(report.total_cost_usd or 0) + analysis_cost,
         suite_docstring=getattr(report, "suite_docstring", None),
         analysis_cost_usd=analysis_cost,
         test_files=report.test_files,
         token_min=token_min,
         token_max=token_max,
+        models_without_pricing=sorted(models_without_pricing),
     )
 
     agents, agents_by_id = _build_agents(report, min_pass_rate=min_pass_rate)
@@ -438,10 +443,41 @@ def _build_test_groups_typed(
     return result
 
 
+def _extract_scores(assertions: list[dict[str, Any]] | None) -> list[ScoreData]:
+    """Extract LLM score data from raw assertion dicts."""
+    if not assertions:
+        return []
+    scores: list[ScoreData] = []
+    for a in assertions:
+        if a.get("type") != "llm_score":
+            continue
+        dimensions = [
+            ScoreDimensionData(
+                name=d["name"],
+                score=d["score"],
+                max_score=d["max_score"],
+                weight=d.get("weight", 1.0),
+            )
+            for d in a.get("dimensions", [])
+        ]
+        scores.append(
+            ScoreData(
+                dimensions=dimensions,
+                total=a.get("total", 0),
+                max_total=a.get("max_total", 0),
+                weighted_score=a.get("weighted_score", 0.0),
+                reasoning=a.get("details", ""),
+            )
+        )
+    return scores
+
+
 def _extract_test_result_fields(
     test: TestReport,
-) -> tuple[list[ToolCallData], list[AssertionData], int, int, str | None, str | None]:
-    """Extract tool calls, assertions, and metadata from a single TestReport."""
+) -> tuple[
+    list[ToolCallData], list[AssertionData], list[ScoreData], int, int, str | None, str | None
+]:
+    """Extract tool calls, assertions, scores, and metadata from a single TestReport."""
     tool_calls = []
     if test.agent_result and test.agent_result.turns:
         for turn in test.agent_result.turns:
@@ -471,6 +507,8 @@ def _extract_test_result_fields(
                 )
             )
 
+    scores_data = _extract_scores(test.assertions)
+
     turn_count = (
         len(test.agent_result.turns) if test.agent_result and test.agent_result.turns else 0
     )
@@ -483,7 +521,7 @@ def _extract_test_result_fields(
     mermaid = generate_mermaid_sequence(agent_result) if agent_result else None
     final_resp = agent_result.final_response if agent_result else None
 
-    return tool_calls, assertions_data, turn_count, tokens, mermaid, final_resp
+    return tool_calls, assertions_data, scores_data, turn_count, tokens, mermaid, final_resp
 
 
 def _build_result_for_agent(agent_tests: list[TestReport]) -> TestResultData:
@@ -498,8 +536,8 @@ def _build_result_for_agent(agent_tests: list[TestReport]) -> TestResultData:
         test = agent_tests[0]
         outcome = test.outcome or "unknown"
         duration_ms = test.duration_ms or 0
-        tool_calls, assertions, turns, tokens, mermaid, final_resp = _extract_test_result_fields(
-            test
+        tool_calls, assertions, scores, turns, tokens, mermaid, final_resp = (
+            _extract_test_result_fields(test)
         )
         return TestResultData(
             outcome=outcome,
@@ -514,6 +552,7 @@ def _build_result_for_agent(agent_tests: list[TestReport]) -> TestResultData:
             final_response=final_resp,
             error=test.error,
             assertions=assertions,
+            scores=scores,
         )
 
     # Multiple iterations — aggregate.
@@ -559,7 +598,9 @@ def _build_result_for_agent(agent_tests: list[TestReport]) -> TestResultData:
     # Use the last iteration for tool calls, mermaid, and final response
     # since that's the most recent representative run.
     last = agent_tests[-1]
-    tool_calls, assertions, turns, _, mermaid, final_resp = _extract_test_result_fields(last)
+    tool_calls, assertions, scores, turns, _, mermaid, final_resp = _extract_test_result_fields(
+        last
+    )
 
     # Aggregated outcome: "passed" only if ALL iterations passed.
     agg_outcome = "passed" if pass_count == n else "failed"
@@ -577,6 +618,7 @@ def _build_result_for_agent(agent_tests: list[TestReport]) -> TestResultData:
         final_response=final_resp,
         error=last.error if agg_outcome == "failed" else None,
         assertions=assertions,
+        scores=scores,
         iterations=iterations,
         iteration_pass_rate=pass_rate,
     )

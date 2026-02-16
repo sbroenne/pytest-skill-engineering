@@ -83,6 +83,51 @@ class _RecordingLLMAssertImage:
         return getattr(self._inner, name)
 
 
+class _RecordingLLMScore:
+    """Wrapper that records multi-dimension LLM scores for report rendering."""
+
+    def __init__(self, inner: Any, store: list[dict[str, Any]]) -> None:
+        self._inner = inner
+        self._store = store
+
+    def _record(self, result: Any, rubric: Any) -> Any:
+        """Store score data including per-dimension detail."""
+        dimensions = []
+        for dim in rubric:
+            dimensions.append(
+                {
+                    "name": dim.name,
+                    "score": result.scores.get(dim.name, 0),
+                    "max_score": dim.max_score,
+                    "weight": dim.weight,
+                }
+            )
+        self._store.append(
+            {
+                "type": "llm_score",
+                "passed": True,  # scoring always succeeds; thresholds checked via assert_score
+                "message": f"{result.total}/{result.max_total} ({result.weighted_score:.0%})",
+                "details": result.reasoning,
+                "dimensions": dimensions,
+                "total": result.total,
+                "max_total": result.max_total,
+                "weighted_score": result.weighted_score,
+            }
+        )
+        return result
+
+    def __call__(self, content: str, rubric: Any, **kwargs: Any) -> Any:
+        result = self._inner(content, rubric, **kwargs)
+        return self._record(result, rubric)
+
+    async def async_score(self, content: str, rubric: Any, **kwargs: Any) -> Any:
+        result = await self._inner.async_score(content, rubric, **kwargs)
+        return self._record(result, rubric)
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self._inner, name)
+
+
 @pytest.hookimpl(hookwrapper=True)
 def pytest_pyfunc_call(pyfuncitem: Item) -> Any:
     """Wrap llm_assert and llm_assert_image fixture values before test function execution."""
@@ -103,6 +148,11 @@ def pytest_pyfunc_call(pyfuncitem: Item) -> Any:
     llm_assert_image = funcargs.get("llm_assert_image")
     if llm_assert_image is not None and not isinstance(llm_assert_image, _RecordingLLMAssertImage):
         pyfuncitem.funcargs["llm_assert_image"] = _RecordingLLMAssertImage(llm_assert_image, store)  # type: ignore[index]
+
+    # Wrap llm_score
+    llm_score = funcargs.get("llm_score")
+    if llm_score is not None and not isinstance(llm_score, _RecordingLLMScore):
+        pyfuncitem.funcargs["llm_score"] = _RecordingLLMScore(llm_score, store)  # type: ignore[index]
 
     yield
 
