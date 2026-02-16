@@ -609,6 +609,12 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
         "results.json", test_name=suite_report.name, default_dir=default_dir
     )
 
+    # Always generate JSON report first (before AI analysis which may fail)
+    json_output_path = Path(json_path) if json_path else default_json_path
+    json_output_path.parent.mkdir(parents=True, exist_ok=True)
+    generate_json(suite_report, json_output_path)
+    _log_report_path(config, "JSON", json_output_path)
+
     # Generate AI insights if HTML/MD report requested OR summary model specified
     summary_model = config.getoption("--aitest-summary-model")
     insights = None
@@ -617,11 +623,9 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
             config, suite_report, required=bool(html_path or md_path)
         )
 
-    # Always generate JSON report (to default or custom path)
-    json_output_path = Path(json_path) if json_path else default_json_path
-    json_output_path.parent.mkdir(parents=True, exist_ok=True)
-    generate_json(suite_report, json_output_path, insights=insights)
-    _log_report_path(config, "JSON", json_output_path)
+    # Update JSON with insights if analysis succeeded
+    if insights is not None:
+        generate_json(suite_report, json_output_path, insights=insights)
 
     # Generate HTML report only when explicitly requested
     if html_path:
@@ -794,14 +798,18 @@ def _generate_structured_insights(
         # Re-raise configuration errors
         raise
     except Exception as e:
-        if required:
-            raise pytest.UsageError(
-                f"AI analysis failed (required for report generation): {e}\n"
-                "Check your model configuration and credentials."
-            ) from e
         terminalreporter: TerminalReporter | None = config.pluginmanager.get_plugin(
             "terminalreporter"
         )
+        if required:
+            msg = (
+                f"AI analysis failed (required for report generation): {e}\n"
+                "JSON results were saved. Regenerate reports from JSON:\n"
+                "  pytest-aitest-report <json-path> --html report.html --summary"
+            )
+            if terminalreporter:
+                terminalreporter.write_line(f"\nERROR: {msg}", red=True, bold=True)
+            raise pytest.UsageError(msg) from e
         if terminalreporter:
             terminalreporter.write_line(f"Warning: AI insights generation failed: {e}")
         return None
