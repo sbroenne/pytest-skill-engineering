@@ -144,6 +144,24 @@ async def test_banking(aitest_run):
     assert result.success
 ```
 
+## Assertion Models
+
+Configure the LLM judge models for semantic and visual assertions:
+
+```toml
+[tool.pytest.ini_options]
+addopts = """
+--llm-model=azure/gpt-5-mini
+--llm-vision-model=azure/gpt-5-mini
+"""
+```
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `--llm-model` | `openai/gpt-5-mini` | Model for `llm_assert` semantic assertions |
+| `--llm-vision-model` | Falls back to `--llm-model` | Vision model for `llm_assert_image` assertions |
+| `--aitest-analysis-prompt` | Built-in prompt | Path to a custom analysis prompt file |
+
 ## CLI Override
 
 You can override pyproject.toml settings via CLI:
@@ -157,4 +175,7 @@ pytest tests/ --aitest-html=custom-report.html
 
 # Run each test 5 times for baseline stability testing
 pytest tests/ --aitest-iterations=5
+
+# Custom assertion model
+pytest tests/ --llm-model=azure/gpt-5-mini
 ```

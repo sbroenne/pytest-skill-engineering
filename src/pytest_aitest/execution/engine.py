@@ -23,6 +23,7 @@ from pytest_aitest.execution.pydantic_adapter import (
     build_pydantic_agent,
     build_system_prompt,
 )
+from pytest_aitest.execution.rate_limiter import get_rate_limiter
 
 _logger = logging.getLogger(__name__)
 
@@ -51,6 +52,11 @@ class AgentEngine:
         self._available_tools: list[ToolInfo] = []
         self._skill_info: SkillInfo | None = None
         self._effective_system_prompt: str = ""
+        self._rate_limiter = get_rate_limiter(
+            agent.provider.model,
+            rpm=agent.provider.rpm,
+            tpm=agent.provider.tpm,
+        )
 
     async def initialize(self) -> None:
         """Build PydanticAI agent with MCP toolsets and start servers."""
@@ -145,12 +151,22 @@ class AgentEngine:
         try:
             import asyncio
 
+            # Enforce rate limits (rpm/tpm) before making the API call
+            if self._rate_limiter.has_limits:
+                await self._rate_limiter.acquire()
+
             async with asyncio.timeout(timeout_ms / 1000):
                 result = await self._pydantic_agent.run(
                     prompt,
                     message_history=message_history,
                     usage_limits=usage_limits,
                 )
+
+            # Record token usage for tpm tracking
+            run_usage = result.usage()
+            total_tokens = (run_usage.input_tokens or 0) + (run_usage.output_tokens or 0)
+            if total_tokens > 0:
+                self._rate_limiter.record_tokens(total_tokens)
 
             # Build AgentResult from PydanticAI result
             agent_result = adapt_result(

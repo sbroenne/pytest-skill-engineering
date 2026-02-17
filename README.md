@@ -83,7 +83,9 @@ pytest tests/
 - **Multi-Provider** — Any model via [Pydantic AI](https://ai.pydantic.dev/) (OpenAI, Anthropic, Gemini, Azure, Bedrock, Mistral, and more)
 - **Clarification Detection** — Catch agents that ask questions instead of acting
 - **Semantic Assertions** — Built-in `llm_assert` fixture powered by [pydantic-evals](https://ai.pydantic.dev/evals/) LLM judge
+- **Multi-Dimension Scoring** — `llm_score` fixture for granular quality measurement across named dimensions
 - **Image Assertions** — `llm_assert_image` for AI-graded visual evaluation of screenshots and charts
+- **Cost Estimation** — Automatic per-test cost tracking with pricing from litellm + custom overrides
 
 ## Who This Is For
 

@@ -28,6 +28,9 @@ Then just `pytest tests/` — reports are generated automatically.
 | `--aitest-json=PATH` | Custom JSON path | No (default: `aitest-reports/results.json`) |
 | `--aitest-min-pass-rate=N` | Fail if overall pass rate below N% | No |
 | `--aitest-iterations=N` | Run each test N times and aggregate results | No (default: `1`) |
+| `--aitest-analysis-prompt=PATH` | Custom analysis prompt file for AI insights | No |
+| `--llm-model=MODEL` | Model for `llm_assert` semantic assertions (default: `openai/gpt-5-mini`) | No |
+| `--llm-vision-model=MODEL` | Vision model for `llm_assert_image` assertions (defaults to `--llm-model`) | No |
 
 !!! note
     **JSON is always generated** after every test run, even without `--aitest-summary-model`. HTML and Markdown reports require a summary model for AI-powered analysis. JSON output contains raw test data that can be used later to regenerate reports via `pytest-aitest-report`.
@@ -72,6 +75,8 @@ pytest-aitest-report <json-file> [options]
 | `--md PATH` | Generate Markdown report | At least one of `--html` or `--md` |
 | `--summary` | Generate AI-powered summary | No |
 | `--summary-model MODEL` | Model for AI insights | Required with `--summary` |
+| `--analysis-prompt PATH` | Custom analysis prompt file for AI insights | No |
+| `--compact` | Omit full conversation turns for passed tests (reduces tokens) | No |
 
 `--summary-model` can also be set via `AITEST_SUMMARY_MODEL` env var or `[tool.pytest-aitest-report]` in `pyproject.toml`.
 
