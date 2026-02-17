@@ -36,6 +36,7 @@ dependencies = [
     "pydantic-ai>=1.59.0",
     "pydantic-evals>=0.3",
     "litellm>=1.81.12",
+    "python-frontmatter>=1.1.0",
 ]
 
 [project.optional-dependencies]
