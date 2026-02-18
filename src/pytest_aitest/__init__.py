@@ -50,6 +50,7 @@ from pytest_aitest.fixtures.llm_score import (  # noqa: E402
 
 # Hooks (for plugin extensibility)
 from pytest_aitest.hooks import AitestHookSpec  # noqa: E402
+from pytest_aitest.plugin import get_analysis_prompt, get_analysis_prompt_details  # noqa: E402
 
 # Reporting
 from pytest_aitest.reporting import (  # noqa: E402
@@ -98,6 +99,8 @@ __all__ = [  # noqa: RUF022
     "generate_json",
     # Hooks
     "AitestHookSpec",
+    "get_analysis_prompt",
+    "get_analysis_prompt_details",
     # Scoring
     "ScoreResult",
     "ScoringDimension",

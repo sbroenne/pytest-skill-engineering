@@ -54,8 +54,14 @@ def _build_analysis_input(
     prompts: dict[str, str],
     *,
     min_pass_rate: int | None = None,
+    compact: bool = False,
 ) -> str:
-    """Build the complete analysis input with all context."""
+    """Build the complete analysis input with all context.
+
+    Args:
+        compact: When True, omit full conversation turns for passed tests
+            to reduce token usage. Failed tests always include full detail.
+    """
     sections = []
 
     # Pass rate threshold
@@ -102,7 +108,7 @@ def _build_analysis_input(
             agg["passed"] += 1
         else:
             agg["failed"] += 1
-        if test.agent_result:
+        if test.agent_result is not None:
             agg["cost"] += test.agent_result.cost_usd or 0
             usage = test.agent_result.token_usage or {}
             agg["tokens"] += usage.get("prompt", 0) + usage.get("completion", 0)
@@ -234,7 +240,7 @@ def _build_analysis_input(
             sections.append(f"- Description: {test.docstring}")
         if test.error:
             sections.append(f"- Error: {test.error}")
-        if test.agent_result:
+        if test.agent_result is not None:
             ar = test.agent_result
             # Include agent identity for this specific test (from TestReport, not AgentResult)
             if test.agent_name:
@@ -270,19 +276,26 @@ def _build_analysis_input(
                         reasoning = assertion.get("details", "")
                         if reasoning:
                             sections.append(f"  - Reasoning: {reasoning[:300]}")
-            # Include conversation
-            sections.append("\n**Conversation:**")
-            for turn in ar.turns:
-                role = turn.role.upper()
-                content = turn.content[:500] + "..." if len(turn.content) > 500 else turn.content
-                sections.append(f"[{role}] {content}")
-                if turn.tool_calls:
-                    for tc in turn.tool_calls:
-                        if tc.result and len(tc.result) > 500:
-                            result = tc.result[:500] + "..."
-                        else:
-                            result = tc.result
-                        sections.append(f"  → {tc.name}({json.dumps(tc.arguments)}) = {result}")
+            # Include conversation turns
+            # In compact mode, omit full conversation for passed tests
+            include_conversation = test.outcome != "passed" or not compact
+            if include_conversation:
+                sections.append("\n**Conversation:**")
+                for turn in ar.turns:
+                    role = turn.role.upper()
+                    content = (
+                        turn.content[:500] + "..." if len(turn.content) > 500 else turn.content
+                    )
+                    sections.append(f"[{role}] {content}")
+                    if turn.tool_calls:
+                        for tc in turn.tool_calls:
+                            if tc.result and len(tc.result) > 500:
+                                result = tc.result[:500] + "..."
+                            else:
+                                result = tc.result
+                            sections.append(f"  → {tc.name}({json.dumps(tc.arguments)}) = {result}")
+            elif ar.tool_names_called:
+                sections.append(f"\n*Passed — {len(ar.turns)} turns*")
         sections.append("")
 
     # MCP tool definitions
@@ -298,7 +311,7 @@ def _build_analysis_input(
         all_tool_names = {t.name for t in tool_info}
         called_tool_names: set[str] = set()
         for test in suite_report.tests:
-            if test.agent_result:
+            if test.agent_result is not None:
                 called_tool_names.update(test.agent_result.tool_names_called)
         uncalled_tools = sorted(all_tool_names - called_tool_names)
         if uncalled_tools:
@@ -366,6 +379,7 @@ async def generate_insights(
     cache_dir: Path | None = None,
     min_pass_rate: int | None = None,
     analysis_prompt: str | None = None,
+    compact: bool = False,
 ) -> InsightsResult:
     """Generate AI insights markdown from test results.
 
@@ -380,6 +394,8 @@ async def generate_insights(
         analysis_prompt: Custom analysis prompt text. If None, uses the built-in
             default from prompts/ai_summary.md. Downstream plugins can provide
             domain-specific prompts via the ``pytest_aitest_analysis_prompt`` hook.
+        compact: When True, omit full conversation turns for passed tests to
+            reduce token usage. Failed tests always include full detail.
 
     Returns:
         InsightsResult with markdown summary and generation metadata.
@@ -421,6 +437,7 @@ async def generate_insights(
         skill_info=skill_info or [],
         prompts=prompts or {},
         min_pass_rate=min_pass_rate,
+        compact=compact,
     )
 
     full_prompt = f"{prompt_template}\n\n---\n\n# Test Data\n\n{analysis_input}"

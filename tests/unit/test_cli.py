@@ -266,3 +266,160 @@ class TestMainCLI:
 
         assert result == 1
         assert not html_path.exists()
+
+    def test_compact_flag_forwarded_to_summary_generation(self, tmp_path: Path) -> None:
+        """CLI forwards --compact to generate_ai_summary when --summary is used."""
+        json_data = {
+            "schema_version": "3.0",
+            "name": "test-suite",
+            "timestamp": "2026-01-31T12:00:00Z",
+            "duration_ms": 100.0,
+            "passed": 1,
+            "failed": 0,
+            "skipped": 0,
+            "tests": [
+                {
+                    "name": "test_a",
+                    "outcome": "passed",
+                    "duration_ms": 100.0,
+                    "agent_id": "test-agent",
+                    "agent_name": "test-agent",
+                    "model": "test-model",
+                }
+            ],
+            "insights": {
+                "markdown_summary": "Existing insights",
+                "model": "test-model",
+                "tokens_used": 10,
+                "cost_usd": 0.0,
+                "cached": True,
+            },
+        }
+        json_path = tmp_path / "results.json"
+        json_path.write_text(json.dumps(json_data), encoding="utf-8")
+        html_path = tmp_path / "report.html"
+
+        with mock.patch("pytest_aitest.cli.generate_ai_summary") as mock_summary:
+            mock_summary.return_value = mock.MagicMock(
+                markdown_summary="Fresh insights",
+                model="test-model",
+                tokens_used=100,
+                cost_usd=0.0,
+                cached=False,
+            )
+
+            result = main(
+                [
+                    str(json_path),
+                    "--html",
+                    str(html_path),
+                    "--summary",
+                    "--summary-model",
+                    "test-model",
+                    "--compact",
+                ]
+            )
+
+        assert result == 0
+        assert mock_summary.call_args.kwargs["compact"] is True
+
+    def test_print_analysis_prompt_uses_builtin_source(self, tmp_path: Path, capsys) -> None:
+        """CLI can print built-in prompt source metadata."""
+        json_data = {
+            "schema_version": "3.0",
+            "name": "test-suite",
+            "timestamp": "2026-01-31T12:00:00Z",
+            "duration_ms": 100.0,
+            "passed": 1,
+            "failed": 0,
+            "skipped": 0,
+            "tests": [],
+            "insights": {
+                "markdown_summary": "Existing insights",
+                "model": "test-model",
+                "tokens_used": 10,
+                "cost_usd": 0.0,
+                "cached": True,
+            },
+        }
+        json_path = tmp_path / "results.json"
+        json_path.write_text(json.dumps(json_data), encoding="utf-8")
+        html_path = tmp_path / "report.html"
+
+        with mock.patch("pytest_aitest.cli.generate_ai_summary") as mock_summary:
+            mock_summary.return_value = mock.MagicMock(
+                markdown_summary="Fresh insights",
+                model="test-model",
+                tokens_used=100,
+                cost_usd=0.0,
+                cached=False,
+            )
+
+            result = main(
+                [
+                    str(json_path),
+                    "--html",
+                    str(html_path),
+                    "--summary",
+                    "--summary-model",
+                    "test-model",
+                    "--print-analysis-prompt",
+                ]
+            )
+
+        captured = capsys.readouterr()
+        assert result == 0
+        assert "analysis prompt: source=built-in" in captured.out
+
+    def test_print_analysis_prompt_uses_cli_file_source(self, tmp_path: Path, capsys) -> None:
+        """CLI can print file-based prompt source metadata and path."""
+        json_data = {
+            "schema_version": "3.0",
+            "name": "test-suite",
+            "timestamp": "2026-01-31T12:00:00Z",
+            "duration_ms": 100.0,
+            "passed": 1,
+            "failed": 0,
+            "skipped": 0,
+            "tests": [],
+            "insights": {
+                "markdown_summary": "Existing insights",
+                "model": "test-model",
+                "tokens_used": 10,
+                "cost_usd": 0.0,
+                "cached": True,
+            },
+        }
+        json_path = tmp_path / "results.json"
+        json_path.write_text(json.dumps(json_data), encoding="utf-8")
+        html_path = tmp_path / "report.html"
+        prompt_path = tmp_path / "analysis_prompt.md"
+        prompt_path.write_text("Custom prompt", encoding="utf-8")
+
+        with mock.patch("pytest_aitest.cli.generate_ai_summary") as mock_summary:
+            mock_summary.return_value = mock.MagicMock(
+                markdown_summary="Fresh insights",
+                model="test-model",
+                tokens_used=100,
+                cost_usd=0.0,
+                cached=False,
+            )
+
+            result = main(
+                [
+                    str(json_path),
+                    "--html",
+                    str(html_path),
+                    "--summary",
+                    "--summary-model",
+                    "test-model",
+                    "--analysis-prompt",
+                    str(prompt_path),
+                    "--print-analysis-prompt",
+                ]
+            )
+
+        captured = capsys.readouterr()
+        assert result == 0
+        assert "analysis prompt: source=cli-file" in captured.out
+        assert str(prompt_path) in captured.out

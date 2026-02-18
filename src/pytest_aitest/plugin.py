@@ -235,6 +235,27 @@ def pytest_addoption(parser: Parser) -> None:
         ),
     )
 
+    group.addoption(
+        "--aitest-summary-compact",
+        action="store_true",
+        default=False,
+        help=(
+            "Omit full conversation turns for passed tests in AI analysis. "
+            "Reduces token usage and prompt size for large suites. "
+            "Failed tests still include full conversation detail."
+        ),
+    )
+
+    group.addoption(
+        "--aitest-print-analysis-prompt",
+        action="store_true",
+        default=False,
+        help=(
+            "Print resolved AI analysis prompt source/path at runtime "
+            "(for debugging prompt overrides)."
+        ),
+    )
+
     # Report options
     group.addoption(
         "--aitest-html",
@@ -704,6 +725,42 @@ def _resolve_analysis_prompt(config: Config) -> str | None:
     return None
 
 
+def get_analysis_prompt_details(config: Config) -> tuple[str, str, str | None]:
+    """Get effective analysis prompt text and metadata for current config.
+
+    Returns:
+        tuple of ``(prompt_text, source, path)`` where:
+        - ``source`` is one of: ``cli-file``, ``hook``, ``built-in``
+        - ``path`` is set only when source is ``cli-file``
+    """
+    prompt_path = config.getoption("--aitest-analysis-prompt", default=None)
+    if prompt_path:
+        path = Path(prompt_path)
+        if not path.exists():
+            raise pytest.UsageError(f"Analysis prompt file not found: {path}")
+        return path.read_text(encoding="utf-8"), "cli-file", str(path)
+
+    result = config.pluginmanager.hook.pytest_aitest_analysis_prompt(config=config)
+    if result:
+        return result, "hook", None
+
+    from pytest_aitest.reporting.insights import _load_analysis_prompt
+
+    return _load_analysis_prompt(), "built-in", None
+
+
+def get_analysis_prompt(config: Config) -> str:
+    """Get the effective analysis prompt text for the current pytest config.
+
+    Resolution order:
+    1. ``--aitest-analysis-prompt`` file content
+    2. ``pytest_aitest_analysis_prompt`` hook result
+    3. Built-in default prompt from ``prompts/ai_summary.md``
+    """
+    prompt, _, _ = get_analysis_prompt_details(config)
+    return prompt
+
+
 def _generate_structured_insights(
     config: Config, report: SuiteReport, *, required: bool = False
 ) -> InsightsResult | None:
@@ -764,7 +821,17 @@ def _generate_structured_insights(
                         prompts[prompt_label] = effective_prompt
 
         # Generate insights using async function
-        analysis_prompt = _resolve_analysis_prompt(config)
+        analysis_prompt, prompt_source, prompt_path = get_analysis_prompt_details(config)
+
+        terminalreporter: TerminalReporter | None = config.pluginmanager.get_plugin(
+            "terminalreporter"
+        )
+        if config.getoption("--aitest-print-analysis-prompt") and terminalreporter:
+            path_info = f", path={prompt_path}" if prompt_path else ""
+            terminalreporter.write_line(
+                f"aitest analysis prompt: source={prompt_source}{path_info}, "
+                f"chars={len(analysis_prompt)}"
+            )
 
         async def _run() -> InsightsResult:
             return await generate_insights(
@@ -775,15 +842,13 @@ def _generate_structured_insights(
                 model=model,
                 min_pass_rate=config.getoption("--aitest-min-pass-rate"),
                 analysis_prompt=analysis_prompt,
+                compact=config.getoption("--aitest-summary-compact"),
             )
 
         # Use asyncio.run() instead of deprecated get_event_loop().run_until_complete()
         result = asyncio.run(_run())
 
         # Log generation stats
-        terminalreporter: TerminalReporter | None = config.pluginmanager.get_plugin(
-            "terminalreporter"
-        )
         if terminalreporter:
             tokens_str = f"{result.tokens_used:,}" if result.tokens_used else "N/A"
             cost_str = f"${result.cost_usd:.4f}" if result.cost_usd else "N/A"

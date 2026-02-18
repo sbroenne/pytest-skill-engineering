@@ -161,6 +161,7 @@ addopts = """
 | `--llm-model` | `openai/gpt-5-mini` | Model for `llm_assert` semantic assertions |
 | `--llm-vision-model` | Falls back to `--llm-model` | Vision model for `llm_assert_image` assertions |
 | `--aitest-analysis-prompt` | Built-in prompt | Path to a custom analysis prompt file |
+| `--aitest-summary-compact` | Disabled | Omit full conversation turns for passed tests in AI analysis |
 
 ## CLI Override
 
@@ -178,4 +179,29 @@ pytest tests/ --aitest-iterations=5
 
 # Custom assertion model
 pytest tests/ --llm-model=azure/gpt-5-mini
+
+# Compact AI analysis input for large suites
+pytest tests/ --aitest-summary-model=azure/gpt-5.2-chat --aitest-summary-compact
 ```
+
+## Programmatic Prompt Access
+
+You can retrieve the effective AI analysis prompt (CLI override → hook override → built-in default) in code:
+
+```python
+from pytest_aitest import get_analysis_prompt
+
+prompt_text = get_analysis_prompt(pytest_config)
+```
+
+To also inspect where it came from:
+
+```python
+from pytest_aitest import get_analysis_prompt_details
+
+prompt_text, source, path = get_analysis_prompt_details(pytest_config)
+# source: "cli-file" | "hook" | "built-in"
+# path: file path when source == "cli-file", otherwise None
+```
+
+This is useful for debugging, logging, or tooling that needs to inspect the exact prompt used for AI summary generation.

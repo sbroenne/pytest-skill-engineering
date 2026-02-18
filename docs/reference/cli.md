@@ -29,6 +29,8 @@ Then just `pytest tests/` — reports are generated automatically.
 | `--aitest-min-pass-rate=N` | Fail if overall pass rate below N% | No |
 | `--aitest-iterations=N` | Run each test N times and aggregate results | No (default: `1`) |
 | `--aitest-analysis-prompt=PATH` | Custom analysis prompt file for AI insights | No |
+| `--aitest-summary-compact` | Omit full conversation turns for passed tests in AI analysis (reduces tokens) | No |
+| `--aitest-print-analysis-prompt` | Print resolved analysis prompt source/path at runtime | No |
 | `--llm-model=MODEL` | Model for `llm_assert` semantic assertions (default: `openai/gpt-5-mini`) | No |
 | `--llm-vision-model=MODEL` | Vision model for `llm_assert_image` assertions (defaults to `--llm-model`) | No |
 
@@ -59,6 +61,18 @@ pytest tests/ \
     --aitest-summary-model=azure/gpt-5.2-chat \
     --aitest-html=report.html \
     --aitest-iterations=3
+
+# Reduce summary token usage for large suites
+pytest tests/ \
+    --aitest-summary-model=azure/gpt-5.2-chat \
+    --aitest-html=report.html \
+    --aitest-summary-compact
+
+# Debug which analysis prompt is used (CLI file / hook / built-in)
+pytest tests/ \
+    --aitest-summary-model=azure/gpt-5.2-chat \
+    --aitest-html=report.html \
+    --aitest-print-analysis-prompt
 ```
 
 ## pytest-aitest-report CLI
@@ -77,6 +91,7 @@ pytest-aitest-report <json-file> [options]
 | `--summary-model MODEL` | Model for AI insights | Required with `--summary` |
 | `--analysis-prompt PATH` | Custom analysis prompt file for AI insights | No |
 | `--compact` | Omit full conversation turns for passed tests (reduces tokens) | No |
+| `--print-analysis-prompt` | Print resolved analysis prompt source/path before summary generation | No |
 
 `--summary-model` can also be set via `AITEST_SUMMARY_MODEL` env var or `[tool.pytest-aitest-report]` in `pyproject.toml`.
 
@@ -97,6 +112,13 @@ pytest-aitest-report results.json \
     --html report.html \
     --summary \
     --summary-model azure/gpt-5.2-chat
+
+# Debug which prompt source is used (file vs built-in)
+pytest-aitest-report results.json \
+    --html report.html \
+    --summary \
+    --summary-model azure/gpt-5.2-chat \
+    --print-analysis-prompt
 ```
 
 ## Environment Variables
