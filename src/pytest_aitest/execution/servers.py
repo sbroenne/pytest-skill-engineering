@@ -133,6 +133,8 @@ class MCPServerProcess:
                 msg = f"Unknown transport: {self.config.transport}"
                 raise ValueError(msg)
 
+        raise AssertionError("unreachable")  # pragma: no cover
+
     async def stop(self) -> None:
         """Stop the MCP server / disconnect from remote."""
         if self._exit_stack:

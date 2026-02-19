@@ -74,7 +74,7 @@ class TestBankingSkillImprovement:
 
         result = await aitest_run(
             agent,
-            "How should I allocate the money in my accounts?",
+            "Check my account balances and tell me how I should allocate my money.",
         )
 
         assert result.success
@@ -276,7 +276,7 @@ class TestSkillComparisonSummary:
     async def test_financial_skill_increases_tool_usage(self, aitest_run, banking_server):
         """Compare tool usage: skilled agent uses tools more consistently."""
         financial_skill = Skill.from_path(SHOWCASE_SKILLS_DIR / "financial-advisor")
-        prompt = "How should I manage my money across my accounts?"
+        prompt = "Check my account balances and tell me how I should manage my money."
 
         # Test WITHOUT skill
         baseline_agent = Agent(

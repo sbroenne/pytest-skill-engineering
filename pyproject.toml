@@ -29,13 +29,13 @@ dependencies = [
     "pytest>=9.0",
     "mcp>=1.26",
     "pydantic>=2.0",
-    "markdown>=3.10",
+    "markdown>=3.10.2",
     "htpy>=25.12.0",
     "mdutils>=1.8.1",
-    "azure-identity>=1.25",
-    "pydantic-ai>=1.59.0",
-    "pydantic-evals>=0.3",
-    "litellm>=1.81.12",
+    "azure-identity>=1.25.2",
+    "pydantic-ai>=1.61.0",
+    "pydantic-evals>=1.61.0",
+    "litellm>=1.81.13",
     "python-frontmatter>=1.1.0",
 ]
 
@@ -44,10 +44,10 @@ dev = [
     "pytest-cov>=7.0",
     "pytest-asyncio>=1.3",
     "python-dotenv>=1.2",
-    "ruff>=0.14",
+    "ruff>=0.15",
     "pyright>=1.1.408",
     "pre-commit>=4.5",
-    "typeguard>=4.4",
+    "typeguard>=4.5",
 ]
 test = [
     "syrupy>=5.1",
