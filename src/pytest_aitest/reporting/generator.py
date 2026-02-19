@@ -95,6 +95,7 @@ def generate_json(
             "cost_usd": insights.cost_usd,
             "tokens_used": insights.tokens_used,
             "cached": insights.cached,
+            "model": insights.model,
         }
 
     json_str = json.dumps(report_dict, indent=2, default=str)

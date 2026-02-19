@@ -7,7 +7,7 @@ import re
 import uuid
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, overload
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -100,6 +100,14 @@ class Wait:
         return cls(strategy=WaitStrategy.TOOLS, tools=tuple(tools), timeout_ms=timeout_ms)
 
 
+@overload
+def _expand_env(value: str) -> str: ...
+
+
+@overload
+def _expand_env(value: None) -> None: ...
+
+
 def _expand_env(value: str | None) -> str | None:
     """Expand ${VAR} patterns in string for server environment variables."""
     if value is None:
@@ -186,9 +194,9 @@ class MCPServer:
 
     def __post_init__(self) -> None:
         # Expand env vars in environment
-        self.env = {k: _expand_env(v) or v for k, v in self.env.items()}
+        self.env = {k: _expand_env(v) for k, v in self.env.items()}
         # Expand env vars in headers
-        self.headers = {k: _expand_env(v) or v for k, v in self.headers.items()}
+        self.headers = {k: _expand_env(v) for k, v in self.headers.items()}
         # Validate transport/field combinations
         if self.transport == "stdio":
             if not self.command:
@@ -256,7 +264,7 @@ class CLIServer:
     timeout: float = 30.0  # Timeout in seconds for each CLI command execution
 
     def __post_init__(self) -> None:
-        self.env = {k: _expand_env(v) or v for k, v in self.env.items()}
+        self.env = {k: _expand_env(v) for k, v in self.env.items()}
         if self.tool_prefix is None:
             # Use command name as prefix (e.g., "git" -> "git_execute")
             self.tool_prefix = self.command.split()[0].split("/")[-1]

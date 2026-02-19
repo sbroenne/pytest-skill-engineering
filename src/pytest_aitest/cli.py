@@ -263,7 +263,7 @@ def main(argv: list[str] | None = None) -> int:
     # Load report from JSON
     try:
         report, existing_insights = load_suite_report(args.json_file)
-    except (json.JSONDecodeError, KeyError) as e:
+    except (json.JSONDecodeError, KeyError, ValueError) as e:
         print(f"Error: Failed to parse JSON file: {e}", file=sys.stderr)
         return 1
 
