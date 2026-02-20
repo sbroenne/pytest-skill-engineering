@@ -114,6 +114,27 @@ class Assertion:
 
 
 @dataclass(slots=True)
+class SubagentInvocation:
+    """A subagent invocation observed during agent execution.
+
+    Tracks when an orchestrator agent dispatches work to a named sub-agent,
+    along with the final status and duration of that invocation.
+
+    Example:
+        result = await copilot_run(agent, "Build and test the project")
+        assert any(s.name == "coder" for s in result.subagent_invocations)
+        assert all(s.status == "completed" for s in result.subagent_invocations)
+    """
+
+    name: str
+    status: str  # "selected", "started", "completed", "failed"
+    duration_ms: float | None = None
+
+    def __repr__(self) -> str:
+        return f"SubagentInvocation({self.name}, {self.status})"
+
+
+@dataclass(slots=True)
 class Turn:
     """A single conversational turn."""
 

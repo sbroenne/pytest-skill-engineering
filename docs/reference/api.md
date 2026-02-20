@@ -75,9 +75,12 @@ Auto-generated API documentation from source code.
       show_source: false
       heading_level: 3
 
-## Scoring Types
+::: pytest_aitest.core.result.SubagentInvocation
+    options:
+      show_source: false
+      heading_level: 3
 
-::: pytest_aitest.fixtures.llm_score.ScoringDimension
+## Scoring Types
     options:
       show_source: false
       heading_level: 3
@@ -132,6 +135,18 @@ Auto-generated API documentation from source code.
       heading_level: 3
 
 ::: pytest_aitest.core.prompt.load_prompt
+    options:
+      show_source: false
+      heading_level: 3
+
+## Optimizer
+
+::: pytest_aitest.execution.optimizer.optimize_instruction
+    options:
+      show_source: false
+      heading_level: 3
+
+::: pytest_aitest.execution.optimizer.InstructionSuggestion
     options:
       show_source: false
       heading_level: 3

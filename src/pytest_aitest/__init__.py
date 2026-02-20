@@ -28,6 +28,7 @@ from pytest_aitest.core import (  # noqa: E402
     SkillError,
     SkillInfo,
     SkillMetadata,
+    SubagentInvocation,
     ToolCall,
     ToolInfo,
     Turn,
@@ -40,6 +41,10 @@ from pytest_aitest.core import (  # noqa: E402
 
 # Execution
 from pytest_aitest.execution import AgentEngine  # noqa: E402
+from pytest_aitest.execution.optimizer import (  # noqa: E402
+    InstructionSuggestion,
+    optimize_instruction,
+)
 
 # Scoring
 from pytest_aitest.fixtures.llm_score import (  # noqa: E402
@@ -81,6 +86,7 @@ __all__ = [  # noqa: RUF022
     "SkillError",
     "SkillInfo",
     "SkillMetadata",
+    "SubagentInvocation",
     "ToolCall",
     "ToolInfo",
     "Turn",
@@ -91,6 +97,8 @@ __all__ = [  # noqa: RUF022
     "load_skill",
     # Execution
     "AgentEngine",
+    "InstructionSuggestion",
+    "optimize_instruction",
     # Reporting
     "SuiteReport",
     "TestReport",
