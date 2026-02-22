@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from pytest_skill_engineering.core.result import AgentResult, ToolCall, Turn
+from pytest_skill_engineering.core.result import EvalResult, ToolCall, Turn
 from pytest_skill_engineering.reporting import SuiteReport, TestReport, generate_md
 from pytest_skill_engineering.reporting.insights import InsightsResult
 
@@ -25,7 +25,7 @@ def insights() -> InsightsResult:
 @pytest.fixture
 def single_agent_suite() -> SuiteReport:
     """Suite with a single agent, one pass and one fail."""
-    result_pass = AgentResult(
+    result_pass = EvalResult(
         turns=[
             Turn(role="user", content="What's my checking balance?"),
             Turn(
@@ -46,7 +46,7 @@ def single_agent_suite() -> SuiteReport:
         token_usage={"prompt": 200, "completion": 100},
         cost_usd=0.002,
     )
-    result_fail = AgentResult(
+    result_fail = EvalResult(
         turns=[
             Turn(role="user", content="Transfer money"),
             Turn(role="assistant", content="I can't do that."),
@@ -65,9 +65,9 @@ def single_agent_suite() -> SuiteReport:
                 name="TestBanking::test_check_balance",
                 outcome="passed",
                 duration_ms=1500.0,
-                agent_result=result_pass,
+                eval_result=result_pass,
                 agent_id="agent-1",
-                agent_name="banking-bot",
+                eval_name="banking-bot",
                 model="gpt-5-mini",
                 docstring="Check account balance",
             ),
@@ -75,10 +75,10 @@ def single_agent_suite() -> SuiteReport:
                 name="TestBanking::test_transfer_fail",
                 outcome="failed",
                 duration_ms=800.0,
-                agent_result=result_fail,
+                eval_result=result_fail,
                 error="AssertionError: expected tool call",
                 agent_id="agent-1",
-                agent_name="banking-bot",
+                eval_name="banking-bot",
                 model="gpt-5-mini",
             ),
         ],
@@ -90,21 +90,21 @@ def single_agent_suite() -> SuiteReport:
 @pytest.fixture
 def multi_agent_suite() -> SuiteReport:
     """Suite with two agents for leaderboard testing."""
-    result_a = AgentResult(
+    result_a = EvalResult(
         turns=[Turn(role="assistant", content="ok")],
         success=True,
         duration_ms=100.0,
         token_usage={"prompt": 50, "completion": 30},
         cost_usd=0.001,
     )
-    result_b = AgentResult(
+    result_b = EvalResult(
         turns=[Turn(role="assistant", content="ok")],
         success=True,
         duration_ms=200.0,
         token_usage={"prompt": 100, "completion": 60},
         cost_usd=0.003,
     )
-    result_b_fail = AgentResult(
+    result_b_fail = EvalResult(
         turns=[Turn(role="assistant", content="error")],
         success=False,
         duration_ms=150.0,
@@ -120,18 +120,18 @@ def multi_agent_suite() -> SuiteReport:
                 name="Tests::test_one",
                 outcome="passed",
                 duration_ms=100.0,
-                agent_result=result_a,
+                eval_result=result_a,
                 agent_id="agent-a",
-                agent_name="gpt-5-mini",
+                eval_name="gpt-5-mini",
                 model="gpt-5-mini",
             ),
             TestReport(
                 name="Tests::test_one",
                 outcome="passed",
                 duration_ms=200.0,
-                agent_result=result_b,
+                eval_result=result_b,
                 agent_id="agent-b",
-                agent_name="gpt-4.1 + detailed",
+                eval_name="gpt-4.1 + detailed",
                 model="gpt-4.1",
                 system_prompt_name="detailed",
             ),
@@ -139,18 +139,18 @@ def multi_agent_suite() -> SuiteReport:
                 name="Tests::test_two",
                 outcome="passed",
                 duration_ms=100.0,
-                agent_result=result_a,
+                eval_result=result_a,
                 agent_id="agent-a",
-                agent_name="gpt-5-mini",
+                eval_name="gpt-5-mini",
                 model="gpt-5-mini",
             ),
             TestReport(
                 name="Tests::test_two",
                 outcome="failed",
                 duration_ms=150.0,
-                agent_result=result_b_fail,
+                eval_result=result_b_fail,
                 agent_id="agent-b",
-                agent_name="gpt-4.1 + detailed",
+                eval_name="gpt-4.1 + detailed",
                 model="gpt-4.1",
                 system_prompt_name="detailed",
             ),
@@ -278,7 +278,7 @@ class TestGenerateMdMultiAgent:
         output = tmp_path / "report.md"
         generate_md(multi_agent_suite, output, insights=insights)
         md = output.read_text(encoding="utf-8")
-        assert "## Agent Leaderboard" in md
+        assert "## Eval Leaderboard" in md
 
     def test_leaderboard_has_table(
         self, multi_agent_suite: SuiteReport, insights: InsightsResult, tmp_path: Path
@@ -286,7 +286,7 @@ class TestGenerateMdMultiAgent:
         output = tmp_path / "report.md"
         generate_md(multi_agent_suite, output, insights=insights)
         md = output.read_text(encoding="utf-8")
-        assert "|#|Agent|" in md
+        assert "|#|Eval|" in md
         assert "Pass Rate" in md
 
     def test_leaderboard_shows_winner(
@@ -311,7 +311,7 @@ class TestGenerateMdMultiAgent:
         output = tmp_path / "report.md"
         generate_md(single_agent_suite, output, insights=insights)
         md = output.read_text(encoding="utf-8")
-        assert "## Agent Leaderboard" not in md
+        assert "## Eval Leaderboard" not in md
 
 
 class TestGenerateMdCli:
@@ -336,7 +336,7 @@ class TestGenerateMdCli:
                     "outcome": "passed",
                     "duration_ms": 100.0,
                     "agent_id": "test-agent",
-                    "agent_name": "test-agent",
+                    "eval_name": "test-agent",
                     "model": "test-model",
                 }
             ],
@@ -379,7 +379,7 @@ class TestGenerateMdCli:
                     "outcome": "passed",
                     "duration_ms": 100.0,
                     "agent_id": "test-agent",
-                    "agent_name": "test-agent",
+                    "eval_name": "test-agent",
                     "model": "test-model",
                 }
             ],
@@ -432,7 +432,7 @@ class TestGenerateMdCli:
                     "outcome": "passed",
                     "duration_ms": 100.0,
                     "agent_id": "test-agent",
-                    "agent_name": "test-agent",
+                    "eval_name": "test-agent",
                     "model": "test-model",
                 }
             ],

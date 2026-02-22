@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import pytest
 
-from pytest_skill_engineering.copilot.agent import CopilotAgent
+from pytest_skill_engineering.copilot.eval import CopilotEval
 
 from .conftest import MODELS
 
@@ -17,15 +17,15 @@ class TestFileOperations:
     """Test file creation and code quality across models."""
 
     @pytest.mark.parametrize("model", MODELS)
-    async def test_create_module_with_tests(self, copilot_run, tmp_path, model):
-        """Agent creates a module and its test file with working code."""
-        agent = CopilotAgent(
+    async def test_create_module_with_tests(self, copilot_eval, tmp_path, model):
+        """Eval creates a module and its test file with working code."""
+        agent = CopilotEval(
             name=f"coder-{model}",
             model=model,
             instructions="You are a Python developer. Create production-quality code.",
             working_directory=str(tmp_path),
         )
-        result = await copilot_run(
+        result = await copilot_eval(
             agent,
             "Create a Python module called calculator.py with functions add, subtract, "
             "multiply, and divide. The divide function should raise ValueError on "
@@ -46,12 +46,12 @@ class TestFileOperations:
             f"{model}: no error handling in divide"
         )
 
-        # Agent used tools
+        # Eval used tools
         assert len(result.all_tool_calls) > 0, f"{model}: no tool calls"
 
     @pytest.mark.parametrize("model", MODELS)
-    async def test_refactor_existing_code(self, copilot_run, tmp_path, model):
-        """Agent reads existing code and refactors it."""
+    async def test_refactor_existing_code(self, copilot_eval, tmp_path, model):
+        """Eval reads existing code and refactors it."""
         # Seed a file with intentionally messy code
         messy = tmp_path / "messy.py"
         messy.write_text(
@@ -64,7 +64,7 @@ class TestFileOperations:
             "        return False\n"
         )
 
-        agent = CopilotAgent(
+        agent = CopilotEval(
             name=f"refactorer-{model}",
             model=model,
             instructions=(
@@ -73,7 +73,7 @@ class TestFileOperations:
             ),
             working_directory=str(tmp_path),
         )
-        result = await copilot_run(
+        result = await copilot_eval(
             agent,
             "Read messy.py, refactor it for clarity, and save the improved version.",
         )

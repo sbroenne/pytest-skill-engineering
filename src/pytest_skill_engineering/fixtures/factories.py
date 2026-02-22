@@ -15,13 +15,13 @@ def skill_factory() -> Callable[[Path | str], Skill]:
     """Factory fixture for loading Skills.
 
     Example:
-        def test_with_skill(skill_factory, aitest_run):
+        def test_with_skill(skill_factory, eval_run):
             skill = skill_factory("path/to/my-skill")
-            agent = Agent(
+            agent = Eval(
                 provider=Provider(model="azure/gpt-5-mini"),
                 skill=skill,
             )
-            result = await aitest_run(agent, "Do something with the skill")
+            result = await eval_run(agent, "Do something with the skill")
             assert result.success
 
         def test_skill_metadata(skill_factory):

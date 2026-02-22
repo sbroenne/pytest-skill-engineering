@@ -1,4 +1,4 @@
-"""Integration tests for Agent Skills support.
+"""Integration tests for Eval Skills support.
 
 These tests verify:
 1. Skill loading from SKILL.md files
@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-from pytest_skill_engineering import Agent, MCPServer, Provider, SkillError, Wait, load_skill
+from pytest_skill_engineering import Eval, MCPServer, Provider, SkillError, Wait, load_skill
 
 from .conftest import DEFAULT_MODEL, DEFAULT_RPM, DEFAULT_TPM
 
@@ -83,12 +83,12 @@ class TestSkillWithAgent:
     """Integration tests for skills with actual LLM calls."""
 
     @pytest.mark.asyncio
-    async def test_skill_prepends_to_system_prompt(self, aitest_run):
+    async def test_skill_prepends_to_system_prompt(self, eval_run):
         """Skill content should be prepended to agent's system prompt."""
         skill = load_skill(SKILLS_DIR / "simple-assistant")
 
         # The skill instructs to always include "Hello" in greetings
-        agent = Agent(
+        agent = Eval(
             name="skill-prepend-test",
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             skill=skill,
@@ -96,14 +96,14 @@ class TestSkillWithAgent:
             max_turns=5,
         )
 
-        result = await aitest_run(agent, "Greet me")
+        result = await eval_run(agent, "Greet me")
 
         assert result.success
         # Skill says to include "Hello" in greetings
         assert "hello" in result.final_response.lower()
 
     @pytest.mark.asyncio
-    async def test_skill_with_references_provides_tools(self, aitest_run):
+    async def test_skill_with_references_provides_tools(self, eval_run):
         """Skills with references/ should inject virtual tools."""
         skill = load_skill(SKILLS_DIR / "math-helper")
 
@@ -112,7 +112,7 @@ class TestSkillWithAgent:
             wait=Wait.for_tools(["get_balance"]),
         )
 
-        agent = Agent(
+        agent = Eval(
             name="skill-references-test",
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             skill=skill,
@@ -124,7 +124,7 @@ class TestSkillWithAgent:
             max_turns=10,
         )
 
-        result = await aitest_run(agent, "What is the formula for the area of a circle?")
+        result = await eval_run(agent, "What is the formula for the area of a circle?")
 
         assert result.success
         # Should have called the skill reference tools
@@ -135,11 +135,11 @@ class TestSkillWithAgent:
         assert "π" in result.final_response or "pi" in result.final_response.lower()
 
     @pytest.mark.asyncio
-    async def test_skill_references_list_tool_returns_files(self, aitest_run):
+    async def test_skill_references_list_tool_returns_files(self, eval_run):
         """The list_skill_references tool should return available filenames."""
         skill = load_skill(SKILLS_DIR / "math-helper")
 
-        agent = Agent(
+        agent = Eval(
             name="skill-list-refs-test",
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             skill=skill,
@@ -150,7 +150,7 @@ class TestSkillWithAgent:
             max_turns=5,
         )
 
-        result = await aitest_run(agent, "List all available reference documents")
+        result = await eval_run(agent, "List all available reference documents")
 
         assert result.success
         assert result.tool_was_called("list_skill_references")
@@ -158,11 +158,11 @@ class TestSkillWithAgent:
         assert "formulas" in result.final_response.lower()
 
     @pytest.mark.asyncio
-    async def test_skill_read_reference_returns_content(self, aitest_run):
+    async def test_skill_read_reference_returns_content(self, eval_run):
         """The read_skill_reference tool should return file content."""
         skill = load_skill(SKILLS_DIR / "math-helper")
 
-        agent = Agent(
+        agent = Eval(
             name="skill-read-ref-test",
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             skill=skill,
@@ -173,7 +173,7 @@ class TestSkillWithAgent:
             max_turns=5,
         )
 
-        result = await aitest_run(
+        result = await eval_run(
             agent, "What is the Pythagorean theorem? Quote the formula exactly."
         )
 

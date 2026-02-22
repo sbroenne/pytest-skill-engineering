@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from pytest_skill_engineering.core.result import AgentResult, ToolCall, Turn
+from pytest_skill_engineering.core.result import EvalResult, ToolCall, Turn
 from pytest_skill_engineering.reporting import (
     SuiteReport,
     TestReport,
@@ -30,7 +30,7 @@ class TestTestReport:
         assert report.name == "test_foo"
         assert report.outcome == "passed"
         assert report.duration_ms == 100.0
-        assert report.agent_result is None
+        assert report.eval_result is None
         assert report.error is None
 
     def test_with_error(self) -> None:
@@ -41,12 +41,12 @@ class TestTestReport:
         assert report.error == "AssertionError"
 
     def test_with_agent_result(self) -> None:
-        result = AgentResult(turns=[], success=True, duration_ms=50.0)
+        result = EvalResult(turns=[], success=True, duration_ms=50.0)
         report = TestReport(
-            name="test_agent", outcome="passed", duration_ms=100.0, agent_result=result
+            name="test_agent", outcome="passed", duration_ms=100.0, eval_result=result
         )
-        assert report.agent_result is not None
-        assert report.agent_result.success
+        assert report.eval_result is not None
+        assert report.eval_result.success
 
 
 class TestSuiteReport:
@@ -83,32 +83,30 @@ class TestSuiteReport:
         assert suite.pass_rate == 100.0
 
     def test_total_tokens(self) -> None:
-        result1 = AgentResult(turns=[], success=True, token_usage={"prompt": 100, "completion": 50})
-        result2 = AgentResult(
-            turns=[], success=True, token_usage={"prompt": 200, "completion": 100}
-        )
+        result1 = EvalResult(turns=[], success=True, token_usage={"prompt": 100, "completion": 50})
+        result2 = EvalResult(turns=[], success=True, token_usage={"prompt": 200, "completion": 100})
         suite = SuiteReport(
             name="suite",
             timestamp="2026-01-31T00:00:00Z",
             duration_ms=1000.0,
             tests=[
-                TestReport(name="t1", outcome="passed", duration_ms=100.0, agent_result=result1),
-                TestReport(name="t2", outcome="passed", duration_ms=100.0, agent_result=result2),
+                TestReport(name="t1", outcome="passed", duration_ms=100.0, eval_result=result1),
+                TestReport(name="t2", outcome="passed", duration_ms=100.0, eval_result=result2),
             ],
             passed=2,
         )
         assert suite.total_tokens == 450  # 100+50+200+100
 
     def test_total_cost(self) -> None:
-        result1 = AgentResult(turns=[], success=True, cost_usd=0.01)
-        result2 = AgentResult(turns=[], success=True, cost_usd=0.02)
+        result1 = EvalResult(turns=[], success=True, cost_usd=0.01)
+        result2 = EvalResult(turns=[], success=True, cost_usd=0.02)
         suite = SuiteReport(
             name="suite",
             timestamp="2026-01-31T00:00:00Z",
             duration_ms=1000.0,
             tests=[
-                TestReport(name="t1", outcome="passed", duration_ms=100.0, agent_result=result1),
-                TestReport(name="t2", outcome="passed", duration_ms=100.0, agent_result=result2),
+                TestReport(name="t1", outcome="passed", duration_ms=100.0, eval_result=result1),
+                TestReport(name="t2", outcome="passed", duration_ms=100.0, eval_result=result2),
             ],
             passed=2,
         )
@@ -116,16 +114,16 @@ class TestSuiteReport:
 
     def test_token_stats(self) -> None:
         results = [
-            AgentResult(turns=[], success=True, token_usage={"prompt": 50, "completion": 50}),
-            AgentResult(turns=[], success=True, token_usage={"prompt": 100, "completion": 100}),
-            AgentResult(turns=[], success=True, token_usage={"prompt": 150, "completion": 150}),
+            EvalResult(turns=[], success=True, token_usage={"prompt": 50, "completion": 50}),
+            EvalResult(turns=[], success=True, token_usage={"prompt": 100, "completion": 100}),
+            EvalResult(turns=[], success=True, token_usage={"prompt": 150, "completion": 150}),
         ]
         suite = SuiteReport(
             name="suite",
             timestamp="2026-01-31T00:00:00Z",
             duration_ms=1000.0,
             tests=[
-                TestReport(name=f"t{i}", outcome="passed", duration_ms=100.0, agent_result=r)
+                TestReport(name=f"t{i}", outcome="passed", duration_ms=100.0, eval_result=r)
                 for i, r in enumerate(results)
             ],
             passed=3,
@@ -173,7 +171,7 @@ class TestReportGenerator:
 
     @pytest.fixture
     def sample_suite(self) -> SuiteReport:
-        result = AgentResult(
+        result = EvalResult(
             turns=[
                 Turn(role="user", content="Hello"),
                 Turn(
@@ -196,9 +194,9 @@ class TestReportGenerator:
                     name="test_example",
                     outcome="passed",
                     duration_ms=200.0,
-                    agent_result=result,
+                    eval_result=result,
                     agent_id="test-agent",
-                    agent_name="test-agent",
+                    eval_name="test-agent",
                     model="test-model",
                 ),
                 TestReport(
@@ -207,7 +205,7 @@ class TestReportGenerator:
                     duration_ms=300.0,
                     error="AssertionError: expected True",
                     agent_id="test-agent",
-                    agent_name="test-agent",
+                    eval_name="test-agent",
                     model="test-model",
                 ),
             ],
@@ -243,7 +241,7 @@ class TestGenerateMermaidSequence:
     """Tests for Mermaid sequence diagram generation."""
 
     def test_simple_conversation(self) -> None:
-        result = AgentResult(
+        result = EvalResult(
             turns=[
                 Turn(role="user", content="Hello"),
                 Turn(role="assistant", content="Hi there!"),
@@ -253,11 +251,11 @@ class TestGenerateMermaidSequence:
         mermaid = generate_mermaid_sequence(result)
 
         assert "sequenceDiagram" in mermaid
-        assert 'User->>Agent: "Hello"' in mermaid
-        assert 'Agent->>User: "Hi there!"' in mermaid
+        assert 'User->>Eval: "Hello"' in mermaid
+        assert 'Eval->>User: "Hi there!"' in mermaid
 
     def test_with_tool_calls(self) -> None:
-        result = AgentResult(
+        result = EvalResult(
             turns=[
                 Turn(role="user", content="Read a file"),
                 Turn(
@@ -277,12 +275,12 @@ class TestGenerateMermaidSequence:
         )
         mermaid = generate_mermaid_sequence(result)
 
-        assert 'Agent->>Tools: "read_file' in mermaid
-        assert 'Tools-->>Agent: "file contents here"' in mermaid
-        assert 'Agent->>User: "Here is the content"' in mermaid
+        assert 'Eval->>Tools: "read_file' in mermaid
+        assert 'Tools-->>Eval: "file contents here"' in mermaid
+        assert 'Eval->>User: "Here is the content"' in mermaid
 
     def test_tool_error(self) -> None:
-        result = AgentResult(
+        result = EvalResult(
             turns=[
                 Turn(role="user", content="Read nonexistent"),
                 Turn(
@@ -305,17 +303,17 @@ class TestGenerateMermaidSequence:
 
     def test_content_truncation(self) -> None:
         long_content = "A" * 100
-        result = AgentResult(
+        result = EvalResult(
             turns=[Turn(role="user", content=long_content)],
             success=True,
         )
         mermaid = generate_mermaid_sequence(result)
 
         # Content should be truncated to 80 chars (the actual truncation length)
-        assert 'User->>Agent: "' + "A" * 80 in mermaid
+        assert 'User->>Eval: "' + "A" * 80 in mermaid
 
     def test_escapes_quotes(self) -> None:
-        result = AgentResult(
+        result = EvalResult(
             turns=[Turn(role="user", content='Say "hello"')],
             success=True,
         )
@@ -349,7 +347,7 @@ class TestAgentLeaderboardSortOrder:
             cost_per_test = stat.get("cost", 0.01) / max(passed + failed, 1)
 
             for i in range(passed):
-                result = AgentResult(
+                result = EvalResult(
                     turns=[Turn(role="assistant", content="ok")],
                     success=True,
                     cost_usd=cost_per_test,
@@ -359,14 +357,14 @@ class TestAgentLeaderboardSortOrder:
                         name=f"test_{model}_{i}",
                         outcome="passed",
                         duration_ms=100.0,
-                        agent_result=result,
+                        eval_result=result,
                         agent_id=model,
-                        agent_name=model,
+                        eval_name=model,
                         model=model,
                     )
                 )
             for i in range(failed):
-                result = AgentResult(
+                result = EvalResult(
                     turns=[Turn(role="assistant", content="err")],
                     success=False,
                     cost_usd=cost_per_test,
@@ -376,9 +374,9 @@ class TestAgentLeaderboardSortOrder:
                         name=f"test_{model}_fail_{i}",
                         outcome="failed",
                         duration_ms=100.0,
-                        agent_result=result,
+                        eval_result=result,
                         agent_id=model,
-                        agent_name=model,
+                        eval_name=model,
                         model=model,
                     )
                 )
@@ -406,7 +404,7 @@ class TestAgentLeaderboardSortOrder:
         html = output.read_text(encoding="utf-8")
 
         # Find the leaderboard section
-        leaderboard_start = html.find("Agent Leaderboard")
+        leaderboard_start = html.find("Eval Leaderboard")
         assert leaderboard_start > 0, "Leaderboard section not found"
         leaderboard_html = html[leaderboard_start : leaderboard_start + 2000]
 
@@ -427,7 +425,7 @@ class TestAgentLeaderboardSortOrder:
         html = output.read_text(encoding="utf-8")
 
         # Find the leaderboard section
-        leaderboard_start = html.find("Agent Leaderboard")
+        leaderboard_start = html.find("Eval Leaderboard")
         assert leaderboard_start > 0, "Leaderboard section not found"
         leaderboard_html = html[leaderboard_start : leaderboard_start + 2000]
 
@@ -448,7 +446,7 @@ class TestAgentLeaderboardSortOrder:
         html = output.read_text(encoding="utf-8")
 
         # Find the leaderboard section
-        leaderboard_start = html.find("Agent Leaderboard")
+        leaderboard_start = html.find("Eval Leaderboard")
         assert leaderboard_start > 0, "Leaderboard section not found"
         leaderboard_html = html[leaderboard_start : leaderboard_start + 2000]
 
@@ -473,7 +471,7 @@ class TestAgentLeaderboardSortOrder:
         html = output.read_text(encoding="utf-8")
 
         # Find the leaderboard section
-        leaderboard_start = html.find("Agent Leaderboard")
+        leaderboard_start = html.find("Eval Leaderboard")
         assert leaderboard_start > 0, "Leaderboard section not found"
         leaderboard_html = html[leaderboard_start : leaderboard_start + 2000]
 

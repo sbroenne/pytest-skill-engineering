@@ -97,19 +97,19 @@ pytest tests/ --aitest-iterations=3
 
 Each model runs each test 3 times. The leaderboard uses aggregated pass rates.
 
-### With Agent Retries
+### With Eval Retries
 
-Iterations are different from `Agent.retries`:
+Iterations are different from `Eval.retries`:
 
 | Feature | Purpose | Scope |
 |---------|---------|-------|
 | `--aitest-iterations=N` | Statistical reliability | Re-runs the entire test N times |
-| `Agent(retries=3)` | Error recovery | Retries failed tool calls within a single run |
+| `Eval(retries=3)` | Error recovery | Retries failed tool calls within a single run |
 
 Use both together for robust testing:
 
 ```python
-agent = Agent(
+agent = Eval(
     provider=Provider(model="azure/gpt-5-mini"),
     mcp_servers=[server],
     retries=3,          # Retry tool errors within each run

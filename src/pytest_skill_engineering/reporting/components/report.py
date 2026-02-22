@@ -222,7 +222,7 @@ def _agent_leaderboard_section(agents: list[AgentData]) -> Node | None:
         return None
 
     return section(".mb-8")[
-        h2(".section-title")["🏆 Agent Leaderboard"],
+        h2(".section-title")["🏆 Eval Leaderboard"],
         leaderboard,
     ]
 
@@ -281,7 +281,7 @@ const allAgentsById = {agents_by_id_json};
 // Track selected agents (exactly 2)
 let selectedAgentIds = {selected_ids_json};
 
-// Agent comparison logic - always keep exactly 2 selected
+// Eval comparison logic - always keep exactly 2 selected
 function updateAgentComparison(clickedAgentId) {{
     const checkboxes = document.querySelectorAll('input[name="compare-agent"]');
     

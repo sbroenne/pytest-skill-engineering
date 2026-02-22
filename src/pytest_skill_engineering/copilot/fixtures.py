@@ -1,6 +1,6 @@
 """Pytest fixtures for GitHub Copilot testing.
 
-Provides the ``copilot_run`` fixture that executes prompts against Copilot
+Provides the ``copilot_eval`` fixture that executes prompts against Copilot
 and stashes results for pytest-skill-engineering reporting.
 
 Also provides ``ab_run``, a higher-level fixture for A/B testing two agent
@@ -22,32 +22,32 @@ if TYPE_CHECKING:
 
     from _pytest.nodes import Item
 
-    from pytest_skill_engineering.copilot.agent import CopilotAgent
+    from pytest_skill_engineering.copilot.eval import CopilotEval
     from pytest_skill_engineering.copilot.result import CopilotResult
 
 
 @pytest.fixture
-def copilot_run(
+def copilot_eval(
     request: pytest.FixtureRequest,
 ) -> Callable[..., Coroutine[Any, Any, CopilotResult]]:
-    """Execute a prompt against a CopilotAgent and capture results.
+    """Execute a prompt against a CopilotEval and capture results.
 
     Results are automatically stashed on the test node for pytest-skill-engineering's
     reporting plugin. This gives you full HTML reports —
     leaderboard, AI insights, Mermaid diagrams — for free.
 
     Example:
-        async def test_file_creation(copilot_run, tmp_path):
-            agent = CopilotAgent(
+        async def test_file_creation(copilot_eval, tmp_path):
+            agent = CopilotEval(
                 instructions="Create files as requested.",
                 working_directory=str(tmp_path),
             )
-            result = await copilot_run(agent, "Create hello.py with print('hello')")
+            result = await copilot_eval(agent, "Create hello.py with print('hello')")
             assert result.success
             assert result.tool_was_called("create_file")
     """
 
-    async def _run(agent: CopilotAgent, prompt: str) -> CopilotResult:
+    async def _run(agent: CopilotEval, prompt: str) -> CopilotResult:
         result = await run_copilot(agent, prompt)
 
         # Stash for pytest-skill-engineering's reporting plugin.
@@ -62,22 +62,22 @@ def copilot_run(
 
 
 def _convert_to_aitest(
-    agent: CopilotAgent,
+    agent: CopilotEval,
     result: CopilotResult,
 ) -> tuple[Any, Any] | None:
     """Convert CopilotResult to pytest-skill-engineering types.
 
-    Returns ``(AgentResult, Agent)`` tuple, or ``None`` if conversion
+    Returns ``(EvalResult, Eval)`` tuple, or ``None`` if conversion
     fails.
 
     Since CopilotResult already uses pytest-skill-engineering's Turn and ToolCall types,
     the turns can be passed through directly without rebuilding.
     """
-    from pytest_skill_engineering.core.agent import Agent, Provider
-    from pytest_skill_engineering.core.result import AgentResult
+    from pytest_skill_engineering.core.eval import Eval, Provider
+    from pytest_skill_engineering.core.result import EvalResult
 
     # Turns already use aitest's Turn/ToolCall types — pass through directly
-    aitest_result = AgentResult(
+    aitest_result = EvalResult(
         turns=list(result.turns),
         success=result.success,
         error=result.error,
@@ -87,7 +87,7 @@ def _convert_to_aitest(
         effective_system_prompt=agent.instructions or "",
     )
 
-    aitest_agent = Agent(
+    aitest_agent = Eval(
         name=agent.name,
         provider=Provider(model=result.model_used or agent.model or "copilot-default"),
         system_prompt=agent.instructions,
@@ -99,7 +99,7 @@ def _convert_to_aitest(
 
 def stash_on_item(
     item: Item,
-    agent: CopilotAgent,
+    agent: CopilotEval,
     result: CopilotResult,
 ) -> None:
     """Stash result on the test node for pytest-skill-engineering compatibility.
@@ -109,7 +109,7 @@ def stash_on_item(
     to build HTML reports. We produce compatible objects so Copilot
     test results appear in the same reports as synthetic agent tests.
 
-    Called automatically by the ``copilot_run`` fixture and by the
+    Called automatically by the ``copilot_eval`` fixture and by the
     ``pytest_runtest_makereport`` plugin hook; consumers should rarely
     need to call this directly.
     """
@@ -134,8 +134,8 @@ def ab_run(
     Example::
 
         async def test_docstring_instruction(ab_run):
-            baseline = CopilotAgent(instructions="Write Python code.")
-            treatment = CopilotAgent(
+            baseline = CopilotEval(instructions="Write Python code.")
+            treatment = CopilotEval(
                 instructions="Write Python code. Add Google-style docstrings to every function."
             )
 
@@ -146,8 +146,8 @@ def ab_run(
             assert '\"\"\"' in t.file("math.py"), "Treatment should add docstrings"
 
     Args:
-        baseline: Control ``CopilotAgent`` (the existing / unchanged config).
-        treatment: Treatment ``CopilotAgent`` (the change you are testing).
+        baseline: Control ``CopilotEval`` (the existing / unchanged config).
+        treatment: Treatment ``CopilotEval`` (the change you are testing).
         task: Prompt to give both agents.
 
     Returns:
@@ -155,8 +155,8 @@ def ab_run(
     """
 
     async def _run(
-        baseline: CopilotAgent,
-        treatment: CopilotAgent,
+        baseline: CopilotEval,
+        treatment: CopilotEval,
         task: str,
     ) -> tuple[CopilotResult, CopilotResult]:
         baseline_dir = tmp_path / "baseline"
@@ -165,7 +165,7 @@ def ab_run(
         treatment_dir.mkdir(exist_ok=True)
 
         # Override working directories to guarantee isolation.
-        # CopilotAgent is frozen — dataclasses.replace() creates a new instance.
+        # CopilotEval is frozen — dataclasses.replace() creates a new instance.
         baseline = dataclasses.replace(baseline, working_directory=str(baseline_dir))
         treatment = dataclasses.replace(treatment, working_directory=str(treatment_dir))
 

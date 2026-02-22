@@ -1,5 +1,5 @@
 ---
-description: "Auto-generated API documentation for pytest-skill-engineering core types: Agent, Provider, MCPServer, CLIServer, Skill, and more."
+description: "Auto-generated API documentation for pytest-skill-engineering core types: Eval, Provider, MCPServer, CLIServer, Skill, and more."
 ---
 
 # API Reference
@@ -8,44 +8,44 @@ Auto-generated API documentation from source code.
 
 ## Core Types
 
-::: pytest_skill_engineering.core.agent.Agent
+::: pytest_skill_engineering.core.eval.Eval
     options:
       show_source: false
       heading_level: 3
 
-::: pytest_skill_engineering.core.agent.Provider
+::: pytest_skill_engineering.core.eval.Provider
     options:
       show_source: false
       heading_level: 3
 
-::: pytest_skill_engineering.core.agent.MCPServer
+::: pytest_skill_engineering.core.eval.MCPServer
     options:
       show_source: false
       heading_level: 3
 
-::: pytest_skill_engineering.core.agent.CLIServer
+::: pytest_skill_engineering.core.eval.CLIServer
     options:
       show_source: false
       heading_level: 3
 
-::: pytest_skill_engineering.core.agent.Wait
+::: pytest_skill_engineering.core.eval.Wait
     options:
       show_source: false
       heading_level: 3
 
-::: pytest_skill_engineering.core.agent.ClarificationDetection
+::: pytest_skill_engineering.core.eval.ClarificationDetection
     options:
       show_source: false
       heading_level: 3
 
-::: pytest_skill_engineering.core.agent.ClarificationLevel
+::: pytest_skill_engineering.core.eval.ClarificationLevel
     options:
       show_source: false
       heading_level: 3
 
 ## Result Types
 
-::: pytest_skill_engineering.core.result.AgentResult
+::: pytest_skill_engineering.core.result.EvalResult
     options:
       show_source: false
       heading_level: 3

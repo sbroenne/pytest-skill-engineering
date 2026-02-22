@@ -12,7 +12,7 @@ A "skill" in the SE sense is anything an LLM calls or invokes:
 
 - **MCP Server Tools** — callable functions (`get_balance()`, `submit_order()`)
 - **Prompt Templates** — server-side reasoning starters exposed via `prompts/list`
-- **Agent Skills** — domain knowledge and behavioral guidelines the agent carries
+- **Eval Skills** — domain knowledge and behavioral guidelines the agent carries
 - **Custom Agents** — specialist sub-agents the orchestrator routes tasks to
 - **Prompt Files** — user-invoked slash commands (`/review`, `/explain`)
 
@@ -39,12 +39,12 @@ Skill engineering maps directly onto the Red/Green/Refactor cycle — with the t
 Start with what a user would say. Don't think about implementation — think about intent:
 
 ```python
-async def test_balance_check(aitest_run):
-    agent = Agent(
+async def test_balance_check(eval_run):
+    agent = Eval(
         provider=Provider(model="azure/gpt-5-mini"),
         mcp_servers=[banking_server],
     )
-    result = await aitest_run(agent, "What's my checking account balance?")
+    result = await eval_run(agent, "What's my checking account balance?")
 
     assert result.success
     assert result.tool_was_called("get_balance")
@@ -97,7 +97,7 @@ In traditional software, you design functions and classes. In skill engineering,
 |---------------------|------------------|
 | Function signatures | Tool descriptions |
 | Type definitions | Parameter schemas |
-| API documentation | Agent skills |
+| API documentation | Eval skills |
 | Serialized responses | MCP prompt templates |
 | — | Custom agent instructions |
 

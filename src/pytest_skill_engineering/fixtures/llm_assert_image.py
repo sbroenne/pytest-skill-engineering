@@ -24,8 +24,8 @@ class LLMAssertImage:
 
     Example::
 
-        async def test_dashboard(aitest_run, agent, llm_assert_image):
-            result = await aitest_run(agent, "Create a dashboard")
+        async def test_dashboard(eval_run, agent, llm_assert_image):
+            result = await eval_run(agent, "Create a dashboard")
             screenshots = result.tool_images_for("screenshot")
             assert llm_assert_image(
                 screenshots[-1],
@@ -100,8 +100,8 @@ def llm_assert_image(request: pytest.FixtureRequest) -> LLMAssertImage:
 
     Example::
 
-        async def test_chart(aitest_run, agent, llm_assert_image):
-            result = await aitest_run(agent, "Create a bar chart")
+        async def test_chart(eval_run, agent, llm_assert_image):
+            result = await eval_run(agent, "Create a bar chart")
             screenshots = result.tool_images_for("screenshot")
             assert llm_assert_image(screenshots[-1], "shows a bar chart")
     """

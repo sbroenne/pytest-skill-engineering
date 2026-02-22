@@ -144,8 +144,8 @@ assert "transferred" in all_text.lower()
 Use the built-in `llm_assert` fixture (powered by pydantic-evals LLM judge) for meaning-based checks:
 
 ```python
-async def test_response_quality(aitest_run, agent, llm_assert):
-    result = await aitest_run(agent, "Show me my balances")
+async def test_response_quality(eval_run, agent, llm_assert):
+    result = await eval_run(agent, "Show me my balances")
     assert llm_assert(
         result.final_response,
         "includes both checking and savings account balances"
@@ -175,8 +175,8 @@ RUBRIC = [
     ScoringDimension("clarity", "Well-organized and readable"),
 ]
 
-async def test_output_quality(aitest_run, agent, llm_score):
-    result = await aitest_run(agent, "Explain retry patterns")
+async def test_output_quality(eval_run, agent, llm_score):
+    result = await eval_run(agent, "Explain retry patterns")
     scores = llm_score(result.final_response, RUBRIC)
     assert_score(scores, min_total=10)  # 10/15
 ```
@@ -223,8 +223,8 @@ assert len(screenshots[-1].data) > 1000  # Reasonable size
 Use the `llm_assert_image` fixture to have a vision LLM evaluate an image:
 
 ```python
-async def test_chart_quality(aitest_run, agent, llm_assert_image):
-    result = await aitest_run(agent, "Create a bar chart")
+async def test_chart_quality(eval_run, agent, llm_assert_image):
+    result = await eval_run(agent, "Create a bar chart")
     screenshots = result.tool_images_for("screenshot")
     assert llm_assert_image(
         screenshots[-1],
@@ -301,8 +301,8 @@ assert all(c.error is None for c in result.all_tool_calls)
 Verify the agent handled an error gracefully:
 
 ```python
-result = await aitest_run(agent, "Transfer $1M from empty account")
-# Agent should succeed (handle the error), not crash
+result = await eval_run(agent, "Transfer $1M from empty account")
+# Eval should succeed (handle the error), not crash
 assert result.success
 assert "insufficient" in result.final_response.lower()
 ```
@@ -311,7 +311,7 @@ assert "insufficient" in result.final_response.lower()
 
 Requires `ClarificationDetection(enabled=True)` on the agent. See [Agents](../explanation/agents.md) for setup.
 
-### Agent didn't ask questions
+### Eval didn't ask questions
 
 ```python
 assert not result.asked_for_clarification
@@ -370,13 +370,13 @@ assert re.search(r"commit [a-f0-9]{7}", cli_result["stdout"])
 ```python
 @pytest.mark.session("banking-flow")
 class TestBankingWorkflow:
-    async def test_check_balance(self, aitest_run, agent):
-        result = await aitest_run(agent, "What's my checking balance?")
+    async def test_check_balance(self, eval_run, agent):
+        result = await eval_run(agent, "What's my checking balance?")
         assert result.success
         assert not result.is_session_continuation
 
-    async def test_transfer(self, aitest_run, agent):
-        result = await aitest_run(agent, "Transfer $100 to savings")
+    async def test_transfer(self, eval_run, agent):
+        result = await eval_run(agent, "Transfer $100 to savings")
         assert result.success
         assert result.is_session_continuation
         assert result.session_context_count > 0
@@ -391,16 +391,16 @@ Extract values from tool results and use them in later tests:
 class TestUserWorkflow:
     user_id: str
 
-    async def test_create(self, aitest_run, agent):
-        result = await aitest_run(agent, "Create a user named Alice")
+    async def test_create(self, eval_run, agent):
+        result = await eval_run(agent, "Create a user named Alice")
         assert result.success
         # Extract from tool result
         call = result.tool_calls_for("create_user")[0]
         data = json.loads(call.result)
         self.__class__.user_id = data["id"]
 
-    async def test_lookup(self, aitest_run, agent):
-        result = await aitest_run(
+    async def test_lookup(self, eval_run, agent):
+        result = await eval_run(
             agent, f"Find user {self.user_id}"
         )
         assert result.tool_was_called("get_user")

@@ -26,8 +26,8 @@ RUBRIC = [
     ScoringDimension("clarity", "Easy to understand"),
 ]
 
-async def test_plan_quality(aitest_run, agent, llm_score):
-    result = await aitest_run(agent, "Create an implementation plan")
+async def test_plan_quality(eval_run, agent, llm_score):
+    result = await eval_run(agent, "Create an implementation plan")
 
     scores = llm_score(
         result.final_response,
@@ -195,7 +195,7 @@ Compare agent variants by scoring both on the same rubric:
 
 ```python
 import pytest
-from pytest_skill_engineering import Agent, Provider, ScoringDimension, assert_score
+from pytest_skill_engineering import Eval, Provider, ScoringDimension, assert_score
 
 RUBRIC = [
     ScoringDimension("accuracy", "Factually correct"),
@@ -204,13 +204,13 @@ RUBRIC = [
 ]
 
 AGENTS = [
-    Agent(name="baseline", provider=Provider(model="azure/gpt-5-mini"), ...),
-    Agent(name="improved", provider=Provider(model="azure/gpt-5-mini"), ...),
+    Eval(name="baseline", provider=Provider(model="azure/gpt-5-mini"), ...),
+    Eval(name="improved", provider=Provider(model="azure/gpt-5-mini"), ...),
 ]
 
 @pytest.mark.parametrize("agent", AGENTS, ids=lambda a: a.name)
-async def test_plan_quality(aitest_run, agent, llm_score):
-    result = await aitest_run(agent, "Create an implementation plan")
+async def test_plan_quality(eval_run, agent, llm_score):
+    result = await eval_run(agent, "Create an implementation plan")
     scores = llm_score(result.final_response, RUBRIC)
 
     print(f"{agent.name}: {scores.total}/{scores.max_total} "

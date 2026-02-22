@@ -66,7 +66,7 @@ See these example reports to understand what pytest-skill-engineering generates:
 
 | Report | Scenario | What It Shows |
 |--------|----------|---------------|
-| [Single Agent](../reports/01_single_agent.html) | One agent, multiple tests | Basic report structure, AI analysis |
-| [Multi-Agent Comparison](../reports/02_multi_agent.html) | Two agents compared | Agent leaderboard, side-by-side results |
+| [Single Eval](../reports/01_single_agent.html) | One agent, multiple tests | Basic report structure, AI analysis |
+| [Multi-Eval Comparison](../reports/02_multi_agent.html) | Two agents compared | Eval leaderboard, side-by-side results |
 | [Sessions](../reports/03_multi_agent_sessions.html) | Multi-turn conversations | Session grouping, context flow |
-| [Agent Selector](../reports/04_agent_selector.html) | 3+ agents | Agent selector UI, pick any 2 to compare |
+| [Eval Selector](../reports/04_agent_selector.html) | 3+ agents | Eval selector UI, pick any 2 to compare |

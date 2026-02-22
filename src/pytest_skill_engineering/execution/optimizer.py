@@ -14,7 +14,7 @@ Example::
     suggestion = await optimize_instruction(
         agent.system_prompt or "",
         result,
-        "Agent should add docstrings.",
+        "Eval should add docstrings.",
     )
 """
 
@@ -30,7 +30,7 @@ from pydantic_ai.models import Model
 from pytest_skill_engineering.execution.pydantic_adapter import build_model_from_string
 
 if TYPE_CHECKING:
-    from pytest_skill_engineering.core.result import AgentResult
+    from pytest_skill_engineering.core.result import EvalResult
 
 __all__ = ["InstructionSuggestion", "optimize_instruction"]
 
@@ -52,7 +52,7 @@ class InstructionSuggestion:
         suggestion = await optimize_instruction(
             agent.system_prompt or "",
             result,
-            "Agent should add docstrings to all functions.",
+            "Eval should add docstrings to all functions.",
         )
         pytest.fail(f"No docstrings found.\\n\\n{suggestion}")
     """
@@ -80,7 +80,7 @@ class _OptimizationOutput(BaseModel):
 
 async def optimize_instruction(
     current_instruction: str,
-    result: AgentResult,
+    result: EvalResult,
     criterion: str,
     *,
     model: str | Model = "azure/gpt-5.2-chat",
@@ -100,18 +100,18 @@ async def optimize_instruction(
 
     Example::
 
-        result = await aitest_run(agent, task)
+        result = await eval_run(agent, task)
         if '\"\"\"' not in result.file("main.py"):
             suggestion = await optimize_instruction(
                 agent.system_prompt or "",
                 result,
-                "Agent should add docstrings to all functions.",
+                "Eval should add docstrings to all functions.",
             )
             pytest.fail(f"No docstrings found.\\n\\n{suggestion}")
 
     Args:
         current_instruction: The agent's current instruction / system prompt text.
-        result: The :class:`~pytest_skill_engineering.core.result.AgentResult` from the
+        result: The :class:`~pytest_skill_engineering.core.result.EvalResult` from the
             (failed) run.
         criterion: What the agent *should* have done — the test expectation
             in plain English (e.g. ``"Always write docstrings"``).

@@ -24,8 +24,8 @@ Your MCP tool must return images as `ImageContentBlock` in the MCP response. Pyd
 Use `result.tool_images_for(tool_name)` to get all images returned by a specific tool:
 
 ```python
-async def test_screenshot_captured(aitest_run, agent):
-    result = await aitest_run(agent, "Take a screenshot of the worksheet")
+async def test_screenshot_captured(eval_run, agent):
+    result = await eval_run(agent, "Take a screenshot of the worksheet")
 
     # Get all images from the "screenshot" tool
     screenshots = result.tool_images_for("screenshot")
@@ -50,8 +50,8 @@ async def test_screenshot_captured(aitest_run, agent):
 Use the `llm_assert_image` fixture to have a vision-capable LLM evaluate an image against plain-English criteria:
 
 ```python
-async def test_dashboard_layout(aitest_run, agent, llm_assert_image):
-    result = await aitest_run(agent, "Create a dashboard with 4 charts")
+async def test_dashboard_layout(eval_run, agent, llm_assert_image):
+    result = await eval_run(agent, "Create a dashboard with 4 charts")
 
     screenshots = result.tool_images_for("screenshot")
     assert len(screenshots) > 0
@@ -146,16 +146,16 @@ The vision model must support image input. Recommended models:
 """A/B test: Does a screenshot tool improve dashboard quality?"""
 
 import pytest
-from pytest_skill_engineering import Agent, Provider
+from pytest_skill_engineering import Eval, Provider
 
-CONTROL = Agent(
+CONTROL = Eval(
     name="without-screenshot",
     provider=Provider(model="azure/gpt-4o"),
     mcp_servers=[excel_server],
     allowed_tools=["file", "worksheet", "range", "table", "chart"],
 )
 
-EXPERIMENT = Agent(
+EXPERIMENT = Eval(
     name="with-screenshot",
     provider=Provider(model="azure/gpt-4o"),
     mcp_servers=[excel_server],
@@ -163,8 +163,8 @@ EXPERIMENT = Agent(
 )
 
 @pytest.mark.parametrize("agent", [CONTROL, EXPERIMENT], ids=lambda a: a.name)
-async def test_dashboard(aitest_run, agent, llm_assert_image):
-    result = await aitest_run(agent, "Create a dashboard with 4 charts")
+async def test_dashboard(eval_run, agent, llm_assert_image):
+    result = await eval_run(agent, "Create a dashboard with 4 charts")
     assert result.success
 
     # Both variants should create charts

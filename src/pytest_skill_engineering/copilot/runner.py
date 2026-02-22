@@ -43,13 +43,13 @@ if TYPE_CHECKING:
     from copilot import CopilotSession, SessionEvent
     from copilot.types import CopilotClientOptions
 
-    from pytest_skill_engineering.copilot.agent import CopilotAgent
+    from pytest_skill_engineering.copilot.eval import CopilotEval
     from pytest_skill_engineering.copilot.result import CopilotResult
 
 logger = logging.getLogger(__name__)
 
 
-async def run_copilot(agent: CopilotAgent, prompt: str) -> CopilotResult:
+async def run_copilot(agent: CopilotEval, prompt: str) -> CopilotResult:
     """Execute a prompt against GitHub Copilot and return structured results.
 
     This is the primary entry point for test execution. It manages the full
@@ -65,7 +65,7 @@ async def run_copilot(agent: CopilotAgent, prompt: str) -> CopilotResult:
     2. Logged-in user via ``gh`` CLI / OAuth (local development)
 
     Args:
-        agent: CopilotAgent configuration.
+        agent: CopilotEval configuration.
         prompt: The prompt to send to Copilot.
 
     Returns:
@@ -118,7 +118,7 @@ def _is_transient_error(error: str | None) -> bool:
     return any(pattern in error for pattern in _TRANSIENT_PATTERNS)
 
 
-async def _run_copilot_once(agent: "CopilotAgent", prompt: str) -> "CopilotResult":
+async def _run_copilot_once(agent: "CopilotEval", prompt: str) -> "CopilotResult":
     """Execute a single attempt of a prompt against GitHub Copilot."""
     client_options: dict[str, Any] = {
         "cwd": agent.working_directory or ".",

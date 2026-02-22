@@ -17,7 +17,7 @@ from pytest_skill_engineering.execution.servers import CLIServerProcess
 if TYPE_CHECKING:
     from pydantic_ai.tools import RunContext
 
-    from pytest_skill_engineering.core.agent import CLIServer
+    from pytest_skill_engineering.core.eval import CLIServer
 
 
 class CLIToolset(AbstractToolset[Any]):

@@ -12,7 +12,7 @@ import sys
 
 import pytest
 
-from pytest_skill_engineering import Agent, MCPServer, Provider, Wait
+from pytest_skill_engineering import Eval, MCPServer, Provider, Wait
 
 from .conftest import BANKING_PROMPT, DEFAULT_MAX_TURNS, DEFAULT_MODEL, DEFAULT_RPM, DEFAULT_TPM
 
@@ -49,28 +49,28 @@ class TestIterationBaseline:
     """
 
     @pytest.mark.asyncio
-    async def test_balance_check_reliability(self, aitest_run, banking_server):
+    async def test_balance_check_reliability(self, eval_run, banking_server):
         """Check balance — should be 100% reliable."""
-        agent = Agent(
+        agent = Eval(
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             mcp_servers=[banking_server],
             system_prompt=BANKING_PROMPT,
             max_turns=DEFAULT_MAX_TURNS,
         )
-        result = await aitest_run(agent, "What's my checking account balance?")
+        result = await eval_run(agent, "What's my checking account balance?")
         assert result.success
         assert result.tool_was_called("get_balance")
 
     @pytest.mark.asyncio
-    async def test_transfer_reliability(self, aitest_run, banking_server):
+    async def test_transfer_reliability(self, eval_run, banking_server):
         """Transfer money — may show flakiness across iterations."""
-        agent = Agent(
+        agent = Eval(
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             mcp_servers=[banking_server],
             system_prompt=BANKING_PROMPT,
             max_turns=DEFAULT_MAX_TURNS,
         )
-        result = await aitest_run(
+        result = await eval_run(
             agent,
             "Transfer $100 from checking to savings.",
         )
@@ -78,15 +78,15 @@ class TestIterationBaseline:
         assert result.tool_was_called("transfer")
 
     @pytest.mark.asyncio
-    async def test_multi_tool_reliability(self, aitest_run, banking_server):
+    async def test_multi_tool_reliability(self, eval_run, banking_server):
         """Multi-tool query — checks stability of complex operations."""
-        agent = Agent(
+        agent = Eval(
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             mcp_servers=[banking_server],
             system_prompt=BANKING_PROMPT,
             max_turns=DEFAULT_MAX_TURNS,
         )
-        result = await aitest_run(
+        result = await eval_run(
             agent,
             "Show me all my account balances and recent transactions.",
         )

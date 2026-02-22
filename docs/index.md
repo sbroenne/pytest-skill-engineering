@@ -23,18 +23,18 @@ For LLMs, your API isn't functions and types — it's **tool descriptions, agent
 
 ## The Solution
 
-Write tests as natural language prompts. An **Agent** is your test harness — it combines an LLM provider, MCP servers, and the configuration you want to evaluate:
+Write tests as natural language prompts. An **Eval** is your test harness — it combines an LLM provider, MCP servers, and the configuration you want to evaluate:
 
 ```python
-async def test_balance_and_transfer(aitest_run, banking_server):
-    agent = Agent(
+async def test_balance_and_transfer(eval_run, banking_server):
+    agent = Eval(
         provider=Provider(model="azure/gpt-5-mini"),   # LLM provider
         mcp_servers=[banking_server],                  # MCP servers with tools
-        skill=financial_skill,                         # Agent Skill (optional)
+        skill=financial_skill,                         # Eval Skill (optional)
         custom_agents=[load_custom_agent("agents/advisor.agent.md")],  # Custom agents (optional)
     )
 
-    result = await aitest_run(
+    result = await eval_run(
         agent,
         "Transfer $200 from checking to savings and show me the new balances.",
     )
@@ -54,8 +54,8 @@ This is **skill engineering**: design a test for what a user would say, watch th
 | MCP Server Tools | Can an LLM understand and use my tools? |
 | MCP Server Prompts | Do my bundled prompt templates render correctly and produce the right LLM behavior? |
 | Prompt Files (Slash Commands) | Does invoking `/my-command` produce the right agent behavior? |
-| Agent Skill | Does this domain knowledge help the agent perform? |
-| Custom Agent | Do my `.agent.md` instructions produce the right behavior and subagent dispatch? |
+| Eval Skill | Does this domain knowledge help the agent perform? |
+| Custom Eval | Do my `.agent.md` instructions produce the right behavior and subagent dispatch? |
 
 ## What Makes This Different?
 
@@ -79,17 +79,17 @@ AI analyzes your test results and tells you **what to fix**, not just what faile
 ## Quick Start
 
 ```python
-from pytest_skill_engineering import Agent, Provider, MCPServer
+from pytest_skill_engineering import Eval, Provider, MCPServer
 
 banking_server = MCPServer(command=["python", "banking_mcp.py"])
 
-async def test_balance_check(aitest_run):
-    agent = Agent(
+async def test_balance_check(eval_run):
+    agent = Eval(
         provider=Provider(model="azure/gpt-5-mini"),
         mcp_servers=[banking_server],
     )
     
-    result = await aitest_run(agent, "What's my checking account balance?")
+    result = await eval_run(agent, "What's my checking account balance?")
     
     assert result.success
     assert result.tool_was_called("get_balance")
@@ -105,10 +105,10 @@ async def test_balance_check(aitest_run):
 - **A/B Test Servers** — Compare MCP server versions or implementations
 - **Test CLI Tools** — Wrap command-line interfaces as testable servers
 - **Compare Models** — Benchmark different LLMs against your tools
-- **Agent Skills** — Add domain knowledge following [agentskills.io](https://agentskills.io)
-- **Custom Agents** — Test `.agent.md` custom agent files with `Agent.from_agent_file()` or load them as subagents in `CopilotAgent`; A/B test agent instruction versions
-- **Coding Agent Testing** — Test real coding agents like GitHub Copilot via the SDK (native OAuth, skill loading, exact user experience)
-- **Agent Leaderboard** — Auto-ranked by pass rate and cost; AI analysis tells you what to fix
+- **Eval Skills** — Add domain knowledge following [agentskills.io](https://agentskills.io)
+- **Custom Agents** — Test `.agent.md` custom agent files with `Eval.from_agent_file()` or load them as subagents in `CopilotEval`; A/B test agent instruction versions
+- **Coding Eval Testing** — Test real coding agents like GitHub Copilot via the SDK (native OAuth, skill loading, exact user experience)
+- **Eval Leaderboard** — Auto-ranked by pass rate and cost; AI analysis tells you what to fix
 - **Multi-Turn Sessions** — Test conversations that build on context
 - **Copilot Model Provider** — Use `copilot/gpt-5-mini` for all LLM calls — zero Azure/OpenAI setup
 - **Clarification Detection** — Catch agents that ask questions instead of acting
@@ -126,7 +126,7 @@ uv add pytest-skill-engineering
 ## Who This Is For
 
 - **MCP server authors** — Validate tool descriptions work
-- **Agent builders** — Compare models and prompts
+- **Eval builders** — Compare models and prompts
 - **Copilot skill and agent authors** — Test exactly what your users experience, before you ship
 - **Teams shipping AI systems** — Catch LLM-facing regressions
 

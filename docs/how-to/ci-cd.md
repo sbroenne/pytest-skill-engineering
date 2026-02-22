@@ -49,12 +49,12 @@ pytest-skill-engineering automatically enriches JUnit XML with agent metadata as
 
 | Property | Description |
 |----------|-------------|
-| `aitest.agent.name` | Agent identifier |
+| `aitest.agent.name` | Eval identifier |
 | `aitest.model` | LLM model used |
 | `aitest.skill` | Skill name (if used) |
 | `aitest.prompt` | System prompt name (if parametrized) |
 | `aitest.servers` | Comma-separated list of MCP server names |
-| `aitest.allowed_tools` | Tool filter from Agent (if specified) |
+| `aitest.allowed_tools` | Tool filter from Eval (if specified) |
 | `aitest.tokens.input` | Input tokens consumed |
 | `aitest.tokens.output` | Output tokens generated |
 | `aitest.cost_usd` | Estimated cost in USD |

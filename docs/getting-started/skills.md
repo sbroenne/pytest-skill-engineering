@@ -1,10 +1,10 @@
 ---
-description: "Add domain knowledge to AI agents with Agent Skills following the agentskills.io specification. Test whether skills improve agent performance."
+description: "Add domain knowledge to AI agents with Eval Skills following the agentskills.io specification. Test whether skills improve agent performance."
 ---
 
-# Agent Skills
+# Eval Skills
 
-An **Agent Skill** is a domain knowledge module following the [agentskills.io](https://agentskills.io/specification) specification. Skills provide:
+An **Eval Skill** is a domain knowledge module following the [agentskills.io](https://agentskills.io/specification) specification. Skills provide:
 
 - **Instructions** — Domain knowledge and behavioral guidelines for the agent
 - **References** — On-demand documents the agent can look up
@@ -70,7 +70,7 @@ References are documents the agent can look up **on demand** rather than having 
 ...
 ```
 
-### How the Agent Uses References
+### How the Eval Uses References
 
 When you tell the skill to "use the reference document for budgeting advice", the agent will:
 
@@ -94,11 +94,11 @@ This keeps your base prompt lean while providing detailed information when neede
 ## Using a Skill
 
 ```python
-from pytest_skill_engineering import Agent, Provider, MCPServer, Skill
+from pytest_skill_engineering import Eval, Provider, MCPServer, Skill
 
 skill = Skill.from_path("skills/financial-advisor")
 
-agent = Agent(
+agent = Eval(
     name="with-skill",
     provider=Provider(model="azure/gpt-5-mini"),
     mcp_servers=[banking_server],
@@ -113,13 +113,13 @@ Compare agents with and without skills:
 ```python
 skill = Skill.from_path("skills/financial-advisor")
 
-agent_without_skill = Agent(
+agent_without_skill = Eval(
     name="without-skill",
     provider=Provider(model="azure/gpt-5-mini"),
     mcp_servers=[banking_server],
 )
 
-agent_with_skill = Agent(
+agent_with_skill = Eval(
     name="with-skill",
     provider=Provider(model="azure/gpt-5-mini"),
     mcp_servers=[banking_server],
@@ -129,9 +129,9 @@ agent_with_skill = Agent(
 AGENTS = [agent_without_skill, agent_with_skill]
 
 @pytest.mark.parametrize("agent", AGENTS, ids=lambda a: a.name)
-async def test_financial_advice(aitest_run, agent):
+async def test_financial_advice(eval_run, agent):
     """Does the skill improve financial recommendations?"""
-    result = await aitest_run(
+    result = await eval_run(
         agent, 
         "I have $5,000 to allocate. How should I split it between needs, savings, and wants?"
     )
@@ -151,22 +151,22 @@ The report shows whether the skill improves performance.
 
 ## Copilot Skills
 
-> **Are you testing a skill for GitHub Copilot?** Use `CopilotAgent` with `skill_directories` instead — **not** `Agent` + `Skill.from_path()`.
+> **Are you testing a skill for GitHub Copilot?** Use `CopilotEval` with `skill_directories` instead — **not** `Eval` + `Skill.from_path()`.
 
-The `Agent` + `Skill` approach above tests whether a *generic LLM* can leverage skill content via injected tools. It does **not** test how GitHub Copilot itself loads and uses the skill.
+The `Eval` + `Skill` approach above tests whether a *generic LLM* can leverage skill content via injected tools. It does **not** test how GitHub Copilot itself loads and uses the skill.
 
 When your skill is built for Copilot (e.g. distributed via `npx skills add`), you want the real Copilot agent to load it — exactly as end users will experience it:
 
 ```python
-from pytest_skill_engineering.copilot import CopilotAgent
+from pytest_skill_engineering.copilot import CopilotEval
 
-async def test_skill_presents_scenarios(copilot_run):
-    agent = CopilotAgent(
+async def test_skill_presents_scenarios(copilot_eval):
+    agent = CopilotEval(
         name="with-skill",
         skill_directories=["skills/my-skill"],  # loads SKILL.md + references/
         max_turns=10,
     )
-    result = await copilot_run(agent, "What can you help me with?")
+    result = await copilot_eval(agent, "What can you help me with?")
     assert result.success
     assert "baseline" in result.final_response.lower()
 ```

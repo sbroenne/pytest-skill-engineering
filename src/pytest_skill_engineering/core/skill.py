@@ -1,4 +1,4 @@
-"""Agent Skills support following agentskills.io specification.
+"""Eval Skills support following agentskills.io specification.
 
 Skills are domain-specific knowledge modules that enhance agent capabilities.
 A skill consists of:
@@ -73,7 +73,7 @@ class SkillMetadata:
 
 @dataclass(slots=True)
 class Skill:
-    """An Agent Skill loaded from a SKILL.md file.
+    """An Eval Skill loaded from a SKILL.md file.
 
     Skills provide domain knowledge to agents by:
     1. Prepending instructions to the system prompt
@@ -81,7 +81,7 @@ class Skill:
 
     Example:
         skill = Skill.from_path(Path("skills/my-skill"))
-        agent = Agent(provider=provider, skill=skill)
+        agent = Eval(provider=provider, skill=skill)
     """
 
     path: Path

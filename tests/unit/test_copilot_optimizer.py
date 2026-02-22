@@ -27,7 +27,7 @@ def _make_result(
 
 
 def _make_agent_mock(instruction: str, reasoning: str, changes: str) -> MagicMock:
-    """Return a MagicMock that behaves like pydantic-ai Agent class."""
+    """Return a MagicMock that behaves like pydantic-ai Eval class."""
     output = MagicMock(instruction=instruction, reasoning=reasoning, changes=changes)
     run_result = MagicMock(output=output)
     agent_instance = MagicMock()
@@ -74,7 +74,7 @@ class TestOptimizeInstruction:
         )
         with patch(_BUILD_MODEL_PATCH, return_value=_FAKE_MODEL), patch(_AGENT_PATCH, agent_class):
             result = await optimize_instruction(
-                "Write Python code.", _make_result(), "Agent should add docstrings."
+                "Write Python code.", _make_result(), "Eval should add docstrings."
             )
         assert isinstance(result, InstructionSuggestion)
         assert result.instruction == "Always add Google-style docstrings."
@@ -118,7 +118,7 @@ class TestOptimizeInstruction:
         agent_instance = agent_class.return_value
         with patch(_BUILD_MODEL_PATCH, return_value=_FAKE_MODEL), patch(_AGENT_PATCH, agent_class):
             await optimize_instruction(
-                "Write code.", _make_result(), "Agent must use type hints on all functions."
+                "Write code.", _make_result(), "Eval must use type hints on all functions."
             )
         assert "type hints" in agent_instance.run.call_args[0][0]
 

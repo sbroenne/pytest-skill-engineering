@@ -291,7 +291,7 @@ def _agent_result_column(
         class_=f"comparison-column {hidden_class} {border_class}",
         data_agent_id=agent.id,
     )[
-        # Agent name + status header
+        # Eval name + status header
         div(".flex.items-center.justify-between.mb-4")[
             div(".font-medium.text-text-light")[agent.name],
             status_span,

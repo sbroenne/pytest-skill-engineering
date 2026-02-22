@@ -1,5 +1,5 @@
 ---
-description: "Choose between Agent + aitest_run (synthetic) and CopilotAgent + copilot_run (real Copilot SDK). Understand the trade-offs for MCP server testing, skill testing, and end-to-end Copilot validation."
+description: "Choose between Eval + eval_run (synthetic) and CopilotEval + copilot_eval (real Copilot SDK). Understand the trade-offs for MCP server testing, skill testing, and end-to-end Copilot validation."
 ---
 
 # Choosing a Test Harness
@@ -10,7 +10,7 @@ pytest-skill-engineering provides two test harnesses. Picking the right one upfr
 
 Both harnesses can test MCP servers, tools, and skills. The difference is **what runs the agent**.
 
-| | `Agent` + `aitest_run` | `CopilotAgent` + `copilot_run` |
+| | `Eval` + `eval_run` | `CopilotEval` + `copilot_eval` |
 |---|---|---|
 | **What runs the agent** | PydanticAI synthetic loop | Real GitHub Copilot (CLI SDK) |
 | **LLM** | Any provider (Azure, OpenAI, `copilot/...`) | GitHub Copilot only |
@@ -18,7 +18,7 @@ Both harnesses can test MCP servers, tools, and skills. The difference is **what
 | **MCP connections** | Made directly by the test process | Managed by Copilot CLI |
 | **MCP auth** | You supply tokens (env vars / headers) | Copilot CLI handles OAuth automatically |
 | **Skill loading** | Injected as virtual reference tools | Native Copilot skill loading (`SKILL.md`) |
-| **Custom agent loading** | `Agent.from_agent_file()` (prompt as system_prompt) | `load_custom_agent()` + `custom_agents=[]` (native subagent dispatch) |
+| **Custom agent loading** | `Eval.from_agent_file()` (prompt as system_prompt) | `load_custom_agent()` + `custom_agents=[]` (native subagent dispatch) |
 | **Model control** | Swap any model per test | Always Copilot's active model |
 | **Per-call introspection** | Full (tool name, args, timing) | Summary (tool names, final response) |
 | **Speed** | Fast (in-process) | Slower (~5–10s CLI startup per test) |
@@ -27,22 +27,22 @@ Both harnesses can test MCP servers, tools, and skills. The difference is **what
 
 ---
 
-## Use `Agent` + `aitest_run` when…
+## Use `Eval` + `eval_run` when…
 
 You want **full control** over the test loop — pick any model, compare variants, introspect every tool call. The test process owns the MCP connections directly.
 
 ```python
-from pytest_skill_engineering import Agent, Provider, MCPServer
+from pytest_skill_engineering import Eval, Provider, MCPServer
 
 server = MCPServer(command=["python", "my_server.py"])
 
-agent = Agent(
+agent = Eval(
     provider=Provider(model="azure/gpt-5-mini"),
     mcp_servers=[server],
 )
 
-async def test_tool_is_called(aitest_run):
-    result = await aitest_run(agent, "What's my checking balance?")
+async def test_tool_is_called(eval_run):
+    result = await eval_run(agent, "What's my checking balance?")
     assert result.tool_was_called("get_balance")
 ```
 
@@ -59,20 +59,20 @@ async def test_tool_is_called(aitest_run):
 
 ---
 
-## Use `CopilotAgent` + `copilot_run` when…
+## Use `CopilotEval` + `copilot_eval` when…
 
 You want to test **what users actually experience** — the real Copilot CLI drives the session, MCP OAuth is handled automatically, and skills are loaded natively. Any MCP server reachable by Copilot CLI (via `~/.copilot/mcp-config.json` or passed directly) is available.
 
 ```python
-from pytest_skill_engineering.copilot import CopilotAgent
+from pytest_skill_engineering.copilot import CopilotEval
 
-async def test_skill_presents_scenarios(copilot_run):
-    agent = CopilotAgent(
+async def test_skill_presents_scenarios(copilot_eval):
+    agent = CopilotEval(
         name="with-skill",
         skill_directories=["skills/my-skill"],  # loads SKILL.md natively
         max_turns=10,
     )
-    result = await copilot_run(agent, "What can you help me with?")
+    result = await copilot_eval(agent, "What can you help me with?")
     assert result.success
     assert "scenario-a" in result.final_response.lower()
 ```
@@ -97,22 +97,22 @@ async def test_skill_presents_scenarios(copilot_run):
 
 ```
 Do you want to test the exact experience your users get in Copilot?
-    YES → CopilotAgent + copilot_run
+    YES → CopilotEval + copilot_eval
 
 Do your MCP servers use OAuth managed by Copilot CLI (Power BI, GitHub…)?
-    YES → CopilotAgent + copilot_run
+    YES → CopilotEval + copilot_eval
 
 Are you loading a native Copilot skill (SKILL.md)?
-    YES → CopilotAgent + copilot_run
+    YES → CopilotEval + copilot_eval
 
 Do you need to compare multiple models or prompt variants?
-    YES → Agent + aitest_run
+    YES → Eval + eval_run
 
 Are you running in CI without a Copilot subscription?
-    YES → Agent + aitest_run
+    YES → Eval + eval_run
 
 Do you need full per-call introspection (args, call count, timing)?
-    YES → Agent + aitest_run
+    YES → Eval + eval_run
 ```
 
 ---
@@ -121,15 +121,15 @@ Do you need full per-call introspection (args, call count, timing)?
 
 Yes. A common pattern is:
 
-- **`Agent` + `aitest_run`** for fast, cheap unit-level MCP server tests
-- **`CopilotAgent` + `copilot_run`** for integration/regression tests of the full skill
+- **`Eval` + `eval_run`** for fast, cheap unit-level MCP server tests
+- **`CopilotEval` + `copilot_eval`** for integration/regression tests of the full skill
 
 ```
 tests/
 ├── unit/
-│   └── test_mcp_tools.py      # Agent + aitest_run — fast, no Copilot needed
+│   └── test_mcp_tools.py      # Eval + eval_run — fast, no Copilot needed
 └── integration/
-    └── test_skill.py          # CopilotAgent + copilot_run — full end-to-end
+    └── test_skill.py          # CopilotEval + copilot_eval — full end-to-end
 ```
 
 Run them separately in CI:
@@ -146,15 +146,15 @@ pytest tests/integration/
 
 ## The `copilot/` model prefix — a third option
 
-If you want `Agent` + `aitest_run` (synthetic loop, direct MCP connections) but want to use a Copilot-accessible model instead of Azure/OpenAI, use the `copilot/` prefix:
+If you want `Eval` + `eval_run` (synthetic loop, direct MCP connections) but want to use a Copilot-accessible model instead of Azure/OpenAI, use the `copilot/` prefix:
 
 ```python
-Agent(
+Eval(
     provider=Provider(model="copilot/claude-opus-4.6"),
     mcp_servers=[my_server],
 )
 ```
 
-This routes LLM calls through the Copilot SDK but keeps the PydanticAI agent loop and your own MCP connections. **This is not the same as `CopilotAgent`** — the Copilot CLI does not manage MCP or skill loading. You still need to handle MCP auth yourself.
+This routes LLM calls through the Copilot SDK but keeps the PydanticAI agent loop and your own MCP connections. **This is not the same as `CopilotEval`** — the Copilot CLI does not manage MCP or skill loading. You still need to handle MCP auth yourself.
 
 Use this when: you want synthetic-loop control + Copilot's model catalogue, without a separate Azure/OpenAI subscription.

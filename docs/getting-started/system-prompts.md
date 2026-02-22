@@ -1,13 +1,13 @@
 ---
-description: "The system_prompt parameter on Agent — what it is and when to use it."
+description: "The system_prompt parameter on Eval — what it is and when to use it."
 ---
 
 # System Prompts
 
-The `system_prompt=` parameter on `Agent` directly sets the instructions passed to the LLM for a synthetic test. Use it when you want to write instructions inline rather than loading them from a file.
+The `system_prompt=` parameter on `Eval` directly sets the instructions passed to the LLM for a synthetic test. Use it when you want to write instructions inline rather than loading them from a file.
 
 ```python
-agent = Agent(
+agent = Eval(
     provider=Provider(model="azure/gpt-5-mini"),
     mcp_servers=[banking_server],
     system_prompt="You are a banking assistant. Be concise and direct.",
@@ -22,7 +22,7 @@ For anything more structured — a specialist agent with defined tools, descript
 
 ```python
 # Prefer this for real agents:
-agent = Agent.from_agent_file(
+agent = Eval.from_agent_file(
     ".github/agents/banking-assistant.agent.md",
     provider=Provider(model="azure/gpt-5-mini"),
     mcp_servers=[banking_server],
@@ -31,9 +31,9 @@ agent = Agent.from_agent_file(
 
 See [Custom Agents](custom-agents.md) for the full guide, including A/B testing agent instructions and real Copilot dispatch testing.
 
-## System Prompt vs Agent Skill
+## System Prompt vs Eval Skill
 
-| Aspect | System Prompt | Agent Skill |
+| Aspect | System Prompt | Eval Skill |
 |--------|---------------|-------------|
 | Purpose | Define behavior | Provide domain knowledge |
 | Content | Instructions | Reference material |

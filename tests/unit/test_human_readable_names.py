@@ -17,7 +17,7 @@ from pathlib import Path
 
 import pytest
 
-from pytest_skill_engineering.core.result import AgentResult, Turn
+from pytest_skill_engineering.core.result import EvalResult, Turn
 from pytest_skill_engineering.reporting import SuiteReport, TestReport, generate_html, generate_md
 from pytest_skill_engineering.reporting.insights import (
     InsightsResult,
@@ -37,8 +37,8 @@ def insights() -> InsightsResult:
     )
 
 
-def _make_result(*, success: bool = True) -> AgentResult:
-    return AgentResult(
+def _make_result(*, success: bool = True) -> EvalResult:
+    return EvalResult(
         turns=[Turn(role="assistant", content="Done.")],
         success=success,
         duration_ms=100.0,
@@ -58,9 +58,9 @@ def _make_suite_with_class_docstrings() -> SuiteReport:
                 name="tests/test_hero.py::TestCoreOperations::test_transfer_and_verify[gpt-5-mini]",
                 outcome="passed",
                 duration_ms=100.0,
-                agent_result=_make_result(),
+                eval_result=_make_result(),
                 agent_id="agent-1",
-                agent_name="gpt-5-mini",
+                eval_name="gpt-5-mini",
                 model="gpt-5-mini",
                 docstring="Transfer money and verify the result with balance check.",
                 class_docstring="Core banking tests — parametrized across all benchmark agents.",
@@ -69,9 +69,9 @@ def _make_suite_with_class_docstrings() -> SuiteReport:
                 name="tests/test_hero.py::TestCoreOperations::test_check_balance[gpt-5-mini]",
                 outcome="passed",
                 duration_ms=100.0,
-                agent_result=_make_result(),
+                eval_result=_make_result(),
                 agent_id="agent-1",
-                agent_name="gpt-5-mini",
+                eval_name="gpt-5-mini",
                 model="gpt-5-mini",
                 docstring="Check account balance for a specific account.",
                 class_docstring="Core banking tests — parametrized across all benchmark agents.",
@@ -93,10 +93,10 @@ def _make_suite_with_error() -> SuiteReport:
                 name="tests/showcase/test_hero.py::TestSavingsPlanningSession::test_01_establish_context[gpt-4.1]",
                 outcome="failed",
                 duration_ms=100.0,
-                agent_result=_make_result(success=False),
+                eval_result=_make_result(success=False),
                 error="AssertionError: no concrete savings suggestion",
                 agent_id="agent-2",
-                agent_name="gpt-4.1",
+                eval_name="gpt-4.1",
                 model="gpt-4.1",
                 docstring="First turn: check balances and discuss savings goals.",
                 class_docstring="Multi-turn session: Planning savings transfers.",

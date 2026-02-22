@@ -8,7 +8,7 @@ not MCP server mechanics (which binary assertions already cover).
 
 from __future__ import annotations
 
-from pytest_skill_engineering import Agent, Provider
+from pytest_skill_engineering import Eval, Provider
 from pytest_skill_engineering.fixtures.llm_score import ScoringDimension, assert_score
 
 from .conftest import (
@@ -54,16 +54,16 @@ DIRECT_PROMPT = """You are a banking assistant. Use tools to answer. Be brief.""
 class TestPromptScoring:
     """Compare system prompt quality via LLM scoring."""
 
-    async def test_verbose_prompt_score(self, aitest_run, banking_server, llm_score):
+    async def test_verbose_prompt_score(self, eval_run, banking_server, llm_score):
         """Score a verbose system prompt — expect lower conciseness."""
-        agent = Agent(
+        agent = Eval(
             name="verbose-prompt",
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             mcp_servers=[banking_server],
             system_prompt=VERBOSE_PROMPT,
             max_turns=DEFAULT_MAX_TURNS,
         )
-        result = await aitest_run(agent, "What are all my account balances?")
+        result = await eval_run(agent, "What are all my account balances?")
         assert result.success
 
         score = llm_score(
@@ -73,16 +73,16 @@ class TestPromptScoring:
         )
         assert_score(score, min_pct=0.4)
 
-    async def test_direct_prompt_score(self, aitest_run, banking_server, llm_score):
+    async def test_direct_prompt_score(self, eval_run, banking_server, llm_score):
         """Score a direct system prompt — expect higher conciseness."""
-        agent = Agent(
+        agent = Eval(
             name="direct-prompt",
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             mcp_servers=[banking_server],
             system_prompt=DIRECT_PROMPT,
             max_turns=DEFAULT_MAX_TURNS,
         )
-        result = await aitest_run(agent, "What are all my account balances?")
+        result = await eval_run(agent, "What are all my account balances?")
         assert result.success
 
         score = llm_score(

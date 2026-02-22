@@ -8,10 +8,10 @@
 *Three agents for testing the agent selector UI.*
 
 
-## Agent Leaderboard
+## Eval Leaderboard
 
 
-|#|Agent|Tests|Pass Rate|Tokens|Cost|Duration|
+|#|Eval|Tests|Pass Rate|Tokens|Cost|Duration|
 | :---: | :--- | :---: | :---: | ---: | ---: | ---: |
 |🥇|gpt-5-mini 🏆|2/2|100%|3,448|$0.003737|31.1s|
 |🥈|gpt-5-mini + financial-advisor|2/2|100%|4,908|$0.004823|33.3s|
@@ -75,7 +75,7 @@
 
 | Test | Root Cause | Fix |
 |------|------------|-----|
-| Financial advice — tests differentiation between agents (skill vs no skill). | Agent asked for user-provided balances instead of calling available tools. | Instruct the agent to proactively fetch balances when advice depends on account data. |
+| Financial advice — tests differentiation between agents (skill vs no skill). | Eval asked for user-provided balances instead of calling available tools. | Instruct the agent to proactively fetch balances when advice depends on account data. |
 
 ### Financial advice — tests differentiation between agents (skill vs no skill). (gpt-4.1-mini)
 - **Problem:** The agent did not call `get_all_balances` or `get_balance`, causing the assertion failure.
@@ -201,13 +201,13 @@ Overall, tools are discoverable and consistently used by compliant agents.
 ```mermaid
 sequenceDiagram
     participant User
-    participant Agent
+    participant Eval
     participant Tools
 
-    User->>Agent: "What's my checking account balance?"
-    Agent->>Tools: "get_balance({'account': 'checking'})"
-    Tools-->>Agent: "{'account': 'checking', 'balance': 1500.0, 'formatted': '$1,"
-    Agent->>User: "Your checking account balance is $1,500.00. Would you like to do anything else w"
+    User->>Eval: "What's my checking account balance?"
+    Eval->>Tools: "get_balance({'account': 'checking'})"
+    Tools-->>Eval: "{'account': 'checking', 'balance': 1500.0, 'formatted': '$1,"
+    Eval->>User: "Your checking account balance is $1,500.00. Would you like to do anything else w"
 ```
 
 </details>
@@ -234,13 +234,13 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant User
-    participant Agent
+    participant Eval
     participant Tools
 
-    User->>Agent: "What's my checking account balance?"
-    Agent->>Tools: "get_balance({'account': 'checking'})"
-    Tools-->>Agent: "{'account': 'checking', 'balance': 1500.0, 'formatted': '$1,"
-    Agent->>User: "Your checking account balance is $1,500.00. Is there anything else you would lik"
+    User->>Eval: "What's my checking account balance?"
+    Eval->>Tools: "get_balance({'account': 'checking'})"
+    Tools-->>Eval: "{'account': 'checking', 'balance': 1500.0, 'formatted': '$1,"
+    Eval->>User: "Your checking account balance is $1,500.00. Is there anything else you would lik"
 ```
 
 </details>
@@ -272,13 +272,13 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant User
-    participant Agent
+    participant Eval
     participant Tools
 
-    User->>Agent: "What's my checking account balance?"
-    Agent->>Tools: "get_balance({'account': 'checking'})"
-    Tools-->>Agent: "{'account': 'checking', 'balance': 1500.0, 'formatted': '$1,"
-    Agent->>User: "Your checking account balance is $1,500.00. Would you like me to: - Show your sa"
+    User->>Eval: "What's my checking account balance?"
+    Eval->>Tools: "get_balance({'account': 'checking'})"
+    Tools-->>Eval: "{'account': 'checking', 'balance': 1500.0, 'formatted': '$1,"
+    Eval->>User: "Your checking account balance is $1,500.00. Would you like me to: - Show your sa"
 ```
 
 </details>
@@ -315,13 +315,13 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant User
-    participant Agent
+    participant Eval
     participant Tools
 
-    User->>Agent: "I have money in checking and savings. How should I allocate my funds?"
-    Agent->>Tools: "get_all_balances({})"
-    Tools-->>Agent: "{'accounts': {'checking': {'balance': 1500.0, 'formatted': '"
-    Agent->>User: "I pulled your balances: checking $1,500 and savings $3,000 (total $4,500). I can"
+    User->>Eval: "I have money in checking and savings. How should I allocate my funds?"
+    Eval->>Tools: "get_all_balances({})"
+    Tools-->>Eval: "{'accounts': {'checking': {'balance': 1500.0, 'formatted': '"
+    Eval->>User: "I pulled your balances: checking $1,500 and savings $3,000 (total $4,500). I can"
 ```
 
 </details>
@@ -331,9 +331,9 @@ sequenceDiagram
 
 **Error:** `      AssertionError: assert (False or False)
        +  where False = tool_was_called('get_all_balances')
-       +    where tool_was_called = AgentResult(SUCCESS)\n  Turns: 2\n  Tools called: none\n  Duration: 1180ms\n  Tokens: 377 | Cost: $0.000202\n  Final: 'To provide you with a recommendation on how to allocate your funds between checking and savings, cou'....tool_was_called
+       +    where tool_was_called = EvalResult(SUCCESS)\n  Turns: 2\n  Tools called: none\n  Duration: 1180ms\n  Tokens: 377 | Cost: $0.000202\n  Final: 'To provide you with a recommendation on how to allocate your funds between checking and savings, cou'....tool_was_called
        +  and   False = tool_was_called('get_balance')
-       +    where tool_was_called = AgentResult(SUCCESS)\n  Turns: 2\n  Tools called: none\n  Duration: 1180ms\n  Tokens: 377 | Cost: $0.000202\n  Final: 'To provide you with a recommendation on how to allocate your funds between checking and savings, cou'....tool_was_called`
+       +    where tool_was_called = EvalResult(SUCCESS)\n  Turns: 2\n  Tools called: none\n  Duration: 1180ms\n  Tokens: 377 | Cost: $0.000202\n  Final: 'To provide you with a recommendation on how to allocate your funds between checking and savings, cou'....tool_was_called`
 
 **Response:**
 
@@ -342,11 +342,11 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant User
-    participant Agent
+    participant Eval
     participant Tools
 
-    User->>Agent: "I have money in checking and savings. How should I allocate my funds?"
-    Agent->>User: "To provide you with a recommendation on how to allocate your funds between check"
+    User->>Eval: "I have money in checking and savings. How should I allocate my funds?"
+    Eval->>User: "To provide you with a recommendation on how to allocate your funds between check"
 ```
 
 </details>
@@ -379,13 +379,13 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant User
-    participant Agent
+    participant Eval
     participant Tools
 
-    User->>Agent: "I have money in checking and savings. How should I allocate my funds?"
-    Agent->>Tools: "get_all_balances({})"
-    Tools-->>Agent: "{'accounts': {'checking': {'balance': 1500.0, 'formatted': '"
-    Agent->>User: "Thanks — I checked your accounts: you have $1,500 in checking and $3,000 in savi"
+    User->>Eval: "I have money in checking and savings. How should I allocate my funds?"
+    Eval->>Tools: "get_all_balances({})"
+    Tools-->>Eval: "{'accounts': {'checking': {'balance': 1500.0, 'formatted': '"
+    Eval->>User: "Thanks — I checked your accounts: you have $1,500 in checking and $3,000 in savi"
 ```
 
 </details>

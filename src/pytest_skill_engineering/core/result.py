@@ -87,7 +87,7 @@ class MCPPrompt:
         await server.start()
         prompts = await server.list_prompts()
         messages = await server.get_prompt("code_review", {"code": "..."})
-        result = await aitest_run(agent, messages[0]["content"])
+        result = await eval_run(agent, messages[0]["content"])
     """
 
     name: str
@@ -125,9 +125,9 @@ class ClarificationStats:
     Only populated when clarification_detection is enabled on the agent.
 
     Example:
-        result = await aitest_run(agent, "Check my balance")
+        result = await eval_run(agent, "Check my balance")
         if result.clarification_stats:
-            print(f"Agent asked {result.clarification_stats.count} question(s)")
+            print(f"Eval asked {result.clarification_stats.count} question(s)")
     """
 
     count: int = 0
@@ -160,7 +160,7 @@ class SubagentInvocation:
     along with the final status and duration of that invocation.
 
     Example:
-        result = await copilot_run(agent, "Build and test the project")
+        result = await copilot_eval(agent, "Build and test the project")
         assert any(s.name == "coder" for s in result.subagent_invocations)
         assert all(s.status == "completed" for s in result.subagent_invocations)
     """
@@ -192,17 +192,17 @@ class Turn:
 
 
 @dataclass(slots=True)
-class AgentResult:
+class EvalResult:
     """Result of running an agent with rich inspection capabilities.
 
     Example:
-        result = await aitest_run(agent, "Hello!")
+        result = await eval_run(agent, "Hello!")
         assert result.success
         assert "hello" in result.final_response.lower()
         assert result.tool_was_called("read_file")
 
         # Session continuity: pass messages to next test
-        next_result = await aitest_run(agent, "Follow up", messages=result.messages)
+        next_result = await eval_run(agent, "Follow up", messages=result.messages)
     """
 
     turns: list[Turn]
@@ -229,8 +229,8 @@ class AgentResult:
 
         Use this to pass conversation history to the next test in a session:
 
-            result = await aitest_run(agent, "First message")
-            next_result = await aitest_run(agent, "Continue", messages=result.messages)
+            result = await eval_run(agent, "First message")
+            next_result = await eval_run(agent, "Continue", messages=result.messages)
         """
         return list(self._messages)  # Return copy to prevent mutation
 
@@ -323,7 +323,7 @@ class AgentResult:
         asked at least one clarifying question.
 
         Example:
-            result = await aitest_run(agent, "Check my balance")
+            result = await eval_run(agent, "Check my balance")
             assert not result.asked_for_clarification
         """
         return self.clarification_stats is not None and self.clarification_stats.count > 0
@@ -372,7 +372,7 @@ class AgentResult:
         cost_str = f"${self.cost_usd:.6f}" if self.cost_usd > 0 else "N/A"
         tokens = self.token_usage.get("prompt", 0) + self.token_usage.get("completion", 0)
         return (
-            f"AgentResult({status})\n"
+            f"EvalResult({status})\n"
             f"  Turns: {len(self.turns)}\n"
             f"  Tools called: {tools}\n"
             f"  Duration: {self.duration_ms:.0f}ms\n"

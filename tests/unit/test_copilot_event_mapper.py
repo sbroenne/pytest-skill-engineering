@@ -239,8 +239,8 @@ class TestEventMapperSubagents:
 
     def test_subagent_lifecycle(self):
         mapper = EventMapper()
-        mapper.handle(_make_event("subagent.started", agent_name="code-reviewer"))
-        mapper.handle(_make_event("subagent.completed", agent_name="code-reviewer", duration=1000))
+        mapper.handle(_make_event("subagent.started", eval_name="code-reviewer"))
+        mapper.handle(_make_event("subagent.completed", eval_name="code-reviewer", duration=1000))
         result = mapper.build()
         assert len(result.subagent_invocations) == 1
         sa = result.subagent_invocations[0]

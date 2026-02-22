@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import pytest
 
-from pytest_skill_engineering import Agent, ClarificationDetection, ClarificationLevel, Provider
+from pytest_skill_engineering import ClarificationDetection, ClarificationLevel, Eval, Provider
 
 from .conftest import (
     BANKING_PROMPT,
@@ -33,7 +33,7 @@ class TestBankingWorkflows:
     """Multi-step banking workflows that test real-world usage patterns."""
 
     @pytest.mark.asyncio
-    async def test_balance_check_and_transfer(self, aitest_run, banking_server, llm_assert):
+    async def test_balance_check_and_transfer(self, eval_run, banking_server, llm_assert):
         """Check balance, transfer funds, verify — classic multi-step workflow.
 
         This tests:
@@ -42,7 +42,7 @@ class TestBankingWorkflows:
         - Verification after mutation
         - AI judge for semantic validation
         """
-        agent = Agent(
+        agent = Eval(
             name="balance-transfer",
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             mcp_servers=[banking_server],
@@ -50,7 +50,7 @@ class TestBankingWorkflows:
             max_turns=10,
         )
 
-        result = await aitest_run(
+        result = await eval_run(
             agent,
             "Check my checking account balance, then transfer $200 to savings. "
             "Show me both balances after the transfer.",
@@ -75,7 +75,7 @@ class TestBankingWorkflows:
         )
 
     @pytest.mark.asyncio
-    async def test_deposit_and_withdrawal_workflow(self, aitest_run, banking_server):
+    async def test_deposit_and_withdrawal_workflow(self, eval_run, banking_server):
         """Deposit money, then withdraw a different amount.
 
         This tests:
@@ -83,7 +83,7 @@ class TestBankingWorkflows:
         - Different tool usage (deposit vs withdraw)
         - Balance awareness across operations
         """
-        agent = Agent(
+        agent = Eval(
             name="deposit-withdraw",
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             mcp_servers=[banking_server],
@@ -91,7 +91,7 @@ class TestBankingWorkflows:
             max_turns=10,
         )
 
-        result = await aitest_run(
+        result = await eval_run(
             agent,
             "Deposit $500 into my checking account, then withdraw $100 from it. "
             "What's the final balance?",
@@ -105,7 +105,7 @@ class TestBankingWorkflows:
         assert any(word in response_lower for word in ["balance", "$", "1,900", "1900"])
 
     @pytest.mark.asyncio
-    async def test_discovery_then_action_workflow(self, aitest_run, banking_server):
+    async def test_discovery_then_action_workflow(self, eval_run, banking_server):
         """Discover all accounts, then act on the largest one.
 
         This tests:
@@ -113,7 +113,7 @@ class TestBankingWorkflows:
         - Decision making based on discovered data
         - Follow-up action based on analysis
         """
-        agent = Agent(
+        agent = Eval(
             name="account-explorer",
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             mcp_servers=[banking_server],
@@ -121,7 +121,7 @@ class TestBankingWorkflows:
             max_turns=10,
         )
 
-        result = await aitest_run(
+        result = await eval_run(
             agent,
             "Show me all my accounts. Which one has the most money? "
             "Deposit $100 into that account.",
@@ -135,7 +135,7 @@ class TestBankingWorkflows:
         assert "savings" in result.final_response.lower()
 
     @pytest.mark.asyncio
-    async def test_transaction_history_analysis(self, aitest_run, banking_server):
+    async def test_transaction_history_analysis(self, eval_run, banking_server):
         """Make transactions then review history.
 
         This tests:
@@ -143,7 +143,7 @@ class TestBankingWorkflows:
         - Data aggregation and analysis
         - Structured output from transaction log
         """
-        agent = Agent(
+        agent = Eval(
             name="transaction-analyst",
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             mcp_servers=[banking_server],
@@ -151,7 +151,7 @@ class TestBankingWorkflows:
             max_turns=12,
         )
 
-        result = await aitest_run(
+        result = await eval_run(
             agent,
             "Transfer $50 from savings to checking, then deposit $200 into checking. "
             "Show me the checking account transaction history.",
@@ -165,7 +165,7 @@ class TestBankingWorkflows:
         assert "checking" in response_lower
 
     @pytest.mark.asyncio
-    async def test_error_recovery_workflow(self, aitest_run, banking_server):
+    async def test_error_recovery_workflow(self, eval_run, banking_server):
         """Handle insufficient funds gracefully and provide alternatives.
 
         This tests:
@@ -173,7 +173,7 @@ class TestBankingWorkflows:
         - Recovery behavior
         - Graceful degradation
         """
-        agent = Agent(
+        agent = Eval(
             name="error-handler",
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             mcp_servers=[banking_server],
@@ -181,7 +181,7 @@ class TestBankingWorkflows:
             max_turns=8,
         )
 
-        result = await aitest_run(
+        result = await eval_run(
             agent,
             "Withdraw $50,000 from my checking account. If that fails, "
             "show me my actual balance so I know how much I can withdraw.",
@@ -203,7 +203,7 @@ class TestTodoWorkflows:
     """Multi-step task management workflows that test stateful operations."""
 
     @pytest.mark.asyncio
-    async def test_project_setup_workflow(self, aitest_run, todo_server):
+    async def test_project_setup_workflow(self, eval_run, todo_server):
         """Create multiple tasks and verify the list.
 
         This tests:
@@ -211,7 +211,7 @@ class TestTodoWorkflows:
         - State persistence between calls
         - Verification via read
         """
-        agent = Agent(
+        agent = Eval(
             name="project-setup",
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             mcp_servers=[todo_server],
@@ -219,7 +219,7 @@ class TestTodoWorkflows:
             max_turns=12,
         )
 
-        result = await aitest_run(
+        result = await eval_run(
             agent,
             "Set up my groceries list: add milk, bread, and eggs. "
             "Then show me the complete list to confirm everything was added.",
@@ -237,7 +237,7 @@ class TestTodoWorkflows:
         assert "eggs" in response_lower
 
     @pytest.mark.asyncio
-    async def test_task_lifecycle_workflow(self, aitest_run, todo_server, llm_assert):
+    async def test_task_lifecycle_workflow(self, eval_run, todo_server, llm_assert):
         """Full task lifecycle: create, complete, verify.
 
         This tests:
@@ -246,7 +246,7 @@ class TestTodoWorkflows:
         - State verification after mutations
         - AI judge for semantic validation
         """
-        agent = Agent(
+        agent = Eval(
             name="task-lifecycle",
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             mcp_servers=[todo_server],
@@ -254,7 +254,7 @@ class TestTodoWorkflows:
             max_turns=10,
         )
 
-        result = await aitest_run(
+        result = await eval_run(
             agent,
             "Add 'review quarterly report' to my work list. "
             "Then mark it as complete. "
@@ -277,7 +277,7 @@ class TestTodoWorkflows:
         )
 
     @pytest.mark.asyncio
-    async def test_priority_management_workflow(self, aitest_run, todo_server):
+    async def test_priority_management_workflow(self, eval_run, todo_server):
         """Create tasks with different priorities and query by priority.
 
         This tests:
@@ -285,7 +285,7 @@ class TestTodoWorkflows:
         - Querying/filtering results
         - Understanding of priority semantics
         """
-        agent = Agent(
+        agent = Eval(
             name="priority-manager",
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             mcp_servers=[todo_server],
@@ -293,7 +293,7 @@ class TestTodoWorkflows:
             max_turns=12,
         )
 
-        result = await aitest_run(
+        result = await eval_run(
             agent,
             "Create three tasks in my work list:\n"
             "1. 'Fix critical bug' with HIGH priority\n"
@@ -313,7 +313,7 @@ class TestTodoWorkflows:
         assert any(word in response_lower for word in ["first", "priority", "urgent"])
 
     @pytest.mark.asyncio
-    async def test_batch_completion_workflow(self, aitest_run, todo_server):
+    async def test_batch_completion_workflow(self, eval_run, todo_server):
         """Add tasks, complete multiple, then show remaining.
 
         This tests:
@@ -321,7 +321,7 @@ class TestTodoWorkflows:
         - State tracking across operations
         - Filtering (remaining vs completed)
         """
-        agent = Agent(
+        agent = Eval(
             name="batch-completer",
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             mcp_servers=[todo_server],
@@ -329,7 +329,7 @@ class TestTodoWorkflows:
             max_turns=15,
         )
 
-        result = await aitest_run(
+        result = await eval_run(
             agent,
             "Add these tasks to my quick-tasks list: 'send email', 'make call', 'write note'. "
             "Then mark 'send email' and 'make call' as complete. "
@@ -348,7 +348,7 @@ class TestTodoWorkflows:
         assert "write note" in response_lower or "note" in response_lower
 
     @pytest.mark.asyncio
-    async def test_multi_list_organization(self, aitest_run, todo_server):
+    async def test_multi_list_organization(self, eval_run, todo_server):
         """Organize tasks across multiple lists.
 
         This tests:
@@ -356,7 +356,7 @@ class TestTodoWorkflows:
         - Understanding list semantics
         - Cross-list queries
         """
-        agent = Agent(
+        agent = Eval(
             name="multi-list-organizer",
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             mcp_servers=[todo_server],
@@ -364,7 +364,7 @@ class TestTodoWorkflows:
             max_turns=12,
         )
 
-        result = await aitest_run(
+        result = await eval_run(
             agent,
             "Add 'buy groceries' to my personal list and 'submit report' to my work list. "
             "Then tell me what lists I have and how many tasks are in each.",
@@ -390,7 +390,7 @@ class TestAdvancedPatterns:
     """Tests for more complex agent behaviors."""
 
     @pytest.mark.asyncio
-    async def test_ambiguous_request_clarification(self, aitest_run, banking_server):
+    async def test_ambiguous_request_clarification(self, eval_run, banking_server):
         """Handle ambiguous requests intelligently.
 
         This tests:
@@ -398,7 +398,7 @@ class TestAdvancedPatterns:
         - Intelligent defaults or clarification
         - Graceful handling of underspecified input
         """
-        agent = Agent(
+        agent = Eval(
             name="ambiguity-handler",
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             mcp_servers=[banking_server],
@@ -406,20 +406,20 @@ class TestAdvancedPatterns:
             max_turns=8,
         )
 
-        result = await aitest_run(
+        result = await eval_run(
             agent,
             "How much money do I have?",
         )
 
         assert result.success
-        # Agent should check balances for the user
+        # Eval should check balances for the user
         assert result.tool_was_called("get_all_balances") or result.tool_was_called("get_balance")
         # Should mention at least one account
         response_lower = result.final_response.lower()
         assert any(acct in response_lower for acct in ["checking", "savings"])
 
     @pytest.mark.asyncio
-    async def test_conditional_logic_workflow(self, aitest_run, todo_server):
+    async def test_conditional_logic_workflow(self, eval_run, todo_server):
         """Execute conditional logic based on current state.
 
         This tests:
@@ -427,7 +427,7 @@ class TestAdvancedPatterns:
         - Conditional branching based on data
         - State-aware decision making
         """
-        agent = Agent(
+        agent = Eval(
             name="conditional-logic",
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             mcp_servers=[todo_server],
@@ -435,7 +435,7 @@ class TestAdvancedPatterns:
             max_turns=10,
         )
 
-        result = await aitest_run(
+        result = await eval_run(
             agent,
             "Check if I have any tasks in my 'urgent' list. "
             "If not, create one called 'check email' with high priority. "
@@ -464,9 +464,9 @@ class TestClarificationDetection:
     """
 
     @pytest.mark.asyncio
-    async def test_no_clarification_on_clear_request(self, aitest_run, banking_server):
-        """Agent should not ask for clarification on a clear request."""
-        agent = Agent(
+    async def test_no_clarification_on_clear_request(self, eval_run, banking_server):
+        """Eval should not ask for clarification on a clear request."""
+        agent = Eval(
             name="no-clarification",
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             mcp_servers=[banking_server],
@@ -478,7 +478,7 @@ class TestClarificationDetection:
             ),
         )
 
-        result = await aitest_run(agent, "What's my checking balance?")
+        result = await eval_run(agent, "What's my checking balance?")
 
         assert result.success
         assert result.tool_was_called("get_balance")

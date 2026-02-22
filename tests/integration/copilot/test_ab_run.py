@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import pytest
 
-from pytest_skill_engineering.copilot.agent import CopilotAgent
+from pytest_skill_engineering.copilot.eval import CopilotEval
 
 
 @pytest.mark.copilot
@@ -24,11 +24,11 @@ class TestAbRunFixture:
         """ab_run returns a tuple of two successful CopilotResults."""
         from pytest_skill_engineering.copilot.result import CopilotResult
 
-        baseline = CopilotAgent(
+        baseline = CopilotEval(
             name="baseline",
             instructions="Create files as requested.",
         )
-        treatment = CopilotAgent(
+        treatment = CopilotEval(
             name="treatment",
             instructions="Create files as requested.",
         )
@@ -42,11 +42,11 @@ class TestAbRunFixture:
 
     async def test_ab_run_isolates_working_directories(self, ab_run, tmp_path):
         """Files created by baseline agent do not appear in treatment workspace."""
-        baseline = CopilotAgent(
+        baseline = CopilotEval(
             name="baseline",
             instructions="Create files as requested.",
         )
-        treatment = CopilotAgent(
+        treatment = CopilotEval(
             name="treatment",
             instructions="Create files as requested.",
         )
@@ -75,7 +75,7 @@ class TestAbRunFixture:
         This is the canonical A/B test — proves the fixture enables real
         differential testing, not just running the same thing twice.
         """
-        baseline = CopilotAgent(
+        baseline = CopilotEval(
             name="baseline",
             instructions=(
                 "Write minimal Python code only. "
@@ -83,7 +83,7 @@ class TestAbRunFixture:
                 "Pure function definitions and logic only."
             ),
         )
-        treatment = CopilotAgent(
+        treatment = CopilotEval(
             name="treatment",
             instructions=(
                 "Write fully documented Python. EVERY function MUST have:\n"
@@ -122,8 +122,8 @@ class TestAbRunFixture:
 
     async def test_ab_run_working_directories_are_accessible_via_result(self, ab_run, tmp_path):
         """CopilotResult.working_directory points to the correct isolated dir."""
-        baseline = CopilotAgent(name="baseline", instructions="Create files as requested.")
-        treatment = CopilotAgent(name="treatment", instructions="Create files as requested.")
+        baseline = CopilotEval(name="baseline", instructions="Create files as requested.")
+        treatment = CopilotEval(name="treatment", instructions="Create files as requested.")
 
         b, t = await ab_run(
             baseline,

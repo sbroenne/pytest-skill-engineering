@@ -7,7 +7,7 @@
       "name": "tests/fixtures/scenario_09_ab_servers.py::test_simple_balance_query[verbose-prompt]",
       "outcome": "passed",
       "duration_ms": 7874.070699996082,
-      "agent_result": {
+      "eval_result": {
         "turns": [
           {
             "role": "user",
@@ -234,7 +234,7 @@
       "docstring": "Simple query \u2014 should work with both prompts.",
       "class_docstring": null,
       "agent_id": "0524905d-d245-4788-bff2-bf9a07953dae",
-      "agent_name": "verbose-prompt",
+      "eval_name": "verbose-prompt",
       "model": "gpt-5-mini",
       "system_prompt_name": null,
       "skill_name": null
@@ -243,7 +243,7 @@
       "name": "tests/fixtures/scenario_09_ab_servers.py::test_simple_balance_query[terse-prompt]",
       "outcome": "passed",
       "duration_ms": 4840.336399996886,
-      "agent_result": {
+      "eval_result": {
         "turns": [
           {
             "role": "user",
@@ -470,7 +470,7 @@
       "docstring": "Simple query \u2014 should work with both prompts.",
       "class_docstring": null,
       "agent_id": "acbf2e8c-372d-4e2b-8cbd-e9e7122611ac",
-      "agent_name": "terse-prompt",
+      "eval_name": "terse-prompt",
       "model": "gpt-5-mini",
       "system_prompt_name": null,
       "skill_name": null
@@ -479,7 +479,7 @@
       "name": "tests/fixtures/scenario_09_ab_servers.py::test_multi_step_transfer[verbose-prompt]",
       "outcome": "passed",
       "duration_ms": 11195.912700000918,
-      "agent_result": {
+      "eval_result": {
         "turns": [
           {
             "role": "user",
@@ -752,7 +752,7 @@
       "docstring": "Multi-step operation \u2014 verbose prompt may perform better.",
       "class_docstring": null,
       "agent_id": "0524905d-d245-4788-bff2-bf9a07953dae",
-      "agent_name": "verbose-prompt",
+      "eval_name": "verbose-prompt",
       "model": "gpt-5-mini",
       "system_prompt_name": null,
       "skill_name": null
@@ -761,7 +761,7 @@
       "name": "tests/fixtures/scenario_09_ab_servers.py::test_multi_step_transfer[terse-prompt]",
       "outcome": "passed",
       "duration_ms": 8773.59900000738,
-      "agent_result": {
+      "eval_result": {
         "turns": [
           {
             "role": "user",
@@ -1034,7 +1034,7 @@
       "docstring": "Multi-step operation \u2014 verbose prompt may perform better.",
       "class_docstring": null,
       "agent_id": "acbf2e8c-372d-4e2b-8cbd-e9e7122611ac",
-      "agent_name": "terse-prompt",
+      "eval_name": "terse-prompt",
       "model": "gpt-5-mini",
       "system_prompt_name": null,
       "skill_name": null

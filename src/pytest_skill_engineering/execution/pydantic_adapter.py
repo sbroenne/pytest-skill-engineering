@@ -1,7 +1,7 @@
 """Adapter between pytest-skill-engineering config types and PydanticAI types.
 
-Converts our Agent/Provider/MCPServer config into PydanticAI Agent + toolsets,
-and converts PydanticAI AgentRunResult back into our AgentResult for reporting.
+Converts our Eval/Provider/MCPServer config into PydanticAI Eval + toolsets,
+and converts PydanticAI AgentRunResult back into our EvalResult for reporting.
 """
 
 from __future__ import annotations
@@ -28,7 +28,7 @@ from pydantic_ai.messages import (
 )
 from pydantic_ai.usage import UsageLimits
 
-from pytest_skill_engineering.core.result import AgentResult, SkillInfo, ToolCall, ToolInfo, Turn
+from pytest_skill_engineering.core.result import EvalResult, SkillInfo, ToolCall, ToolInfo, Turn
 
 if TYPE_CHECKING:
     from pydantic_ai.agent import AgentRunResult
@@ -36,12 +36,12 @@ if TYPE_CHECKING:
     from pydantic_ai.models import Model
     from pydantic_ai.toolsets import AbstractToolset
 
-    from pytest_skill_engineering.core.agent import Agent, MCPServer
+    from pytest_skill_engineering.core.eval import Eval, MCPServer
 
 _logger = logging.getLogger(__name__)
 
 
-def build_pydantic_model(agent: Agent) -> Model:
+def build_pydantic_model(agent: Eval) -> Model:
     """Convert our Provider config into a PydanticAI Model instance.
 
     Handles Azure Entra ID auth (no API key) and standard OpenAI-compatible providers.
@@ -172,7 +172,7 @@ def build_mcp_toolsets(
     return toolsets
 
 
-def build_system_prompt(agent: Agent) -> str | None:
+def build_system_prompt(agent: Eval) -> str | None:
     """Build the complete system prompt with skill content prepended."""
     parts: list[str] = []
 
@@ -200,10 +200,10 @@ def _apply_tool_filter(
 
 
 def build_pydantic_agent(
-    agent: Agent,
+    agent: Eval,
     toolsets: list[AbstractToolset],
 ) -> PydanticAgent[None, str]:
-    """Create a PydanticAI Agent from our Agent config."""
+    """Create a PydanticAI Eval from our Eval config."""
     model = build_pydantic_model(agent)
     instructions = build_system_prompt(agent)
 
@@ -231,8 +231,8 @@ def build_pydantic_agent(
     )
 
 
-def build_usage_limits(agent: Agent) -> UsageLimits:
-    """Build PydanticAI UsageLimits from our Agent config."""
+def build_usage_limits(agent: Eval) -> UsageLimits:
+    """Build PydanticAI UsageLimits from our Eval config."""
     return UsageLimits(request_limit=agent.max_turns)
 
 
@@ -245,8 +245,8 @@ def adapt_result(
     skill_info: SkillInfo | None,
     effective_system_prompt: str,
     session_context_count: int = 0,
-) -> AgentResult:
-    """Convert PydanticAI AgentRunResult into our AgentResult for reporting."""
+) -> EvalResult:
+    """Convert PydanticAI AgentRunResult into our EvalResult for reporting."""
     from pytest_skill_engineering.execution.cost import estimate_cost
 
     duration_ms = (time.perf_counter() - start_time) * 1000
@@ -268,7 +268,7 @@ def adapt_result(
     # Store PydanticAI messages directly for session continuity
     raw_messages = pydantic_result.all_messages()
 
-    return AgentResult(
+    return EvalResult(
         turns=turns,
         success=True,
         duration_ms=duration_ms,

@@ -54,12 +54,12 @@ In documentation, always show `uv add` instead of `pip install`.
 **We do NOT test agents. We USE agents to test:**
 - **MCP Servers** — Can an LLM understand and use these tools?
 - **CLI Tools** — Can an LLM operate this command-line interface?
-- **Agent Skills** — Does this domain knowledge improve performance?
+- **Eval Skills** — Does this domain knowledge improve performance?
 - **Custom Agents** — Do these `.agent.md` instructions produce the right behavior and subagent dispatch?
 
-**System prompts are NOT a standalone test concept.** A custom agent's body IS its system prompt. Testing agent instructions = testing a custom agent file. The `system_prompt=` param on `Agent` exists for raw synthetic tests only — not a primary concept.
+**System prompts are NOT a standalone test concept.** A custom agent's body IS its system prompt. Testing agent instructions = testing a custom agent file. The `system_prompt=` param on `Eval` exists for raw synthetic tests only — not a primary concept.
 
-**The Agent is the test harness**, not the thing being tested. It bundles an LLM provider with the tools/prompts/skills/custom agents you want to evaluate.
+**The Eval is the test harness**, not the thing being tested. It bundles an LLM provider with the tools/prompts/skills/custom agents you want to evaluate.
 
 ## Why This Project Exists
 
@@ -117,7 +117,7 @@ For LLMs, your API isn't functions and types — it's **tool descriptions, syste
 ### Core Dependencies
 | Package | Purpose | Pattern |
 |---------|---------|---------|
-| `pydantic-ai` | LLM abstraction | Agent execution, MCP toolsets, Azure auth |
+| `pydantic-ai` | LLM abstraction | Eval execution, MCP toolsets, Azure auth |
 | `pydantic-evals` | Evaluation | LLM judge for clarification detection |
 | `mcp` | MCP protocol | Server process management, tool discovery |
 | `pydantic` | Validation | Config validation (used sparingly) |
@@ -139,7 +139,7 @@ class Wait:
 
 # Good - mutable data with slots
 @dataclass(slots=True)
-class AgentResult:
+class EvalResult:
     turns: list[Turn]
     success: bool
 ```
@@ -151,8 +151,8 @@ class AgentResult:
 
 ```python
 # Tests are async by default (asyncio_mode = "auto" in pyproject.toml)
-async def test_balance(aitest_run, banking_server):
-    result = await aitest_run(agent, "What's my balance?")
+async def test_balance(eval_run, banking_server):
+    result = await eval_run(agent, "What's my balance?")
     assert result.success
 ```
 
@@ -189,7 +189,7 @@ uv run pytest tests/integration -v
 ### Import Conventions
 - Group imports: stdlib → third-party → local
 - Use `TYPE_CHECKING` block for type-only imports
-- Import from package root when possible (`from pytest_skill_engineering import Agent`)
+- Import from package root when possible (`from pytest_skill_engineering import Eval`)
 
 ```python
 from __future__ import annotations
@@ -200,10 +200,10 @@ from typing import TYPE_CHECKING, Any
 import pydantic_ai
 from mcp import ClientSession
 
-from pytest_skill_engineering.core.result import AgentResult
+from pytest_skill_engineering.core.result import EvalResult
 
 if TYPE_CHECKING:
-    from pytest_skill_engineering.core.agent import Agent
+    from pytest_skill_engineering.core.eval import Eval
 ```
 
 ## What We're Building
@@ -213,14 +213,14 @@ if TYPE_CHECKING:
 ### Core Features
 
 1. **Base Testing**: Define test agents, run tests against MCP/CLI tool servers
-   - Agent = Provider (LLM) + System Prompt + MCP/CLI Servers + optional Skill + optional Custom Agents
-   - Use `aitest_run` fixture to execute agent and verify tool usage
+   - Eval = Provider (LLM) + System Prompt + MCP/CLI Servers + optional Skill + optional Custom Agents
+   - Use `eval_run` fixture to execute agent and verify tool usage
    - Assert on `result.success`, `result.tool_was_called("tool_name")`, `result.final_response`
 
-2. **Agent Leaderboard**: When you test multiple agents, the report shows a leaderboard
+2. **Eval Leaderboard**: When you test multiple agents, the report shows a leaderboard
    - 1 agent → Just results
-   - Multiple agents → Agent Leaderboard (always)
-   - AI detects what varies (Model, Skill, Custom Agent, Server) to focus its analysis
+   - Multiple agents → Eval Leaderboard (always)
+   - AI detects what varies (Model, Skill, Custom Eval, Server) to focus its analysis
 
 3. **Winning Criteria**: Highest pass rate → Lowest cost (tiebreaker)
    - Use `--aitest-min-pass-rate=N` to fail the session if overall pass rate falls below N%
@@ -235,14 +235,14 @@ if TYPE_CHECKING:
    - Skills inject structured knowledge into agent context
    - Reports analyze skill effectiveness and suggest improvements
 
-6. **Custom Agent Testing**: Test `.agent.md` custom agent files (VS Code / Claude Code format)
-   - `Agent.from_agent_file(path, provider, ...)` — agent file becomes the system prompt; test it synthetically
-   - `load_custom_agent(path)` + `CopilotAgent(custom_agents=[...])` — test real subagent dispatch through Copilot
+6. **Custom Eval Testing**: Test `.agent.md` custom agent files (VS Code / Claude Code format)
+   - `Eval.from_agent_file(path, provider, ...)` — agent file becomes the system prompt; test it synthetically
+   - `load_custom_agent(path)` + `CopilotEval(custom_agents=[...])` — test real subagent dispatch through Copilot
    - Both approaches are first-class: same prominence as Skill Testing
 
 7. **Clarification Detection**: Catch agents that ask questions instead of acting
    - LLM-as-judge detects "Would you like me to...?" style responses
-   - Configure with `ClarificationDetection(enabled=True)` on Agent
+   - Configure with `ClarificationDetection(enabled=True)` on Eval
    - Assert with `result.asked_for_clarification` / `result.clarification_count`
    - Levels: INFO (log only), WARNING (default), ERROR (fail test)
    - Uses separate judge LLM call (defaults to agent's own model)
@@ -270,10 +270,10 @@ pytest-skill-engineering-report results.json --html report.html --summary --summ
 ### Key Types
 
 ```python
-from pytest_skill_engineering import Agent, Provider, MCPServer, Skill, load_system_prompts, load_custom_agent
+from pytest_skill_engineering import Eval, Provider, MCPServer, Skill, load_system_prompts, load_custom_agent
 
 # Define an agent (auth via AZURE_API_BASE env var)
-agent = Agent(
+agent = Eval(
     provider=Provider(model="azure/gpt-5-mini"),
     mcp_servers=[my_server],
     system_prompt="You are helpful...",
@@ -282,15 +282,15 @@ agent = Agent(
 )
 
 # Load a custom agent file as the agent under test (synthetic testing)
-agent = Agent.from_agent_file(
+agent = Eval.from_agent_file(
     "skills/my-skill/agent.md",
     provider=Provider(model="azure/gpt-5-mini"),
     mcp_servers=[my_server],
 )
 
-# Load a custom agent as a subagent for CopilotAgent (real Copilot dispatch)
-from pytest_skill_engineering.copilot import CopilotAgent
-copilot_agent = CopilotAgent(
+# Load a custom agent as a subagent for CopilotEval (real Copilot dispatch)
+from pytest_skill_engineering.copilot import CopilotEval
+copilot_agent = CopilotEval(
     custom_agents=[load_custom_agent("skills/my-skill/agent.md")],
 )
 
@@ -299,10 +299,10 @@ prompts = load_system_prompts(Path("prompts/"))
 # {"concise": "Be brief...", "detailed": "Explain..."}
 
 # Run test
-result = await aitest_run(agent, "Do something with tools")
+result = await eval_run(agent, "Do something with tools")
 assert result.success
 assert result.tool_was_called("my_tool")
-assert not result.asked_for_clarification  # Agent should act, not ask
+assert not result.asked_for_clarification  # Eval should act, not ask
 ```
 
 ### Multi-Turn Sessions
@@ -310,13 +310,13 @@ assert not result.asked_for_clarification  # Agent should act, not ask
 ```python
 @pytest.mark.session("banking-flow")
 class TestBankingWorkflow:
-    async def test_check_balance(self, aitest_run, bank_agent):
-        result = await aitest_run(bank_agent, "What's my balance?")
+    async def test_check_balance(self, eval_run, bank_agent):
+        result = await eval_run(bank_agent, "What's my balance?")
         assert result.success
 
-    async def test_transfer(self, aitest_run, bank_agent):
+    async def test_transfer(self, eval_run, bank_agent):
         # Shares context with previous test
-        result = await aitest_run(bank_agent, "Transfer $100 to savings")
+        result = await eval_run(bank_agent, "Transfer $100 to savings")
         assert result.tool_was_called("transfer")
 ```
 
@@ -335,13 +335,13 @@ prompt_list = load_prompts(Path("prompts/"))
 
 # Use with pytest parametrize
 @pytest.mark.parametrize("prompt_name,system_prompt", prompts.items())
-async def test_with_prompt(aitest_run, banking_server, prompt_name, system_prompt):
-    agent = Agent(
+async def test_with_prompt(eval_run, banking_server, prompt_name, system_prompt):
+    agent = Eval(
         provider=Provider(model="azure/gpt-5-mini"),
         mcp_servers=[banking_server],
         system_prompt=system_prompt,
     )
-    result = await aitest_run(agent, "What's my balance?")
+    result = await eval_run(agent, "What's my balance?")
     assert result.success
 ```
 
@@ -452,21 +452,21 @@ Available models are dynamic (whatever Copilot exposes).
 ```
 src/pytest_skill_engineering/
 ├── core/                  # Core types
-│   ├── agent.py           # Agent, Provider, MCPServer, CLIServer, Wait
+│   ├── agent.py           # Eval, Provider, MCPServer, CLIServer, Wait
 │   ├── auth.py            # Shared Azure AD auth (get_azure_ad_token_provider)
 │   ├── prompt.py          # load_system_prompts() for .md files (returns dict[str, str])
-│   ├── result.py          # AgentResult, Turn, ToolCall, ToolInfo, SkillInfo
+│   ├── result.py          # EvalResult, Turn, ToolCall, ToolInfo, SkillInfo
 │   ├── skill.py           # Skill, load from markdown
 │   └── errors.py          # AITestError, ServerStartError, etc.
 ├── execution/             # Runtime
-│   ├── engine.py          # AgentEngine (PydanticAI-powered agent execution)
+│   ├── engine.py          # EvalEngine (PydanticAI-powered agent execution)
 │   ├── pydantic_adapter.py # Adapter: our config types ↔ PydanticAI types (handles azure/, copilot/ prefixes)
 │   ├── cli_toolset.py     # Custom PydanticAI Toolset for CLI servers
 │   ├── clarification.py   # Clarification detection via pydantic-evals LLMJudge
 │   ├── servers.py         # Server process management
 │   └── skill_tools.py     # Skill injection into agent
 ├── fixtures/              # Pytest fixtures
-│   ├── run.py             # aitest_run fixture
+│   ├── run.py             # eval_run fixture
 │   └── factories.py       # skill_factory (Skills only - agents created inline)
 ├── reporting/             # AI analysis & reports
 │   ├── collector.py       # TestReport, SuiteReport dataclasses + build_suite_report()
@@ -475,8 +475,8 @@ src/pytest_skill_engineering/
 │   └── components/        # htpy report components
 │       ├── types.py       # TypedDicts for component data shapes
 │       ├── report.py      # Full report layout
-│       ├── agent_leaderboard.py  # Agent ranking table
-│       ├── agent_selector.py     # Agent comparison toggles
+│       ├── agent_leaderboard.py  # Eval ranking table
+│       ├── agent_selector.py     # Eval comparison toggles
 │       ├── test_grid.py          # Test results grid
 │       ├── test_comparison.py    # Side-by-side agent comparison
 │       └── overlay.py            # Fullscreen expanded view
@@ -528,17 +528,17 @@ DEFAULT_MAX_TURNS = 5
 
 **Pattern for writing tests:**
 ```python
-from pytest_skill_engineering import Agent, Provider
+from pytest_skill_engineering import Eval, Provider
 from .conftest import DEFAULT_MODEL, DEFAULT_RPM, DEFAULT_TPM, DEFAULT_MAX_TURNS
 
-async def test_balance(aitest_run, banking_server):
-    agent = Agent(
+async def test_balance(eval_run, banking_server):
+    agent = Eval(
         provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
         mcp_servers=[banking_server],
         system_prompt="You are a banking assistant.",
         max_turns=DEFAULT_MAX_TURNS,
     )
-    result = await aitest_run(agent, "What's my checking balance?")
+    result = await eval_run(agent, "What's my checking balance?")
     assert result.success
 ```
 
@@ -547,9 +547,9 @@ async def test_balance(aitest_run, banking_server):
 Use the built-in `llm_assert` fixture for AI-powered semantic assertions (powered by `pydantic-evals` LLMJudge):
 
 ```python
-async def test_response_quality(aitest_run, banking_server, llm_assert):
-    agent = Agent(...)
-    result = await aitest_run(agent, "Show me my account balances and recent transactions")
+async def test_response_quality(eval_run, banking_server, llm_assert):
+    agent = Eval(...)
+    result = await eval_run(agent, "Show me my account balances and recent transactions")
     
     # Semantic assertion - AI evaluates if condition is met
     assert llm_assert(result.final_response, "includes account balances and transaction details")
@@ -576,7 +576,7 @@ Every htpy component has a **typed data contract** in `components/types.py`. Thi
 
 | Contract | Used By | Purpose |
 |----------|---------|---------|
-| `AgentData` | `agent_leaderboard.py`, `agent_selector.py` | Agent metrics: pass_rate, cost, tokens, is_winner |
+| `AgentData` | `agent_leaderboard.py`, `agent_selector.py` | Eval metrics: pass_rate, cost, tokens, is_winner |
 | `TestResultData` | `test_comparison.py`, `test_grid.py` | Per-agent test result: tool_calls, mermaid, outcome |
 | `TestData` | `test_grid.py` | Test with `results_by_agent` dict |
 | `TestGroupData` | `test_grid.py` | Session or standalone group containing tests |
@@ -673,7 +673,7 @@ uv run pytest-skill-engineering-report aitest-reports/results.json --html aitest
 
 **When to re-run tests:**
 - Test code itself changed
-- Agent/tool/engine functionality changed
+- Eval/tool/engine functionality changed
 - Need fresh data with different models/prompts
 
 **When to regenerate from JSON:**
@@ -709,7 +709,7 @@ This workflow is **instant and free** - no LLM calls, no API costs.
 - **Material Design** - Match mkdocs-material indigo theme
 - **Roboto fonts** - Via Google Fonts
 - **Test details expanded by default** - Users want to see results immediately
-- **Human-readable names everywhere** - All user-facing reports (HTML, Markdown) must use human-readable names, not internal IDs. Use docstrings or humanize function names for tests. Use `agent_name` (not `agent_id`) for agents. Use `system_prompt_name` (not raw keys). If a human-readable name isn't available, humanize the ID (e.g., `test_check_balance` → `Test check balance`).
+- **Human-readable names everywhere** - All user-facing reports (HTML, Markdown) must use human-readable names, not internal IDs. Use docstrings or humanize function names for tests. Use `eval_name` (not `agent_id`) for agents. Use `system_prompt_name` (not raw keys). If a human-readable name isn't available, humanize the ID (e.g., `test_check_balance` → `Test check balance`).
 - **Assertions visible** - Show tool_was_called, semantic assertions
 - **Mermaid diagrams readable** - Use neutral theme with good contrast
 - **AI insights prominent** - Verdict section at top with clear recommendation

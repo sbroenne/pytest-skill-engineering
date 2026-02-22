@@ -21,19 +21,19 @@ A/B testing answers these questions with data.
 Compare two versions of your MCP server:
 
 ```python
-from pytest_skill_engineering import Agent, Provider, MCPServer
+from pytest_skill_engineering import Eval, Provider, MCPServer
 
 # Two versions to compare
 banking_v1 = MCPServer(command=["python", "banking_v1.py"])
 banking_v2 = MCPServer(command=["python", "banking_v2.py"])
 
 AGENTS = [
-    Agent(
+    Eval(
         name="banking-v1",
         provider=Provider(model="azure/gpt-5-mini"),
         mcp_servers=[banking_v1],
     ),
-    Agent(
+    Eval(
         name="banking-v2",
         provider=Provider(model="azure/gpt-5-mini"),
         mcp_servers=[banking_v2],
@@ -41,8 +41,8 @@ AGENTS = [
 ]
 
 @pytest.mark.parametrize("agent", AGENTS, ids=lambda a: a.name)
-async def test_balance_query(aitest_run, agent):
-    result = await aitest_run(agent, "What's my checking balance?")
+async def test_balance_query(eval_run, agent):
+    result = await eval_run(agent, "What's my checking balance?")
     assert result.success
     assert result.tool_was_called("get_balance")
 ```
@@ -73,8 +73,8 @@ Test whether a clearer description improves tool usage:
 # get_balance: "Get current balance for a bank account. Example: get_balance('checking')"
 
 @pytest.mark.parametrize("agent", [agent_v1, agent_v2], ids=["vague", "clear"])
-async def test_tool_discovery(aitest_run, agent):
-    result = await aitest_run(agent, "I need to check how much money I have")
+async def test_tool_discovery(eval_run, agent):
+    result = await eval_run(agent, "I need to check how much money I have")
     assert result.tool_was_called("get_balance")
 ```
 
@@ -87,8 +87,8 @@ my_server = MCPServer(command=["python", "my_server.py"])
 reference = MCPServer(command=["npx", "-y", "@org/reference-server"])
 
 AGENTS = [
-    Agent(name="my-implementation", mcp_servers=[my_server], ...),
-    Agent(name="reference-implementation", mcp_servers=[reference], ...),
+    Eval(name="my-implementation", mcp_servers=[my_server], ...),
+    Eval(name="reference-implementation", mcp_servers=[reference], ...),
 ]
 ```
 
@@ -117,9 +117,9 @@ Test whether a new input schema is clearer:
 # v2: Separate "account" and "type" parameters
 
 @pytest.mark.parametrize("agent", [agent_v1, agent_v2])
-async def test_ambiguous_query(aitest_run, agent):
+async def test_ambiguous_query(eval_run, agent):
     # This query is ambiguous - does the LLM handle it correctly?
-    result = await aitest_run(agent, "How much do I have in checking?")
+    result = await eval_run(agent, "How much do I have in checking?")
     assert result.success
 ```
 
@@ -132,7 +132,7 @@ MODELS = ["gpt-5-mini", "gpt-4.1"]
 SERVERS = {"v1": banking_v1, "v2": banking_v2}
 
 AGENTS = [
-    Agent(
+    Eval(
         name=f"{server_name}-{model}",
         provider=Provider(model=f"azure/{model}"),
         mcp_servers=[server],

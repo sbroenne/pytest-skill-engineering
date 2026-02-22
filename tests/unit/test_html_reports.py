@@ -114,7 +114,7 @@ def agent_selector_html() -> str:
 
 
 # ============================================================================
-# 01: Single Agent — header, AI analysis, test grid, mermaid, NO comparison UI
+# 01: Single Eval — header, AI analysis, test grid, mermaid, NO comparison UI
 # ============================================================================
 
 
@@ -193,7 +193,7 @@ class TestSingleAgentNoComparisonUI:
 
 
 # ============================================================================
-# 02: Multi-Agent (2 agents) — leaderboard, comparison, NO agent selector
+# 02: Multi-Eval (2 agents) — leaderboard, comparison, NO agent selector
 # ============================================================================
 
 
@@ -212,7 +212,7 @@ class TestMultiAgentLeaderboard:
 
 
 class TestMultiAgentNoSelector:
-    """Agent selector should NOT appear for only 2 agents."""
+    """Eval selector should NOT appear for only 2 agents."""
 
     def test_no_agent_selector(self, multi_agent_html: str) -> None:
         body = _strip_css_js(multi_agent_html)
@@ -303,7 +303,7 @@ class TestSessionLeaderboard:
 
 
 class TestSessionNoSelector:
-    """Agent selector should NOT appear for 2 agents."""
+    """Eval selector should NOT appear for 2 agents."""
 
     def test_no_agent_selector(self, session_html: str) -> None:
         body = _strip_css_js(session_html)
@@ -328,7 +328,7 @@ class TestSessionTestInteraction:
 
 
 # ============================================================================
-# 04: Agent Selector (3 agents) — leaderboard with medals, selector, swap logic
+# 04: Eval Selector (3 agents) — leaderboard with medals, selector, swap logic
 # ============================================================================
 
 
@@ -348,7 +348,7 @@ class TestAgentSelectorLeaderboard:
 
 
 class TestAgentSelectorExists:
-    """Agent selector presence and structure."""
+    """Eval selector presence and structure."""
 
     def test_agent_chips_exist(self, agent_selector_html: str) -> None:
         assert "agent-chip" in agent_selector_html
@@ -376,7 +376,7 @@ class TestAgentSelectorDefaultState:
 
 
 class TestAgentSelectorJS:
-    """Agent selector JavaScript logic."""
+    """Eval selector JavaScript logic."""
 
     def test_update_comparison_function(self, agent_selector_html: str) -> None:
         assert "updateAgentComparison" in agent_selector_html

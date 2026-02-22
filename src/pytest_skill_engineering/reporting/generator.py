@@ -26,7 +26,7 @@ from pytest_skill_engineering.reporting.components.types import (
 )
 
 if TYPE_CHECKING:
-    from pytest_skill_engineering.core.result import AgentResult
+    from pytest_skill_engineering.core.result import EvalResult
     from pytest_skill_engineering.reporting.collector import SuiteReport, TestReport
     from pytest_skill_engineering.reporting.insights import InsightsResult
 
@@ -133,24 +133,24 @@ def generate_md(
     Path(output_path).write_text(md, encoding="utf-8")
 
 
-def generate_mermaid_sequence(result: AgentResult) -> str:
+def generate_mermaid_sequence(result: EvalResult) -> str:
     """Generate Mermaid sequence diagram from agent result.
 
     Example output:
         sequenceDiagram
             participant User
-            participant Agent
+            participant Eval
             participant Tools
 
-            User->>Agent: Hello!
-            Agent->>Tools: read_file(path="/tmp/test.txt")
-            Tools-->>Agent: File contents...
-            Agent->>User: Here is the file...
+            User->>Eval: Hello!
+            Eval->>Tools: read_file(path="/tmp/test.txt")
+            Tools-->>Eval: File contents...
+            Eval->>User: Here is the file...
     """
     lines = [
         "sequenceDiagram",
         "    participant User",
-        "    participant Agent",
+        "    participant Eval",
         "    participant Tools",
         "",
     ]
@@ -158,22 +158,22 @@ def generate_mermaid_sequence(result: AgentResult) -> str:
     for turn in result.turns:
         if turn.role == "user":
             content = _sanitize_mermaid_text(turn.content, 80)
-            lines.append(f'    User->>Agent: "{content}"')
+            lines.append(f'    User->>Eval: "{content}"')
 
         elif turn.role == "assistant":
             if turn.tool_calls:
                 for tc in turn.tool_calls:
                     args_preview = _sanitize_mermaid_text(str(tc.arguments), 60)
-                    lines.append(f'    Agent->>Tools: "{tc.name}({args_preview})"')
+                    lines.append(f'    Eval->>Tools: "{tc.name}({args_preview})"')
                     if tc.error:
                         err_preview = _sanitize_mermaid_text(str(tc.error), 60)
                         lines.append(f'    Tools--xAgent: "Error: {err_preview}"')
                     elif tc.result:
                         result_preview = _sanitize_mermaid_text(tc.result, 60)
-                        lines.append(f'    Tools-->>Agent: "{result_preview}"')
+                        lines.append(f'    Tools-->>Eval: "{result_preview}"')
             else:
                 content = _sanitize_mermaid_text(turn.content, 80)
-                lines.append(f'    Agent->>User: "{content}"')
+                lines.append(f'    Eval->>User: "{content}"')
 
     return "\n".join(lines)
 
@@ -260,18 +260,18 @@ def _build_agents(
             "cost": 0.0,
             "tokens": 0,
             "duration_ms": 0,
-            "agent_name": None,
+            "eval_name": None,
             "model": None,
         }
     )
 
     for test in report.tests:
         model = test.model or "unknown"
-        agent_name = test.agent_name or model  # Agent.name is always set; fallback for legacy JSON
+        eval_name = test.eval_name or model  # Eval.name is always set; fallback for legacy JSON
 
-        stats = agent_stats[agent_name]
+        stats = agent_stats[eval_name]
         stats["model"] = model
-        stats["agent_name"] = agent_name
+        stats["eval_name"] = eval_name
         stats["total"] += 1
 
         if test.outcome == "passed":
@@ -282,11 +282,11 @@ def _build_agents(
         if test.duration_ms:
             stats["duration_ms"] += test.duration_ms
 
-        if test.agent_result:
-            if test.agent_result.cost_usd:
-                stats["cost"] += test.agent_result.cost_usd
-            if test.agent_result.token_usage:
-                usage = test.agent_result.token_usage
+        if test.eval_result:
+            if test.eval_result.cost_usd:
+                stats["cost"] += test.eval_result.cost_usd
+            if test.eval_result.token_usage:
+                usage = test.eval_result.token_usage
                 stats["tokens"] += usage.get("prompt", 0) + usage.get("completion", 0)
 
     agents = []
@@ -300,7 +300,7 @@ def _build_agents(
         agents.append(
             AgentData(
                 id=agent_name_key,
-                name=stats["agent_name"],
+                name=stats["eval_name"],
                 passed=passed,
                 failed=stats["failed"],
                 total=total,
@@ -385,14 +385,14 @@ def _build_test_groups_typed(
             # Group variants by agent, then aggregate iterations per agent.
             variants_by_agent: dict[str, list[TestReport]] = defaultdict(list)
             for test in test_variants:
-                agent_name = test.agent_name or test.model or "unknown"
-                if agent_name in all_agent_ids:
-                    variants_by_agent[agent_name].append(test)
+                eval_name = test.eval_name or test.model or "unknown"
+                if eval_name in all_agent_ids:
+                    variants_by_agent[eval_name].append(test)
 
             results_by_agent: dict[str, TestResultData] = {}
-            for agent_name, agent_tests in variants_by_agent.items():
+            for eval_name, agent_tests in variants_by_agent.items():
                 result_data = _build_result_for_agent(agent_tests)
-                results_by_agent[agent_name] = result_data
+                results_by_agent[eval_name] = result_data
                 outcomes.add(result_data.outcome)
                 if not result_data.passed:
                     has_failed = True
@@ -480,8 +480,8 @@ def _extract_test_result_fields(
 ]:
     """Extract tool calls, assertions, scores, and metadata from a single TestReport."""
     tool_calls = []
-    if test.agent_result and test.agent_result.turns:
-        for turn in test.agent_result.turns:
+    if test.eval_result and test.eval_result.turns:
+        for turn in test.eval_result.turns:
             if turn.tool_calls:
                 for tc in turn.tool_calls:
                     tool_calls.append(
@@ -510,17 +510,15 @@ def _extract_test_result_fields(
 
     scores_data = _extract_scores(test.assertions)
 
-    turn_count = (
-        len(test.agent_result.turns) if test.agent_result and test.agent_result.turns else 0
-    )
+    turn_count = len(test.eval_result.turns) if test.eval_result and test.eval_result.turns else 0
     tokens = 0
-    if test.agent_result and test.agent_result.token_usage:
-        usage = test.agent_result.token_usage
+    if test.eval_result and test.eval_result.token_usage:
+        usage = test.eval_result.token_usage
         tokens = usage.get("prompt", 0) + usage.get("completion", 0)
 
-    agent_result = test.agent_result
-    mermaid = generate_mermaid_sequence(agent_result) if agent_result else None
-    final_resp = agent_result.final_response if agent_result else None
+    eval_result = test.eval_result
+    mermaid = generate_mermaid_sequence(eval_result) if eval_result else None
+    final_resp = eval_result.final_response if eval_result else None
 
     return tool_calls, assertions_data, scores_data, turn_count, tokens, mermaid, final_resp
 
@@ -545,7 +543,7 @@ def _build_result_for_agent(agent_tests: list[TestReport]) -> TestResultData:
             passed=outcome == "passed",
             duration_s=duration_ms / 1000,
             tokens=tokens,
-            cost=test.agent_result.cost_usd if test.agent_result else 0,
+            cost=test.eval_result.cost_usd if test.eval_result else 0,
             tool_calls=tool_calls,
             tool_count=len(tool_calls),
             turns=turns,
@@ -567,10 +565,10 @@ def _build_result_for_agent(agent_tests: list[TestReport]) -> TestResultData:
         outcome = test.outcome or "unknown"
         duration_ms = test.duration_ms or 0
         tokens = 0
-        if test.agent_result and test.agent_result.token_usage:
-            usage = test.agent_result.token_usage
+        if test.eval_result and test.eval_result.token_usage:
+            usage = test.eval_result.token_usage
             tokens = usage.get("prompt", 0) + usage.get("completion", 0)
-        cost = test.agent_result.cost_usd if test.agent_result else 0.0
+        cost = test.eval_result.cost_usd if test.eval_result else 0.0
 
         passed = outcome == "passed"
         if passed:

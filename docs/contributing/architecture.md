@@ -16,7 +16,7 @@ How pytest-skill-engineering executes tests and dispatches tools.
 │                         │                                │
 │                         ▼                                │
 │  ┌─────────────────────────────────────────────────┐    │
-│  │              AgentEngine                         │    │
+│  │              EvalEngine                         │    │
 │  │  ┌──────────┐   ┌─────────┐    ┌─────────────┐  │    │
 │  │  │PydanticAI│◄──►│  Tool   │◄──►│ MCP/CLI     │  │    │
 │  │  │  (LLM)   │   │Dispatch │    │ Servers     │  │    │
@@ -24,20 +24,20 @@ How pytest-skill-engineering executes tests and dispatches tools.
 │  └─────────────────────────────────────────────────┘    │
 │                         │                                │
 │                         ▼                                │
-│  AgentResult { turns, tool_calls, final_response }      │
+│  EvalResult { turns, tool_calls, final_response }      │
 └─────────────────────────────────────────────────────────┘
 ```
 
-## The Agent Execution Loop
+## The Eval Execution Loop
 
-When you call `await aitest_run(agent, "prompt")`, here's what happens:
+When you call `await eval_run(agent, "prompt")`, here's what happens:
 
 ### 1. Server Startup
 
 All MCP and CLI servers defined in the agent are started as subprocesses:
 
 ```python
-agent = Agent(
+agent = Eval(
     provider=Provider(model="azure/gpt-5-mini"),
     mcp_servers=[banking_server, calendar_server],  # Started
     cli_servers=[git_cli],                           # Started
@@ -85,10 +85,10 @@ When the LLM requests a tool call:
 
 ### 5. Result Collection
 
-Every turn is recorded in the `AgentResult`:
+Every turn is recorded in the `EvalResult`:
 
 ```python
-result = await aitest_run(agent, "What's my checking balance?")
+result = await eval_run(agent, "What's my checking balance?")
 
 result.turns          # List of all conversation turns
 result.all_tool_calls # All tool calls made
@@ -136,7 +136,7 @@ The LLM calls it like: `git_execute(args="status --porcelain")`
 When an agent has a skill, it's injected into the system prompt:
 
 ```python
-agent = Agent(
+agent = Eval(
     provider=Provider(model="azure/gpt-5-mini"),
     skill=Skill.from_path("skills/financial-advisor"),
     system_prompt="You are a helpful assistant.",
@@ -153,12 +153,12 @@ PydanticAI handles transient failures automatically via its built-in retry mecha
 * **Connection errors**: Automatic retry
 * **API errors**: Automatic retry for transient failures
 
-The `Agent.retries` field (default: `1`) controls the maximum number of retries
+The `Eval.retries` field (default: `1`) controls the maximum number of retries
 PydanticAI attempts when a tool call returns an error. Increase this value for
 agents that interact with unreliable tools or external services:
 
 ```python
-Agent(
+Eval(
     provider=Provider(model="azure/gpt-5-mini"),
     retries=3,  # Allow up to 3 retries on tool errors
 )
@@ -171,7 +171,7 @@ passed *that time*, not whether the configuration is reliable. The
 `--aitest-iterations=N` CLI option reruns each test N times and aggregates the
 results.
 
-Under the hood, `pytest_generate_tests` parametrizes every `aitest_run` test
+Under the hood, `pytest_generate_tests` parametrizes every `eval_run` test
 with `_aitest_iteration` values `1..N`. The report generator groups iterations
 by agent + test and computes an iteration pass rate.
 

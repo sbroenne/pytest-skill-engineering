@@ -8,10 +8,10 @@
 *Core banking tests — parametrized across all benchmark agents.*
 
 
-## Agent Leaderboard
+## Eval Leaderboard
 
 
-|#|Agent|Tests|Pass Rate|Tokens|Cost|Duration|
+|#|Eval|Tests|Pass Rate|Tokens|Cost|Duration|
 | :---: | :--- | :---: | :---: | ---: | ---: | ---: |
 |🥇|gpt-4.1 + friendly 🏆|1/1|100%|1,617|N/A|7.4s|
 |🥈|gpt-4.1 + concise|1/1|100%|1,335|N/A|8.9s|
@@ -233,13 +233,13 @@ Overall, tools are clear and consistently usable. Failures were prompt-driven, n
 ```mermaid
 sequenceDiagram
     participant User
-    participant Agent
+    participant Eval
     participant Tools
 
-    User->>Agent: "What's my checking account balance?"
-    Agent->>Tools: "get_balance({'account': 'checking'})"
-    Tools-->>Agent: "{'account': 'checking', 'balance': 1500.0, 'formatted': '$1,"
-    Agent->>User: "Your checking account balance is $1,500.00. Would you like to see recent transac"
+    User->>Eval: "What's my checking account balance?"
+    Eval->>Tools: "get_balance({'account': 'checking'})"
+    Tools-->>Eval: "{'account': 'checking', 'balance': 1500.0, 'formatted': '$1,"
+    Eval->>User: "Your checking account balance is $1,500.00. Would you like to see recent transac"
 ```
 
 </details>
@@ -262,13 +262,13 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant User
-    participant Agent
+    participant Eval
     participant Tools
 
-    User->>Agent: "What's my checking account balance?"
-    Agent->>Tools: "get_balance({'account': 'checking'})"
-    Tools-->>Agent: "{'account': 'checking', 'balance': 1500.0, 'formatted': '$1,"
-    Agent->>User: "Your checking account balance is $1,500.00. If you need more details or want to "
+    User->>Eval: "What's my checking account balance?"
+    Eval->>Tools: "get_balance({'account': 'checking'})"
+    Tools-->>Eval: "{'account': 'checking', 'balance': 1500.0, 'formatted': '$1,"
+    Eval->>User: "Your checking account balance is $1,500.00. If you need more details or want to "
 ```
 
 </details>
@@ -301,13 +301,13 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant User
-    participant Agent
+    participant Eval
     participant Tools
 
-    User->>Agent: "Show me all my account balances."
-    Agent->>Tools: "get_all_balances({})"
-    Tools-->>Agent: "{'accounts': {'checking': {'balance': 1500.0, 'formatted': '"
-    Agent->>User: "Here are your current account balances: - Checking: $1,500.00 - Savings: $3,000."
+    User->>Eval: "Show me all my account balances."
+    Eval->>Tools: "get_all_balances({})"
+    Tools-->>Eval: "{'accounts': {'checking': {'balance': 1500.0, 'formatted': '"
+    Eval->>User: "Here are your current account balances: - Checking: $1,500.00 - Savings: $3,000."
 ```
 
 </details>
@@ -334,13 +334,13 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant User
-    participant Agent
+    participant Eval
     participant Tools
 
-    User->>Agent: "Show me all my account balances."
-    Agent->>Tools: "get_all_balances({})"
-    Tools-->>Agent: "{'accounts': {'checking': {'balance': 1500.0, 'formatted': '"
-    Agent->>User: "Here are your current account balances: - Checking: $1,500.00 - Savings: $3,000."
+    User->>Eval: "Show me all my account balances."
+    Eval->>Tools: "get_all_balances({})"
+    Tools-->>Eval: "{'accounts': {'checking': {'balance': 1500.0, 'formatted': '"
+    Eval->>User: "Here are your current account balances: - Checking: $1,500.00 - Savings: $3,000."
 ```
 
 </details>
@@ -352,7 +352,7 @@ sequenceDiagram
 <summary>❌ gpt-5-mini — 6.4s · 0 tokens · 0 turns · N/A</summary>
 
 **Error:** `      assert False
-       +  where False = AgentResult(FAILED: status_code: 400, model_name: gpt-5-mini, body: {'message': "The response was filtered due to the prompt triggering Azure OpenAI's content management policy. Please modify your prompt and retry. To learn more about our content filtering policies please read our documentation: https://go.microsoft.com/fwlink/?linkid=2198766", 'type': None, 'param': 'prompt', 'code': 'content_filter', 'status': 400, 'innererror': {'code': 'ResponsibleAIPolicyViolation', 'content_filter_result': {'hate': {'filtered': False, 'severity': 'safe'}, 'indirect_attack': {'detected': False, 'filtered': False}, 'jailbreak': {'detected': True, 'filtered': True}, 'self_harm': {'filtered': False, 'severity': 'safe'}, 'sexual': {'filtered': False, 'severity': 'safe'}, 'violence': {'filtered': False, 'severity': 'safe'}}}})\n  Turns: 0\n  Tools called: none\n  Duration: 3850ms\n  Tokens: 0 | Cost: N/A\n  Final: ''....success`
+       +  where False = EvalResult(FAILED: status_code: 400, model_name: gpt-5-mini, body: {'message': "The response was filtered due to the prompt triggering Azure OpenAI's content management policy. Please modify your prompt and retry. To learn more about our content filtering policies please read our documentation: https://go.microsoft.com/fwlink/?linkid=2198766", 'type': None, 'param': 'prompt', 'code': 'content_filter', 'status': 400, 'innererror': {'code': 'ResponsibleAIPolicyViolation', 'content_filter_result': {'hate': {'filtered': False, 'severity': 'safe'}, 'indirect_attack': {'detected': False, 'filtered': False}, 'jailbreak': {'detected': True, 'filtered': True}, 'self_harm': {'filtered': False, 'severity': 'safe'}, 'sexual': {'filtered': False, 'severity': 'safe'}, 'violence': {'filtered': False, 'severity': 'safe'}}}})\n  Turns: 0\n  Tools called: none\n  Duration: 3850ms\n  Tokens: 0 | Cost: N/A\n  Final: ''....success`
 
 </details>
 
@@ -360,7 +360,7 @@ sequenceDiagram
 <summary>❌ gpt-4.1 — 5.7s · 0 tokens · 0 turns · N/A</summary>
 
 **Error:** `      assert False
-       +  where False = AgentResult(FAILED: status_code: 400, model_name: gpt-4.1, body: {'message': "The response was filtered due to the prompt triggering Azure OpenAI's content management policy. Please modify your prompt and retry. To learn more about our content filtering policies please read our documentation: https://go.microsoft.com/fwlink/?linkid=2198766", 'type': None, 'param': 'prompt', 'code': 'content_filter', 'status': 400, 'innererror': {'code': 'ResponsibleAIPolicyViolation', 'content_filter_result': {'hate': {'filtered': False, 'severity': 'safe'}, 'jailbreak': {'filtered': True, 'detected': True}, 'self_harm': {'filtered': False, 'severity': 'safe'}, 'sexual': {'filtered': False, 'severity': 'safe'}, 'violence': {'filtered': False, 'severity': 'safe'}}}})\n  Turns: 0\n  Tools called: none\n  Duration: 3336ms\n  Tokens: 0 | Cost: N/A\n  Final: ''....success`
+       +  where False = EvalResult(FAILED: status_code: 400, model_name: gpt-4.1, body: {'message': "The response was filtered due to the prompt triggering Azure OpenAI's content management policy. Please modify your prompt and retry. To learn more about our content filtering policies please read our documentation: https://go.microsoft.com/fwlink/?linkid=2198766", 'type': None, 'param': 'prompt', 'code': 'content_filter', 'status': 400, 'innererror': {'code': 'ResponsibleAIPolicyViolation', 'content_filter_result': {'hate': {'filtered': False, 'severity': 'safe'}, 'jailbreak': {'filtered': True, 'detected': True}, 'self_harm': {'filtered': False, 'severity': 'safe'}, 'sexual': {'filtered': False, 'severity': 'safe'}, 'violence': {'filtered': False, 'severity': 'safe'}}}})\n  Turns: 0\n  Tools called: none\n  Duration: 3336ms\n  Tokens: 0 | Cost: N/A\n  Final: ''....success`
 
 </details>
 
@@ -391,13 +391,13 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant User
-    participant Agent
+    participant Eval
     participant Tools
 
-    User->>Agent: "Show me my recent transactions and summarize my spending patterns."
-    Agent->>Tools: "get_transactions({'account': None, 'limit': 50})"
-    Tools-->>Agent: "{'transactions': [], 'count': 0, 'filter': null}"
-    Agent->>User: "I checked your transaction history but it returned no transactions. That could m"
+    User->>Eval: "Show me my recent transactions and summarize my spending patterns."
+    Eval->>Tools: "get_transactions({'account': None, 'limit': 50})"
+    Tools-->>Eval: "{'transactions': [], 'count': 0, 'filter': null}"
+    Eval->>User: "I checked your transaction history but it returned no transactions. That could m"
 ```
 
 </details>
@@ -420,13 +420,13 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant User
-    participant Agent
+    participant Eval
     participant Tools
 
-    User->>Agent: "Show me my recent transactions and summarize my spending patterns."
-    Agent->>Tools: "get_transactions({'limit': 10})"
-    Tools-->>Agent: "{'transactions': [], 'count': 0, 'filter': null}"
-    Agent->>User: "You don't have any recent transactions in your account, so there's no spending a"
+    User->>Eval: "Show me my recent transactions and summarize my spending patterns."
+    Eval->>Tools: "get_transactions({'limit': 10})"
+    Tools-->>Eval: "{'transactions': [], 'count': 0, 'filter': null}"
+    Eval->>User: "You don't have any recent transactions in your account, so there's no spending a"
 ```
 
 </details>
@@ -463,13 +463,13 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant User
-    participant Agent
+    participant Eval
     participant Tools
 
-    User->>Agent: "I have some money in checking. Should I move some to savings? Check my balances "
-    Agent->>Tools: "get_all_balances({})"
-    Tools-->>Agent: "{'accounts': {'checking': {'balance': 1500.0, 'formatted': '"
-    Agent->>User: "I checked your accounts — totals are: - Checking: $1,500.00 - Savings: $3,000.00"
+    User->>Eval: "I have some money in checking. Should I move some to savings? Check my balances "
+    Eval->>Tools: "get_all_balances({})"
+    Tools-->>Eval: "{'accounts': {'checking': {'balance': 1500.0, 'formatted': '"
+    Eval->>User: "I checked your accounts — totals are: - Checking: $1,500.00 - Savings: $3,000.00"
 ```
 
 </details>
@@ -502,13 +502,13 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant User
-    participant Agent
+    participant Eval
     participant Tools
 
-    User->>Agent: "I have some money in checking. Should I move some to savings? Check my balances "
-    Agent->>Tools: "get_all_balances({})"
-    Tools-->>Agent: "{'accounts': {'checking': {'balance': 1500.0, 'formatted': '"
-    Agent->>User: "Here are your current balances: - Checking: $1,500.00 - Savings: $3,000.00 A com"
+    User->>Eval: "I have some money in checking. Should I move some to savings? Check my balances "
+    Eval->>Tools: "get_all_balances({})"
+    Tools-->>Eval: "{'accounts': {'checking': {'balance': 1500.0, 'formatted': '"
+    Eval->>User: "Here are your current balances: - Checking: $1,500.00 - Savings: $3,000.00 A com"
 ```
 
 </details>
@@ -548,15 +548,15 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant User
-    participant Agent
+    participant Eval
     participant Tools
 
-    User->>Agent: "Transfer $50,000 from my checking to savings."
-    Agent->>Tools: "transfer({'from_account': 'checking', 'to_account': 'savings', 'amoun)"
-    Tools-->>Agent: "Error: Insufficient funds. checking has $1,500.00, but trans"
-    Agent->>Tools: "get_all_balances({})"
-    Tools-->>Agent: "{'accounts': {'checking': {'balance': 1500.0, 'formatted': '"
-    Agent->>User: "I couldn’t complete that transfer — your checking account has insufficient funds"
+    User->>Eval: "Transfer $50,000 from my checking to savings."
+    Eval->>Tools: "transfer({'from_account': 'checking', 'to_account': 'savings', 'amoun)"
+    Tools-->>Eval: "Error: Insufficient funds. checking has $1,500.00, but trans"
+    Eval->>Tools: "get_all_balances({})"
+    Tools-->>Eval: "{'accounts': {'checking': {'balance': 1500.0, 'formatted': '"
+    Eval->>User: "I couldn’t complete that transfer — your checking account has insufficient funds"
 ```
 
 </details>
@@ -585,13 +585,13 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant User
-    participant Agent
+    participant Eval
     participant Tools
 
-    User->>Agent: "Transfer $50,000 from my checking to savings."
-    Agent->>Tools: "get_balance({'account': 'checking'})"
-    Tools-->>Agent: "{'account': 'checking', 'balance': 1500.0, 'formatted': '$1,"
-    Agent->>User: "Your checking account balance is $1,500, which is less than the $50,000 you want"
+    User->>Eval: "Transfer $50,000 from my checking to savings."
+    Eval->>Tools: "get_balance({'account': 'checking'})"
+    Tools-->>Eval: "{'account': 'checking', 'balance': 1500.0, 'formatted': '$1,"
+    Eval->>User: "Your checking account balance is $1,500, which is less than the $50,000 you want"
 ```
 
 </details>
@@ -634,13 +634,13 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant User
-    participant Agent
+    participant Eval
     participant Tools
 
-    User->>Agent: "I want to save more money. Can you check my accounts and suggest how much I coul"
-    Agent->>Tools: "get_all_balances({})"
-    Tools-->>Agent: "{'accounts': {'checking': {'balance': 1500.0, 'formatted': '"
-    Agent->>User: "Thanks — I pulled your account balances: - Checking: $1,500.00 - Savings: $3,000"
+    User->>Eval: "I want to save more money. Can you check my accounts and suggest how much I coul"
+    Eval->>Tools: "get_all_balances({})"
+    Tools-->>Eval: "{'accounts': {'checking': {'balance': 1500.0, 'formatted': '"
+    Eval->>User: "Thanks — I pulled your account balances: - Checking: $1,500.00 - Savings: $3,000"
 ```
 
 </details>
@@ -662,7 +662,7 @@ sequenceDiagram
 
 **Error:** `      AssertionError: assert LLMAssert(FAIL: 'provides savings suggestion based on balances')\n  Content: 'Your current balances are:\n- Checking: $1,500.00\n- Savings: $3,000.00\n\nTo suggest an amount you could transfer to savings each month, I’ll need some more details:\n1. What are your typical monthly expe...'\n  Reasoning: The output lists current balances and requests more information but does not recommend a specific monthly transfer amount or provide a savings suggestion based on those balances.
        +  where LLMAssert(FAIL: 'provides savings suggestion based on balances')\n  Content: 'Your current balances are:\n- Checking: $1,500.00\n- Savings: $3,000.00\n\nTo suggest an amount you could transfer to savings each month, I’ll need some more details:\n1. What are your typical monthly expe...'\n  Reasoning: The output lists current balances and requests more information but does not recommend a specific monthly transfer amount or provide a savings suggestion based on those balances. = <pytest_skill_engineering.plugin._RecordingLLMAssert object at 0x0000012AED340650>('Your current balances are:\n- Checking: $1,500.00\n- Savings: $3,000.00\n\nTo suggest an amount you could transfer to savings each month, I’ll need some more details:\n1. What are your typical monthly expenses (bills, rent, groceries, etc.)?\n2. Do you want to keep a certain minimum in checking for emergencies or flex spending?\n3. Are there any irregular expenses I should consider?\n\nWith this info, I can help recommend a safe amount to transfer to savings each month.', 'provides savings suggestion based on balances')
-       +    where 'Your current balances are:\n- Checking: $1,500.00\n- Savings: $3,000.00\n\nTo suggest an amount you could transfer to savings each month, I’ll need some more details:\n1. What are your typical monthly expenses (bills, rent, groceries, etc.)?\n2. Do you want to keep a certain minimum in checking for emergencies or flex spending?\n3. Are there any irregular expenses I should consider?\n\nWith this info, I can help recommend a safe amount to transfer to savings each month.' = AgentResult(SUCCESS)\n  Turns: 3\n  Tools called: get_all_balances\n  Duration: 5615ms\n  Tokens: 945 | Cost: N/A\n  Final: 'Your current balances are:\n- Checking: $1,500.00\n- Savings: $3,000.00\n\nTo suggest an amount you coul'....final_response`
+       +    where 'Your current balances are:\n- Checking: $1,500.00\n- Savings: $3,000.00\n\nTo suggest an amount you could transfer to savings each month, I’ll need some more details:\n1. What are your typical monthly expenses (bills, rent, groceries, etc.)?\n2. Do you want to keep a certain minimum in checking for emergencies or flex spending?\n3. Are there any irregular expenses I should consider?\n\nWith this info, I can help recommend a safe amount to transfer to savings each month.' = EvalResult(SUCCESS)\n  Turns: 3\n  Tools called: get_all_balances\n  Duration: 5615ms\n  Tokens: 945 | Cost: N/A\n  Final: 'Your current balances are:\n- Checking: $1,500.00\n- Savings: $3,000.00\n\nTo suggest an amount you coul'....final_response`
 
 **Response:**
 
@@ -680,13 +680,13 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant User
-    participant Agent
+    participant Eval
     participant Tools
 
-    User->>Agent: "I want to save more money. Can you check my accounts and suggest how much I coul"
-    Agent->>Tools: "get_all_balances({})"
-    Tools-->>Agent: "{'accounts': {'checking': {'balance': 1500.0, 'formatted': '"
-    Agent->>User: "Your current balances are: - Checking: $1,500.00 - Savings: $3,000.00 To suggest"
+    User->>Eval: "I want to save more money. Can you check my accounts and suggest how much I coul"
+    Eval->>Tools: "get_all_balances({})"
+    Tools-->>Eval: "{'accounts': {'checking': {'balance': 1500.0, 'formatted': '"
+    Eval->>User: "Your current balances are: - Checking: $1,500.00 - Savings: $3,000.00 To suggest"
 ```
 
 </details>
@@ -719,17 +719,17 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant User
-    participant Agent
+    participant Eval
     participant Tools
 
-    User->>Agent: "I want to save more money. Can you check my accounts and suggest how much I coul"
-    Agent->>Tools: "get_all_balances({})"
-    Tools-->>Agent: "{'accounts': {'checking': {'balance': 1500.0, 'formatted': '"
-    Agent->>User: "Thanks — I pulled your account balances: - Checking: $1,500.00 - Savings: $3,000"
-    User->>Agent: "That sounds good. Let's start by moving $200 to savings right now."
-    Agent->>Tools: "transfer({'from_account': 'checking', 'to_account': 'savings', 'amoun)"
-    Tools-->>Agent: "{'transaction_id': 'TX0001', 'type': 'transfer', 'from_accou"
-    Agent->>User: "Done — I transferred $200.00 from your checking to savings. Updated balances: - "
+    User->>Eval: "I want to save more money. Can you check my accounts and suggest how much I coul"
+    Eval->>Tools: "get_all_balances({})"
+    Tools-->>Eval: "{'accounts': {'checking': {'balance': 1500.0, 'formatted': '"
+    Eval->>User: "Thanks — I pulled your account balances: - Checking: $1,500.00 - Savings: $3,000"
+    User->>Eval: "That sounds good. Let's start by moving $200 to savings right now."
+    Eval->>Tools: "transfer({'from_account': 'checking', 'to_account': 'savings', 'amoun)"
+    Tools-->>Eval: "{'transaction_id': 'TX0001', 'type': 'transfer', 'from_accou"
+    Eval->>User: "Done — I transferred $200.00 from your checking to savings. Updated balances: - "
 ```
 
 </details>
@@ -759,17 +759,17 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant User
-    participant Agent
+    participant Eval
     participant Tools
 
-    User->>Agent: "I want to save more money. Can you check my accounts and suggest how much I coul"
-    Agent->>Tools: "get_all_balances({})"
-    Tools-->>Agent: "{'accounts': {'checking': {'balance': 1500.0, 'formatted': '"
-    Agent->>User: "Your current balances are: - Checking: $1,500.00 - Savings: $3,000.00 To suggest"
-    User->>Agent: "That sounds good. Let's start by moving $200 to savings right now."
-    Agent->>Tools: "transfer({'from_account': 'checking', 'to_account': 'savings', 'amoun)"
-    Tools-->>Agent: "{'transaction_id': 'TX0001', 'type': 'transfer', 'from_accou"
-    Agent->>User: "$200 has been successfully transferred from your checking to your savings accoun"
+    User->>Eval: "I want to save more money. Can you check my accounts and suggest how much I coul"
+    Eval->>Tools: "get_all_balances({})"
+    Tools-->>Eval: "{'accounts': {'checking': {'balance': 1500.0, 'formatted': '"
+    Eval->>User: "Your current balances are: - Checking: $1,500.00 - Savings: $3,000.00 To suggest"
+    User->>Eval: "That sounds good. Let's start by moving $200 to savings right now."
+    Eval->>Tools: "transfer({'from_account': 'checking', 'to_account': 'savings', 'amoun)"
+    Tools-->>Eval: "{'transaction_id': 'TX0001', 'type': 'transfer', 'from_accou"
+    Eval->>User: "$200 has been successfully transferred from your checking to your savings accoun"
 ```
 
 </details>
@@ -802,21 +802,21 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant User
-    participant Agent
+    participant Eval
     participant Tools
 
-    User->>Agent: "I want to save more money. Can you check my accounts and suggest how much I coul"
-    Agent->>Tools: "get_all_balances({})"
-    Tools-->>Agent: "{'accounts': {'checking': {'balance': 1500.0, 'formatted': '"
-    Agent->>User: "Thanks — I pulled your account balances: - Checking: $1,500.00 - Savings: $3,000"
-    User->>Agent: "That sounds good. Let's start by moving $200 to savings right now."
-    Agent->>Tools: "transfer({'from_account': 'checking', 'to_account': 'savings', 'amoun)"
-    Tools-->>Agent: "{'transaction_id': 'TX0001', 'type': 'transfer', 'from_accou"
-    Agent->>User: "Done — I transferred $200.00 from your checking to savings. Updated balances: - "
-    User->>Agent: "Great! Can you show me my new savings balance?"
-    Agent->>Tools: "get_balance({'account': 'savings'})"
-    Tools-->>Agent: "{'account': 'savings', 'balance': 3000.0, 'formatted': '$3,0"
-    Agent->>User: "Thanks — I checked your savings account. Right now the system shows a balance of"
+    User->>Eval: "I want to save more money. Can you check my accounts and suggest how much I coul"
+    Eval->>Tools: "get_all_balances({})"
+    Tools-->>Eval: "{'accounts': {'checking': {'balance': 1500.0, 'formatted': '"
+    Eval->>User: "Thanks — I pulled your account balances: - Checking: $1,500.00 - Savings: $3,000"
+    User->>Eval: "That sounds good. Let's start by moving $200 to savings right now."
+    Eval->>Tools: "transfer({'from_account': 'checking', 'to_account': 'savings', 'amoun)"
+    Tools-->>Eval: "{'transaction_id': 'TX0001', 'type': 'transfer', 'from_accou"
+    Eval->>User: "Done — I transferred $200.00 from your checking to savings. Updated balances: - "
+    User->>Eval: "Great! Can you show me my new savings balance?"
+    Eval->>Tools: "get_balance({'account': 'savings'})"
+    Tools-->>Eval: "{'account': 'savings', 'balance': 3000.0, 'formatted': '$3,0"
+    Eval->>User: "Thanks — I checked your savings account. Right now the system shows a balance of"
 ```
 
 </details>
@@ -843,21 +843,21 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant User
-    participant Agent
+    participant Eval
     participant Tools
 
-    User->>Agent: "I want to save more money. Can you check my accounts and suggest how much I coul"
-    Agent->>Tools: "get_all_balances({})"
-    Tools-->>Agent: "{'accounts': {'checking': {'balance': 1500.0, 'formatted': '"
-    Agent->>User: "Your current balances are: - Checking: $1,500.00 - Savings: $3,000.00 To suggest"
-    User->>Agent: "That sounds good. Let's start by moving $200 to savings right now."
-    Agent->>Tools: "transfer({'from_account': 'checking', 'to_account': 'savings', 'amoun)"
-    Tools-->>Agent: "{'transaction_id': 'TX0001', 'type': 'transfer', 'from_accou"
-    Agent->>User: "$200 has been successfully transferred from your checking to your savings accoun"
-    User->>Agent: "Great! Can you show me my new savings balance?"
-    Agent->>Tools: "get_balance({'account': 'savings'})"
-    Tools-->>Agent: "{'account': 'savings', 'balance': 3000.0, 'formatted': '$3,0"
-    Agent->>User: "It looks like your savings account balance is currently $3,000.00. If you were e"
+    User->>Eval: "I want to save more money. Can you check my accounts and suggest how much I coul"
+    Eval->>Tools: "get_all_balances({})"
+    Tools-->>Eval: "{'accounts': {'checking': {'balance': 1500.0, 'formatted': '"
+    Eval->>User: "Your current balances are: - Checking: $1,500.00 - Savings: $3,000.00 To suggest"
+    User->>Eval: "That sounds good. Let's start by moving $200 to savings right now."
+    Eval->>Tools: "transfer({'from_account': 'checking', 'to_account': 'savings', 'amoun)"
+    Tools-->>Eval: "{'transaction_id': 'TX0001', 'type': 'transfer', 'from_accou"
+    Eval->>User: "$200 has been successfully transferred from your checking to your savings accoun"
+    User->>Eval: "Great! Can you show me my new savings balance?"
+    Eval->>Tools: "get_balance({'account': 'savings'})"
+    Tools-->>Eval: "{'account': 'savings', 'balance': 3000.0, 'formatted': '$3,0"
+    Eval->>User: "It looks like your savings account balance is currently $3,000.00. If you were e"
 ```
 
 </details>
@@ -896,13 +896,13 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant User
-    participant Agent
+    participant Eval
     participant Tools
 
-    User->>Agent: "I'm worried about my spending. Can you check my accounts and give me advice on m"
-    Agent->>Tools: "get_all_balances({})"
-    Tools-->>Agent: "{'accounts': {'checking': {'balance': 1500.0, 'formatted': '"
-    Agent->>User: "Quick snapshot - Total: $4,500 — Checking $1,500, Savings $3,000. Short assessme"
+    User->>Eval: "I'm worried about my spending. Can you check my accounts and give me advice on m"
+    Eval->>Tools: "get_all_balances({})"
+    Tools-->>Eval: "{'accounts': {'checking': {'balance': 1500.0, 'formatted': '"
+    Eval->>User: "Quick snapshot - Total: $4,500 — Checking $1,500, Savings $3,000. Short assessme"
 ```
 
 </details>
@@ -912,9 +912,9 @@ sequenceDiagram
 
 **Error:** `      AssertionError: assert (False or False)
        +  where False = tool_was_called('get_all_balances')
-       +    where tool_was_called = AgentResult(SUCCESS)\n  Turns: 2\n  Tools called: none\n  Duration: 15583ms\n  Tokens: 2037 | Cost: N/A\n  Final: 'I can definitely help. I can look at your account balances and recent transactions, identify where m'....tool_was_called
+       +    where tool_was_called = EvalResult(SUCCESS)\n  Turns: 2\n  Tools called: none\n  Duration: 15583ms\n  Tokens: 2037 | Cost: N/A\n  Final: 'I can definitely help. I can look at your account balances and recent transactions, identify where m'....tool_was_called
        +  and   False = tool_was_called('get_balance')
-       +    where tool_was_called = AgentResult(SUCCESS)\n  Turns: 2\n  Tools called: none\n  Duration: 15583ms\n  Tokens: 2037 | Cost: N/A\n  Final: 'I can definitely help. I can look at your account balances and recent transactions, identify where m'....tool_was_called`
+       +    where tool_was_called = EvalResult(SUCCESS)\n  Turns: 2\n  Tools called: none\n  Duration: 15583ms\n  Tokens: 2037 | Cost: N/A\n  Final: 'I can definitely help. I can look at your account balances and recent transactions, identify where m'....tool_was_called`
 
 **Response:**
 
@@ -927,11 +927,11 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant User
-    participant Agent
+    participant Eval
     participant Tools
 
-    User->>Agent: "I'm worried about my spending. Can you check my accounts and give me advice on m"
-    Agent->>User: "I can definitely help. I can look at your account balances and recent transactio"
+    User->>Eval: "I'm worried about my spending. Can you check my accounts and give me advice on m"
+    Eval->>User: "I can definitely help. I can look at your account balances and recent transactio"
 ```
 
 </details>
@@ -959,15 +959,15 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant User
-    participant Agent
+    participant Eval
     participant Tools
 
-    User->>Agent: "I'm worried about my spending. Can you check my accounts and give me advice on m"
-    Agent->>Tools: "get_all_balances({})"
-    Tools-->>Agent: "{'accounts': {'checking': {'balance': 1500.0, 'formatted': '"
-    Agent->>Tools: "get_transactions({'limit': 20})"
-    Tools-->>Agent: "{'transactions': [], 'count': 0, 'filter': null}"
-    Agent->>User: "Great — thanks for asking, and nice work already: you have $3,000 in savings and"
+    User->>Eval: "I'm worried about my spending. Can you check my accounts and give me advice on m"
+    Eval->>Tools: "get_all_balances({})"
+    Tools-->>Eval: "{'accounts': {'checking': {'balance': 1500.0, 'formatted': '"
+    Eval->>Tools: "get_transactions({'limit': 20})"
+    Tools-->>Eval: "{'transactions': [], 'count': 0, 'filter': null}"
+    Eval->>User: "Great — thanks for asking, and nice work already: you have $3,000 in savings and"
 ```
 
 </details>
@@ -1000,15 +1000,15 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant User
-    participant Agent
+    participant Eval
     participant Tools
 
-    User->>Agent: "I'm worried about my spending. Can you check my accounts and give me advice on m"
-    Agent->>Tools: "get_all_balances({})"
-    Tools-->>Agent: "{'accounts': {'checking': {'balance': 1500.0, 'formatted': '"
-    Agent->>Tools: "get_transactions({'limit': 10})"
-    Tools-->>Agent: "{'transactions': [], 'count': 0, 'filter': null}"
-    Agent->>User: "• Checking balance: $1,500 • Savings balance: $3,000 Tips: - Set a monthly budge"
+    User->>Eval: "I'm worried about my spending. Can you check my accounts and give me advice on m"
+    Eval->>Tools: "get_all_balances({})"
+    Tools-->>Eval: "{'accounts': {'checking': {'balance': 1500.0, 'formatted': '"
+    Eval->>Tools: "get_transactions({'limit': 10})"
+    Tools-->>Eval: "{'transactions': [], 'count': 0, 'filter': null}"
+    Eval->>User: "• Checking balance: $1,500 • Savings balance: $3,000 Tips: - Set a monthly budge"
 ```
 
 </details>
@@ -1041,17 +1041,17 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant User
-    participant Agent
+    participant Eval
     participant Tools
 
-    User->>Agent: "I'm worried about my spending. Can you check my accounts and give me advice on m"
-    Agent->>Tools: "get_all_balances({})"
-    Tools-->>Agent: "{'accounts': {'checking': {'balance': 1500.0, 'formatted': '"
-    Agent->>Tools: "get_transactions({'account': 'checking', 'limit': 10})"
-    Tools-->>Agent: "{'transactions': [], 'count': 0, 'filter': 'checking'}"
-    Agent->>Tools: "get_transactions({'account': 'savings', 'limit': 10})"
-    Tools-->>Agent: "{'transactions': [], 'count': 0, 'filter': 'savings'}"
-    Agent->>User: "Currently, your account balances are: - Checking: $1,500.00 - Savings: $3,000.00"
+    User->>Eval: "I'm worried about my spending. Can you check my accounts and give me advice on m"
+    Eval->>Tools: "get_all_balances({})"
+    Tools-->>Eval: "{'accounts': {'checking': {'balance': 1500.0, 'formatted': '"
+    Eval->>Tools: "get_transactions({'account': 'checking', 'limit': 10})"
+    Tools-->>Eval: "{'transactions': [], 'count': 0, 'filter': 'checking'}"
+    Eval->>Tools: "get_transactions({'account': 'savings', 'limit': 10})"
+    Tools-->>Eval: "{'transactions': [], 'count': 0, 'filter': 'savings'}"
+    Eval->>User: "Currently, your account balances are: - Checking: $1,500.00 - Savings: $3,000.00"
 ```
 
 </details>
@@ -1085,17 +1085,17 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant User
-    participant Agent
+    participant Eval
     participant Tools
 
-    User->>Agent: "I'm worried about my spending. Can you check my accounts and give me advice on m"
-    Agent->>Tools: "get_all_balances({})"
-    Tools-->>Agent: "{'accounts': {'checking': {'balance': 1500.0, 'formatted': '"
-    Agent->>Tools: "get_transactions({'account': 'checking', 'limit': 10})"
-    Tools-->>Agent: "{'transactions': [], 'count': 0, 'filter': 'checking'}"
-    Agent->>Tools: "get_transactions({'account': 'savings', 'limit': 10})"
-    Tools-->>Agent: "{'transactions': [], 'count': 0, 'filter': 'savings'}"
-    Agent->>User: "Here’s a quick look at your financial situation: - Checking account: $1,500.00 -"
+    User->>Eval: "I'm worried about my spending. Can you check my accounts and give me advice on m"
+    Eval->>Tools: "get_all_balances({})"
+    Tools-->>Eval: "{'accounts': {'checking': {'balance': 1500.0, 'formatted': '"
+    Eval->>Tools: "get_transactions({'account': 'checking', 'limit': 10})"
+    Tools-->>Eval: "{'transactions': [], 'count': 0, 'filter': 'checking'}"
+    Eval->>Tools: "get_transactions({'account': 'savings', 'limit': 10})"
+    Tools-->>Eval: "{'transactions': [], 'count': 0, 'filter': 'savings'}"
+    Eval->>User: "Here’s a quick look at your financial situation: - Checking account: $1,500.00 -"
 ```
 
 </details>
@@ -1104,7 +1104,7 @@ sequenceDiagram
 ### Test how skills improve advice quality.
 
 
-#### ✅ Agent with financial advisor skill should give better advice…
+#### ✅ Eval with financial advisor skill should give better advice…
 
 <details>
 <summary>✅ gpt-5-mini + financial-advisor — 26.1s · 3,078 tokens · 3 turns · N/A</summary>
@@ -1135,15 +1135,15 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant User
-    participant Agent
+    participant Eval
     participant Tools
 
-    User->>Agent: "I have $1500 in checking. Should I keep it there or move some to savings? What's"
-    Agent->>Tools: "get_balance({'account': 'checking'})"
-    Tools-->>Agent: "{'account': 'checking', 'balance': 1500.0, 'formatted': '$1,"
-    Agent->>Tools: "get_balance({'account': 'savings'})"
-    Tools-->>Agent: "{'account': 'savings', 'balance': 3000.0, 'formatted': '$3,0"
-    Agent->>User: "Good — I checked your accounts: you have $1,500 in checking and $3,000 in saving"
+    User->>Eval: "I have $1500 in checking. Should I keep it there or move some to savings? What's"
+    Eval->>Tools: "get_balance({'account': 'checking'})"
+    Tools-->>Eval: "{'account': 'checking', 'balance': 1500.0, 'formatted': '$1,"
+    Eval->>Tools: "get_balance({'account': 'savings'})"
+    Tools-->>Eval: "{'account': 'savings', 'balance': 3000.0, 'formatted': '$3,0"
+    Eval->>User: "Good — I checked your accounts: you have $1,500 in checking and $3,000 in saving"
 ```
 
 </details>
@@ -1167,11 +1167,11 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant User
-    participant Agent
+    participant Eval
     participant Tools
 
-    User->>Agent: "I have $1500 in checking. Should I keep it there or move some to savings? What's"
-    Agent->>User: "A healthy emergency fund is typically 3–6 months of your essential expenses (ren"
+    User->>Eval: "I have $1500 in checking. Should I keep it there or move some to savings? What's"
+    Eval->>User: "A healthy emergency fund is typically 3–6 months of your essential expenses (ren"
 ```
 
 </details>

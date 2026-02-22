@@ -153,7 +153,7 @@ Tool results are JSON with structured output:
 
 ```python
 import pytest
-from pytest_skill_engineering import Agent, CLIServer, Provider
+from pytest_skill_engineering import Eval, CLIServer, Provider
 
 @pytest.fixture(scope="module")
 def git_server():
@@ -166,7 +166,7 @@ def git_server():
 
 @pytest.fixture
 def git_agent(git_server):
-    return Agent(
+    return Eval(
         name="git-assistant",
         provider=Provider(model="azure/gpt-5-mini"),
         cli_servers=[git_server],
@@ -174,14 +174,14 @@ def git_agent(git_server):
         max_turns=5,
     )
 
-async def test_git_status(aitest_run, git_agent):
-    result = await aitest_run(git_agent, "What's the repo status?")
+async def test_git_status(eval_run, git_agent):
+    result = await eval_run(git_agent, "What's the repo status?")
     
     assert result.success
     assert result.tool_was_called("git_execute")
 
-async def test_git_log(aitest_run, git_agent):
-    result = await aitest_run(git_agent, "Show me the last 3 commits")
+async def test_git_log(eval_run, git_agent):
+    result = await eval_run(git_agent, "Show me the last 3 commits")
     
     assert result.success
     assert result.tool_was_called("git_execute")
@@ -207,7 +207,7 @@ def grep_server():
 
 @pytest.fixture
 def hybrid_agent(filesystem_server, grep_server):
-    return Agent(
+    return Eval(
         name="hybrid",
         provider=Provider(model="azure/gpt-5-mini"),
         mcp_servers=[filesystem_server],

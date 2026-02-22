@@ -1,18 +1,18 @@
-"""Unit tests for Agent configuration."""
+"""Unit tests for Eval configuration."""
 
 from __future__ import annotations
 
 from pathlib import Path
 
-from pytest_skill_engineering.core.agent import Agent, MCPServer, Provider, Wait
+from pytest_skill_engineering.core.eval import Eval, MCPServer, Provider, Wait
 
 
 class TestAgent:
-    """Tests for Agent dataclass."""
+    """Tests for Eval dataclass."""
 
     def test_minimal_agent(self) -> None:
-        """Agent requires only provider; name auto-constructed from model."""
-        agent = Agent(provider=Provider(model="azure/gpt-5-mini"))
+        """Eval requires only provider; name auto-constructed from model."""
+        agent = Eval(provider=Provider(model="azure/gpt-5-mini"))
         assert agent.provider.model == "azure/gpt-5-mini"
         assert agent.name == "gpt-5-mini"
         assert agent.mcp_servers == []
@@ -23,8 +23,8 @@ class TestAgent:
         assert agent.allowed_tools is None
 
     def test_agent_with_allowed_tools(self) -> None:
-        """Agent can specify allowed_tools to filter available tools."""
-        agent = Agent(
+        """Eval can specify allowed_tools to filter available tools."""
+        agent = Eval(
             provider=Provider(model="azure/gpt-5-mini"),
             allowed_tools=["read_cell", "write_cell"],
         )
@@ -32,19 +32,19 @@ class TestAgent:
 
     def test_agent_with_empty_allowed_tools(self) -> None:
         """Empty allowed_tools list means no tools available."""
-        agent = Agent(
+        agent = Eval(
             provider=Provider(model="azure/gpt-5-mini"),
             allowed_tools=[],
         )
         assert agent.allowed_tools == []
 
     def test_agent_with_all_options(self) -> None:
-        """Agent with all configuration options."""
+        """Eval with all configuration options."""
         server = MCPServer(
             command=["python", "-m", "banking_server"],
             wait=Wait.for_tools(["get_balance"]),
         )
-        agent = Agent(
+        agent = Eval(
             name="test-agent",
             provider=Provider(model="azure/gpt-5-mini", temperature=0.7),
             mcp_servers=[server],
@@ -61,12 +61,12 @@ class TestAgent:
 
     def test_auto_name_model_only(self) -> None:
         """Auto-name strips provider prefix."""
-        agent = Agent(provider=Provider(model="azure/gpt-4.1"))
+        agent = Eval(provider=Provider(model="azure/gpt-4.1"))
         assert agent.name == "gpt-4.1"
 
     def test_auto_name_with_prompt(self) -> None:
         """Auto-name includes system_prompt_name dimension."""
-        agent = Agent(
+        agent = Eval(
             provider=Provider(model="azure/gpt-5-mini"),
             system_prompt_name="concise",
         )
@@ -81,7 +81,7 @@ class TestAgent:
             metadata=SkillMetadata(name="financial-advisor", description="Financial advice"),
             content="Be helpful.",
         )
-        agent = Agent(
+        agent = Eval(
             provider=Provider(model="azure/gpt-5-mini"),
             skill=skill,
         )
@@ -96,7 +96,7 @@ class TestAgent:
             metadata=SkillMetadata(name="financial-advisor", description="Financial advice"),
             content="Know finance.",
         )
-        agent = Agent(
+        agent = Eval(
             provider=Provider(model="azure/gpt-4.1"),
             system_prompt_name="detailed",
             skill=skill,
@@ -105,7 +105,7 @@ class TestAgent:
 
     def test_explicit_name_not_overridden(self) -> None:
         """Explicit name is preserved — not overridden by auto-construction."""
-        agent = Agent(
+        agent = Eval(
             name="my-custom-agent",
             provider=Provider(model="azure/gpt-5-mini"),
             system_prompt_name="concise",
@@ -114,7 +114,7 @@ class TestAgent:
 
     def test_auto_name_no_provider_prefix(self) -> None:
         """Auto-name works without provider prefix."""
-        agent = Agent(provider=Provider(model="gpt-4o"))
+        agent = Eval(provider=Provider(model="gpt-4o"))
         assert agent.name == "gpt-4o"
 
 

@@ -22,11 +22,11 @@ Use the `@pytest.mark.session` marker:
 
 ```python
 import pytest
-from pytest_skill_engineering import Agent, Provider, MCPServer
+from pytest_skill_engineering import Eval, Provider, MCPServer
 
 banking_server = MCPServer(command=["python", "banking_mcp.py"])
 
-banking_agent = Agent(
+banking_agent = Eval(
     name="banking",
     provider=Provider(model="azure/gpt-5-mini"),
     mcp_servers=[banking_server],
@@ -36,22 +36,22 @@ banking_agent = Agent(
 class TestBankingConversation:
     """Tests run in order, sharing conversation history."""
     
-    async def test_initial_query(self, aitest_run):
+    async def test_initial_query(self, eval_run):
         """First message - establishes context."""
-        result = await aitest_run(banking_agent, "What's my checking account balance?")
+        result = await eval_run(banking_agent, "What's my checking account balance?")
         assert result.success
         assert result.tool_was_called("get_balance")
     
-    async def test_followup(self, aitest_run):
+    async def test_followup(self, eval_run):
         """Second message - uses context from first."""
-        result = await aitest_run(banking_agent, "Transfer $200 to savings")
+        result = await eval_run(banking_agent, "Transfer $200 to savings")
         assert result.success
-        # Agent remembers we were talking about checking
+        # Eval remembers we were talking about checking
         assert result.tool_was_called("transfer")
     
-    async def test_verification(self, aitest_run):
+    async def test_verification(self, eval_run):
         """Third message - builds on full conversation."""
-        result = await aitest_run(banking_agent, "What are my new balances?")
+        result = await eval_run(banking_agent, "What are my new balances?")
         assert result.success
 ```
 
@@ -70,19 +70,19 @@ class TestBankingConversation:
 ```
 test_initial_query
     User: "What's my checking account balance?"
-    Agent: "Your checking balance is $1,500.00..."
+    Eval: "Your checking balance is $1,500.00..."
     ↓ context passed to next test
 
 test_followup  
     [Previous messages included]
     User: "Transfer $200 to savings"
-    Agent: "Done! Transferred $200 from checking to savings..."
+    Eval: "Done! Transferred $200 from checking to savings..."
     ↓ context passed to next test
 
 test_verification
     [All previous messages included]
     User: "What are my new balances?"
-    Agent: "Checking: $1,300, Savings: $3,200..."
+    Eval: "Checking: $1,300, Savings: $3,200..."
 ```
 
 ## When to Use Sessions
@@ -105,22 +105,22 @@ You can combine sessions with model comparison:
 class TestShoppingWorkflow:
     """Test the same conversation flow with different models."""
     
-    async def test_browse(self, aitest_run, model, shopping_server):
-        agent = Agent(
+    async def test_browse(self, eval_run, model, shopping_server):
+        agent = Eval(
             name=f"shop-{model}",
             provider=Provider(model=f"azure/{model}"),
             mcp_servers=[shopping_server],
         )
-        result = await aitest_run(agent, "Show me running shoes")
+        result = await eval_run(agent, "Show me running shoes")
         assert result.success
     
-    async def test_select(self, aitest_run, model, shopping_server):
-        agent = Agent(
+    async def test_select(self, eval_run, model, shopping_server):
+        agent = Eval(
             name=f"shop-{model}",
             provider=Provider(model=f"azure/{model}"),
             mcp_servers=[shopping_server],
         )
-        result = await aitest_run(agent, "I'll take the Nike ones")
+        result = await eval_run(agent, "I'll take the Nike ones")
         assert result.success
 ```
 

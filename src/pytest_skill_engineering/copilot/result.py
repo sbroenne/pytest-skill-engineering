@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING, Any
 from pytest_skill_engineering.core.result import SubagentInvocation, ToolCall, Turn  # noqa: F401
 
 if TYPE_CHECKING:
-    from pytest_skill_engineering.copilot.agent import CopilotAgent
+    from pytest_skill_engineering.copilot.eval import CopilotEval
 
 __all__ = [
     "CopilotResult",
@@ -43,7 +43,7 @@ class CopilotResult:
     reasoning traces, subagent routing, permissions, and token usage.
 
     Example:
-        result = await copilot_run(agent, "Create hello.py")
+        result = await copilot_eval(agent, "Create hello.py")
         assert result.success
         assert result.tool_was_called("create_file")
         assert "hello" in result.final_response.lower()
@@ -76,8 +76,8 @@ class CopilotResult:
     # Back-reference to the agent that produced this result.
     # Set automatically by run_copilot() so the plugin hook can
     # stash results for pytest-skill-engineering without requiring the
-    # copilot_run fixture.
-    agent: CopilotAgent | None = field(default=None, repr=False)
+    # copilot_eval fixture.
+    agent: CopilotEval | None = field(default=None, repr=False)
 
     @property
     def final_response(self) -> str | None:
@@ -139,7 +139,7 @@ class CopilotResult:
 
     @property
     def token_usage(self) -> dict[str, int]:
-        """Token usage dict compatible with pytest-skill-engineering's AgentResult.
+        """Token usage dict compatible with pytest-skill-engineering's EvalResult.
 
         Keys use short names (``prompt``, ``completion``, ``total``) to match
         the format pytest-skill-engineering reads in its collector and generator.
@@ -152,7 +152,7 @@ class CopilotResult:
 
     @property
     def cost_usd(self) -> float:
-        """Cost in USD, compatible with pytest-skill-engineering's AgentResult."""
+        """Cost in USD, compatible with pytest-skill-engineering's EvalResult."""
         return self.total_cost_usd
 
     def __repr__(self) -> str:

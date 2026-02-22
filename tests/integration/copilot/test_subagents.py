@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import pytest
 
-from pytest_skill_engineering.copilot.agent import CopilotAgent
+from pytest_skill_engineering.copilot.eval import CopilotEval
 
 # Tools that let the orchestrator write files directly.
 # Excluding these forces the orchestrator to delegate.
@@ -36,14 +36,14 @@ class TestForcedSubagentDispatch:
     files, so it has no choice but to dispatch to the subagent that can.
     """
 
-    async def test_subagent_invocations_non_empty(self, copilot_run, tmp_path):
+    async def test_subagent_invocations_non_empty(self, copilot_eval, tmp_path):
         """Orchestrator with excluded write tools dispatches to a subagent.
 
         With no write tools available, the orchestrator cannot create the
         requested file itself and must invoke the file-writer subagent.
         Asserts that at least one subagent invocation is recorded.
         """
-        agent = CopilotAgent(
+        agent = CopilotEval(
             name="forced-orchestrator",
             instructions=(
                 "You are an orchestrator. You MUST delegate all file creation "
@@ -65,7 +65,7 @@ class TestForcedSubagentDispatch:
                 }
             ],
         )
-        result = await copilot_run(
+        result = await copilot_eval(
             agent,
             "Use the file-writer agent to create hello.py containing: print('hello world')",
         )
@@ -75,13 +75,13 @@ class TestForcedSubagentDispatch:
             "to implement directly despite excluded write tools"
         )
 
-    async def test_subagent_file_created(self, copilot_run, tmp_path):
+    async def test_subagent_file_created(self, copilot_eval, tmp_path):
         """File created by subagent exists in the workspace.
 
         Complements test_subagent_invocations_non_empty by verifying the
         subagent actually produced the expected artifact.
         """
-        agent = CopilotAgent(
+        agent = CopilotEval(
             name="forced-orchestrator-file",
             instructions=(
                 "You are an orchestrator. Delegate all file creation to the "
@@ -99,7 +99,7 @@ class TestForcedSubagentDispatch:
                 }
             ],
         )
-        result = await copilot_run(
+        result = await copilot_eval(
             agent,
             "Use the file-writer agent to create output.py containing: x = 42",
         )
@@ -108,9 +108,9 @@ class TestForcedSubagentDispatch:
             "output.py not created — subagent did not write the file"
         )
 
-    async def test_subagent_invocation_fields(self, copilot_run, tmp_path):
+    async def test_subagent_invocation_fields(self, copilot_eval, tmp_path):
         """SubagentInvocation objects have valid name and status fields."""
-        agent = CopilotAgent(
+        agent = CopilotEval(
             name="forced-orchestrator-fields",
             instructions=(
                 "You are an orchestrator. Delegate file creation to the "
@@ -128,7 +128,7 @@ class TestForcedSubagentDispatch:
                 }
             ],
         )
-        result = await copilot_run(
+        result = await copilot_eval(
             agent,
             "Use the file-writer agent to create result.py containing: done = True",
         )

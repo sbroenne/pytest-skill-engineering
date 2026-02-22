@@ -8,10 +8,10 @@
 *Skill improvement — baseline vs skilled agent.*
 
 
-## Agent Leaderboard
+## Eval Leaderboard
 
 
-|#|Agent|Tests|Pass Rate|Tokens|Cost|Duration|
+|#|Eval|Tests|Pass Rate|Tokens|Cost|Duration|
 | :---: | :--- | :---: | :---: | ---: | ---: | ---: |
 |🥇|baseline 🏆|2/2|100%|3,455|$0.004625|37.7s|
 |🥈|with-financial-skill|1/2|50%|3,975|$0.005622|34.4s|
@@ -172,13 +172,13 @@ Overall, tools are simple and discoverable. Failures were not due to tool design
 ```mermaid
 sequenceDiagram
     participant User
-    participant Agent
+    participant Eval
     participant Tools
 
-    User->>Agent: "How should I allocate the money across my accounts?"
-    Agent->>Tools: "get_all_balances({})"
-    Tools-->>Agent: "{'accounts': {'checking': {'balance': 1500.0, 'formatted': '"
-    Agent->>User: "Right now you have $4,500 total: $1,500 in checking and $3,000 in savings. How y"
+    User->>Eval: "How should I allocate the money across my accounts?"
+    Eval->>Tools: "get_all_balances({})"
+    Tools-->>Eval: "{'accounts': {'checking': {'balance': 1500.0, 'formatted': '"
+    Eval->>User: "Right now you have $4,500 total: $1,500 in checking and $3,000 in savings. How y"
 ```
 
 </details>
@@ -188,9 +188,9 @@ sequenceDiagram
 
 **Error:** `      AssertionError: assert (False or False)
        +  where False = tool_was_called('get_all_balances')
-       +    where tool_was_called = AgentResult(SUCCESS)\n  Turns: 2\n  Tools called: none\n  Duration: 11112ms\n  Tokens: 1983 | Cost: $0.002804\n  Final: 'I can help — to give specific transfers I’ll need a little info. Quick question first: do you want g'....tool_was_called
+       +    where tool_was_called = EvalResult(SUCCESS)\n  Turns: 2\n  Tools called: none\n  Duration: 11112ms\n  Tokens: 1983 | Cost: $0.002804\n  Final: 'I can help — to give specific transfers I’ll need a little info. Quick question first: do you want g'....tool_was_called
        +  and   False = tool_was_called('get_balance')
-       +    where tool_was_called = AgentResult(SUCCESS)\n  Turns: 2\n  Tools called: none\n  Duration: 11112ms\n  Tokens: 1983 | Cost: $0.002804\n  Final: 'I can help — to give specific transfers I’ll need a little info. Quick question first: do you want g'....tool_was_called`
+       +    where tool_was_called = EvalResult(SUCCESS)\n  Turns: 2\n  Tools called: none\n  Duration: 11112ms\n  Tokens: 1983 | Cost: $0.002804\n  Final: 'I can help — to give specific transfers I’ll need a little info. Quick question first: do you want g'....tool_was_called`
 
 **Response:**
 
@@ -205,11 +205,11 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant User
-    participant Agent
+    participant Eval
     participant Tools
 
-    User->>Agent: "How should I allocate the money across my accounts?"
-    Agent->>User: "I can help — to give specific transfers I’ll need a little info. Quick question "
+    User->>Eval: "How should I allocate the money across my accounts?"
+    Eval->>User: "I can help — to give specific transfers I’ll need a little info. Quick question "
 ```
 
 </details>
@@ -240,11 +240,11 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant User
-    participant Agent
+    participant Eval
     participant Tools
 
-    User->>Agent: "I want to save more money. What do you recommend?"
-    Agent->>User: "Great — here are practical, high-impact ways to save more, plus a couple quick o"
+    User->>Eval: "I want to save more money. What do you recommend?"
+    Eval->>User: "Great — here are practical, high-impact ways to save more, plus a couple quick o"
 ```
 
 </details>
@@ -269,11 +269,11 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant User
-    participant Agent
+    participant Eval
     participant Tools
 
-    User->>Agent: "I want to save more money. What do you recommend?"
-    Agent->>User: "Great — want practical, doable steps. Here’s a short, actionable plan you can st"
+    User->>Eval: "I want to save more money. What do you recommend?"
+    Eval->>User: "Great — want practical, doable steps. Here’s a short, actionable plan you can st"
 ```
 
 </details>

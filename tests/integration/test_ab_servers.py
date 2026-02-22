@@ -17,7 +17,7 @@ import sys
 
 import pytest
 
-from pytest_skill_engineering import Agent, MCPServer, Provider, Wait
+from pytest_skill_engineering import Eval, MCPServer, Provider, Wait
 
 from .conftest import (
     BANKING_PROMPT,
@@ -94,7 +94,7 @@ class TestServerABComparison:
 
     @pytest.mark.parametrize("server_version", ["v1-verbose", "v1-terse"])
     @pytest.mark.asyncio
-    async def test_banking_simple_query(self, aitest_run, banking_server_v1, server_version):
+    async def test_banking_simple_query(self, eval_run, banking_server_v1, server_version):
         """Simple balance query across different prompt styles."""
         # Simulate A/B by varying system prompt (in real scenario, use different servers)
         if server_version == "v1-verbose":
@@ -102,7 +102,7 @@ class TestServerABComparison:
         else:
             system_prompt = "You help with banking. Use tools to get data."
 
-        agent = Agent(
+        agent = Eval(
             name=f"banking-{server_version}",
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             mcp_servers=[banking_server_v1],
@@ -110,14 +110,14 @@ class TestServerABComparison:
             max_turns=DEFAULT_MAX_TURNS,
         )
 
-        result = await aitest_run(agent, "What's my checking account balance?")
+        result = await eval_run(agent, "What's my checking account balance?")
 
         assert result.success
         assert result.tool_was_called("get_balance")
 
     @pytest.mark.parametrize("server_version", ["v1-verbose", "v1-terse"])
     @pytest.mark.asyncio
-    async def test_banking_transfer_query(self, aitest_run, banking_server_v1, server_version):
+    async def test_banking_transfer_query(self, eval_run, banking_server_v1, server_version):
         """Transfer operation across different prompt styles.
 
         This tests whether the prompt style affects the agent's ability
@@ -128,7 +128,7 @@ class TestServerABComparison:
         else:
             system_prompt = "You help with banking. Use tools to get data."
 
-        agent = Agent(
+        agent = Eval(
             name=f"banking-transfer-{server_version}",
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             mcp_servers=[banking_server_v1],
@@ -136,7 +136,7 @@ class TestServerABComparison:
             max_turns=8,
         )
 
-        result = await aitest_run(
+        result = await eval_run(
             agent,
             "Transfer $100 from checking to savings and show me the updated balances.",
         )
@@ -157,9 +157,7 @@ class TestToolDescriptionImpact:
 
     @pytest.mark.parametrize("description_quality", ["good", "minimal"])
     @pytest.mark.asyncio
-    async def test_ambiguous_query_handling(
-        self, aitest_run, banking_server_v1, description_quality
-    ):
+    async def test_ambiguous_query_handling(self, eval_run, banking_server_v1, description_quality):
         """Test how description quality affects ambiguous query handling.
 
         With good descriptions, the agent should:
@@ -179,7 +177,7 @@ class TestToolDescriptionImpact:
         else:
             system_prompt = "You manage bank accounts."
 
-        agent = Agent(
+        agent = Eval(
             name=f"ambiguous-{description_quality}",
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             mcp_servers=[banking_server_v1],
@@ -187,7 +185,7 @@ class TestToolDescriptionImpact:
             max_turns=8,
         )
 
-        result = await aitest_run(
+        result = await eval_run(
             agent,
             "Show me my account overview.",
         )
@@ -217,13 +215,13 @@ class TestServerMigration:
     """
 
     @pytest.mark.asyncio
-    async def test_todo_workflow_consistency(self, aitest_run, todo_server_v1):
+    async def test_todo_workflow_consistency(self, eval_run, todo_server_v1):
         """Ensure todo workflow works consistently.
 
         This test could be run against v1 and v2 servers to ensure
         a migration doesn't regress functionality.
         """
-        agent = Agent(
+        agent = Eval(
             name="todo-migration-test",
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             mcp_servers=[todo_server_v1],
@@ -231,7 +229,7 @@ class TestServerMigration:
             max_turns=10,
         )
 
-        result = await aitest_run(
+        result = await eval_run(
             agent,
             "Add 'buy groceries' to my shopping list, then show me all my tasks.",
         )

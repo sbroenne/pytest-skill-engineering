@@ -117,18 +117,18 @@ Built-in test servers in `src/pytest_skill_engineering/testing/`:
 Create agents inline using constants from `conftest.py`:
 
 ```python
-from pytest_skill_engineering import Agent, Provider
+from pytest_skill_engineering import Eval, Provider
 from .conftest import DEFAULT_MODEL, DEFAULT_RPM, DEFAULT_TPM, DEFAULT_MAX_TURNS
 
-async def test_my_feature(aitest_run, banking_server):
-    agent = Agent(
+async def test_my_feature(eval_run, banking_server):
+    agent = Eval(
         provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
         mcp_servers=[banking_server],
         system_prompt="You are a banking assistant.",
         max_turns=DEFAULT_MAX_TURNS,
     )
     
-    result = await aitest_run(agent, "What's my checking balance?")
+    result = await eval_run(agent, "What's my checking balance?")
     
     assert result.success
     assert result.tool_was_called("get_balance")

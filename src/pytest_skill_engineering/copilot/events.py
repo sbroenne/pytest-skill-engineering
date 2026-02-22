@@ -30,7 +30,7 @@ SDK Event Types (38 values) grouped by what they map to:
     Session lifecycle:
         session.start            → Session metadata (model, etc.)
         session.resume           → Session resumed
-        session.idle             → Agent finished processing
+        session.idle             → Eval finished processing
         session.error            → Error occurred
         session.shutdown         → Session terminated
         session.info             → Informational message
@@ -302,12 +302,12 @@ class EventMapper:
 
     def _handle_subagent_selected(self, event: SessionEvent) -> None:
         """Handle subagent selection."""
-        name = _get_data_field(event, "agent_name", "unknown")
+        name = _get_data_field(event, "eval_name", "unknown")
         self._subagents.append(SubagentInvocation(name=name, status="selected"))
 
     def _handle_subagent_started(self, event: SessionEvent) -> None:
         """Handle subagent execution start."""
-        name = _get_data_field(event, "agent_name", "unknown")
+        name = _get_data_field(event, "eval_name", "unknown")
         self._subagent_start_times[name] = time.monotonic()
         # Update existing or add new
         for sa in self._subagents:
@@ -318,7 +318,7 @@ class EventMapper:
 
     def _handle_subagent_completed(self, event: SessionEvent) -> None:
         """Handle subagent execution completion."""
-        name = _get_data_field(event, "agent_name", "unknown")
+        name = _get_data_field(event, "eval_name", "unknown")
         start = self._subagent_start_times.pop(name, None)
         duration = (time.monotonic() - start) * 1000 if start else None
         for sa in self._subagents:
@@ -332,7 +332,7 @@ class EventMapper:
 
     def _handle_subagent_failed(self, event: SessionEvent) -> None:
         """Handle subagent execution failure."""
-        name = _get_data_field(event, "agent_name", "unknown")
+        name = _get_data_field(event, "eval_name", "unknown")
         for sa in self._subagents:
             if sa.name == name and sa.status in ("selected", "started"):
                 sa.status = "failed"

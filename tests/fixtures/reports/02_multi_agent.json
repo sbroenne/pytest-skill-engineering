@@ -7,7 +7,7 @@
       "name": "tests/fixtures/scenario_02_multi_agent.py::test_check_balance[gpt-5-mini]",
       "outcome": "passed",
       "duration_ms": 11010.467499989318,
-      "agent_result": {
+      "eval_result": {
         "turns": [
           {
             "role": "user",
@@ -240,7 +240,7 @@
       "docstring": "Basic balance query \u2014 all agents should pass.",
       "class_docstring": null,
       "agent_id": "ad04b52d-294a-4161-8599-76d9323acea5",
-      "agent_name": "gpt-5-mini",
+      "eval_name": "gpt-5-mini",
       "model": "gpt-5-mini",
       "system_prompt_name": null,
       "skill_name": null
@@ -249,7 +249,7 @@
       "name": "tests/fixtures/scenario_02_multi_agent.py::test_check_balance[gpt-4.1-mini]",
       "outcome": "passed",
       "duration_ms": 6942.6545999886,
-      "agent_result": {
+      "eval_result": {
         "turns": [
           {
             "role": "user",
@@ -482,7 +482,7 @@
       "docstring": "Basic balance query \u2014 all agents should pass.",
       "class_docstring": null,
       "agent_id": "6d7e2109-b028-4314-86b9-6a6c03758c2a",
-      "agent_name": "gpt-4.1-mini",
+      "eval_name": "gpt-4.1-mini",
       "model": "gpt-4.1-mini",
       "system_prompt_name": null,
       "skill_name": null
@@ -491,7 +491,7 @@
       "name": "tests/fixtures/scenario_02_multi_agent.py::test_transfer_and_verify[gpt-5-mini]",
       "outcome": "passed",
       "duration_ms": 9964.89499998279,
-      "agent_result": {
+      "eval_result": {
         "turns": [
           {
             "role": "user",
@@ -746,7 +746,7 @@
       "docstring": "Transfer with verification \u2014 tests multi-step tool use.",
       "class_docstring": null,
       "agent_id": "ad04b52d-294a-4161-8599-76d9323acea5",
-      "agent_name": "gpt-5-mini",
+      "eval_name": "gpt-5-mini",
       "model": "gpt-5-mini",
       "system_prompt_name": null,
       "skill_name": null
@@ -755,7 +755,7 @@
       "name": "tests/fixtures/scenario_02_multi_agent.py::test_transfer_and_verify[gpt-4.1-mini]",
       "outcome": "passed",
       "duration_ms": 8061.471699998947,
-      "agent_result": {
+      "eval_result": {
         "turns": [
           {
             "role": "user",
@@ -1010,7 +1010,7 @@
       "docstring": "Transfer with verification \u2014 tests multi-step tool use.",
       "class_docstring": null,
       "agent_id": "6d7e2109-b028-4314-86b9-6a6c03758c2a",
-      "agent_name": "gpt-4.1-mini",
+      "eval_name": "gpt-4.1-mini",
       "model": "gpt-4.1-mini",
       "system_prompt_name": null,
       "skill_name": null
@@ -1019,7 +1019,7 @@
       "name": "tests/fixtures/scenario_02_multi_agent.py::test_error_handling[gpt-5-mini]",
       "outcome": "passed",
       "duration_ms": 14318.14449999365,
-      "agent_result": {
+      "eval_result": {
         "turns": [
           {
             "role": "user",
@@ -1290,7 +1290,7 @@
       "docstring": "Insufficient funds \u2014 tests error recovery.",
       "class_docstring": null,
       "agent_id": "ad04b52d-294a-4161-8599-76d9323acea5",
-      "agent_name": "gpt-5-mini",
+      "eval_name": "gpt-5-mini",
       "model": "gpt-5-mini",
       "system_prompt_name": null,
       "skill_name": null
@@ -1299,7 +1299,7 @@
       "name": "tests/fixtures/scenario_02_multi_agent.py::test_error_handling[gpt-4.1-mini]",
       "outcome": "failed",
       "duration_ms": 5476.377599989064,
-      "agent_result": {
+      "eval_result": {
         "turns": [
           {
             "role": "user",
@@ -1525,7 +1525,7 @@
       "docstring": "Insufficient funds \u2014 tests error recovery.",
       "class_docstring": null,
       "agent_id": "6d7e2109-b028-4314-86b9-6a6c03758c2a",
-      "agent_name": "gpt-4.1-mini",
+      "eval_name": "gpt-4.1-mini",
       "model": "gpt-4.1-mini",
       "system_prompt_name": null,
       "skill_name": null

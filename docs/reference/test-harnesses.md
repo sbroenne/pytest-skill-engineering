@@ -38,7 +38,7 @@ Stateful task management for testing CRUD operations.
 
 ```python
 import sys
-from pytest_skill_engineering import Agent, Provider, MCPServer, Wait
+from pytest_skill_engineering import Eval, Provider, MCPServer, Wait
 from pytest_skill_engineering.testing import TodoStore
 
 @pytest.fixture(scope="module")
@@ -50,21 +50,21 @@ def todo_server():
 
 @pytest.fixture
 def todo_agent(todo_server):
-    return Agent(
+    return Eval(
         name="todo",
         provider=Provider(model="azure/gpt-5-mini"),
         mcp_servers=[todo_server],
         system_prompt="You are a task management assistant.",
     )
 
-async def test_add_and_complete(aitest_run, todo_agent):
-    result = await aitest_run(
+async def test_add_and_complete(eval_run, todo_agent):
+    result = await eval_run(
         todo_agent,
         "Add a task: Buy groceries"
     )
     assert result.tool_was_called("add_task")
     
-    result = await aitest_run(
+    result = await eval_run(
         todo_agent,
         "Mark the groceries task as done"
     )
@@ -121,7 +121,7 @@ Stateful banking service for multi-turn session testing.
 
 ```python
 import sys
-from pytest_skill_engineering import Agent, Provider, MCPServer, Wait
+from pytest_skill_engineering import Eval, Provider, MCPServer, Wait
 
 @pytest.fixture(scope="module")
 def banking_server():
@@ -134,26 +134,26 @@ def banking_server():
 class TestBankingWorkflow:
     """Tests share conversation context via session decorator."""
 
-    async def test_check_balance(self, aitest_run, banking_server):
-        agent = Agent(
+    async def test_check_balance(self, eval_run, banking_server):
+        agent = Eval(
             name="banking",
             provider=Provider(model="azure/gpt-5-mini"),
             mcp_servers=[banking_server],
             system_prompt="You are a banking assistant.",
         )
         
-        result = await aitest_run(agent, "What's my checking balance?")
+        result = await eval_run(agent, "What's my checking balance?")
         assert result.tool_was_called("get_balance")
 
-    async def test_transfer_funds(self, aitest_run, banking_server):
-        agent = Agent(
+    async def test_transfer_funds(self, eval_run, banking_server):
+        agent = Eval(
             name="banking",
             provider=Provider(model="azure/gpt-5-mini"),
             mcp_servers=[banking_server],
             system_prompt="You are a banking assistant.",
         )
         
-        result = await aitest_run(
+        result = await eval_run(
             agent,
             "Transfer $500 from checking to savings"
         )
@@ -243,8 +243,8 @@ def create_my_server(store: MyStore | None = None):
 def my_server():
     return create_my_server()
 
-async def test_my_tool(aitest_run, agent_with_my_server):
-    result = await aitest_run(agent_with_my_server, "Use my tool")
+async def test_my_tool(eval_run, agent_with_my_server):
+    result = await eval_run(agent_with_my_server, "Use my tool")
     assert result.tool_was_called("my_tool")
 ```
 

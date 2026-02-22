@@ -6,7 +6,7 @@ description: "Write your first AI test in under 5 minutes. Set up pytest-skill-e
 
 Write your first AI test in under 5 minutes.
 
-> **New here?** pytest-skill-engineering has two harnesses — `Agent + aitest_run` (for MCP servers and tool testing) and `CopilotAgent + copilot_run` (for GitHub Copilot skills). Read [Choosing a Test Harness](../explanation/choosing-a-harness.md) first if you're unsure which to use.
+> **New here?** pytest-skill-engineering has two harnesses — `Eval + eval_run` (for MCP servers and tool testing) and `CopilotEval + copilot_eval` (for GitHub Copilot skills). Read [Choosing a Test Harness](../explanation/choosing-a-harness.md) first if you're unsure which to use.
 
 ## What You're Testing
 
@@ -15,20 +15,20 @@ pytest-skill-engineering tests whether an LLM can understand and use your tools:
 - **MCP Server Tools** — Can the LLM discover and call your tools correctly?
 - **MCP Server Prompts** — Do your bundled prompt templates render and produce the right behavior?
 - **Prompt Files** — Does invoking a slash command (`.prompt.md` / `.claude/commands/`) produce the right agent behavior?
-- **Agent Skills** — Does domain knowledge help the agent perform?
+- **Eval Skills** — Does domain knowledge help the agent perform?
 - **Custom Agents** — Do your `.agent.md` instructions produce the right behavior?
 
-## The Agent
+## The Eval
 
-An **Agent** is the test harness that bundles your configuration:
+An **Eval** is the test harness that bundles your configuration:
 
 ```python
-from pytest_skill_engineering import Agent, Provider, MCPServer
+from pytest_skill_engineering import Eval, Provider, MCPServer
 
-Agent(
+Eval(
     provider=Provider(model="azure/gpt-5-mini"),   # LLM provider (required)
     mcp_servers=[banking_server],                   # MCP servers with tools
-    skill=financial_skill,                          # Agent Skill (optional)
+    skill=financial_skill,                          # Eval Skill (optional)
 )
 ```
 
@@ -38,19 +38,19 @@ The simplest case: verify an LLM can use your MCP server correctly.
 
 ```python
 import pytest
-from pytest_skill_engineering import Agent, Provider, MCPServer
+from pytest_skill_engineering import Eval, Provider, MCPServer
 
 # The MCP server you're testing
 banking_server = MCPServer(command=["python", "banking_mcp.py"])
 
-agent = Agent(
+agent = Eval(
     provider=Provider(model="azure/gpt-5-mini"),
     mcp_servers=[banking_server],
 )
 
-async def test_balance_query(aitest_run):
+async def test_balance_query(eval_run):
     """Verify the LLM can use get_balance correctly."""
-    result = await aitest_run(agent, "What's my checking account balance?")
+    result = await eval_run(agent, "What's my checking account balance?")
     
     assert result.success
     assert result.tool_was_called("get_balance")
@@ -110,6 +110,6 @@ The report shows:
 ## Next Steps
 
 - [Custom Agents](custom-agents.md) — Test `.agent.md` files and A/B test agent instructions
-- [Agent Skills](skills.md) — Add domain knowledge
+- [Eval Skills](skills.md) — Add domain knowledge
 - [Comparing Configurations](comparing.md) — Find what works best
 - [A/B Testing Servers](ab-testing-servers.md) — Compare MCP server versions

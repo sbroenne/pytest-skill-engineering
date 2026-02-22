@@ -1,15 +1,15 @@
-"""Unit tests for CopilotAgent."""
+"""Unit tests for CopilotEval."""
 
 from __future__ import annotations
 
-from pytest_skill_engineering.copilot.agent import CopilotAgent, _parse_agent_file
+from pytest_skill_engineering.copilot.eval import CopilotEval, _parse_agent_file
 
 
 class TestCopilotAgentDefaults:
     """Test default values."""
 
     def test_default_values(self):
-        agent = CopilotAgent(name="test")
+        agent = CopilotEval(name="test")
         assert agent.name == "test"
         assert agent.model is None
         assert agent.max_turns == 25
@@ -19,7 +19,7 @@ class TestCopilotAgentDefaults:
         assert agent.working_directory is None
 
     def test_custom_values(self):
-        agent = CopilotAgent(
+        agent = CopilotEval(
             name="custom",
             model="gpt-4.1",
             max_turns=10,
@@ -34,7 +34,7 @@ class TestCopilotAgentDefaults:
         assert agent.auto_confirm is False
 
     def test_frozen(self):
-        agent = CopilotAgent(name="frozen")
+        agent = CopilotEval(name="frozen")
         try:
             agent.name = "mutated"  # type: ignore[misc]
             raise AssertionError("Should not allow mutation")
@@ -46,14 +46,14 @@ class TestBuildSessionConfig:
     """Test build_session_config() method."""
 
     def test_minimal_config(self):
-        agent = CopilotAgent(name="minimal")
+        agent = CopilotEval(name="minimal")
         config = agent.build_session_config()
         assert isinstance(config, dict)
         # None fields should be omitted entirely
         assert "model" not in config
 
     def test_full_config(self):
-        agent = CopilotAgent(
+        agent = CopilotEval(
             name="full",
             model="claude-sonnet-4",
             reasoning_effort="high",
@@ -73,7 +73,7 @@ class TestBuildSessionConfig:
         assert config["working_directory"] == "/tmp/test"
 
     def test_mcp_servers_included(self):
-        agent = CopilotAgent(
+        agent = CopilotEval(
             name="mcp",
             mcp_servers={
                 "my-server": {"command": "python", "args": ["-m", "my_server"]},
@@ -84,7 +84,7 @@ class TestBuildSessionConfig:
         assert len(config["mcp_servers"]) == 1
 
     def test_system_message_replace_mode(self):
-        agent = CopilotAgent(
+        agent = CopilotEval(
             name="replace",
             instructions="Custom system message",
             system_message_mode="replace",
@@ -96,12 +96,12 @@ class TestBuildSessionConfig:
         }
 
     def test_no_system_message_without_instructions(self):
-        agent = CopilotAgent(name="no-instructions")
+        agent = CopilotEval(name="no-instructions")
         config = agent.build_session_config()
         assert "system_message" not in config
 
     def test_extra_config_merged(self):
-        agent = CopilotAgent(
+        agent = CopilotEval(
             name="extra",
             extra_config={"customField": "value"},
         )
@@ -109,7 +109,7 @@ class TestBuildSessionConfig:
         assert config["customField"] == "value"
 
     def test_skill_directories_included(self):
-        agent = CopilotAgent(
+        agent = CopilotEval(
             name="skilled",
             skill_directories=["/path/to/skills", "/other/skills"],
         )
@@ -117,12 +117,12 @@ class TestBuildSessionConfig:
         assert config["skill_directories"] == ["/path/to/skills", "/other/skills"]
 
     def test_skill_directories_omitted_when_empty(self):
-        agent = CopilotAgent(name="no-skills")
+        agent = CopilotEval(name="no-skills")
         config = agent.build_session_config()
         assert "skill_directories" not in config
 
     def test_disabled_skills_included(self):
-        agent = CopilotAgent(
+        agent = CopilotEval(
             name="restrict",
             disabled_skills=["code-search"],
         )
@@ -130,7 +130,7 @@ class TestBuildSessionConfig:
         assert config["disabled_skills"] == ["code-search"]
 
     def test_custom_agents_included(self):
-        agent = CopilotAgent(
+        agent = CopilotEval(
             name="multi",
             custom_agents=[
                 {"name": "test-writer", "prompt": "Write tests", "tools": ["create_file"]}
@@ -141,7 +141,7 @@ class TestBuildSessionConfig:
         assert config["custom_agents"][0]["name"] == "test-writer"
 
     def test_custom_agents_omitted_when_empty(self):
-        agent = CopilotAgent(name="no-custom")
+        agent = CopilotEval(name="no-custom")
         config = agent.build_session_config()
         assert "custom_agents" not in config
 
@@ -188,10 +188,10 @@ class TestParseAgentFile:
 
 
 class TestFromCopilotConfig:
-    """Tests for CopilotAgent.from_copilot_config()."""
+    """Tests for CopilotEval.from_copilot_config()."""
 
     def test_empty_dir_returns_defaults(self, tmp_path):
-        agent = CopilotAgent.from_copilot_config(tmp_path)
+        agent = CopilotEval.from_copilot_config(tmp_path)
         assert agent.instructions is None
         assert agent.custom_agents == []
 
@@ -199,7 +199,7 @@ class TestFromCopilotConfig:
         github = tmp_path / ".github"
         github.mkdir()
         (github / "copilot-instructions.md").write_text("Always add type hints.", encoding="utf-8")
-        agent = CopilotAgent.from_copilot_config(tmp_path)
+        agent = CopilotEval.from_copilot_config(tmp_path)
         assert agent.instructions == "Always add type hints."
 
     def test_loads_agents(self, tmp_path):
@@ -209,7 +209,7 @@ class TestFromCopilotConfig:
             "---\nname: tester\ndescription: Writes tests\n---\nWrite tests.",
             encoding="utf-8",
         )
-        agent = CopilotAgent.from_copilot_config(tmp_path)
+        agent = CopilotEval.from_copilot_config(tmp_path)
         assert len(agent.custom_agents) == 1
         assert agent.custom_agents[0]["name"] == "tester"
         assert agent.custom_agents[0]["prompt"] == "Write tests."
@@ -222,7 +222,7 @@ class TestFromCopilotConfig:
         (agents_dir / "reviewer.agent.md").write_text(
             "---\nname: reviewer\n---\nReview code.", encoding="utf-8"
         )
-        agent = CopilotAgent.from_copilot_config(config_dir)
+        agent = CopilotEval.from_copilot_config(config_dir)
         assert len(agent.custom_agents) == 1
         assert agent.custom_agents[0]["name"] == "reviewer"
 
@@ -230,7 +230,7 @@ class TestFromCopilotConfig:
         github = tmp_path / ".github"
         github.mkdir()
         (github / "copilot-instructions.md").write_text("Base instructions.", encoding="utf-8")
-        agent = CopilotAgent.from_copilot_config(
+        agent = CopilotEval.from_copilot_config(
             tmp_path, instructions="Override instructions.", model="claude-opus-4.5"
         )
         assert agent.instructions == "Override instructions."
@@ -245,6 +245,6 @@ class TestFromCopilotConfig:
         (agents_dir / "a-agent.agent.md").write_text(
             "---\nname: a-agent\n---\nA.", encoding="utf-8"
         )
-        agent = CopilotAgent.from_copilot_config(tmp_path)
+        agent = CopilotEval.from_copilot_config(tmp_path)
         names = [a["name"] for a in agent.custom_agents]
         assert names == ["a-agent", "b-agent"]  # sorted by filename

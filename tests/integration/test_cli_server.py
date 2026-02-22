@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import pytest
 
-from pytest_skill_engineering import Agent, CLIServer, Provider
+from pytest_skill_engineering import CLIServer, Eval, Provider
 
 from .conftest import (
     DEFAULT_MAX_TURNS,
@@ -77,9 +77,9 @@ class TestCLIServerBasicUsage:
     """Basic CLI server functionality tests."""
 
     @pytest.mark.asyncio
-    async def test_list_directory(self, aitest_run, ls_cli_server, cat_cli_server):
-        """Agent can list files using ls_execute tool."""
-        agent = Agent(
+    async def test_list_directory(self, eval_run, ls_cli_server, cat_cli_server):
+        """Eval can list files using ls_execute tool."""
+        agent = Eval(
             name="ls-test",
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             cli_servers=[ls_cli_server, cat_cli_server],
@@ -87,7 +87,7 @@ class TestCLIServerBasicUsage:
             max_turns=DEFAULT_MAX_TURNS,
         )
 
-        result = await aitest_run(
+        result = await eval_run(
             agent,
             "List the files in the current directory",
         )
@@ -96,9 +96,9 @@ class TestCLIServerBasicUsage:
         assert result.tool_was_called("ls_execute")
 
     @pytest.mark.asyncio
-    async def test_read_file_contents(self, aitest_run, ls_cli_server, cat_cli_server):
-        """Agent can read file contents using cat_execute tool."""
-        agent = Agent(
+    async def test_read_file_contents(self, eval_run, ls_cli_server, cat_cli_server):
+        """Eval can read file contents using cat_execute tool."""
+        agent = Eval(
             name="cat-test",
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             cli_servers=[ls_cli_server, cat_cli_server],
@@ -106,7 +106,7 @@ class TestCLIServerBasicUsage:
             max_turns=DEFAULT_MAX_TURNS,
         )
 
-        result = await aitest_run(
+        result = await eval_run(
             agent,
             "Read the contents of pyproject.toml and tell me the package name.",
         )
@@ -118,9 +118,9 @@ class TestCLIServerBasicUsage:
         assert "pytest-skill-engineering" in response_lower or "aitest" in response_lower
 
     @pytest.mark.asyncio
-    async def test_echo_command(self, aitest_run, echo_cli_server):
-        """Agent can use echo command."""
-        agent = Agent(
+    async def test_echo_command(self, eval_run, echo_cli_server):
+        """Eval can use echo command."""
+        agent = Eval(
             name="echo-test",
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             cli_servers=[echo_cli_server],
@@ -128,7 +128,7 @@ class TestCLIServerBasicUsage:
             max_turns=DEFAULT_MAX_TURNS,
         )
 
-        result = await aitest_run(
+        result = await eval_run(
             agent,
             "Echo the message: Hello from pytest-skill-engineering!",
         )
@@ -141,9 +141,9 @@ class TestCLIServerMultiStep:
     """Multi-step workflows with CLI servers."""
 
     @pytest.mark.asyncio
-    async def test_explore_and_read(self, aitest_run, ls_cli_server, cat_cli_server):
-        """Agent lists directory, then reads a specific file."""
-        agent = Agent(
+    async def test_explore_and_read(self, eval_run, ls_cli_server, cat_cli_server):
+        """Eval lists directory, then reads a specific file."""
+        agent = Eval(
             name="explore-read",
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             cli_servers=[ls_cli_server, cat_cli_server],
@@ -151,7 +151,7 @@ class TestCLIServerMultiStep:
             max_turns=8,
         )
 
-        result = await aitest_run(
+        result = await eval_run(
             agent,
             "First list what files are in the current directory, "
             "then read the README.md file and summarize what this project does.",
@@ -162,9 +162,9 @@ class TestCLIServerMultiStep:
         assert result.tool_was_called("cat_execute")
 
     @pytest.mark.asyncio
-    async def test_file_analysis(self, aitest_run, ls_cli_server, cat_cli_server, llm_assert):
-        """Agent analyzes a file using multiple CLI tools."""
-        agent = Agent(
+    async def test_file_analysis(self, eval_run, ls_cli_server, cat_cli_server, llm_assert):
+        """Eval analyzes a file using multiple CLI tools."""
+        agent = Eval(
             name="file-analysis",
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             cli_servers=[ls_cli_server, cat_cli_server],
@@ -172,7 +172,7 @@ class TestCLIServerMultiStep:
             max_turns=8,
         )
 
-        result = await aitest_run(
+        result = await eval_run(
             agent,
             "List the files in the current directory and then read pyproject.toml. "
             "Tell me what Python version is required.",
@@ -189,9 +189,9 @@ class TestCLIServerErrorHandling:
     """Error handling tests for CLI servers."""
 
     @pytest.mark.asyncio
-    async def test_nonexistent_file(self, aitest_run, ls_cli_server, cat_cli_server):
-        """Agent handles errors when file doesn't exist."""
-        agent = Agent(
+    async def test_nonexistent_file(self, eval_run, ls_cli_server, cat_cli_server):
+        """Eval handles errors when file doesn't exist."""
+        agent = Eval(
             name="error-handling",
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             cli_servers=[ls_cli_server, cat_cli_server],
@@ -199,13 +199,13 @@ class TestCLIServerErrorHandling:
             max_turns=DEFAULT_MAX_TURNS,
         )
 
-        result = await aitest_run(
+        result = await eval_run(
             agent,
             "Read the contents of /nonexistent/path/file.txt using cat",
         )
 
         assert result.success
-        # Agent should attempt to read the file (may also try ls first)
+        # Eval should attempt to read the file (may also try ls first)
         assert result.tool_was_called("cat_execute") or result.tool_was_called("ls_execute")
         # Should gracefully report the error
         response_lower = result.final_response.lower()

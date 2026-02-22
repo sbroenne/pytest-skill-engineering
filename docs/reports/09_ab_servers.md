@@ -8,10 +8,10 @@
 *A/B server comparison — verbose vs terse system prompts.*
 
 
-## Agent Leaderboard
+## Eval Leaderboard
 
 
-|#|Agent|Tests|Pass Rate|Tokens|Cost|Duration|
+|#|Eval|Tests|Pass Rate|Tokens|Cost|Duration|
 | :---: | :--- | :---: | :---: | ---: | ---: | ---: |
 |🥇|terse-prompt 🏆|2/2|100%|2,602|$0.001062|13.6s|
 |🥈|verbose-prompt|2/2|100%|3,086|$0.001242|19.1s|
@@ -135,13 +135,13 @@ Overall, tool discoverability and usage are strong. The agent consistently selec
 ```mermaid
 sequenceDiagram
     participant User
-    participant Agent
+    participant Eval
     participant Tools
 
-    User->>Agent: "What's my checking balance?"
-    Agent->>Tools: "get_balance({'account': 'checking'})"
-    Tools-->>Agent: "{'account': 'checking', 'balance': 1500.0, 'formatted': '$1,"
-    Agent->>User: "Your checking account balance is $1,500.00."
+    User->>Eval: "What's my checking balance?"
+    Eval->>Tools: "get_balance({'account': 'checking'})"
+    Tools-->>Eval: "{'account': 'checking', 'balance': 1500.0, 'formatted': '$1,"
+    Eval->>User: "Your checking account balance is $1,500.00."
 ```
 
 </details>
@@ -164,13 +164,13 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant User
-    participant Agent
+    participant Eval
     participant Tools
 
-    User->>Agent: "What's my checking balance?"
-    Agent->>Tools: "get_balance({'account': 'checking'})"
-    Tools-->>Agent: "{'account': 'checking', 'balance': 1500.0, 'formatted': '$1,"
-    Agent->>User: "Your checking account balance is $1,500.00. Would you like to do anything with t"
+    User->>Eval: "What's my checking balance?"
+    Eval->>Tools: "get_balance({'account': 'checking'})"
+    Tools-->>Eval: "{'account': 'checking', 'balance': 1500.0, 'formatted': '$1,"
+    Eval->>User: "Your checking account balance is $1,500.00. Would you like to do anything with t"
 ```
 
 </details>
@@ -207,15 +207,15 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant User
-    participant Agent
+    participant Eval
     participant Tools
 
-    User->>Agent: "Transfer $100 from checking to savings, then show me both balances"
-    Agent->>Tools: "transfer({'from_account': 'checking', 'to_account': 'savings', 'amoun)"
-    Tools-->>Agent: "{'transaction_id': 'TX0001', 'type': 'transfer', 'from_accou"
-    Agent->>Tools: "get_all_balances({})"
-    Tools-->>Agent: "{'accounts': {'checking': {'balance': 1400.0, 'formatted': '"
-    Agent->>User: "Done — I transferred $100 from checking to savings. Current balances: - Checking"
+    User->>Eval: "Transfer $100 from checking to savings, then show me both balances"
+    Eval->>Tools: "transfer({'from_account': 'checking', 'to_account': 'savings', 'amoun)"
+    Tools-->>Eval: "{'transaction_id': 'TX0001', 'type': 'transfer', 'from_accou"
+    Eval->>Tools: "get_all_balances({})"
+    Tools-->>Eval: "{'accounts': {'checking': {'balance': 1400.0, 'formatted': '"
+    Eval->>User: "Done — I transferred $100 from checking to savings. Current balances: - Checking"
 ```
 
 </details>
@@ -251,15 +251,15 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant User
-    participant Agent
+    participant Eval
     participant Tools
 
-    User->>Agent: "Transfer $100 from checking to savings, then show me both balances"
-    Agent->>Tools: "transfer({'from_account': 'checking', 'to_account': 'savings', 'amoun)"
-    Tools-->>Agent: "{'transaction_id': 'TX0001', 'type': 'transfer', 'from_accou"
-    Agent->>Tools: "get_all_balances({})"
-    Tools-->>Agent: "{'accounts': {'checking': {'balance': 1400.0, 'formatted': '"
-    Agent->>User: "Done — I transferred $100 from checking to savings. Current balances: - Checking"
+    User->>Eval: "Transfer $100 from checking to savings, then show me both balances"
+    Eval->>Tools: "transfer({'from_account': 'checking', 'to_account': 'savings', 'amoun)"
+    Tools-->>Eval: "{'transaction_id': 'TX0001', 'type': 'transfer', 'from_accou"
+    Eval->>Tools: "get_all_balances({})"
+    Tools-->>Eval: "{'accounts': {'checking': {'balance': 1400.0, 'formatted': '"
+    Eval->>User: "Done — I transferred $100 from checking to savings. Current balances: - Checking"
 ```
 
 </details>

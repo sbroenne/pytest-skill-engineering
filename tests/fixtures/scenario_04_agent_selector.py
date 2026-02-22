@@ -1,6 +1,6 @@
 """Three agents for testing the agent selector UI.
 
-Agent selector only appears when there are 3+ agents.
+Eval selector only appears when there are 3+ agents.
 
 Generates: tests/fixtures/reports/04_agent_selector.json
 
@@ -16,7 +16,7 @@ from pathlib import Path
 
 import pytest
 
-from pytest_skill_engineering import Agent, MCPServer, Provider, Skill, Wait
+from pytest_skill_engineering import Eval, MCPServer, Provider, Skill, Wait
 
 pytestmark = [pytest.mark.integration]
 
@@ -40,19 +40,19 @@ FINANCIAL_SKILL = (
 )
 
 AGENTS = [
-    Agent(
+    Eval(
         provider=Provider(model="azure/gpt-5-mini", rpm=10, tpm=10000),
         mcp_servers=[banking_server],
         system_prompt=BANKING_PROMPT,
         max_turns=5,
     ),
-    Agent(
+    Eval(
         provider=Provider(model="azure/gpt-4.1-mini", rpm=10, tpm=10000),
         mcp_servers=[banking_server],
         system_prompt=BANKING_PROMPT,
         max_turns=5,
     ),
-    Agent(
+    Eval(
         provider=Provider(model="azure/gpt-5-mini", rpm=10, tpm=10000),
         mcp_servers=[banking_server],
         system_prompt=BANKING_PROMPT,
@@ -71,9 +71,9 @@ def _reset_agents():
 
 
 @pytest.mark.parametrize("agent", AGENTS, ids=lambda a: a.name)
-async def test_balance_query(aitest_run, agent, llm_assert):
+async def test_balance_query(eval_run, agent, llm_assert):
     """Basic balance query — all agents should pass."""
-    result = await aitest_run(agent, "What's my checking account balance?")
+    result = await eval_run(agent, "What's my checking account balance?")
     assert result.success
     assert result.tool_was_called("get_balance")
     assert result.tool_call_arg("get_balance", "account") == "checking"
@@ -84,10 +84,10 @@ async def test_balance_query(aitest_run, agent, llm_assert):
 
 
 @pytest.mark.parametrize("agent", AGENTS, ids=lambda a: a.name)
-async def test_financial_planning(aitest_run, agent, llm_assert):
+async def test_financial_planning(eval_run, agent, llm_assert):
     """Financial advice — tests differentiation between agents (skill vs no skill)."""
     agent.max_turns = 8
-    result = await aitest_run(
+    result = await eval_run(
         agent,
         "I have money in checking and savings. How should I allocate my funds?",
     )

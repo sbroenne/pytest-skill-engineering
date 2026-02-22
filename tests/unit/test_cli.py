@@ -79,7 +79,7 @@ class TestLoadSuiteReport:
                     "outcome": "passed",
                     "duration_ms": 100.0,
                     "agent_id": "a1",
-                    "agent_name": "a1",
+                    "eval_name": "a1",
                     "model": "gpt-5-mini",
                 },
                 {
@@ -87,7 +87,7 @@ class TestLoadSuiteReport:
                     "outcome": "passed",
                     "duration_ms": 200.0,
                     "agent_id": "a1",
-                    "agent_name": "a1",
+                    "eval_name": "a1",
                     "model": "gpt-5-mini",
                 },
                 {
@@ -95,7 +95,7 @@ class TestLoadSuiteReport:
                     "outcome": "failed",
                     "duration_ms": 300.0,
                     "agent_id": "a1",
-                    "agent_name": "a1",
+                    "eval_name": "a1",
                     "model": "gpt-5-mini",
                 },
             ],
@@ -215,7 +215,7 @@ class TestMainCLI:
                     "outcome": "passed",
                     "duration_ms": 100.0,
                     "agent_id": "test-agent",
-                    "agent_name": "test-agent",
+                    "eval_name": "test-agent",
                     "model": "test-model",
                 }
             ],
@@ -253,7 +253,7 @@ class TestMainCLI:
                     "outcome": "passed",
                     "duration_ms": 100.0,
                     "agent_id": "test-agent",
-                    "agent_name": "test-agent",
+                    "eval_name": "test-agent",
                     "model": "test-model",
                 }
             ],
@@ -283,7 +283,7 @@ class TestMainCLI:
                     "outcome": "passed",
                     "duration_ms": 100.0,
                     "agent_id": "test-agent",
-                    "agent_name": "test-agent",
+                    "eval_name": "test-agent",
                     "model": "test-model",
                 }
             ],

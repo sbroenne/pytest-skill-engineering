@@ -36,7 +36,7 @@ import sys
 
 import pytest
 
-from pytest_skill_engineering import Agent, MCPServer, Provider, Wait
+from pytest_skill_engineering import Eval, MCPServer, Provider, Wait
 
 from .conftest import BENCHMARK_MODELS, DEFAULT_RPM, DEFAULT_TPM
 
@@ -112,14 +112,14 @@ class TestBankingWorkflow:
     """
 
     @pytest.mark.asyncio
-    async def test_01_introduce_context(self, aitest_run, llm_assert, banking_server):
+    async def test_01_introduce_context(self, eval_run, llm_assert, banking_server):
         """Establish memorable context (Paris trip) and check balances.
 
         This test introduces "Paris" as a memorable detail that will be
         verified in later tests. The agent should check account balances
         and acknowledge the trip planning context.
         """
-        agent = Agent(
+        agent = Eval(
             name="banking-session-01",
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             mcp_servers=[banking_server],
@@ -127,19 +127,19 @@ class TestBankingWorkflow:
             max_turns=10,
         )
 
-        result = await aitest_run(
+        result = await eval_run(
             agent,
             "Hi! I'm planning a trip to Paris next summer and want to start "
             "saving for it. Can you check my account balances first?",
         )
 
-        assert result.success, f"Agent failed: {result.error}"
+        assert result.success, f"Eval failed: {result.error}"
 
         # Verify the agent used tools to get real balance data
         balance_calls = result.tool_call_count("get_balance") + result.tool_call_count(
             "get_all_balances"
         )
-        assert balance_calls >= 1, "Agent should use tools to check balances"
+        assert balance_calls >= 1, "Eval should use tools to check balances"
 
         # Verify response quality - agent should show actual balances
         assert llm_assert(
@@ -148,7 +148,7 @@ class TestBankingWorkflow:
         )
 
     @pytest.mark.asyncio
-    async def test_02_reference_prior_context(self, aitest_run, llm_assert, banking_server):
+    async def test_02_reference_prior_context(self, eval_run, llm_assert, banking_server):
         """Reference prior context without repeating it.
 
         Key Test Design:
@@ -158,7 +158,7 @@ class TestBankingWorkflow:
         This tests implicit context retention - the agent should understand
         the reference without us restating it explicitly.
         """
-        agent = Agent(
+        agent = Eval(
             name="banking-session-02",
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             mcp_servers=[banking_server],
@@ -166,7 +166,7 @@ class TestBankingWorkflow:
             max_turns=10,
         )
 
-        result = await aitest_run(
+        result = await eval_run(
             agent,
             # IMPORTANT: We say "that trip" NOT "Paris trip"
             # The agent must remember what trip we're talking about
@@ -174,8 +174,8 @@ class TestBankingWorkflow:
             "for that trip I mentioned.",
         )
 
-        assert result.success, f"Agent failed: {result.error}"
-        assert result.tool_was_called("transfer"), "Agent should make a transfer"
+        assert result.success, f"Eval failed: {result.error}"
+        assert result.tool_was_called("transfer"), "Eval should make a transfer"
 
         # Verify the transfer was completed
         assert llm_assert(
@@ -184,7 +184,7 @@ class TestBankingWorkflow:
         )
 
     @pytest.mark.asyncio
-    async def test_03_pure_context_question(self, aitest_run, banking_server):
+    async def test_03_pure_context_question(self, eval_run, banking_server):
         """Ask a question that can ONLY be answered from conversation history.
 
         THIS IS THE CRITICAL TEST.
@@ -196,7 +196,7 @@ class TestBankingWorkflow:
         The agent MUST retrieve "Paris" from the conversation history established
         in test_01. If sessions don't work, this test fails.
         """
-        agent = Agent(
+        agent = Eval(
             name="banking-session-03",
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             mcp_servers=[banking_server],
@@ -204,24 +204,24 @@ class TestBankingWorkflow:
             max_turns=10,
         )
 
-        result = await aitest_run(
+        result = await eval_run(
             agent,
             # This cannot be answered by tools - requires memory
             "Wait, remind me - what was I saving for again?",
         )
 
-        assert result.success, f"Agent failed: {result.error}"
+        assert result.success, f"Eval failed: {result.error}"
 
-        # THE DEFINITIVE ASSERTION: Agent must say "Paris"
+        # THE DEFINITIVE ASSERTION: Eval must say "Paris"
         response_lower = result.final_response.lower()
         assert "paris" in response_lower, (
-            f"Agent must remember 'Paris' from conversation history.\n"
+            f"Eval must remember 'Paris' from conversation history.\n"
             f"This proves sessions work - no tool provides this information.\n"
             f"Got: {result.final_response}"
         )
 
     @pytest.mark.asyncio
-    async def test_04_multi_turn_reasoning(self, aitest_run, llm_assert, banking_server):
+    async def test_04_multi_turn_reasoning(self, eval_run, llm_assert, banking_server):
         """Complex question requiring both context retention AND tool usage.
 
         This test combines:
@@ -229,7 +229,7 @@ class TestBankingWorkflow:
             2. Tool call: Check current savings balance
             3. Reasoning: Calculate months to afford $800 flight
         """
-        agent = Agent(
+        agent = Eval(
             name="banking-session-04",
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             mcp_servers=[banking_server],
@@ -237,7 +237,7 @@ class TestBankingWorkflow:
             max_turns=10,
         )
 
-        result = await aitest_run(
+        result = await eval_run(
             agent,
             # Requires: context (Paris), tool call (balance), math (calculation)
             "If I keep saving $500 per month for my trip, and flights to "
@@ -245,12 +245,12 @@ class TestBankingWorkflow:
             "afford the flight? Check my current savings balance first.",
         )
 
-        assert result.success, f"Agent failed: {result.error}"
+        assert result.success, f"Eval failed: {result.error}"
 
-        # Agent should check the balance using tools
-        assert result.tool_was_called("get_balance"), "Agent should check savings balance"
+        # Eval should check the balance using tools
+        assert result.tool_was_called("get_balance"), "Eval should check savings balance"
 
-        # Agent should provide a reasonable answer with calculation
+        # Eval should provide a reasonable answer with calculation
         assert llm_assert(
             result.final_response,
             "Response shows current savings balance and calculates how long "
@@ -258,7 +258,7 @@ class TestBankingWorkflow:
         )
 
     @pytest.mark.asyncio
-    async def test_05_context_summary(self, aitest_run, llm_assert, banking_server):
+    async def test_05_context_summary(self, eval_run, llm_assert, banking_server):
         """Request a summary to verify full conversation history retention.
 
         This tests that the agent remembers the ENTIRE conversation:
@@ -266,7 +266,7 @@ class TestBankingWorkflow:
             - The $500 transfer
             - The flight cost calculation
         """
-        agent = Agent(
+        agent = Eval(
             name="banking-session-05",
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             mcp_servers=[banking_server],
@@ -274,12 +274,12 @@ class TestBankingWorkflow:
             max_turns=10,
         )
 
-        result = await aitest_run(
+        result = await eval_run(
             agent,
             "Give me a quick summary of what we've discussed and done today.",
         )
 
-        assert result.success, f"Agent failed: {result.error}"
+        assert result.success, f"Eval failed: {result.error}"
 
         # Summary should mention key points from the entire conversation
         assert llm_assert(
@@ -307,14 +307,14 @@ class TestSessionIsolation:
     """
 
     @pytest.mark.asyncio
-    async def test_fresh_session_starts_clean(self, aitest_run, banking_server):
+    async def test_fresh_session_starts_clean(self, eval_run, banking_server):
         """This class should NOT see TestBankingWorkflow's conversation.
 
         The conversation history should be empty because we're using a
         different session name, even though the server state (account
         balances) reflects changes from the prior test class.
         """
-        agent = Agent(
+        agent = Eval(
             name="isolated-session-test",
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             mcp_servers=[banking_server],
@@ -322,7 +322,7 @@ class TestSessionIsolation:
             max_turns=10,
         )
 
-        result = await aitest_run(
+        result = await eval_run(
             agent,
             "What's my current checking balance?",
         )
@@ -352,13 +352,13 @@ class TestModelSessionComparison:
 
     @pytest.mark.parametrize("model", BENCHMARK_MODELS)
     @pytest.mark.asyncio
-    async def test_session_context_retention(self, aitest_run, banking_server, model):
+    async def test_session_context_retention(self, eval_run, banking_server, model):
         """Full session workflow: introduce context → reference it → verify memory.
 
         This runs a complete session in a single test to compare models fairly.
         Each model gets the same prompts and must demonstrate context retention.
         """
-        agent = Agent(
+        agent = Eval(
             name=f"model-comparison-{model}",
             provider=Provider(model=f"azure/{model}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             mcp_servers=[banking_server],
@@ -368,7 +368,7 @@ class TestModelSessionComparison:
         messages: list = []
 
         # Step 1: Introduce Paris trip context
-        result1 = await aitest_run(
+        result1 = await eval_run(
             agent,
             "Hi! I'm planning a trip to Paris next summer. Can you check my savings balance?",
         )
@@ -377,7 +377,7 @@ class TestModelSessionComparison:
         messages = result1.messages
 
         # Step 2: Reference prior context without repeating it
-        result2 = await aitest_run(
+        result2 = await eval_run(
             agent,
             "Great! Move $200 to savings for that trip I mentioned.",
             messages=messages,
@@ -387,7 +387,7 @@ class TestModelSessionComparison:
         messages = result2.messages
 
         # Step 3: Pure context question - THE CRITICAL TEST
-        result3 = await aitest_run(
+        result3 = await eval_run(
             agent,
             "Remind me - what was I saving for?",
             messages=messages,

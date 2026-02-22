@@ -86,7 +86,7 @@ def _report_header(report: ReportMetadata) -> str:
 
 
 # ---------------------------------------------------------------------------
-# Agent leaderboard
+# Eval leaderboard
 # ---------------------------------------------------------------------------
 
 
@@ -99,10 +99,10 @@ def _medal(rank: int) -> str:
 def _agent_leaderboard_multi(agents: list[AgentData]) -> str:
     """Render ranked leaderboard table for multiple agents."""
     parts: list[str] = []
-    parts.append(Header.atx(level=_H2, title="Agent Leaderboard"))
+    parts.append(Header.atx(level=_H2, title="Eval Leaderboard"))
 
     # Build table data: header + rows
-    header = ["#", "Agent", "Tests", "Pass Rate", "Tokens", "Cost", "Duration"]
+    header = ["#", "Eval", "Tests", "Pass Rate", "Tokens", "Cost", "Duration"]
     rows: list[list[str]] = [header]
 
     for i, agent in enumerate(agents, 1):
@@ -445,7 +445,7 @@ def render_markdown_report(ctx: ReportContext) -> str:
     # 1. Header with metadata
     sections.append(_report_header(ctx.report))
 
-    # 2. Agent leaderboard (table for multi, card for single)
+    # 2. Eval leaderboard (table for multi, card for single)
     sections.append(_agent_leaderboard(ctx.agents))
 
     # 3. AI analysis

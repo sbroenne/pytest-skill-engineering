@@ -15,7 +15,7 @@ import sys
 
 import pytest
 
-from pytest_skill_engineering import Agent, MCPServer, Provider, Wait
+from pytest_skill_engineering import Eval, MCPServer, Provider, Wait
 
 pytestmark = [pytest.mark.integration]
 
@@ -43,14 +43,14 @@ banking_server = MCPServer(
 )
 
 AGENTS = [
-    Agent(
+    Eval(
         name="verbose-prompt",
         provider=Provider(model="azure/gpt-5-mini", rpm=10, tpm=10000),
         mcp_servers=[banking_server],
         system_prompt=VERBOSE_PROMPT,
         max_turns=5,
     ),
-    Agent(
+    Eval(
         name="terse-prompt",
         provider=Provider(model="azure/gpt-5-mini", rpm=10, tpm=10000),
         mcp_servers=[banking_server],
@@ -69,18 +69,18 @@ def _reset_agents():
 
 
 @pytest.mark.parametrize("agent", AGENTS, ids=lambda a: a.name)
-async def test_simple_balance_query(aitest_run, agent):
+async def test_simple_balance_query(eval_run, agent):
     """Simple query — should work with both prompts."""
-    result = await aitest_run(agent, "What's my checking balance?")
+    result = await eval_run(agent, "What's my checking balance?")
     assert result.success
     assert result.tool_was_called("get_balance")
 
 
 @pytest.mark.parametrize("agent", AGENTS, ids=lambda a: a.name)
-async def test_multi_step_transfer(aitest_run, agent, llm_assert):
+async def test_multi_step_transfer(eval_run, agent, llm_assert):
     """Multi-step operation — verbose prompt may perform better."""
     agent.max_turns = 8
-    result = await aitest_run(
+    result = await eval_run(
         agent,
         "Transfer $100 from checking to savings, then show me both balances",
     )

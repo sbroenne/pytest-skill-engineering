@@ -8,10 +8,10 @@
 *2×2 matrix proving dimension auto-detection.*
 
 
-## Agent Leaderboard
+## Eval Leaderboard
 
 
-|#|Agent|Tests|Pass Rate|Tokens|Cost|Duration|
+|#|Eval|Tests|Pass Rate|Tokens|Cost|Duration|
 | :---: | :--- | :---: | :---: | ---: | ---: | ---: |
 |🥇|gpt-5-mini + concise 🏆|1/1|100%|893|$0.000297|4.7s|
 |🥈|gpt-4.1-mini + concise|1/1|100%|706|$0.000317|5.1s|
@@ -163,13 +163,13 @@ The tool is easy to discover and consistently called correctly across all agents
 ```mermaid
 sequenceDiagram
     participant User
-    participant Agent
+    participant Eval
     participant Tools
 
-    User->>Agent: "What's my checking account balance?"
-    Agent->>Tools: "get_balance({'account': 'checking'})"
-    Tools-->>Agent: "{'account': 'checking', 'balance': 1500.0, 'formatted': '$1,"
-    Agent->>User: "Your checking account balance is $1,500.00. Would you like to do anything with t"
+    User->>Eval: "What's my checking account balance?"
+    Eval->>Tools: "get_balance({'account': 'checking'})"
+    Tools-->>Eval: "{'account': 'checking', 'balance': 1500.0, 'formatted': '$1,"
+    Eval->>User: "Your checking account balance is $1,500.00. Would you like to do anything with t"
 ```
 
 </details>
@@ -192,13 +192,13 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant User
-    participant Agent
+    participant Eval
     participant Tools
 
-    User->>Agent: "What's my checking account balance?"
-    Agent->>Tools: "get_balance({'account': 'checking'})"
-    Tools-->>Agent: "{'account': 'checking', 'balance': 1500.0, 'formatted': '$1,"
-    Agent->>User: "Your checking account balance is $1,500.00. Is there anything else you would lik"
+    User->>Eval: "What's my checking account balance?"
+    Eval->>Tools: "get_balance({'account': 'checking'})"
+    Tools-->>Eval: "{'account': 'checking', 'balance': 1500.0, 'formatted': '$1,"
+    Eval->>User: "Your checking account balance is $1,500.00. Is there anything else you would lik"
 ```
 
 </details>
@@ -221,13 +221,13 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant User
-    participant Agent
+    participant Eval
     participant Tools
 
-    User->>Agent: "What's my checking account balance?"
-    Agent->>Tools: "get_balance({'account': 'checking'})"
-    Tools-->>Agent: "{'account': 'checking', 'balance': 1500.0, 'formatted': '$1,"
-    Agent->>User: "Your checking balance is $1,500.00. Anything else?"
+    User->>Eval: "What's my checking account balance?"
+    Eval->>Tools: "get_balance({'account': 'checking'})"
+    Tools-->>Eval: "{'account': 'checking', 'balance': 1500.0, 'formatted': '$1,"
+    Eval->>User: "Your checking balance is $1,500.00. Anything else?"
 ```
 
 </details>
@@ -250,13 +250,13 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant User
-    participant Agent
+    participant Eval
     participant Tools
 
-    User->>Agent: "What's my checking account balance?"
-    Agent->>Tools: "get_balance({'account': 'checking'})"
-    Tools-->>Agent: "{'account': 'checking', 'balance': 1500.0, 'formatted': '$1,"
-    Agent->>User: "Your checking account balance is $1,500.00."
+    User->>Eval: "What's my checking account balance?"
+    Eval->>Tools: "get_balance({'account': 'checking'})"
+    Tools-->>Eval: "{'account': 'checking', 'balance': 1500.0, 'formatted': '$1,"
+    Eval->>User: "Your checking account balance is $1,500.00."
 ```
 
 </details>

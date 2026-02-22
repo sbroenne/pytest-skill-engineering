@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from pytest_skill_engineering.copilot.agents import (
+from pytest_skill_engineering.copilot.evals import (
     _extract_frontmatter,
     _name_from_path,
     load_custom_agent,
@@ -48,7 +48,7 @@ class TestExtractFrontmatter:
             "    prompt: /task-review\n"
             "    send: true\n"
             "---\n\n"
-            "# Agent body"
+            "# Eval body"
         )
         metadata, body = _extract_frontmatter(content)
         assert metadata["description"] == "Complex agent"
@@ -98,19 +98,19 @@ class TestLoadCustomAgent:
         agent_file = tmp_path / "test-agent.agent.md"
         agent_file.write_text(
             "---\ndescription: 'A test agent'\nmaturity: stable\n---\n\n"
-            "# Test Agent\n\nDoes test things.",
+            "# Test Eval\n\nDoes test things.",
             encoding="utf-8",
         )
         result = load_custom_agent(agent_file)
         assert result["name"] == "test-agent"
-        assert result["prompt"] == "# Test Agent\n\nDoes test things."
+        assert result["prompt"] == "# Test Eval\n\nDoes test things."
         assert result["description"] == "A test agent"
         assert result["metadata"]["maturity"] == "stable"
 
     def test_missing_description(self, tmp_path):
         agent_file = tmp_path / "no-desc.agent.md"
         agent_file.write_text(
-            "---\nmaturity: experimental\n---\n\n# Agent\n\nBody.",
+            "---\nmaturity: experimental\n---\n\n# Eval\n\nBody.",
             encoding="utf-8",
         )
         result = load_custom_agent(agent_file)
@@ -119,7 +119,7 @@ class TestLoadCustomAgent:
 
     def test_no_frontmatter(self, tmp_path):
         agent_file = tmp_path / "bare.agent.md"
-        agent_file.write_text("# Bare Agent\n\nNo frontmatter.", encoding="utf-8")
+        agent_file.write_text("# Bare Eval\n\nNo frontmatter.", encoding="utf-8")
         result = load_custom_agent(agent_file)
         assert result["name"] == "bare"
         assert result["description"] == ""
@@ -128,7 +128,7 @@ class TestLoadCustomAgent:
     def test_overrides(self, tmp_path):
         agent_file = tmp_path / "overridable.agent.md"
         agent_file.write_text(
-            "---\ndescription: 'Original'\n---\n\n# Agent",
+            "---\ndescription: 'Original'\n---\n\n# Eval",
             encoding="utf-8",
         )
         result = load_custom_agent(
@@ -139,7 +139,7 @@ class TestLoadCustomAgent:
         assert result["description"] == "Overridden"
 
     def test_file_not_found(self):
-        with pytest.raises(FileNotFoundError, match="Agent file not found"):
+        with pytest.raises(FileNotFoundError, match="Eval file not found"):
             load_custom_agent(Path("/nonexistent/agent.agent.md"))
 
     def test_empty_body(self, tmp_path):
@@ -201,7 +201,7 @@ class TestLoadCustomAgents:
         assert "tools" not in alpha
 
     def test_directory_not_found(self):
-        with pytest.raises(FileNotFoundError, match="Agent directory not found"):
+        with pytest.raises(FileNotFoundError, match="Eval directory not found"):
             load_custom_agents(Path("/nonexistent/agents"))
 
     def test_ignores_non_agent_files(self, agents_dir):

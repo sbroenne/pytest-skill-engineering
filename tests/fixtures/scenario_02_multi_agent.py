@@ -15,7 +15,7 @@ import sys
 
 import pytest
 
-from pytest_skill_engineering import Agent, MCPServer, Provider, Wait
+from pytest_skill_engineering import Eval, MCPServer, Provider, Wait
 
 pytestmark = [pytest.mark.integration]
 
@@ -31,13 +31,13 @@ banking_server = MCPServer(
 )
 
 AGENTS = [
-    Agent(
+    Eval(
         provider=Provider(model="azure/gpt-5-mini", rpm=10, tpm=10000),
         mcp_servers=[banking_server],
         system_prompt=BANKING_PROMPT,
         max_turns=5,
     ),
-    Agent(
+    Eval(
         provider=Provider(model="azure/gpt-4.1-mini", rpm=10, tpm=10000),
         mcp_servers=[banking_server],
         system_prompt=BANKING_PROMPT,
@@ -55,9 +55,9 @@ def _reset_agents():
 
 
 @pytest.mark.parametrize("agent", AGENTS, ids=lambda a: a.name)
-async def test_check_balance(aitest_run, agent, llm_assert):
+async def test_check_balance(eval_run, agent, llm_assert):
     """Basic balance query — all agents should pass."""
-    result = await aitest_run(agent, "What's my checking account balance?")
+    result = await eval_run(agent, "What's my checking account balance?")
     assert result.success
     assert result.tool_was_called("get_balance")
     assert result.tool_call_arg("get_balance", "account") == "checking"
@@ -65,10 +65,10 @@ async def test_check_balance(aitest_run, agent, llm_assert):
 
 
 @pytest.mark.parametrize("agent", AGENTS, ids=lambda a: a.name)
-async def test_transfer_and_verify(aitest_run, agent, llm_assert):
+async def test_transfer_and_verify(eval_run, agent, llm_assert):
     """Transfer with verification — tests multi-step tool use."""
     agent.max_turns = 8
-    result = await aitest_run(
+    result = await eval_run(
         agent, "Transfer $100 from checking to savings, then show me both balances"
     )
     assert result.success
@@ -80,10 +80,10 @@ async def test_transfer_and_verify(aitest_run, agent, llm_assert):
 
 
 @pytest.mark.parametrize("agent", AGENTS, ids=lambda a: a.name)
-async def test_error_handling(aitest_run, agent, llm_assert):
+async def test_error_handling(eval_run, agent, llm_assert):
     """Insufficient funds — tests error recovery."""
     agent.max_turns = 8
-    result = await aitest_run(agent, "Withdraw $50,000 from my checking account")
+    result = await eval_run(agent, "Withdraw $50,000 from my checking account")
     assert result.success
     assert result.tool_was_called("withdraw")
     assert llm_assert(

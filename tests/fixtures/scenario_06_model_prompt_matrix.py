@@ -15,7 +15,7 @@ import sys
 
 import pytest
 
-from pytest_skill_engineering import Agent, MCPServer, Provider, Wait
+from pytest_skill_engineering import Eval, MCPServer, Provider, Wait
 
 pytestmark = [pytest.mark.integration]
 
@@ -46,16 +46,16 @@ class TestModelPromptMatrix:
     @pytest.mark.parametrize(
         "prompt_name,system_prompt", TEST_PROMPTS.items(), ids=TEST_PROMPTS.keys()
     )
-    async def test_balance_check(self, aitest_run, model, prompt_name, system_prompt, llm_assert):
+    async def test_balance_check(self, eval_run, model, prompt_name, system_prompt, llm_assert):
         """Balance query across all model × prompt permutations."""
-        agent = Agent(
+        agent = Eval(
             provider=Provider(model=f"azure/{model}", rpm=10, tpm=10000),
             mcp_servers=[banking_server],
             system_prompt=system_prompt,
             system_prompt_name=prompt_name,
             max_turns=5,
         )
-        result = await aitest_run(agent, "What's my checking account balance?")
+        result = await eval_run(agent, "What's my checking account balance?")
         assert result.success
         assert result.tool_was_called("get_balance")
         assert llm_assert(result.final_response, "states the checking balance amount")
@@ -64,18 +64,16 @@ class TestModelPromptMatrix:
     @pytest.mark.parametrize(
         "prompt_name,system_prompt", TEST_PROMPTS.items(), ids=TEST_PROMPTS.keys()
     )
-    async def test_transfer_workflow(
-        self, aitest_run, model, prompt_name, system_prompt, llm_assert
-    ):
+    async def test_transfer_workflow(self, eval_run, model, prompt_name, system_prompt, llm_assert):
         """Transfer workflow across all permutations."""
-        agent = Agent(
+        agent = Eval(
             provider=Provider(model=f"azure/{model}", rpm=10, tpm=10000),
             mcp_servers=[banking_server],
             system_prompt=system_prompt,
             system_prompt_name=prompt_name,
             max_turns=8,
         )
-        result = await aitest_run(agent, "Transfer $100 from checking to savings")
+        result = await eval_run(agent, "Transfer $100 from checking to savings")
         assert result.success
         assert result.tool_was_called("transfer")
         assert llm_assert(result.final_response, "confirms the transfer")

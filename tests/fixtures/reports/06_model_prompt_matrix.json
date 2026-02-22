@@ -7,7 +7,7 @@
       "name": "tests/fixtures/scenario_06_model_prompt_matrix.py::TestModelPromptMatrix::test_balance_check[detailed-gpt-5-mini]",
       "outcome": "passed",
       "duration_ms": 12289.076099987142,
-      "agent_result": {
+      "eval_result": {
         "turns": [
           {
             "role": "user",
@@ -240,7 +240,7 @@
       "docstring": "Balance query across all model \u00d7 prompt permutations.",
       "class_docstring": "2\u00d72 matrix: 2 models \u00d7 2 prompts = 4 agent configurations.",
       "agent_id": "29d53880-5fdd-4de8-a9f0-ac7ba991e273",
-      "agent_name": "gpt-5-mini + detailed",
+      "eval_name": "gpt-5-mini + detailed",
       "model": "gpt-5-mini",
       "system_prompt_name": "detailed",
       "skill_name": null
@@ -249,7 +249,7 @@
       "name": "tests/fixtures/scenario_06_model_prompt_matrix.py::TestModelPromptMatrix::test_balance_check[detailed-gpt-4.1-mini]",
       "outcome": "passed",
       "duration_ms": 6776.0258000053,
-      "agent_result": {
+      "eval_result": {
         "turns": [
           {
             "role": "user",
@@ -482,7 +482,7 @@
       "docstring": "Balance query across all model \u00d7 prompt permutations.",
       "class_docstring": "2\u00d72 matrix: 2 models \u00d7 2 prompts = 4 agent configurations.",
       "agent_id": "ed612af6-6d89-4161-aa54-bb7a382c564f",
-      "agent_name": "gpt-4.1-mini + detailed",
+      "eval_name": "gpt-4.1-mini + detailed",
       "model": "gpt-4.1-mini",
       "system_prompt_name": "detailed",
       "skill_name": null
@@ -491,7 +491,7 @@
       "name": "tests/fixtures/scenario_06_model_prompt_matrix.py::TestModelPromptMatrix::test_balance_check[concise-gpt-5-mini]",
       "outcome": "passed",
       "duration_ms": 6571.896000008564,
-      "agent_result": {
+      "eval_result": {
         "turns": [
           {
             "role": "user",
@@ -724,7 +724,7 @@
       "docstring": "Balance query across all model \u00d7 prompt permutations.",
       "class_docstring": "2\u00d72 matrix: 2 models \u00d7 2 prompts = 4 agent configurations.",
       "agent_id": "235b5920-75f2-4ea0-b031-6fcb78683f12",
-      "agent_name": "gpt-5-mini + concise",
+      "eval_name": "gpt-5-mini + concise",
       "model": "gpt-5-mini",
       "system_prompt_name": "concise",
       "skill_name": null
@@ -733,7 +733,7 @@
       "name": "tests/fixtures/scenario_06_model_prompt_matrix.py::TestModelPromptMatrix::test_balance_check[concise-gpt-4.1-mini]",
       "outcome": "passed",
       "duration_ms": 6418.796399986604,
-      "agent_result": {
+      "eval_result": {
         "turns": [
           {
             "role": "user",
@@ -966,7 +966,7 @@
       "docstring": "Balance query across all model \u00d7 prompt permutations.",
       "class_docstring": "2\u00d72 matrix: 2 models \u00d7 2 prompts = 4 agent configurations.",
       "agent_id": "16046cf6-eb09-4ff4-826c-c02903074856",
-      "agent_name": "gpt-4.1-mini + concise",
+      "eval_name": "gpt-4.1-mini + concise",
       "model": "gpt-4.1-mini",
       "system_prompt_name": "concise",
       "skill_name": null
@@ -975,7 +975,7 @@
       "name": "tests/fixtures/scenario_06_model_prompt_matrix.py::TestModelPromptMatrix::test_transfer_workflow[detailed-gpt-5-mini]",
       "outcome": "passed",
       "duration_ms": 11781.111099990085,
-      "agent_result": {
+      "eval_result": {
         "turns": [
           {
             "role": "user",
@@ -1284,7 +1284,7 @@
       "docstring": "Transfer workflow across all permutations.",
       "class_docstring": "2\u00d72 matrix: 2 models \u00d7 2 prompts = 4 agent configurations.",
       "agent_id": "9a188352-740b-4f99-a6ce-43db0e428006",
-      "agent_name": "gpt-5-mini + detailed",
+      "eval_name": "gpt-5-mini + detailed",
       "model": "gpt-5-mini",
       "system_prompt_name": "detailed",
       "skill_name": null
@@ -1293,7 +1293,7 @@
       "name": "tests/fixtures/scenario_06_model_prompt_matrix.py::TestModelPromptMatrix::test_transfer_workflow[detailed-gpt-4.1-mini]",
       "outcome": "passed",
       "duration_ms": 7176.225300005171,
-      "agent_result": {
+      "eval_result": {
         "turns": [
           {
             "role": "user",
@@ -1567,7 +1567,7 @@
       "docstring": "Transfer workflow across all permutations.",
       "class_docstring": "2\u00d72 matrix: 2 models \u00d7 2 prompts = 4 agent configurations.",
       "agent_id": "80e79ede-adc3-4c34-bf9d-6839ed1daa36",
-      "agent_name": "gpt-4.1-mini + detailed",
+      "eval_name": "gpt-4.1-mini + detailed",
       "model": "gpt-4.1-mini",
       "system_prompt_name": "detailed",
       "skill_name": null
@@ -1576,7 +1576,7 @@
       "name": "tests/fixtures/scenario_06_model_prompt_matrix.py::TestModelPromptMatrix::test_transfer_workflow[concise-gpt-5-mini]",
       "outcome": "passed",
       "duration_ms": 6748.944599996321,
-      "agent_result": {
+      "eval_result": {
         "turns": [
           {
             "role": "user",
@@ -1811,7 +1811,7 @@
       "docstring": "Transfer workflow across all permutations.",
       "class_docstring": "2\u00d72 matrix: 2 models \u00d7 2 prompts = 4 agent configurations.",
       "agent_id": "1d50c4dc-ede2-478d-b8c1-152a7284a431",
-      "agent_name": "gpt-5-mini + concise",
+      "eval_name": "gpt-5-mini + concise",
       "model": "gpt-5-mini",
       "system_prompt_name": "concise",
       "skill_name": null
@@ -1820,7 +1820,7 @@
       "name": "tests/fixtures/scenario_06_model_prompt_matrix.py::TestModelPromptMatrix::test_transfer_workflow[concise-gpt-4.1-mini]",
       "outcome": "passed",
       "duration_ms": 6212.465199991129,
-      "agent_result": {
+      "eval_result": {
         "turns": [
           {
             "role": "user",
@@ -2055,7 +2055,7 @@
       "docstring": "Transfer workflow across all permutations.",
       "class_docstring": "2\u00d72 matrix: 2 models \u00d7 2 prompts = 4 agent configurations.",
       "agent_id": "d950f803-72f1-45d9-8fac-bea255d78fef",
-      "agent_name": "gpt-4.1-mini + concise",
+      "eval_name": "gpt-4.1-mini + concise",
       "model": "gpt-4.1-mini",
       "system_prompt_name": "concise",
       "skill_name": null

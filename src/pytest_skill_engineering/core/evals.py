@@ -2,10 +2,10 @@
 
 Loads VS Code (``.github/agents/*.agent.md``) and Claude Code
 (``.claude/agents/*.md``) custom agent definitions into dicts
-compatible with both :attr:`Agent.from_agent_file` and
-:attr:`CopilotAgent.custom_agents`.
+compatible with both :attr:`Eval.from_agent_file` and
+:attr:`CopilotEval.custom_agents`.
 
-Agent files use YAML frontmatter for metadata and a markdown body for
+Eval files use YAML frontmatter for metadata and a markdown body for
 the agent's prompt/instructions.
 
 Example ``.agent.md`` file::
@@ -24,7 +24,7 @@ Example ``.agent.md`` file::
 
 Example usage::
 
-    from pytest_skill_engineering.core.agents import load_custom_agent, load_custom_agents
+    from pytest_skill_engineering.core.evals import load_custom_agent, load_custom_agents
 
     # Single agent
     researcher = load_custom_agent("agents/task-researcher.agent.md")
@@ -34,16 +34,16 @@ Example usage::
     # All agents from a directory
     agents = load_custom_agents("agents/")
 
-    # Use with Agent.from_agent_file()
-    from pytest_skill_engineering import Agent, Provider
-    agent = Agent.from_agent_file(
+    # Use with Eval.from_agent_file()
+    from pytest_skill_engineering import Eval, Provider
+    agent = Eval.from_agent_file(
         ".github/agents/reviewer.agent.md",
         provider=Provider(model="azure/gpt-5-mini"),
     )
 
-    # Use with CopilotAgent
-    from pytest_skill_engineering.copilot import CopilotAgent
-    agent = CopilotAgent(
+    # Use with CopilotEval
+    from pytest_skill_engineering.copilot import CopilotEval
+    agent = CopilotEval(
         name="orchestrator",
         instructions="Dispatch tasks to specialized agents.",
         custom_agents=load_custom_agents("agents/", exclude={"orchestrator"}),
@@ -53,7 +53,7 @@ Also provides prompt file loaders for VS Code prompt files
 (``.github/prompts/*.prompt.md``) and Claude Code commands
 (``.claude/commands/*.md``) — reusable slash-command prompts::
 
-    from pytest_skill_engineering.core.agents import load_prompt_file, load_prompt_files
+    from pytest_skill_engineering.core.evals import load_prompt_file, load_prompt_files
 
     # Single prompt file
     prompt = load_prompt_file(".github/prompts/review.prompt.md")
@@ -61,7 +61,7 @@ Also provides prompt file loaders for VS Code prompt files
     #    "description": "...", "metadata": {...}}
 
     # Use the body as the test input
-    result = await aitest_run(agent, prompt["body"])
+    result = await eval_run(agent, prompt["body"])
 
     # Load all from directory
     prompts = load_prompt_files(".github/prompts/")
@@ -137,8 +137,8 @@ def load_custom_agent(
             - ``prompt`` (str): Markdown body after frontmatter.
             - ``description`` (str): From frontmatter, empty if absent.
             - ``metadata`` (dict): Full parsed frontmatter dict.
-        Compatible with :attr:`CopilotAgent.custom_agents` and
-        :meth:`Agent.from_agent_file`.
+        Compatible with :attr:`CopilotEval.custom_agents` and
+        :meth:`Eval.from_agent_file`.
 
     Raises:
         FileNotFoundError: If the file does not exist.
@@ -146,7 +146,7 @@ def load_custom_agent(
     """
     path = Path(path)
     if not path.exists():
-        msg = f"Agent file not found: {path}"
+        msg = f"Eval file not found: {path}"
         raise FileNotFoundError(msg)
 
     content = path.read_text(encoding="utf-8")
@@ -154,7 +154,7 @@ def load_custom_agent(
     body = body.strip()
 
     if not body:
-        msg = f"Agent file has no content after frontmatter: {path}"
+        msg = f"Eval file has no content after frontmatter: {path}"
         raise ValueError(msg)
 
     config: dict[str, Any] = {
@@ -184,7 +184,7 @@ def load_custom_agents(
         include: If set, only load agents with these names. Names are
             derived from filenames (e.g. ``task-researcher.agent.md``
             → ``task-researcher``).
-        exclude: Agent names to skip.
+        exclude: Eval names to skip.
         overrides: Per-agent override dicts keyed by agent name. Merged
             into each matching agent's config.
 
@@ -196,7 +196,7 @@ def load_custom_agents(
     """
     directory = Path(directory)
     if not directory.is_dir():
-        msg = f"Agent directory not found: {directory}"
+        msg = f"Eval directory not found: {directory}"
         raise FileNotFoundError(msg)
 
     agents: list[dict[str, Any]] = []
@@ -243,7 +243,7 @@ def load_prompt_file(path: Path | str) -> dict[str, Any]:
         - ``name`` (str): Derived from filename
           (``review.prompt.md`` → ``review``).
         - ``body`` (str): The prompt text — use this as the input to
-          :func:`aitest_run`.
+          :func:`eval_run`.
         - ``description`` (str): From frontmatter ``description`` field,
           empty if absent.
         - ``metadata`` (dict): Full parsed frontmatter dict.
@@ -258,11 +258,11 @@ def load_prompt_file(path: Path | str) -> dict[str, Any]:
 
         # VS Code prompt file
         prompt = load_prompt_file(".github/prompts/review.prompt.md")
-        result = await aitest_run(agent, prompt["body"])
+        result = await eval_run(agent, prompt["body"])
 
         # Claude Code command
         prompt = load_prompt_file(".claude/commands/review.md")
-        result = await aitest_run(agent, prompt["body"])
+        result = await eval_run(agent, prompt["body"])
     """
     path = Path(path)
     if not path.exists():
@@ -316,8 +316,8 @@ def load_prompt_files(
         prompts = load_prompt_files(".github/prompts/")
 
         @pytest.mark.parametrize("prompt", prompts, ids=lambda p: p["name"])
-        async def test_prompt_files(aitest_run, agent, prompt):
-            result = await aitest_run(agent, prompt["body"])
+        async def test_prompt_files(eval_run, agent, prompt):
+            result = await eval_run(agent, prompt["body"])
             assert result.success
     """
     directory = Path(directory)

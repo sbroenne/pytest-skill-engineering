@@ -13,14 +13,14 @@ from __future__ import annotations
 
 import pytest
 
-from pytest_skill_engineering.copilot.agent import CopilotAgent
+from pytest_skill_engineering.copilot.eval import CopilotEval
 
 
 @pytest.mark.copilot
 class TestSkillABComparison:
     """Same task, two configs — skill produces measurably different output than no-skill baseline."""
 
-    async def test_version_declaration_skill_adds_dunder_version(self, copilot_run, tmp_path):
+    async def test_version_declaration_skill_adds_dunder_version(self, copilot_eval, tmp_path):
         """Skill mandating __version__ produces a module version declaration.
 
         Baseline (no skill): agent creates a plain module — LLMs never add __version__
@@ -42,7 +42,7 @@ class TestSkillABComparison:
 
         baseline_dir = tmp_path / "baseline"
         baseline_dir.mkdir()
-        baseline = CopilotAgent(
+        baseline = CopilotEval(
             name="baseline",
             instructions="Write a Python module.",
             working_directory=str(baseline_dir),
@@ -50,15 +50,15 @@ class TestSkillABComparison:
 
         treatment_dir = tmp_path / "treatment"
         treatment_dir.mkdir()
-        treatment = CopilotAgent(
+        treatment = CopilotEval(
             name="treatment",
             instructions="Write a Python module. Apply all versioning standards from your skills.",
             working_directory=str(treatment_dir),
             skill_directories=[str(skill_dir)],
         )
 
-        result_a = await copilot_run(baseline, task)
-        result_b = await copilot_run(treatment, task)
+        result_a = await copilot_eval(baseline, task)
+        result_b = await copilot_eval(treatment, task)
 
         assert result_a.success and result_b.success
 
@@ -74,7 +74,7 @@ class TestSkillABComparison:
             f"Baseline output:\n{content_a}"
         )
 
-    async def test_module_exports_skill_adds_all_declaration(self, copilot_run, tmp_path):
+    async def test_module_exports_skill_adds_all_declaration(self, copilot_eval, tmp_path):
         """Skill mandating __all__ exports produces explicit public API declarations.
 
         Baseline (no skill): agent creates a plain module — LLMs almost never add __all__
@@ -95,7 +95,7 @@ class TestSkillABComparison:
 
         baseline_dir = tmp_path / "baseline"
         baseline_dir.mkdir()
-        baseline = CopilotAgent(
+        baseline = CopilotEval(
             name="baseline",
             instructions="Write a Python module.",
             working_directory=str(baseline_dir),
@@ -103,15 +103,15 @@ class TestSkillABComparison:
 
         treatment_dir = tmp_path / "treatment"
         treatment_dir.mkdir()
-        treatment = CopilotAgent(
+        treatment = CopilotEval(
             name="treatment",
             instructions="Write a Python module. Apply all module export standards from your skills.",
             working_directory=str(treatment_dir),
             skill_directories=[str(skill_dir)],
         )
 
-        result_a = await copilot_run(baseline, task)
-        result_b = await copilot_run(treatment, task)
+        result_a = await copilot_eval(baseline, task)
+        result_b = await copilot_eval(treatment, task)
 
         assert result_a.success and result_b.success
 
@@ -127,7 +127,7 @@ class TestSkillABComparison:
             f"Baseline output:\n{content_a}"
         )
 
-    async def test_docstring_format_skill_produces_google_style(self, copilot_run, tmp_path):
+    async def test_docstring_format_skill_produces_google_style(self, copilot_eval, tmp_path):
         """Skill mandating Google-style docstrings produces Args:/Returns: sections.
 
         Baseline (no skill): agent writes plain one-line docstrings or none at all.
@@ -153,7 +153,7 @@ class TestSkillABComparison:
 
         baseline_dir = tmp_path / "baseline"
         baseline_dir.mkdir()
-        baseline = CopilotAgent(
+        baseline = CopilotEval(
             name="baseline",
             instructions="Write a Python module with minimal documentation.",
             working_directory=str(baseline_dir),
@@ -161,15 +161,15 @@ class TestSkillABComparison:
 
         treatment_dir = tmp_path / "treatment"
         treatment_dir.mkdir()
-        treatment = CopilotAgent(
+        treatment = CopilotEval(
             name="treatment",
             instructions="Write a Python module. Apply all docstring standards from your skills.",
             working_directory=str(treatment_dir),
             skill_directories=[str(skill_dir)],
         )
 
-        result_a = await copilot_run(baseline, task)
-        result_b = await copilot_run(treatment, task)
+        result_a = await copilot_eval(baseline, task)
+        result_b = await copilot_eval(treatment, task)
 
         assert result_a.success and result_b.success
 

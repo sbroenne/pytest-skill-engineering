@@ -7,7 +7,7 @@
       "name": "tests/fixtures/scenario_08_cli_server.py::test_cli_echo_basic",
       "outcome": "passed",
       "duration_ms": 5350.666000013007,
-      "agent_result": {
+      "eval_result": {
         "turns": [
           {
             "role": "user",
@@ -109,7 +109,7 @@
       "docstring": "Basic CLI tool usage \u2014 echo a message.",
       "class_docstring": null,
       "agent_id": "1f3d37ce-7075-4639-bdec-b8377d380fa3",
-      "agent_name": "cli-agent",
+      "eval_name": "cli-agent",
       "model": "gpt-5-mini",
       "system_prompt_name": null,
       "skill_name": null
@@ -118,7 +118,7 @@
       "name": "tests/fixtures/scenario_08_cli_server.py::test_cli_echo_with_reasoning",
       "outcome": "passed",
       "duration_ms": 10448.556099989219,
-      "agent_result": {
+      "eval_result": {
         "turns": [
           {
             "role": "user",
@@ -227,7 +227,7 @@
       "docstring": "CLI tool with reasoning \u2014 echo and explain.",
       "class_docstring": null,
       "agent_id": "1f3d37ce-7075-4639-bdec-b8377d380fa3",
-      "agent_name": "cli-agent",
+      "eval_name": "cli-agent",
       "model": "gpt-5-mini",
       "system_prompt_name": null,
       "skill_name": null

@@ -29,9 +29,9 @@ class TestCopilotModelText:
 
     async def test_simple_text_response(self) -> None:
         """CopilotModel can answer a simple question."""
-        from pydantic_ai import Agent
+        from pydantic_ai import Eval
 
-        agent = Agent(CopilotModel("gpt-5-mini"))
+        agent = Eval(CopilotModel("gpt-5-mini"))
         result = await agent.run("What is 2 + 2? Answer with just the number.")
         assert "4" in result.output
 
@@ -42,9 +42,9 @@ class TestCopilotModelText:
         assert model.model_name == "copilot:gpt-5-mini"
 
         # Verify it actually works end-to-end
-        from pydantic_ai import Agent
+        from pydantic_ai import Eval
 
-        agent = Agent(model)
+        agent = Eval(model)
         result = await agent.run("Say hello in exactly one word.")
         assert result.output.strip()
 
@@ -56,13 +56,13 @@ class TestCopilotModelStructuredOutput:
     async def test_structured_output(self) -> None:
         """CopilotModel extracts typed BaseModel output."""
         from pydantic import BaseModel
-        from pydantic_ai import Agent
+        from pydantic_ai import Eval
 
         class MathResult(BaseModel):
             answer: int
             explanation: str
 
-        agent = Agent(CopilotModel("gpt-5-mini"), output_type=MathResult)
+        agent = Eval(CopilotModel("gpt-5-mini"), output_type=MathResult)
         result = await agent.run("What is 15 + 27?")
         assert result.output.answer == 42
         assert result.output.explanation  # Non-empty
@@ -203,11 +203,11 @@ class TestCopilotModelOptimizer:
 
     async def test_optimize_instruction(self) -> None:
         """optimize_instruction returns a suggestion via CopilotModel."""
-        from pytest_skill_engineering.core.result import AgentResult, Turn
+        from pytest_skill_engineering.core.result import EvalResult, Turn
         from pytest_skill_engineering.execution.optimizer import optimize_instruction
 
-        # Build a minimal AgentResult representing a failed test
-        result = AgentResult(
+        # Build a minimal EvalResult representing a failed test
+        result = EvalResult(
             turns=[
                 Turn(
                     role="user",
@@ -224,7 +224,7 @@ class TestCopilotModelOptimizer:
         suggestion = await optimize_instruction(
             "You are a Python developer.",
             result,
-            "Agent should add docstrings to all functions, not just type hints.",
+            "Eval should add docstrings to all functions, not just type hints.",
             model="copilot/gpt-5-mini",
         )
         assert suggestion.instruction

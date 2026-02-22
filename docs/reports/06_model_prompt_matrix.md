@@ -8,10 +8,10 @@
 *2×2 matrix: 2 models × 2 prompts = 4 agent configurations.*
 
 
-## Agent Leaderboard
+## Eval Leaderboard
 
 
-|#|Agent|Tests|Pass Rate|Tokens|Cost|Duration|
+|#|Eval|Tests|Pass Rate|Tokens|Cost|Duration|
 | :---: | :--- | :---: | :---: | ---: | ---: | ---: |
 |🥇|gpt-5-mini + concise 🏆|1/1|100%|894|$0.000299|6.6s|
 |🥈|gpt-4.1-mini + concise|1/1|100%|706|$0.000317|6.4s|
@@ -182,13 +182,13 @@ Overall, tools are discoverable and well-used. The concise prompt variants demon
 ```mermaid
 sequenceDiagram
     participant User
-    participant Agent
+    participant Eval
     participant Tools
 
-    User->>Agent: "What's my checking account balance?"
-    Agent->>Tools: "get_balance({'account': 'checking'})"
-    Tools-->>Agent: "{'account': 'checking', 'balance': 1500.0, 'formatted': '$1,"
-    Agent->>User: "Your checking account balance is $1,500.00. Would you like to make a transfer, v"
+    User->>Eval: "What's my checking account balance?"
+    Eval->>Tools: "get_balance({'account': 'checking'})"
+    Tools-->>Eval: "{'account': 'checking', 'balance': 1500.0, 'formatted': '$1,"
+    Eval->>User: "Your checking account balance is $1,500.00. Would you like to make a transfer, v"
 ```
 
 </details>
@@ -215,13 +215,13 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant User
-    participant Agent
+    participant Eval
     participant Tools
 
-    User->>Agent: "What's my checking account balance?"
-    Agent->>Tools: "get_balance({'account': 'checking'})"
-    Tools-->>Agent: "{'account': 'checking', 'balance': 1500.0, 'formatted': '$1,"
-    Agent->>User: "Your checking account balance is $1,500.00. Is there anything else you would lik"
+    User->>Eval: "What's my checking account balance?"
+    Eval->>Tools: "get_balance({'account': 'checking'})"
+    Tools-->>Eval: "{'account': 'checking', 'balance': 1500.0, 'formatted': '$1,"
+    Eval->>User: "Your checking account balance is $1,500.00. Is there anything else you would lik"
 ```
 
 </details>
@@ -248,13 +248,13 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant User
-    participant Agent
+    participant Eval
     participant Tools
 
-    User->>Agent: "What's my checking account balance?"
-    Agent->>Tools: "get_balance({'account': 'checking'})"
-    Tools-->>Agent: "{'account': 'checking', 'balance': 1500.0, 'formatted': '$1,"
-    Agent->>User: "Your checking balance is $1,500.00. Need anything else?"
+    User->>Eval: "What's my checking account balance?"
+    Eval->>Tools: "get_balance({'account': 'checking'})"
+    Tools-->>Eval: "{'account': 'checking', 'balance': 1500.0, 'formatted': '$1,"
+    Eval->>User: "Your checking balance is $1,500.00. Need anything else?"
 ```
 
 </details>
@@ -281,13 +281,13 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant User
-    participant Agent
+    participant Eval
     participant Tools
 
-    User->>Agent: "What's my checking account balance?"
-    Agent->>Tools: "get_balance({'account': 'checking'})"
-    Tools-->>Agent: "{'account': 'checking', 'balance': 1500.0, 'formatted': '$1,"
-    Agent->>User: "Your checking account balance is $1,500.00."
+    User->>Eval: "What's my checking account balance?"
+    Eval->>Tools: "get_balance({'account': 'checking'})"
+    Tools-->>Eval: "{'account': 'checking', 'balance': 1500.0, 'formatted': '$1,"
+    Eval->>User: "Your checking account balance is $1,500.00."
 ```
 
 </details>
@@ -327,17 +327,17 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant User
-    participant Agent
+    participant Eval
     participant Tools
 
-    User->>Agent: "Transfer $100 from checking to savings"
-    Agent->>Tools: "get_all_balances({})"
-    Tools-->>Agent: "{'accounts': {'checking': {'balance': 1500.0, 'formatted': '"
-    Agent->>Tools: "transfer({'from_account': 'checking', 'to_account': 'savings', 'amoun)"
-    Tools-->>Agent: "{'transaction_id': 'TX0001', 'type': 'transfer', 'from_accou"
-    Agent->>Tools: "get_all_balances({})"
-    Tools-->>Agent: "{'accounts': {'checking': {'balance': 1400.0, 'formatted': '"
-    Agent->>User: "Done — I transferred $100.00 from your checking to savings. Updated balances: - "
+    User->>Eval: "Transfer $100 from checking to savings"
+    Eval->>Tools: "get_all_balances({})"
+    Tools-->>Eval: "{'accounts': {'checking': {'balance': 1500.0, 'formatted': '"
+    Eval->>Tools: "transfer({'from_account': 'checking', 'to_account': 'savings', 'amoun)"
+    Tools-->>Eval: "{'transaction_id': 'TX0001', 'type': 'transfer', 'from_accou"
+    Eval->>Tools: "get_all_balances({})"
+    Tools-->>Eval: "{'accounts': {'checking': {'balance': 1400.0, 'formatted': '"
+    Eval->>User: "Done — I transferred $100.00 from your checking to savings. Updated balances: - "
 ```
 
 </details>
@@ -365,15 +365,15 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant User
-    participant Agent
+    participant Eval
     participant Tools
 
-    User->>Agent: "Transfer $100 from checking to savings"
-    Agent->>Tools: "get_balance({'account': 'checking'})"
-    Tools-->>Agent: "{'account': 'checking', 'balance': 1500.0, 'formatted': '$1,"
-    Agent->>Tools: "transfer({'from_account': 'checking', 'to_account': 'savings', 'amoun)"
-    Tools-->>Agent: "{'transaction_id': 'TX0001', 'type': 'transfer', 'from_accou"
-    Agent->>User: "I have successfully transferred $100 from your checking account to your savings "
+    User->>Eval: "Transfer $100 from checking to savings"
+    Eval->>Tools: "get_balance({'account': 'checking'})"
+    Tools-->>Eval: "{'account': 'checking', 'balance': 1500.0, 'formatted': '$1,"
+    Eval->>Tools: "transfer({'from_account': 'checking', 'to_account': 'savings', 'amoun)"
+    Tools-->>Eval: "{'transaction_id': 'TX0001', 'type': 'transfer', 'from_accou"
+    Eval->>User: "I have successfully transferred $100 from your checking account to your savings "
 ```
 
 </details>
@@ -400,13 +400,13 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant User
-    participant Agent
+    participant Eval
     participant Tools
 
-    User->>Agent: "Transfer $100 from checking to savings"
-    Agent->>Tools: "transfer({'from_account': 'checking', 'to_account': 'savings', 'amoun)"
-    Tools-->>Agent: "{'transaction_id': 'TX0001', 'type': 'transfer', 'from_accou"
-    Agent->>User: "Done — $100 transferred from checking to savings. New balances: checking $1,400."
+    User->>Eval: "Transfer $100 from checking to savings"
+    Eval->>Tools: "transfer({'from_account': 'checking', 'to_account': 'savings', 'amoun)"
+    Tools-->>Eval: "{'transaction_id': 'TX0001', 'type': 'transfer', 'from_accou"
+    Eval->>User: "Done — $100 transferred from checking to savings. New balances: checking $1,400."
 ```
 
 </details>
@@ -433,13 +433,13 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant User
-    participant Agent
+    participant Eval
     participant Tools
 
-    User->>Agent: "Transfer $100 from checking to savings"
-    Agent->>Tools: "transfer({'from_account': 'checking', 'to_account': 'savings', 'amoun)"
-    Tools-->>Agent: "{'transaction_id': 'TX0001', 'type': 'transfer', 'from_accou"
-    Agent->>User: "Successfully transferred $100 from checking to savings."
+    User->>Eval: "Transfer $100 from checking to savings"
+    Eval->>Tools: "transfer({'from_account': 'checking', 'to_account': 'savings', 'amoun)"
+    Tools-->>Eval: "{'transaction_id': 'TX0001', 'type': 'transfer', 'from_accou"
+    Eval->>User: "Successfully transferred $100 from checking to savings."
 ```
 
 </details>

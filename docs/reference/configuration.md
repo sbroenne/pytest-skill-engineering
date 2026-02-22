@@ -113,17 +113,17 @@ provider = Provider(
 )
 ```
 
-## Agent Configuration
+## Eval Configuration
 
 ```python
-from pytest_skill_engineering import Agent, ClarificationDetection, Provider, MCPServer
+from pytest_skill_engineering import Eval, ClarificationDetection, Provider, MCPServer
 
-agent = Agent(
+agent = Eval(
     provider=Provider(model="azure/gpt-5-mini"),
     mcp_servers=[server],               # MCP servers
     cli_servers=[cli],                  # CLI servers (optional)
     system_prompt="You are...",         # System prompt (optional)
-    skill=my_skill,                     # Agent Skill (optional)
+    skill=my_skill,                     # Eval Skill (optional)
     max_turns=10,                       # Max tool-call rounds
     retries=3,                          # Max retries on tool errors (default: 1)
     name="my-agent",                    # Identifier for reports (optional)
@@ -166,19 +166,19 @@ See [Test CLI Tools](../how-to/test-cli-tools.md) for complete options.
 
 ## Fixtures
 
-### aitest_run
+### eval_run
 
 The main fixture for running tests:
 
 ```python
-async def test_banking(aitest_run):
-    agent = Agent(
+async def test_banking(eval_run):
+    agent = Eval(
         name="banking",
         provider=Provider(model="azure/gpt-5-mini"),
         mcp_servers=[banking_server],
     )
     
-    result = await aitest_run(agent, "What's my checking balance?")
+    result = await eval_run(agent, "What's my checking balance?")
     assert result.success
 ```
 

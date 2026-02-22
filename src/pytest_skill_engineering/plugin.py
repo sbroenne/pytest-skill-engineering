@@ -23,8 +23,8 @@ if TYPE_CHECKING:
     from _pytest.reports import TestReport as PytestTestReport
     from _pytest.terminal import TerminalReporter
 
-    from pytest_skill_engineering.core.agent import Agent
-    from pytest_skill_engineering.core.result import AgentResult
+    from pytest_skill_engineering.core.eval import Eval
+    from pytest_skill_engineering.core.result import EvalResult
     from pytest_skill_engineering.reporting import SuiteReport
     from pytest_skill_engineering.reporting.insights import InsightsResult
 
@@ -383,7 +383,7 @@ def pytest_collection_modifyitems(
     for item in items:
         # Check if test uses any aitest fixtures
         fixturenames = getattr(item, "fixturenames", [])
-        aitest_fixtures = {"aitest_run", "copilot_run"}
+        aitest_fixtures = {"eval_run", "copilot_eval"}
         if (aitest_fixtures & set(fixturenames)) and not any(
             m.name == "aitest" for m in item.iter_markers()
         ):
@@ -395,7 +395,7 @@ def pytest_runtest_makereport(item: Item, call: Any) -> Any:
     """Capture test results for reporting.
 
     Also auto-stashes CopilotResult for tests that call ``run_copilot()``
-    directly instead of using the ``copilot_run`` fixture — critical for
+    directly instead of using the ``copilot_eval`` fixture — critical for
     module-scoped agent fixtures that cannot use the function-scoped fixture.
     """
     # Auto-stash CopilotResult before processing (tryfirst ensures this runs early)
@@ -430,14 +430,14 @@ def pytest_runtest_makereport(item: Item, call: Any) -> Any:
         return
 
     # Get agent result if available
-    agent_result = getattr(item, "_aitest_result", None)
+    eval_result = getattr(item, "_aitest_result", None)
 
     # Only collect tests that actually used aitest (have an agent result)
     # This prevents unit tests from triggering AI analysis for reports
-    if agent_result is None:
+    if eval_result is None:
         return
 
-    # Get agent identity directly from the Agent object stashed by the fixture
+    # Get agent identity directly from the Eval object stashed by the fixture
     agent = getattr(item, "_aitest_agent", None)
 
     # Get test function docstring if available
@@ -482,14 +482,14 @@ def pytest_runtest_makereport(item: Item, call: Any) -> Any:
                     error_msg = stripped
                     break
 
-    # Build agent identity from the Agent object
+    # Build agent identity from the Eval object
     agent_id = agent.id if agent else ""
     if agent:
         raw = agent.provider.model
         model = raw.split("/")[-1] if "/" in raw else raw
     else:
         model = ""
-    agent_name = agent.name if agent else ""
+    eval_name = agent.name if agent else ""
     system_prompt_name = agent.system_prompt_name if agent else None
     skill_name = agent.skill.name if agent and agent.skill else None
 
@@ -504,13 +504,13 @@ def pytest_runtest_makereport(item: Item, call: Any) -> Any:
         name=item.nodeid,
         outcome=report.outcome,
         duration_ms=report.duration * 1000,
-        agent_result=agent_result,
+        eval_result=eval_result,
         error=error_msg,
         assertions=assertions,
         docstring=docstring,
         class_docstring=class_docstring,
         agent_id=agent_id,
-        agent_name=agent_name,
+        eval_name=eval_name,
         model=model,
         system_prompt_name=system_prompt_name,
         skill_name=skill_name,
@@ -524,13 +524,13 @@ def pytest_runtest_makereport(item: Item, call: Any) -> Any:
     tests.append(test_report)
 
     # Enrich JUnit XML with agent metadata (user_properties → <property> elements)
-    _add_junit_properties(report, agent_result, agent)
+    _add_junit_properties(report, eval_result, agent)
 
 
 def _add_junit_properties(
     report: PytestTestReport,
-    agent_result: AgentResult,
-    agent: Agent | None = None,
+    eval_result: EvalResult,
+    agent: Eval | None = None,
 ) -> None:
     """Add agent metadata to pytest report for JUnit XML output.
 
@@ -552,7 +552,7 @@ def _add_junit_properties(
 
     props = []
 
-    # Agent identity (from Agent object)
+    # Eval identity (from Eval object)
     if agent:
         model = agent.provider.model
         display_model = model.split("/")[-1] if "/" in model else model
@@ -562,8 +562,8 @@ def _add_junit_properties(
             props.append(("aitest.prompt", agent.system_prompt_name))
 
     # Skill
-    if agent_result.skill_info:
-        props.append(("aitest.skill", agent_result.skill_info.name))
+    if eval_result.skill_info:
+        props.append(("aitest.skill", eval_result.skill_info.name))
 
     # MCP servers (from agent config)
     if agent and agent.mcp_servers:
@@ -583,9 +583,9 @@ def _add_junit_properties(
         props.append(("aitest.allowed_tools", ",".join(sorted(agent.allowed_tools))))
 
     # Token usage
-    if agent_result.token_usage:
-        prompt = agent_result.token_usage.get("prompt", 0)
-        completion = agent_result.token_usage.get("completion", 0)
+    if eval_result.token_usage:
+        prompt = eval_result.token_usage.get("prompt", 0)
+        completion = eval_result.token_usage.get("completion", 0)
         if prompt:
             props.append(("aitest.tokens.input", str(prompt)))
         if completion:
@@ -595,23 +595,23 @@ def _add_junit_properties(
             props.append(("aitest.tokens.total", str(total)))
 
     # Cost
-    if agent_result.cost_usd > 0:
-        props.append(("aitest.cost_usd", f"{agent_result.cost_usd:.6f}"))
+    if eval_result.cost_usd > 0:
+        props.append(("aitest.cost_usd", f"{eval_result.cost_usd:.6f}"))
 
     # Turns
-    if agent_result.turns:
-        props.append(("aitest.turns", str(len(agent_result.turns))))
+    if eval_result.turns:
+        props.append(("aitest.turns", str(len(eval_result.turns))))
 
     # Tools called (unique, comma-separated)
     tools_called = set()
-    for turn in agent_result.turns:
+    for turn in eval_result.turns:
         for tc in turn.tool_calls:
             tools_called.add(tc.name)
     if tools_called:
         props.append(("aitest.tools.called", ",".join(sorted(tools_called))))
 
     # Success/failure
-    props.append(("aitest.success", str(agent_result.success).lower()))
+    props.append(("aitest.success", str(eval_result.success).lower()))
 
     # Add all properties to report
     report.user_properties.extend(props)
@@ -856,21 +856,21 @@ def _generate_structured_insights(
         prompts: dict[str, str] = {}
 
         for test in report.tests:
-            if test.agent_result:
+            if test.eval_result:
                 # Collect tools (deduplicate by name)
                 seen_tools = {t.name for t in tool_info}
-                for t in getattr(test.agent_result, "available_tools", []) or []:
+                for t in getattr(test.eval_result, "available_tools", []) or []:
                     if t.name not in seen_tools:
                         tool_info.append(t)
                         seen_tools.add(t.name)
 
                 # Collect skills (deduplicate by name)
-                skill = getattr(test.agent_result, "skill_info", None)
+                skill = getattr(test.eval_result, "skill_info", None)
                 if skill and skill.name not in {s.name for s in skill_info}:
                     skill_info.append(skill)
 
                 # Collect effective system prompts as prompt variants
-                effective_prompt = getattr(test.agent_result, "effective_system_prompt", "")
+                effective_prompt = getattr(test.eval_result, "effective_system_prompt", "")
                 if effective_prompt:
                     prompt_label = test.system_prompt_name or "default"
                     if prompt_label not in prompts:
@@ -949,7 +949,7 @@ _CODING_AGENT_ANALYSIS_PROMPT_PATH = Path(__file__).parent / "prompts" / "coding
 def pytest_skill_engineering_analysis_prompt(config: object) -> str | None:
     """Provide coding-agent-specific analysis prompt when copilot tests are detected.
 
-    Checks if any collected tests use the ``copilot_run`` fixture. If so,
+    Checks if any collected tests use the ``copilot_eval`` fixture. If so,
     returns the coding agent analysis prompt instead of the default MCP/tool
     prompt.
 

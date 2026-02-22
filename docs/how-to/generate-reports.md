@@ -95,17 +95,17 @@ This is useful for:
 - Generating different formats from one test run
 - Experimenting with different AI summary models
 
-## Agent Leaderboard
+## Eval Leaderboard
 
-When you test multiple agents, the report shows an **Agent Leaderboard** ranking all configurations:
+When you test multiple agents, the report shows an **Eval Leaderboard** ranking all configurations:
 
-| Agent | Pass Rate | Cost |
+| Eval | Pass Rate | Cost |
 |-------|-----------|------|
 | ✓ gpt-4.1 (detailed) | 100% | $0.15 |
 | ✓ gpt-5-mini (detailed) | 97% | $0.03 |
 | ✗ gpt-5-mini (concise) | 82% | $0.02 |
 
-**Winning Agent = Highest pass rate → Lowest cost (tiebreaker)**
+**Winning Eval = Highest pass rate → Lowest cost (tiebreaker)**
 
 ### Dimension Detection
 
@@ -114,7 +114,7 @@ The AI detects *what varies* between agents to focus its analysis:
 | What Varies | AI Analysis Focuses On |
 |-------------|------------------------|
 | Model | Which model works best |
-| Custom Agent | Which agent instructions work best |
+| Custom Eval | Which agent instructions work best |
 | Skill | Whether domain knowledge helps |
 | Server | Which implementation is more reliable |
 

@@ -12,7 +12,7 @@ pytest-skill-engineering includes a comprehensive visual test suite that verifie
 
 - **Report Rendering** — Headers, metrics, sections display correctly
 - **UI Interactions** — Expand/collapse, filters, agent selector toggling
-- **Agent Comparison** — Multi-column layouts for comparing agents
+- **Eval Comparison** — Multi-column layouts for comparing agents
 - **Mermaid Diagrams** — Tool usage flow diagrams render and open
 - **Session Grouping** — Multi-turn sessions display with proper styling
 
@@ -100,7 +100,7 @@ visible = page.locator(".comparison-column:not(.hidden)")
 assert visible.count() == 2
 ```
 
-### Agent Selector Testing
+### Eval Selector Testing
 
 ```python
 # Check default selection (first 2 agents)

@@ -16,7 +16,7 @@ from pathlib import Path
 
 import pytest
 
-from pytest_skill_engineering import Agent, MCPServer, Provider, Skill, Wait
+from pytest_skill_engineering import Eval, MCPServer, Provider, Skill, Wait
 
 pytestmark = [pytest.mark.integration]
 
@@ -35,14 +35,14 @@ SKILLS_DIR = Path(__file__).parent.parent / "showcase" / "skills"
 FINANCIAL_SKILL = Skill.from_path(SKILLS_DIR / "financial-advisor")
 
 AGENTS = [
-    Agent(
+    Eval(
         name="baseline",
         provider=Provider(model="azure/gpt-5-mini", rpm=10, tpm=10000),
         mcp_servers=[banking_server],
         system_prompt=BANKING_PROMPT,
         max_turns=5,
     ),
-    Agent(
+    Eval(
         name="with-financial-skill",
         provider=Provider(model="azure/gpt-5-mini", rpm=10, tpm=10000),
         mcp_servers=[banking_server],
@@ -62,19 +62,19 @@ def _reset_agents():
 
 
 @pytest.mark.parametrize("agent", AGENTS, ids=lambda a: a.name)
-async def test_fund_allocation_advice(aitest_run, agent, llm_assert):
+async def test_fund_allocation_advice(eval_run, agent, llm_assert):
     """Ask for allocation advice — skilled agent should apply 50/30/20 rule."""
     agent.max_turns = 8
-    result = await aitest_run(agent, "How should I allocate the money across my accounts?")
+    result = await eval_run(agent, "How should I allocate the money across my accounts?")
     assert result.success
     assert result.tool_was_called("get_all_balances") or result.tool_was_called("get_balance")
     assert llm_assert(result.final_response, "provides financial advice about fund allocation")
 
 
 @pytest.mark.parametrize("agent", AGENTS, ids=lambda a: a.name)
-async def test_savings_recommendation(aitest_run, agent, llm_assert):
+async def test_savings_recommendation(eval_run, agent, llm_assert):
     """Ask about savings — skilled agent should mention emergency fund."""
     agent.max_turns = 8
-    result = await aitest_run(agent, "I want to save more money. What do you recommend?")
+    result = await eval_run(agent, "I want to save more money. What do you recommend?")
     assert result.success
     assert llm_assert(result.final_response, "provides savings recommendations")

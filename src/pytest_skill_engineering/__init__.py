@@ -10,8 +10,6 @@ logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 # Core types  # noqa: E402 - logging must be configured before submodule imports
 from pytest_skill_engineering.core import (  # noqa: E402
-    Agent,
-    AgentResult,
     AITestError,
     ClarificationDetection,
     ClarificationLevel,
@@ -19,6 +17,8 @@ from pytest_skill_engineering.core import (  # noqa: E402
     CLIExecution,
     CLIServer,
     EngineTimeoutError,
+    Eval,
+    EvalResult,
     ImageContent,
     MCPPrompt,
     MCPPromptArgument,
@@ -46,7 +46,7 @@ from pytest_skill_engineering.core import (  # noqa: E402
 )
 
 # Execution
-from pytest_skill_engineering.execution import AgentEngine  # noqa: E402
+from pytest_skill_engineering.execution import EvalEngine  # noqa: E402
 from pytest_skill_engineering.execution.optimizer import (  # noqa: E402
     InstructionSuggestion,
     optimize_instruction,
@@ -77,8 +77,8 @@ from pytest_skill_engineering.reporting import (  # noqa: E402
 
 __all__ = [  # noqa: RUF022
     # Core
-    "Agent",
-    "AgentResult",
+    "Eval",
+    "EvalResult",
     "AITestError",
     "CLIExecution",
     "CLIServer",
@@ -111,7 +111,7 @@ __all__ = [  # noqa: RUF022
     "load_system_prompts",
     "load_skill",
     # Execution
-    "AgentEngine",
+    "EvalEngine",
     "InstructionSuggestion",
     "optimize_instruction",
     # Reporting
@@ -134,8 +134,8 @@ __all__ = [  # noqa: RUF022
 try:
     from pytest_skill_engineering.copilot import (  # noqa: E402
         ClaudeCodePersona,
-        CopilotAgent,
         CopilotCLIPersona,
+        CopilotEval,
         CopilotResult,
         HeadlessPersona,
         Persona,
@@ -144,7 +144,7 @@ try:
     )
 
     __all__ += [
-        "CopilotAgent",
+        "CopilotEval",
         "CopilotResult",
         "ClaudeCodePersona",
         "CopilotCLIPersona",

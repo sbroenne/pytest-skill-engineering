@@ -119,9 +119,9 @@ pytest-skill-engineering/
 │   ├── __init__.py      # Package exports
 │   ├── cli.py           # CLI for report regeneration
 │   ├── plugin.py        # pytest plugin hooks
-│   ├── core/            # Core types (Agent, Provider, Result, Skill)
+│   ├── core/            # Core types (Eval, Provider, Result, Skill)
 │   ├── execution/       # Engine, server management, skill tools
-│   ├── fixtures/        # pytest fixtures (aitest_run, factories)
+│   ├── fixtures/        # pytest fixtures (eval_run, factories)
 │   ├── reporting/       # Collector, aggregator, insights, generator
 │   └── templates/       # Jinja2 + Tailwind HTML report templates
 ├── tests/

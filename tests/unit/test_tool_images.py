@@ -1,8 +1,8 @@
-"""Tests for tool_images_for and ImageContent on AgentResult."""
+"""Tests for tool_images_for and ImageContent on EvalResult."""
 
 from __future__ import annotations
 
-from pytest_skill_engineering.core.result import AgentResult, ImageContent, ToolCall, Turn
+from pytest_skill_engineering.core.result import EvalResult, ImageContent, ToolCall, Turn
 
 
 class TestImageContent:
@@ -23,12 +23,12 @@ class TestImageContent:
 
 
 class TestToolImagesFor:
-    """Tests for AgentResult.tool_images_for()."""
+    """Tests for EvalResult.tool_images_for()."""
 
-    def _make_result(self, tool_calls: list[ToolCall]) -> AgentResult:
-        """Helper to create an AgentResult with tool calls."""
+    def _make_result(self, tool_calls: list[ToolCall]) -> EvalResult:
+        """Helper to create an EvalResult with tool calls."""
         turn = Turn(role="assistant", content="", tool_calls=tool_calls)
-        return AgentResult(turns=[turn], success=True)
+        return EvalResult(turns=[turn], success=True)
 
     def test_no_images(self) -> None:
         """Returns empty list when no tool calls have images."""
@@ -145,7 +145,7 @@ class TestToolImagesFor:
         )
         turn1 = Turn(role="assistant", content="", tool_calls=[tc1])
         turn2 = Turn(role="assistant", content="", tool_calls=[tc2])
-        result = AgentResult(turns=[turn1, turn2], success=True)
+        result = EvalResult(turns=[turn1, turn2], success=True)
 
         images = result.tool_images_for("screenshot")
         assert len(images) == 2

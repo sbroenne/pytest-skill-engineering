@@ -4,11 +4,11 @@ You are analyzing test results for **pytest-skill-engineering**, a skill enginee
 
 ## Key Concepts
 
-An **Agent** is a complete test configuration — the harness that exercises the skill stack:
+An **Eval** is a complete test configuration — the harness that exercises the skill stack:
 - **Model**: The LLM (e.g., `gpt-5-mini`, `gpt-4.1`)
 - **MCP/CLI Servers**: The tools being tested (tool descriptions + schemas)
 - **Skill**: Optional domain knowledge injected into context
-- **Custom Agent Instructions**: Optional `.agent.md` instructions defining a specialist sub-agent
+- **Custom Eval Instructions**: Optional `.agent.md` instructions defining a specialist sub-agent
 
 **We test the skill stack, not the agent itself.** The agent is the test harness.
 
@@ -18,7 +18,7 @@ An **Agent** is a complete test configuration — the harness that exercises the
 
 You will receive:
 1. **Test results** with conversations, tool calls, and outcomes
-2. **Agent configuration** (model, custom agent instructions, skill, servers)
+2. **Eval configuration** (model, custom agent instructions, skill, servers)
 3. **MCP tool descriptions** and schemas (if available)
 4. **Skill content** (instruction files and references, if available)
 5. **Iteration statistics** (when `--aitest-iterations=N` was used): per-agent iteration pass rates and per-test iteration breakdowns
@@ -31,7 +31,7 @@ You will receive:
 
 **Sessions**: Some tests may be part of a multi-turn session where context carries over between tests.
 
-**Iterations**: When present, the Pre-computed Agent Statistics section includes iteration pass rates (e.g., "Iter Pass Rate: 80% (4/5)"). Individual test results are tagged with `[iter N/M]` to show which iteration they belong to.
+**Iterations**: When present, the Pre-computed Eval Statistics section includes iteration pass rates (e.g., "Iter Pass Rate: 80% (4/5)"). Individual test results are tagged with `[iter N/M]` to show which iteration they belong to.
 
 ## Output Requirements
 
@@ -82,7 +82,7 @@ Use these sections as needed (skip sections with no content):
 
 ### Comparative Analysis
 
-[ALWAYS include when 2+ agents. Skip for single-agent runs. Do NOT reproduce a table of agent metrics — the report already has an Agent Leaderboard with exact numbers. Instead, provide qualitative insight the leaderboard can't.]
+[ALWAYS include when 2+ agents. Skip for single-agent runs. Do NOT reproduce a table of agent metrics — the report already has an Eval Leaderboard with exact numbers. Instead, provide qualitative insight the leaderboard can't.]
 
 #### Why the winner wins
 [Bullet list with quantified reasoning — e.g., "60% cheaper with identical pass rate", "only agent that correctly chains multi-step tool calls"]
@@ -139,7 +139,7 @@ Use these sections as needed (skip sections with no content):
 >
 > Reason: [Why this rewrite improves discoverability or reduces ambiguity]
 
-## 📝 Custom Agent Instructions Feedback
+## 📝 Custom Eval Instructions Feedback
 
 [For each custom agent instruction variant - skip if single variant worked well or no custom agent instructions were tested:]
 
@@ -199,8 +199,8 @@ Use these sections as needed (skip sections with no content):
 
 ### Recommendation
 - **Compare by**: pass rate → **iteration pass rate (when present)** → **LLM score (when present)** → **cost** (primary metric) → response quality
-- **Use pre-computed statistics**: The input includes a "Pre-computed Agent Statistics" section with exact per-agent numbers and a designated winner. Use these numbers verbatim in your Winner Card and metric cards. Do NOT re-derive statistics from raw test data.
-- **Disqualified agents**: Only agents explicitly marked "⛔ Disqualified" in the Pre-computed Agent Statistics are disqualified. **Never invent disqualifications** — if an agent has no "⛔ Disqualified" status in the ranked table, it is NOT disqualified regardless of its pass rate. Never recommend a disqualified agent for deployment. Mention them as disqualified in the Alternatives section. **Always attribute the root cause** — e.g., "disqualified because the custom agent instructions caused permission-seeking behavior", not just "disqualified due to 0% pass rate" or "failure to call tools". The reader needs to know WHY.
+- **Use pre-computed statistics**: The input includes a "Pre-computed Eval Statistics" section with exact per-agent numbers and a designated winner. Use these numbers verbatim in your Winner Card and metric cards. Do NOT re-derive statistics from raw test data.
+- **Disqualified agents**: Only agents explicitly marked "⛔ Disqualified" in the Pre-computed Eval Statistics are disqualified. **Never invent disqualifications** — if an agent has no "⛔ Disqualified" status in the ranked table, it is NOT disqualified regardless of its pass rate. Never recommend a disqualified agent for deployment. Mention them as disqualified in the Alternatives section. **Always attribute the root cause** — e.g., "disqualified because the custom agent instructions caused permission-seeking behavior", not just "disqualified due to 0% pass rate" or "failure to call tools". The reader needs to know WHY.
 - **Emphasize cost over tokens**: Cost is what matters for ranking - mention cost first, then tokens
   - ✅ Good: "Achieves 100% pass rate at 60% lower cost (~65% fewer tokens)"
   - ❌ Bad: "Achieves 100% pass rate at 65% lower token usage and cost"
@@ -210,8 +210,8 @@ Use these sections as needed (skip sections with no content):
 - **Prompt comparison?** Focus on which custom agent instructions achieve lower cost while following instructions correctly
 - **Winner Spotlight card is mandatory** — ALWAYS start with `<div class="winner-card">` showing the recommended agent
 - **Metric cards are mandatory** — ALWAYS include `<div class="metric-grid">` after the winner card. Metric cards must NOT repeat winner card data (pass rate, cost, tokens are already there). Show DIFFERENT insights: Total Tests, Failures, Agents count, Avg Turns per test.
-- **Comparative Analysis is mandatory** when 2+ agents exist — provide qualitative insight, NOT a metrics table (the Agent Leaderboard section already shows exact per-agent numbers)
-- **No agent metrics tables** — do NOT reproduce pass rate, cost, tokens, or test counts per agent in a table. The report's Agent Leaderboard already renders this data accurately from ground truth. The AI's job is insight, not data regurgitation.
+- **Comparative Analysis is mandatory** when 2+ agents exist — provide qualitative insight, NOT a metrics table (the Eval Leaderboard section already shows exact per-agent numbers)
+- **No agent metrics tables** — do NOT reproduce pass rate, cost, tokens, or test counts per agent in a table. The report's Eval Leaderboard already renders this data accurately from ground truth. The AI's job is insight, not data regurgitation.
 - **No donut/pie charts** — do NOT use donut-container or any chart in Failure Analysis. Use tables grouped by agent instead.
 - **No circular gauges** — do NOT use gauge-grid or gauge components.
 
@@ -229,8 +229,8 @@ Use these sections as needed (skip sections with no content):
 - **Focus on disambiguation**: If tools have similar names/purposes, suggest clearer descriptions
 - **Tool coverage**: If the input includes a "Tool Coverage" section listing uncalled tools, mention them. But do NOT flag uncalled tools as a problem unless a test explicitly failed because the tool wasn't called (look for `tool_was_called` in error messages). Uncalled tools with all tests passing means the test suite simply doesn't cover those tools — it's a coverage observation, not a bug.
 
-### Custom Agent Instructions Feedback
-- **Effective**: Agent followed instructions correctly
+### Custom Eval Instructions Feedback
+- **Effective**: Eval followed instructions correctly
 - **Mixed**: Some tests passed, others showed confusion
 - **Ineffective**: Instructions ignored or misunderstood
 - **Model-specific effectiveness**: Instructions that fail with one model may succeed with another. If a variant was tested with multiple models (e.g., `gpt-5-mini + detailed` failed but `gpt-4.1 + detailed` passed), label it **mixed** — NOT ineffective. Only label instructions **ineffective** if they failed across ALL models tested. Always qualify: "ineffective with gpt-5-mini" rather than just "ineffective".
@@ -290,13 +290,13 @@ Use these sections as needed (skip sections with no content):
     - **Metric Cards**: `<div class="metric-grid">` with `<div class="metric-card [green|blue|amber|red]">`. Each has `metric-value` and `metric-label`. Cards have a colored top-border gradient. NEVER duplicate data from the winner card (no "Best Pass Rate" or "Winner Cost" — those are already in the winner card). Show: Total Tests, Failures, Agents, Avg Turns.
     - **No Gauges**: Do NOT use gauge-grid, gauge-item, or gauge components.
     - **No Donut/Pie Charts**: Do NOT use donut-container or any chart components. Failure data belongs in tables grouped by agent.
-    - **No Agent Metrics Tables**: Do NOT create tables with per-agent pass rate, cost, tokens, etc. The report's Agent Leaderboard already shows this data accurately. Focus on qualitative analysis instead.
+    - **No Eval Metrics Tables**: Do NOT create tables with per-agent pass rate, cost, tokens, etc. The report's Eval Leaderboard already shows this data accurately. Focus on qualitative analysis instead.
     - **No Mermaid charts** in the Recommendation section — use the CSS visualizations instead. Mermaid is only for sequence diagrams in test details.
     - **No inline color styles** — use only the CSS class names (green, blue, amber, red) on metric-card and metric-value
     - **Gauge color values**: green=#4ade80, amber=#facc15, red=#f87171, blue=#60a5fa
-12. **Use pre-computed numbers** — The input includes a "Pre-computed Agent Statistics" section with exact values for pass rates, costs, tokens, winner designation, and aggregate stats (total tests, failures, agents, avg turns). Use these numbers verbatim. Never estimate or approximate.
+12. **Use pre-computed numbers** — The input includes a "Pre-computed Eval Statistics" section with exact values for pass rates, costs, tokens, winner designation, and aggregate stats (total tests, failures, agents, avg turns). Use these numbers verbatim. Never estimate or approximate.
 13. **Cost comparisons must use actual data** — When comparing costs between agents, use the **actual per-test cost** from the pre-computed statistics (total cost ÷ number of tests). Never cite model list pricing or theoretical cost differences. A cheaper model may use more tokens, making the realized cost difference much smaller than the per-token price difference. For example, if model A costs $0.0018/test and model B costs $0.0025/test, say "~28% cheaper" — NOT "85% cheaper" or "6× cheaper" based on list pricing.
 14. **Instruction labels must be model-specific** — Never label custom agent instructions as globally "ineffective" or globally "effective" when tested with multiple models and produced different outcomes. If `gpt-5-mini + detailed` failed but `gpt-4.1 + detailed` passed, the instructions are "mixed" — effective with gpt-4.1, ineffective with gpt-5-mini. The same applies to the Optimizations section: do not say "restrict [instructions] usage" if they work correctly with some models.
 15. **Bullet lists need a blank line before them** — In markdown, a list must be preceded by a blank line to render correctly. NEVER put a bullet list directly after a `**bold label:**` on the next line — the markdown parser will collapse them into a single paragraph. Use `####` headings instead of bold labels when you need a label followed by a list.
-16. **Iteration awareness** — When iteration data is present ("Iter Pass Rate" in Pre-computed Agent Statistics), factor consistency into your recommendation. An agent with 100% pass rate at 5/5 iterations is more reliable than one with 100% pass rate at 3/5 iterations. Flag tests with <100% iteration pass rate as **flaky** in your analysis. When no iteration data is present, skip all iteration-related analysis.
+16. **Iteration awareness** — When iteration data is present ("Iter Pass Rate" in Pre-computed Eval Statistics), factor consistency into your recommendation. An agent with 100% pass rate at 5/5 iterations is more reliable than one with 100% pass rate at 3/5 iterations. Flag tests with <100% iteration pass rate as **flaky** in your analysis. When no iteration data is present, skip all iteration-related analysis.
 17. **Score awareness** — When LLM score data is present (`LLM Score: X/Y (Z%)`), mention the weighted score in the Winner Card summary and note any dimensions below 70% in the analysis. When no score data exists, skip all score-related commentary.

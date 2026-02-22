@@ -6,7 +6,7 @@ import os
 import subprocess
 
 import pytest
-from pydantic_ai import Agent
+from pydantic_ai import Eval
 
 from pytest_skill_engineering.execution.pydantic_adapter import build_model_from_string
 
@@ -73,7 +73,7 @@ async def integration_judge_model() -> str:
     for model_str in candidates:
         try:
             model = build_model_from_string(model_str)
-            agent = Agent(model)
+            agent = Eval(model)
             result = await agent.run("Reply with exactly: OK")
             if "OK" in result.output:
                 return model_str

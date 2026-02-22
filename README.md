@@ -42,35 +42,35 @@ Write tests as natural language prompts — you assert on what the agent did. If
 
 pytest-skill-engineering has two harnesses — pick the one that fits your setup:
 
-### Agent + `aitest_run` — bring your own model
+### Eval + `eval_run` — bring your own model
 
 Bundle any LLM with your MCP server and assert on what happened:
 
 ```python
-from pytest_skill_engineering import Agent, Provider, MCPServer
+from pytest_skill_engineering import Eval, Provider, MCPServer
 
-async def test_balance_query(aitest_run):
-    agent = Agent(
+async def test_balance_query(eval_run):
+    agent = Eval(
         provider=Provider(model="azure/gpt-5-mini"),
         mcp_servers=[MCPServer(command=["python", "-m", "my_banking_server"])],
     )
-    result = await aitest_run(agent, "What's my checking balance?")
+    result = await eval_run(agent, "What's my checking balance?")
     assert result.success
     assert result.tool_was_called("get_balance")
 ```
 
 Best for: full control over the test loop — pick any model, compare variants, introspect every tool call. No Copilot subscription required.
 
-### CopilotAgent + `copilot_run` — use the real Copilot CLI
+### CopilotEval + `copilot_eval` — use the real Copilot CLI
 
 No model setup. No API keys. Copilot handles MCP OAuth automatically.
 
 ```python
-from pytest_skill_engineering.copilot import CopilotAgent
+from pytest_skill_engineering.copilot import CopilotEval
 
-async def test_agent(copilot_run):
-    agent = CopilotAgent(skill_directories=["skills/my-skill"])
-    result = await copilot_run(agent, "What can you help me with?")
+async def test_agent(copilot_eval):
+    agent = CopilotEval(skill_directories=["skills/my-skill"])
+    result = await copilot_eval(agent, "What can you help me with?")
     assert result.success
 ```
 
@@ -126,10 +126,10 @@ addopts = "--aitest-summary-model=azure/gpt-5.2-chat"
 - **MCP Server Testing** — Real models against real tool interfaces and bundled prompt templates
 - **Prompt File Testing** — Test VS Code `.prompt.md` and Claude Code command files (slash commands) with `load_prompt_file()` / `load_prompt_files()`
 - **CLI Server Testing** — Wrap CLIs as testable tool servers
-- **Copilot Skill Testing** — `CopilotAgent + copilot_run` for end-to-end tests using the real Copilot CLI (native OAuth, skill loading, exact user experience)
-- **Custom Agent Testing** — Load `.agent.md` files with `Agent.from_agent_file()` to test agent instructions, or A/B test agent versions; use `load_custom_agent()` + `CopilotAgent` to test real subagent dispatch
-- **Agent Comparison** — Compare models, skills, custom agent versions, and server configurations
-- **Agent Leaderboard** — Auto-ranked by pass rate and cost
+- **Copilot Skill Testing** — `CopilotEval + copilot_eval` for end-to-end tests using the real Copilot CLI (native OAuth, skill loading, exact user experience)
+- **Custom Eval Testing** — Load `.agent.md` files with `Eval.from_agent_file()` to test agent instructions, or A/B test agent versions; use `load_custom_agent()` + `CopilotEval` to test real subagent dispatch
+- **Eval Comparison** — Compare models, skills, custom agent versions, and server configurations
+- **Eval Leaderboard** — Auto-ranked by pass rate and cost
 - **Multi-Turn Sessions** — Test conversations that build on context
 - **AI Analysis** — Actionable feedback on tool descriptions, prompts, and costs
 - **Multi-Provider** — Any model via [Pydantic AI](https://ai.pydantic.dev/) (OpenAI, Anthropic, Gemini, Azure, Bedrock, Mistral, and more)
@@ -144,7 +144,7 @@ addopts = "--aitest-summary-model=azure/gpt-5.2-chat"
 
 - **MCP server authors** — Validate that LLMs can actually use your tools
 - **Copilot skill and agent authors** — Test exactly what your users experience, before you ship
-- **Agent builders** — Compare models, prompts, and skills to find the best configuration
+- **Eval builders** — Compare models, prompts, and skills to find the best configuration
 - **Teams shipping AI systems** — Catch LLM-facing regressions in CI/CD
 
 ## Documentation

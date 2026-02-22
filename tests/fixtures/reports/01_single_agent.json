@@ -7,7 +7,7 @@
       "name": "tests/fixtures/scenario_01_single_agent.py::test_check_balance",
       "outcome": "passed",
       "duration_ms": 13733.995100017637,
-      "agent_result": {
+      "eval_result": {
         "turns": [
           {
             "role": "user",
@@ -240,7 +240,7 @@
       "docstring": "Basic balance check \u2014 should pass.",
       "class_docstring": null,
       "agent_id": "8fa82e98-35c0-4a0d-b3c3-8f81e3669c46",
-      "agent_name": "banking-agent",
+      "eval_name": "banking-agent",
       "model": "gpt-5-mini",
       "system_prompt_name": null,
       "skill_name": null
@@ -249,7 +249,7 @@
       "name": "tests/fixtures/scenario_01_single_agent.py::test_transfer_between_accounts",
       "outcome": "passed",
       "duration_ms": 7056.472500000382,
-      "agent_result": {
+      "eval_result": {
         "turns": [
           {
             "role": "user",
@@ -484,7 +484,7 @@
       "docstring": "Transfer money \u2014 tests the transfer tool.",
       "class_docstring": null,
       "agent_id": "8fa82e98-35c0-4a0d-b3c3-8f81e3669c46",
-      "agent_name": "banking-agent",
+      "eval_name": "banking-agent",
       "model": "gpt-5-mini",
       "system_prompt_name": null,
       "skill_name": null
@@ -493,7 +493,7 @@
       "name": "tests/fixtures/scenario_01_single_agent.py::test_transaction_history",
       "outcome": "passed",
       "duration_ms": 11859.495099983178,
-      "agent_result": {
+      "eval_result": {
         "turns": [
           {
             "role": "user",
@@ -726,7 +726,7 @@
       "docstring": "View transactions \u2014 multiple tool calls possible.",
       "class_docstring": null,
       "agent_id": "8fa82e98-35c0-4a0d-b3c3-8f81e3669c46",
-      "agent_name": "banking-agent",
+      "eval_name": "banking-agent",
       "model": "gpt-5-mini",
       "system_prompt_name": null,
       "skill_name": null
@@ -735,7 +735,7 @@
       "name": "tests/fixtures/scenario_01_single_agent.py::test_expected_failure",
       "outcome": "failed",
       "duration_ms": 4505.407099990407,
-      "agent_result": {
+      "eval_result": {
         "turns": [
           {
             "role": "user",
@@ -950,7 +950,7 @@
       "docstring": "Test that fails due to turn limit \u2014 for report variety.",
       "class_docstring": null,
       "agent_id": "8fa82e98-35c0-4a0d-b3c3-8f81e3669c46",
-      "agent_name": "banking-agent",
+      "eval_name": "banking-agent",
       "model": "gpt-5-mini",
       "system_prompt_name": null,
       "skill_name": null

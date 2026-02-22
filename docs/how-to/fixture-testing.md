@@ -15,7 +15,7 @@ Fixture tests demonstrate best practices for comprehensive AI agent validation. 
 | `scenario_01_single_agent.py` | 1 | Basic report, no comparison UI |
 | `scenario_02_multi_agent.py` | 2 | Leaderboard, comparison |
 | `scenario_03_sessions.py` | 2 | Session grouping + comparison |
-| `scenario_04_agent_selector.py` | 3 | Agent selector UI |
+| `scenario_04_agent_selector.py` | 3 | Eval selector UI |
 
 They demonstrate:
 
@@ -23,7 +23,7 @@ They demonstrate:
 - **Tool Argument Assertions** — Verify correct parameters passed
 - **Tool Count Assertions** — Check single vs. multiple tool calls
 - **Performance Assertions** — Validate cost and duration
-- **Multi-Agent Comparison** — Compare models and skills
+- **Multi-Eval Comparison** — Compare models and skills
 - **Session Testing** — Multi-turn context preservation
 
 ## Running Fixture Tests
@@ -45,20 +45,20 @@ pytest tests/fixtures/ -v
 
 ## Test Suites
 
-### 1. Single Agent (4 tests)
+### 1. Single Eval (4 tests)
 
 `scenario_01_single_agent.py` — one agent, multiple prompts:
 
 ```python
-agent = Agent(
+agent = Eval(
     name="banking-agent",
     provider=Provider(model="azure/gpt-5-mini", rpm=10, tpm=10000),
     mcp_servers=[banking_server],
     system_prompt=BANKING_PROMPT,
 )
 
-async def test_balance_check(aitest_run, llm_assert):
-    result = await aitest_run(agent, "What's my checking account balance?")
+async def test_balance_check(eval_run, llm_assert):
+    result = await eval_run(agent, "What's my checking account balance?")
     assert result.success
     assert result.tool_was_called("get_balance")
     assert llm_assert(result.final_response, "mentions the account balance")
@@ -73,13 +73,13 @@ async def test_balance_check(aitest_run, llm_assert):
 
 ```python
 AGENTS = [
-    Agent(name="gpt-5-mini", provider=Provider(model="azure/gpt-5-mini"), ...),
-    Agent(name="gpt-4.1-mini", provider=Provider(model="azure/gpt-4.1-mini"), ...),
+    Eval(name="gpt-5-mini", provider=Provider(model="azure/gpt-5-mini"), ...),
+    Eval(name="gpt-4.1-mini", provider=Provider(model="azure/gpt-4.1-mini"), ...),
 ]
 
 @pytest.mark.parametrize("agent", AGENTS, ids=lambda a: a.name)
-async def test_balance_check(aitest_run, agent, llm_assert):
-    result = await aitest_run(agent, "What's my checking account balance?")
+async def test_balance_check(eval_run, agent, llm_assert):
+    result = await eval_run(agent, "What's my checking account balance?")
     assert result.success
 ```
 
@@ -93,33 +93,33 @@ Each test runs on both models — AI analysis auto-generates leaderboard.
 @pytest.mark.session("banking-workflow")
 class TestBankingWorkflow:
     @pytest.mark.parametrize("agent", AGENTS, ids=lambda a: a.name)
-    async def test_check_balance(self, aitest_run, agent, llm_assert):
-        result = await aitest_run(agent, "What's my checking account balance?")
+    async def test_check_balance(self, eval_run, agent, llm_assert):
+        result = await eval_run(agent, "What's my checking account balance?")
         assert result.success
         assert result.tool_was_called("get_balance")
 
     @pytest.mark.parametrize("agent", AGENTS, ids=lambda a: a.name)
-    async def test_transfer_funds(self, aitest_run, agent, llm_assert):
-        result = await aitest_run(agent, "Transfer $100 from checking to savings")
+    async def test_transfer_funds(self, eval_run, agent, llm_assert):
+        result = await eval_run(agent, "Transfer $100 from checking to savings")
         assert result.is_session_continuation
 ```
 
 The `@pytest.mark.session` marker ensures tests share agent state.
 
-### 4. Agent Selector (6 tests)
+### 4. Eval Selector (6 tests)
 
 `scenario_04_agent_selector.py` — three agents for selector UI:
 
 ```python
 AGENTS = [
-    Agent(name="gpt-5-mini", ...),
-    Agent(name="gpt-4.1-mini", ...),
-    Agent(name="gpt-5-mini+skill", ..., skill=FINANCIAL_SKILL),
+    Eval(name="gpt-5-mini", ...),
+    Eval(name="gpt-4.1-mini", ...),
+    Eval(name="gpt-5-mini+skill", ..., skill=FINANCIAL_SKILL),
 ]
 
 @pytest.mark.parametrize("agent", AGENTS, ids=lambda a: a.name)
-async def test_balance_query(aitest_run, agent, llm_assert):
-    result = await aitest_run(agent, "What's my checking account balance?")
+async def test_balance_query(eval_run, agent, llm_assert):
+    result = await eval_run(agent, "What's my checking account balance?")
     assert result.success
 ```
 
@@ -232,7 +232,7 @@ This updates HTML reports in `docs/reports/` without re-running tests (faster).
 When writing fixture tests, follow this pattern:
 
 1. **Create agent** — Configure provider, servers, system prompt, skill
-2. **Run prompt** — Use `aitest_run(agent, "user message")`
+2. **Run prompt** — Use `eval_run(agent, "user message")`
 3. **Validate success** — `assert result.success`
 4. **Assert tool usage** — `assert result.tool_was_called(...)`
 5. **Check arguments** — `assert result.tool_call_arg(...) == expected`
@@ -242,16 +242,16 @@ When writing fixture tests, follow this pattern:
 Example:
 
 ```python
-async def test_transfer_workflow(self, aitest_run, banking_server, llm_assert):
-    agent = Agent(...)
+async def test_transfer_workflow(self, eval_run, banking_server, llm_assert):
+    agent = Eval(...)
     
-    result = await aitest_run(
+    result = await eval_run(
         agent,
         "Check my checking balance, then transfer $100 to savings."
     )
     
     # Validate execution
-    assert result.success, f"Agent failed: {result.error}"
+    assert result.success, f"Eval failed: {result.error}"
     
     # Validate tools used
     assert result.tool_was_called("transfer")

@@ -8,10 +8,10 @@
 *Multi-turn banking session with 2 agents.*
 
 
-## Agent Leaderboard
+## Eval Leaderboard
 
 
-|#|Agent|Tests|Pass Rate|Tokens|Cost|Duration|
+|#|Eval|Tests|Pass Rate|Tokens|Cost|Duration|
 | :---: | :--- | :---: | :---: | ---: | ---: | ---: |
 |🥇|gpt-4.1-mini 🏆|3/3|100%|3,005|$0.001419|19.9s|
 |🥈|gpt-5-mini|3/3|100%|4,180|$0.002354|30.2s|
@@ -156,13 +156,13 @@ This optimization preserves all necessary information while reducing token overh
 ```mermaid
 sequenceDiagram
     participant User
-    participant Agent
+    participant Eval
     participant Tools
 
-    User->>Agent: "What's my checking account balance?"
-    Agent->>Tools: "get_balance({'account': 'checking'})"
-    Tools-->>Agent: "{'account': 'checking', 'balance': 1500.0, 'formatted': '$1,"
-    Agent->>User: "Your checking account balance is $1,500.00. Would you like to do anything else w"
+    User->>Eval: "What's my checking account balance?"
+    Eval->>Tools: "get_balance({'account': 'checking'})"
+    Tools-->>Eval: "{'account': 'checking', 'balance': 1500.0, 'formatted': '$1,"
+    Eval->>User: "Your checking account balance is $1,500.00. Would you like to do anything else w"
 ```
 
 </details>
@@ -189,13 +189,13 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant User
-    participant Agent
+    participant Eval
     participant Tools
 
-    User->>Agent: "What's my checking account balance?"
-    Agent->>Tools: "get_balance({'account': 'checking'})"
-    Tools-->>Agent: "{'account': 'checking', 'balance': 1500.0, 'formatted': '$1,"
-    Agent->>User: "Your checking account balance is $1,500.00. Is there anything else you'd like to"
+    User->>Eval: "What's my checking account balance?"
+    Eval->>Tools: "get_balance({'account': 'checking'})"
+    Tools-->>Eval: "{'account': 'checking', 'balance': 1500.0, 'formatted': '$1,"
+    Eval->>User: "Your checking account balance is $1,500.00. Is there anything else you'd like to"
 ```
 
 </details>
@@ -229,13 +229,13 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant User
-    participant Agent
+    participant Eval
     participant Tools
 
-    User->>Agent: "Transfer $100 from checking to savings"
-    Agent->>Tools: "transfer({'from_account': 'checking', 'to_account': 'savings', 'amoun)"
-    Tools-->>Agent: "{'transaction_id': 'TX0001', 'type': 'transfer', 'from_accou"
-    Agent->>User: "Done — $100.00 has been transferred from your checking to your savings. Your new"
+    User->>Eval: "Transfer $100 from checking to savings"
+    Eval->>Tools: "transfer({'from_account': 'checking', 'to_account': 'savings', 'amoun)"
+    Tools-->>Eval: "{'transaction_id': 'TX0001', 'type': 'transfer', 'from_accou"
+    Eval->>User: "Done — $100.00 has been transferred from your checking to your savings. Your new"
 ```
 
 </details>
@@ -262,13 +262,13 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant User
-    participant Agent
+    participant Eval
     participant Tools
 
-    User->>Agent: "Transfer $100 from checking to savings"
-    Agent->>Tools: "transfer({'from_account': 'checking', 'to_account': 'savings', 'amoun)"
-    Tools-->>Agent: "{'transaction_id': 'TX0001', 'type': 'transfer', 'from_accou"
-    Agent->>User: "Successfully transferred $100.00 from your checking account to your savings acco"
+    User->>Eval: "Transfer $100 from checking to savings"
+    Eval->>Tools: "transfer({'from_account': 'checking', 'to_account': 'savings', 'amoun)"
+    Tools-->>Eval: "{'transaction_id': 'TX0001', 'type': 'transfer', 'from_accou"
+    Eval->>User: "Successfully transferred $100.00 from your checking account to your savings acco"
 ```
 
 </details>
@@ -303,13 +303,13 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant User
-    participant Agent
+    participant Eval
     participant Tools
 
-    User->>Agent: "Show me all my account balances now"
-    Agent->>Tools: "get_all_balances({})"
-    Tools-->>Agent: "{'accounts': {'checking': {'balance': 1500.0, 'formatted': '"
-    Agent->>User: "According to your account summary right now: - Checking: $1,500.00 - Savings: $3"
+    User->>Eval: "Show me all my account balances now"
+    Eval->>Tools: "get_all_balances({})"
+    Tools-->>Eval: "{'accounts': {'checking': {'balance': 1500.0, 'formatted': '"
+    Eval->>User: "According to your account summary right now: - Checking: $1,500.00 - Savings: $3"
 ```
 
 </details>
@@ -341,13 +341,13 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant User
-    participant Agent
+    participant Eval
     participant Tools
 
-    User->>Agent: "Show me all my account balances now"
-    Agent->>Tools: "get_all_balances({})"
-    Tools-->>Agent: "{'accounts': {'checking': {'balance': 1500.0, 'formatted': '"
-    Agent->>User: "Currently, your account balances are: - Checking: $1,500.00 - Savings: $3,000.00"
+    User->>Eval: "Show me all my account balances now"
+    Eval->>Tools: "get_all_balances({})"
+    Tools-->>Eval: "{'accounts': {'checking': {'balance': 1500.0, 'formatted': '"
+    Eval->>User: "Currently, your account balances are: - Checking: $1,500.00 - Savings: $3,000.00"
 ```
 
 </details>

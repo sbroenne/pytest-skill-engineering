@@ -167,7 +167,7 @@ def api_server():
 
 ```python
 import pytest
-from pytest_skill_engineering import Agent, MCPServer, Provider, Wait
+from pytest_skill_engineering import Eval, MCPServer, Provider, Wait
 
 @pytest.fixture(scope="module")
 def banking_server():
@@ -178,7 +178,7 @@ def banking_server():
 
 @pytest.fixture
 def banking_agent(banking_server):
-    return Agent(
+    return Eval(
         name="banking",
         provider=Provider(model="azure/gpt-5-mini"),
         mcp_servers=[banking_server],
@@ -186,8 +186,8 @@ def banking_agent(banking_server):
         max_turns=5,
     )
 
-async def test_balance_query(aitest_run, banking_agent):
-    result = await aitest_run(banking_agent, "What's my checking balance?")
+async def test_balance_query(eval_run, banking_agent):
+    result = await eval_run(banking_agent, "What's my checking balance?")
     
     assert result.success
     assert result.tool_was_called("get_balance")
@@ -214,7 +214,7 @@ def calendar_server():
 
 @pytest.fixture
 def assistant_agent(banking_server, calendar_server):
-    return Agent(
+    return Eval(
         name="assistant",
         provider=Provider(model="azure/gpt-5-mini"),
         mcp_servers=[banking_server, calendar_server],
@@ -225,13 +225,13 @@ def assistant_agent(banking_server, calendar_server):
 
 ## Filtering Tools
 
-Use `allowed_tools` on the Agent to limit which tools are exposed to the LLM. This reduces token usage and focuses the agent.
+Use `allowed_tools` on the Eval to limit which tools are exposed to the LLM. This reduces token usage and focuses the agent.
 
 ```python
 @pytest.fixture
 def balance_agent(banking_server):
     # banking_server has 16 tools, but this test only needs 2
-    return Agent(
+    return Eval(
         name="balance-checker",
         provider=Provider(model="azure/gpt-5-mini"),
         mcp_servers=[banking_server],
@@ -248,7 +248,7 @@ Use `MCPServerProcess` directly to interact with the MCP protocol:
 
 ```python
 import pytest
-from pytest_skill_engineering import Agent, MCPPrompt, MCPServer, Provider
+from pytest_skill_engineering import Eval, MCPPrompt, MCPServer, Provider
 from pytest_skill_engineering.execution.servers import MCPServerProcess
 
 @pytest.fixture(scope="module")
@@ -265,7 +265,7 @@ async def test_prompts_are_discoverable(server_process):
     names = [p.name for p in prompts]
     assert "balance_summary" in names
 
-async def test_balance_summary_prompt(aitest_run, server_process, banking_server):
+async def test_balance_summary_prompt(eval_run, server_process, banking_server):
     """The balance_summary prompt produces a coherent LLM response."""
     # Render the template (like VS Code does when user invokes the slash command)
     messages = await server_process.get_prompt(
@@ -275,11 +275,11 @@ async def test_balance_summary_prompt(aitest_run, server_process, banking_server
     assert messages, "Prompt returned no messages"
 
     # Run the rendered prompt through the LLM
-    agent = Agent(
+    agent = Eval(
         provider=Provider(model="azure/gpt-5-mini"),
         mcp_servers=[banking_server],
     )
-    result = await aitest_run(agent, messages[0]["content"])
+    result = await eval_run(agent, messages[0]["content"])
     assert result.success
 ```
 

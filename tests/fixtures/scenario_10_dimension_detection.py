@@ -15,7 +15,7 @@ import sys
 
 import pytest
 
-from pytest_skill_engineering import Agent, MCPServer, Provider, Wait
+from pytest_skill_engineering import Eval, MCPServer, Provider, Wait
 
 pytestmark = [pytest.mark.integration]
 
@@ -46,17 +46,15 @@ class TestDimensionDetection:
     @pytest.mark.parametrize(
         "prompt_name,system_prompt", TEST_PROMPTS.items(), ids=TEST_PROMPTS.keys()
     )
-    async def test_balance_with_all_permutations(
-        self, aitest_run, model, prompt_name, system_prompt
-    ):
+    async def test_balance_with_all_permutations(self, eval_run, model, prompt_name, system_prompt):
         """Balance query across 2 models × 2 prompts = 4 runs."""
-        agent = Agent(
+        agent = Eval(
             provider=Provider(model=f"azure/{model}", rpm=10, tpm=10000),
             mcp_servers=[banking_server],
             system_prompt=system_prompt,
             system_prompt_name=prompt_name,
             max_turns=5,
         )
-        result = await aitest_run(agent, "What's my checking account balance?")
+        result = await eval_run(agent, "What's my checking account balance?")
         assert result.success
         assert result.tool_was_called("get_balance")

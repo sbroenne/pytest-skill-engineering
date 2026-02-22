@@ -17,14 +17,12 @@ class ServerStartError(AITestError):
 
 
 class EngineTimeoutError(AITestError):
-    """Agent engine timed out."""
+    """Eval engine timed out."""
 
     def __init__(self, timeout_ms: int, turns_completed: int) -> None:
         self.timeout_ms = timeout_ms
         self.turns_completed = turns_completed
-        super().__init__(
-            f"Agent timed out after {timeout_ms}ms ({turns_completed} turns completed)"
-        )
+        super().__init__(f"Eval timed out after {timeout_ms}ms ({turns_completed} turns completed)")
 
 
 class ToolCallError(AITestError):

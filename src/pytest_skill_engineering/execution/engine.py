@@ -1,4 +1,4 @@
-"""Agent execution engine powered by Pydantic AI."""
+"""Eval execution engine powered by Pydantic AI."""
 
 from __future__ import annotations
 
@@ -11,8 +11,8 @@ from pydantic_ai.messages import ModelMessage
 from pydantic_ai.usage import UsageLimits
 
 from pytest_skill_engineering.core.result import (
-    AgentResult,
     ClarificationStats,
+    EvalResult,
     SkillInfo,
     ToolInfo,
 )
@@ -31,20 +31,20 @@ if TYPE_CHECKING:
     from pydantic_ai import Agent as PydanticAgent
     from pydantic_ai.toolsets import AbstractToolset
 
-    from pytest_skill_engineering.core.agent import Agent
+    from pytest_skill_engineering.core.eval import Eval
 
 
-class AgentEngine:
+class EvalEngine:
     """Executes agent interactions using Pydantic AI.
 
     Example:
-        engine = AgentEngine(agent)
+        engine = EvalEngine(agent)
         await engine.initialize()
         result = await engine.run("What's my checking balance?")
         await engine.shutdown()
     """
 
-    def __init__(self, agent: Agent) -> None:
+    def __init__(self, agent: Eval) -> None:
         self.agent = agent
         self._pydantic_agent: PydanticAgent[None, str] | None = None
         self._toolsets: list[AbstractToolset[Any]] = []
@@ -125,7 +125,7 @@ class AgentEngine:
         max_turns: int | None = None,
         timeout_ms: int = 60000,
         messages: list[Any] | None = None,
-    ) -> AgentResult:
+    ) -> EvalResult:
         """Run the agent with the given prompt.
 
         Args:
@@ -135,7 +135,7 @@ class AgentEngine:
             messages: Optional prior PydanticAI messages for session continuity.
 
         Returns:
-            AgentResult with conversation history and tool calls
+            EvalResult with conversation history and tool calls
         """
         assert self._pydantic_agent is not None, "Engine not initialized"
 
@@ -168,8 +168,8 @@ class AgentEngine:
             if total_tokens > 0:
                 self._rate_limiter.record_tokens(total_tokens)
 
-            # Build AgentResult from PydanticAI result
-            agent_result = adapt_result(
+            # Build EvalResult from PydanticAI result
+            eval_result = adapt_result(
                 result,
                 start_time=start_time,
                 model=self.agent.provider.model,
@@ -181,15 +181,15 @@ class AgentEngine:
 
             # Post-processing: clarification detection
             if self.agent.clarification_detection.enabled:
-                agent_result.clarification_stats = await self._run_clarification_detection(
-                    agent_result
+                eval_result.clarification_stats = await self._run_clarification_detection(
+                    eval_result
                 )
 
-            return agent_result
+            return eval_result
 
         except TimeoutError:
             duration_ms = (time.perf_counter() - start_time) * 1000
-            return AgentResult(
+            return EvalResult(
                 turns=[],
                 success=False,
                 error=f"Engine timed out after {timeout_ms}ms",
@@ -200,7 +200,7 @@ class AgentEngine:
             )
         except Exception as e:
             duration_ms = (time.perf_counter() - start_time) * 1000
-            return AgentResult(
+            return EvalResult(
                 turns=[],
                 success=False,
                 error=str(e),
@@ -210,7 +210,7 @@ class AgentEngine:
                 effective_system_prompt=self._effective_system_prompt,
             )
 
-    async def _run_clarification_detection(self, result: AgentResult) -> ClarificationStats:
+    async def _run_clarification_detection(self, result: EvalResult) -> ClarificationStats:
         """Run clarification detection on the final response."""
         from pytest_skill_engineering.execution.pydantic_adapter import build_model_from_string
 

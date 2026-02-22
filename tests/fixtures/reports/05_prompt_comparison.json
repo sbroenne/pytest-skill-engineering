@@ -7,7 +7,7 @@
       "name": "tests/fixtures/scenario_05_prompt_comparison.py::test_balance_check[gpt-5-mini + concise]",
       "outcome": "passed",
       "duration_ms": 11764.541700016707,
-      "agent_result": {
+      "eval_result": {
         "turns": [
           {
             "role": "user",
@@ -240,7 +240,7 @@
       "docstring": "Balance query \u2014 tests how prompt style affects response format.",
       "class_docstring": null,
       "agent_id": "a5486ae2-d9b1-416f-b712-55ad7244c3fa",
-      "agent_name": "gpt-5-mini + concise",
+      "eval_name": "gpt-5-mini + concise",
       "model": "gpt-5-mini",
       "system_prompt_name": "concise",
       "skill_name": null
@@ -249,7 +249,7 @@
       "name": "tests/fixtures/scenario_05_prompt_comparison.py::test_balance_check[gpt-5-mini + detailed]",
       "outcome": "passed",
       "duration_ms": 7734.239799989155,
-      "agent_result": {
+      "eval_result": {
         "turns": [
           {
             "role": "user",
@@ -482,7 +482,7 @@
       "docstring": "Balance query \u2014 tests how prompt style affects response format.",
       "class_docstring": null,
       "agent_id": "5726d007-c023-4209-8381-ef8eb020e5d0",
-      "agent_name": "gpt-5-mini + detailed",
+      "eval_name": "gpt-5-mini + detailed",
       "model": "gpt-5-mini",
       "system_prompt_name": "detailed",
       "skill_name": null
@@ -491,7 +491,7 @@
       "name": "tests/fixtures/scenario_05_prompt_comparison.py::test_balance_check[gpt-5-mini + structured]",
       "outcome": "passed",
       "duration_ms": 6881.439499993576,
-      "agent_result": {
+      "eval_result": {
         "turns": [
           {
             "role": "user",
@@ -724,7 +724,7 @@
       "docstring": "Balance query \u2014 tests how prompt style affects response format.",
       "class_docstring": null,
       "agent_id": "59fa6919-449c-477c-a8e8-5e085d95ea33",
-      "agent_name": "gpt-5-mini + structured",
+      "eval_name": "gpt-5-mini + structured",
       "model": "gpt-5-mini",
       "system_prompt_name": "structured",
       "skill_name": null
@@ -733,7 +733,7 @@
       "name": "tests/fixtures/scenario_05_prompt_comparison.py::test_transfer_with_explanation[gpt-5-mini + concise]",
       "outcome": "passed",
       "duration_ms": 7550.867200014181,
-      "agent_result": {
+      "eval_result": {
         "turns": [
           {
             "role": "user",
@@ -968,7 +968,7 @@
       "docstring": "Transfer with explanation \u2014 tests prompt impact on response quality.",
       "class_docstring": null,
       "agent_id": "a5486ae2-d9b1-416f-b712-55ad7244c3fa",
-      "agent_name": "gpt-5-mini + concise",
+      "eval_name": "gpt-5-mini + concise",
       "model": "gpt-5-mini",
       "system_prompt_name": "concise",
       "skill_name": null
@@ -977,7 +977,7 @@
       "name": "tests/fixtures/scenario_05_prompt_comparison.py::test_transfer_with_explanation[gpt-5-mini + detailed]",
       "outcome": "passed",
       "duration_ms": 17462.591300019994,
-      "agent_result": {
+      "eval_result": {
         "turns": [
           {
             "role": "user",
@@ -1286,7 +1286,7 @@
       "docstring": "Transfer with explanation \u2014 tests prompt impact on response quality.",
       "class_docstring": null,
       "agent_id": "5726d007-c023-4209-8381-ef8eb020e5d0",
-      "agent_name": "gpt-5-mini + detailed",
+      "eval_name": "gpt-5-mini + detailed",
       "model": "gpt-5-mini",
       "system_prompt_name": "detailed",
       "skill_name": null
@@ -1295,7 +1295,7 @@
       "name": "tests/fixtures/scenario_05_prompt_comparison.py::test_transfer_with_explanation[gpt-5-mini + structured]",
       "outcome": "passed",
       "duration_ms": 16479.10349999438,
-      "agent_result": {
+      "eval_result": {
         "turns": [
           {
             "role": "user",
@@ -1530,7 +1530,7 @@
       "docstring": "Transfer with explanation \u2014 tests prompt impact on response quality.",
       "class_docstring": null,
       "agent_id": "59fa6919-449c-477c-a8e8-5e085d95ea33",
-      "agent_name": "gpt-5-mini + structured",
+      "eval_name": "gpt-5-mini + structured",
       "model": "gpt-5-mini",
       "system_prompt_name": "structured",
       "skill_name": null

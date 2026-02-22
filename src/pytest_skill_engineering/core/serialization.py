@@ -43,16 +43,18 @@ def deserialize_suite_report(data: dict[str, Any]) -> SuiteReport:
 
     Reconstructs the full dataclass hierarchy from the serialized format.
     """
-    from pytest_skill_engineering.core.result import AgentResult, ToolCall, Turn
+    from pytest_skill_engineering.core.result import EvalResult, ToolCall, Turn
     from pytest_skill_engineering.reporting.collector import SuiteReport, TestReport
 
     # Reconstruct tests
     tests = []
     for test_data in data.get("tests", []):
-        # Reconstruct agent result if present
-        agent_result = None
-        if test_data.get("agent_result"):
-            ar_data = test_data["agent_result"]
+        # Reconstruct agent result if present (support both new and legacy field name)
+        eval_result = None
+        if test_data.get("eval_result") or test_data.get("agent_result"):
+            test_data.setdefault("eval_result", test_data.get("agent_result"))
+        if test_data.get("eval_result"):
+            ar_data = test_data["eval_result"]
 
             # Reconstruct turns
             turns = []
@@ -137,7 +139,7 @@ def deserialize_suite_report(data: dict[str, Any]) -> SuiteReport:
                 )
 
             # Reconstruct agent result
-            agent_result = AgentResult(
+            eval_result = EvalResult(
                 turns=turns,
                 success=ar_data.get("success", False),
                 error=ar_data.get("error"),
@@ -152,9 +154,9 @@ def deserialize_suite_report(data: dict[str, Any]) -> SuiteReport:
                 effective_system_prompt=ar_data.get("effective_system_prompt", ""),
             )
 
-        # Read identity from typed fields
+        # Read identity from typed fields (support both new and legacy field names)
         agent_id = test_data.get("agent_id", "")
-        agent_name = test_data.get("agent_name", "")
+        eval_name = test_data.get("eval_name", test_data.get("agent_name", ""))
         model = test_data.get("model", "")
         system_prompt_name = test_data.get("system_prompt_name")
         skill_name = test_data.get("skill_name")
@@ -164,13 +166,13 @@ def deserialize_suite_report(data: dict[str, Any]) -> SuiteReport:
             name=test_data["name"],
             outcome=test_data["outcome"],
             duration_ms=test_data["duration_ms"],
-            agent_result=agent_result,
+            eval_result=eval_result,
             error=test_data.get("error"),
             assertions=test_data.get("assertions", []),
             docstring=test_data.get("docstring"),
             class_docstring=test_data.get("class_docstring"),
             agent_id=agent_id,
-            agent_name=agent_name,
+            eval_name=eval_name,
             model=model,
             system_prompt_name=system_prompt_name,
             skill_name=skill_name,

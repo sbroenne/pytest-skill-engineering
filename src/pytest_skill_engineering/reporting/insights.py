@@ -90,10 +90,10 @@ def _build_analysis_input(
     agent_agg: dict[str, dict[str, Any]] = {}
     has_iterations = any(t.iteration is not None for t in suite_report.tests)
     for test in suite_report.tests:
-        agent_name = test.agent_name or test.model or "unknown"
-        if agent_name not in agent_agg:
-            agent_agg[agent_name] = {
-                "name": test.agent_name or test.model or "unknown",
+        eval_name = test.eval_name or test.model or "unknown"
+        if eval_name not in agent_agg:
+            agent_agg[eval_name] = {
+                "name": test.eval_name or test.model or "unknown",
                 "passed": 0,
                 "failed": 0,
                 "total": 0,
@@ -102,17 +102,17 @@ def _build_analysis_input(
                 "turn_counts": [],
                 "iter_groups": {},  # test_base_name -> {"passed": int, "total": int}
             }
-        agg = agent_agg[agent_name]
+        agg = agent_agg[eval_name]
         agg["total"] += 1
         if test.outcome == "passed":
             agg["passed"] += 1
         else:
             agg["failed"] += 1
-        if test.agent_result is not None:
-            agg["cost"] += test.agent_result.cost_usd or 0
-            usage = test.agent_result.token_usage or {}
+        if test.eval_result is not None:
+            agg["cost"] += test.eval_result.cost_usd or 0
+            usage = test.eval_result.token_usage or {}
             agg["tokens"] += usage.get("prompt", 0) + usage.get("completion", 0)
-            agg["turn_counts"].append(len(test.agent_result.turns))
+            agg["turn_counts"].append(len(test.eval_result.turns))
         # Track iteration groups for flakiness detection
         if has_iterations and test.iteration is not None:
             # Strip "-iter-N" parametrize suffix to group by base test name
@@ -141,7 +141,7 @@ def _build_analysis_input(
             all_turn_counts.extend(v["turn_counts"])
         avg_turns = sum(all_turn_counts) / len(all_turn_counts) if all_turn_counts else 0
 
-        sections.append("## Pre-computed Agent Statistics\n")
+        sections.append("## Pre-computed Eval Statistics\n")
         sections.append(
             "Use these exact numbers in your Winner Card, metric cards, "
             "and Comparative Analysis. "
@@ -153,7 +153,7 @@ def _build_analysis_input(
         sections.append(f"- Total Test Executions: {suite_report.total}")
         sections.append(f"- Passed: {suite_report.passed}")
         sections.append(f"- Failed: {suite_report.failed}")
-        sections.append(f"- Agent Configurations: {len(agent_agg)}")
+        sections.append(f"- Eval Configurations: {len(agent_agg)}")
         sections.append(f"- Avg Turns per Test: {avg_turns:.1f}")
         sections.append("")
 
@@ -174,7 +174,7 @@ def _build_analysis_input(
 
         # All agents ranked
         sections.append("**All Agents (ranked):**\n")
-        sections.append("| Rank | Agent | Pass Rate | Tests | Cost | Tokens | Status |")
+        sections.append("| Rank | Eval | Pass Rate | Tests | Cost | Tokens | Status |")
         sections.append("|------|-------|-----------|-------|------|--------|--------|")
         for rank, (_aid, st) in enumerate(ranked, 1):
             rate = st["passed"] / max(st["total"], 1) * 100
@@ -240,11 +240,11 @@ def _build_analysis_input(
             sections.append(f"- Description: {test.docstring}")
         if test.error:
             sections.append(f"- Error: {test.error}")
-        if test.agent_result is not None:
-            ar = test.agent_result
-            # Include agent identity for this specific test (from TestReport, not AgentResult)
-            if test.agent_name:
-                sections.append(f"- Agent: {test.agent_name}")
+        if test.eval_result is not None:
+            ar = test.eval_result
+            # Include agent identity for this specific test (from TestReport, not EvalResult)
+            if test.eval_name:
+                sections.append(f"- Eval: {test.eval_name}")
             if test.model:
                 sections.append(f"- Model: {test.model}")
             if ar.skill_info:
@@ -261,7 +261,7 @@ def _build_analysis_input(
                 prompt_excerpt = ar.effective_system_prompt[:300]
                 if len(ar.effective_system_prompt) > 300:
                     prompt_excerpt += "..."
-                sections.append(f"- Custom Agent Instructions: {prompt_excerpt}")
+                sections.append(f"- Custom Eval Instructions: {prompt_excerpt}")
             # Include LLM score data when available
             if test.assertions:
                 for assertion in test.assertions:
@@ -311,8 +311,8 @@ def _build_analysis_input(
         all_tool_names = {t.name for t in tool_info}
         called_tool_names: set[str] = set()
         for test in suite_report.tests:
-            if test.agent_result is not None:
-                called_tool_names.update(test.agent_result.tool_names_called)
+            if test.eval_result is not None:
+                called_tool_names.update(test.eval_result.tool_names_called)
         uncalled_tools = sorted(all_tool_names - called_tool_names)
         if uncalled_tools:
             sections.append("## Tool Coverage\n")

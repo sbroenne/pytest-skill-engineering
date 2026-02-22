@@ -1,4 +1,4 @@
-"""CopilotAgent configuration for testing GitHub Copilot."""
+"""CopilotEval configuration for testing GitHub Copilot."""
 
 from __future__ import annotations
 
@@ -57,7 +57,7 @@ def _parse_agent_file(path: Path) -> dict[str, Any]:
 
 
 @dataclass(slots=True, frozen=True)
-class CopilotAgent:
+class CopilotEval:
     """Configuration for a GitHub Copilot agent test.
 
     Maps to the Copilot SDK's ``SessionConfig``. User-facing field names
@@ -70,17 +70,17 @@ class CopilotAgent:
 
     Example:
         # Minimal
-        CopilotAgent()
+        CopilotEval()
 
         # With instructions and model
-        CopilotAgent(
+        CopilotEval(
             name="security-reviewer",
             model="claude-sonnet-4",
             instructions="Review code for security vulnerabilities.",
         )
 
         # With custom tools and references
-        CopilotAgent(
+        CopilotEval(
             name="file-creator",
             instructions="Create files as requested.",
             working_directory="/tmp/workspace",
@@ -206,8 +206,8 @@ class CopilotAgent:
         cls,
         path: str | Path = ".",
         **overrides: Any,
-    ) -> "CopilotAgent":
-        """Load a ``CopilotAgent`` from a directory containing Copilot config files.
+    ) -> "CopilotEval":
+        """Load a ``CopilotEval`` from a directory containing Copilot config files.
 
         Looks for the following files under ``path``:
 
@@ -221,27 +221,27 @@ class CopilotAgent:
         Args:
             path: Root directory to load config from. Defaults to the current
                 working directory.
-            **overrides: Override any ``CopilotAgent`` field after loading,
+            **overrides: Override any ``CopilotEval`` field after loading,
                 e.g. ``model="claude-opus-4.5"``.
 
         Returns:
-            A ``CopilotAgent`` initialised from the discovered config files.
+            A ``CopilotEval`` initialised from the discovered config files.
 
         Example::
 
             # Load from the current project (production config as baseline)
-            baseline = CopilotAgent.from_copilot_config()
+            baseline = CopilotEval.from_copilot_config()
 
             # A/B test: same config, one instruction changed
-            treatment = CopilotAgent.from_copilot_config(
+            treatment = CopilotEval.from_copilot_config(
                 instructions="Always add type hints.",
             )
 
             # Load from a dedicated test-fixture project
-            agent = CopilotAgent.from_copilot_config("tests/fixtures/strict-agent")
+            agent = CopilotEval.from_copilot_config("tests/fixtures/strict-agent")
 
             # Load from a shared team agent library
-            agent = CopilotAgent.from_copilot_config("/shared/team/copilot-config")
+            agent = CopilotEval.from_copilot_config("/shared/team/copilot-config")
         """
         root = Path(path).resolve()
         github_dir = root / ".github"

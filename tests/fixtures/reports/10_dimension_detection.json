@@ -7,7 +7,7 @@
       "name": "tests/fixtures/scenario_10_dimension_detection.py::TestDimensionDetection::test_balance_with_all_permutations[detailed-gpt-5-mini]",
       "outcome": "passed",
       "duration_ms": 8208.714000007603,
-      "agent_result": {
+      "eval_result": {
         "turns": [
           {
             "role": "user",
@@ -234,7 +234,7 @@
       "docstring": "Balance query across 2 models \u00d7 2 prompts = 4 runs.",
       "class_docstring": "2\u00d72 matrix proving dimension auto-detection.",
       "agent_id": "144fd80a-8787-49ab-abe5-d1824e0ff49e",
-      "agent_name": "gpt-5-mini + detailed",
+      "eval_name": "gpt-5-mini + detailed",
       "model": "gpt-5-mini",
       "system_prompt_name": "detailed",
       "skill_name": null
@@ -243,7 +243,7 @@
       "name": "tests/fixtures/scenario_10_dimension_detection.py::TestDimensionDetection::test_balance_with_all_permutations[detailed-gpt-4.1-mini]",
       "outcome": "passed",
       "duration_ms": 5679.532200010726,
-      "agent_result": {
+      "eval_result": {
         "turns": [
           {
             "role": "user",
@@ -470,7 +470,7 @@
       "docstring": "Balance query across 2 models \u00d7 2 prompts = 4 runs.",
       "class_docstring": "2\u00d72 matrix proving dimension auto-detection.",
       "agent_id": "9bca51b8-644b-45ac-8f2e-3befb94e71ac",
-      "agent_name": "gpt-4.1-mini + detailed",
+      "eval_name": "gpt-4.1-mini + detailed",
       "model": "gpt-4.1-mini",
       "system_prompt_name": "detailed",
       "skill_name": null
@@ -479,7 +479,7 @@
       "name": "tests/fixtures/scenario_10_dimension_detection.py::TestDimensionDetection::test_balance_with_all_permutations[concise-gpt-5-mini]",
       "outcome": "passed",
       "duration_ms": 4666.403600014746,
-      "agent_result": {
+      "eval_result": {
         "turns": [
           {
             "role": "user",
@@ -706,7 +706,7 @@
       "docstring": "Balance query across 2 models \u00d7 2 prompts = 4 runs.",
       "class_docstring": "2\u00d72 matrix proving dimension auto-detection.",
       "agent_id": "548aec0d-7bd5-4460-8f5f-d358e9240e07",
-      "agent_name": "gpt-5-mini + concise",
+      "eval_name": "gpt-5-mini + concise",
       "model": "gpt-5-mini",
       "system_prompt_name": "concise",
       "skill_name": null
@@ -715,7 +715,7 @@
       "name": "tests/fixtures/scenario_10_dimension_detection.py::TestDimensionDetection::test_balance_with_all_permutations[concise-gpt-4.1-mini]",
       "outcome": "passed",
       "duration_ms": 5064.414899999974,
-      "agent_result": {
+      "eval_result": {
         "turns": [
           {
             "role": "user",
@@ -942,7 +942,7 @@
       "docstring": "Balance query across 2 models \u00d7 2 prompts = 4 runs.",
       "class_docstring": "2\u00d72 matrix proving dimension auto-detection.",
       "agent_id": "4715bb1f-5984-4fb4-9501-e5c5c31b9b94",
-      "agent_name": "gpt-4.1-mini + concise",
+      "eval_name": "gpt-4.1-mini + concise",
       "model": "gpt-4.1-mini",
       "system_prompt_name": "concise",
       "skill_name": null

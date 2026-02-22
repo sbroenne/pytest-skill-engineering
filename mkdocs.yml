@@ -73,7 +73,7 @@ nav:
   - Getting Started:
     - Overview: getting-started/index.md
     - Custom Agents: getting-started/custom-agents.md
-    - Agent Skills: getting-started/skills.md
+    - Eval Skills: getting-started/skills.md
     - Comparing Configurations: getting-started/comparing.md
     - A/B Testing Servers: getting-started/ab-testing-servers.md
     - Test Iterations: getting-started/iterations.md
@@ -96,7 +96,7 @@ nav:
     - API: reference/api.md
     - Assertions Cookbook: reference/assertions.md
     - CLI Options: reference/cli.md
-    - AgentResult: reference/result.md
+    - EvalResult: reference/result.md
     - Configuration: reference/configuration.md
     - Test Harnesses: reference/test-harnesses.md
   - Explanation:

@@ -153,13 +153,13 @@ Overall, tools are clearly named and correctly invoked. The agent consistently s
 ```mermaid
 sequenceDiagram
     participant User
-    participant Agent
+    participant Eval
     participant Tools
 
-    User->>Agent: "What's my checking account balance?"
-    Agent->>Tools: "get_balance({'account': 'checking'})"
-    Tools-->>Agent: "{'account': 'checking', 'balance': 1500.0, 'formatted': '$1,"
-    Agent->>User: "Your checking account balance is $1,500.00. Would you like to do anything else w"
+    User->>Eval: "What's my checking account balance?"
+    Eval->>Tools: "get_balance({'account': 'checking'})"
+    Tools-->>Eval: "{'account': 'checking', 'balance': 1500.0, 'formatted': '$1,"
+    Eval->>User: "Your checking account balance is $1,500.00. Would you like to do anything else w"
 ```
 
 </details>
@@ -193,13 +193,13 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant User
-    participant Agent
+    participant Eval
     participant Tools
 
-    User->>Agent: "Transfer $200 from checking to savings"
-    Agent->>Tools: "transfer({'from_account': 'checking', 'to_account': 'savings', 'amoun)"
-    Tools-->>Agent: "{'transaction_id': 'TX0001', 'type': 'transfer', 'from_accou"
-    Agent->>User: "Done — I transferred $200 from your checking to savings. Your new balances: - Ch"
+    User->>Eval: "Transfer $200 from checking to savings"
+    Eval->>Tools: "transfer({'from_account': 'checking', 'to_account': 'savings', 'amoun)"
+    Tools-->>Eval: "{'transaction_id': 'TX0001', 'type': 'transfer', 'from_accou"
+    Eval->>User: "Done — I transferred $200 from your checking to savings. Your new balances: - Ch"
 ```
 
 </details>
@@ -237,13 +237,13 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant User
-    participant Agent
+    participant Eval
     participant Tools
 
-    User->>Agent: "Show me recent transactions for all accounts"
-    Agent->>Tools: "get_transactions({'limit': 20})"
-    Tools-->>Agent: "{'transactions': [], 'count': 0, 'filter': null}"
-    Agent->>User: "I checked your recent transactions (up to 20) across all accounts and found none"
+    User->>Eval: "Show me recent transactions for all accounts"
+    Eval->>Tools: "get_transactions({'limit': 20})"
+    Tools-->>Eval: "{'transactions': [], 'count': 0, 'filter': null}"
+    Eval->>User: "I checked your recent transactions (up to 20) across all accounts and found none"
 ```
 
 </details>
@@ -262,17 +262,17 @@ sequenceDiagram
 |`get_all_balances`|✅||
 
 
-**Error:** `      AssertionError: Agent exceeded turn limit - unable to process multi-step request (max_turns=1)`
+**Error:** `      AssertionError: Eval exceeded turn limit - unable to process multi-step request (max_turns=1)`
 
 ```mermaid
 sequenceDiagram
     participant User
-    participant Agent
+    participant Eval
     participant Tools
 
-    User->>Agent: "Check all balances, transfer $500 from checking to savings, then show me updated"
-    Agent->>Tools: "get_all_balances({})"
-    Tools-->>Agent: "{'accounts': {'checking': {'balance': 1500.0, 'formatted': '"
+    User->>Eval: "Check all balances, transfer $500 from checking to savings, then show me updated"
+    Eval->>Tools: "get_all_balances({})"
+    Tools-->>Eval: "{'accounts': {'checking': {'balance': 1500.0, 'formatted': '"
 ```
 
 </details>

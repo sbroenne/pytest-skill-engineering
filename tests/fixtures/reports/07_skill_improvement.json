@@ -7,7 +7,7 @@
       "name": "tests/fixtures/scenario_07_skill_improvement.py::test_fund_allocation_advice[baseline]",
       "outcome": "passed",
       "duration_ms": 23865.081399999326,
-      "agent_result": {
+      "eval_result": {
         "turns": [
           {
             "role": "user",
@@ -238,7 +238,7 @@
       "docstring": "Ask for allocation advice \u2014 skilled agent should apply 50/30/20 rule.",
       "class_docstring": null,
       "agent_id": "bcdf19f2-5315-4124-88f3-36677b59a55c",
-      "agent_name": "baseline",
+      "eval_name": "baseline",
       "model": "gpt-5-mini",
       "system_prompt_name": null,
       "skill_name": null
@@ -247,7 +247,7 @@
       "name": "tests/fixtures/scenario_07_skill_improvement.py::test_fund_allocation_advice[with-financial-skill]",
       "outcome": "failed",
       "duration_ms": 17714.165800018236,
-      "agent_result": {
+      "eval_result": {
         "turns": [
           {
             "role": "user",
@@ -439,7 +439,7 @@
       "docstring": "Ask for allocation advice \u2014 skilled agent should apply 50/30/20 rule.",
       "class_docstring": null,
       "agent_id": "51daba5a-035d-48e8-8a71-89d451c61e3e",
-      "agent_name": "with-financial-skill",
+      "eval_name": "with-financial-skill",
       "model": "gpt-5-mini",
       "system_prompt_name": null,
       "skill_name": "financial-advisor"
@@ -448,7 +448,7 @@
       "name": "tests/fixtures/scenario_07_skill_improvement.py::test_savings_recommendation[baseline]",
       "outcome": "passed",
       "duration_ms": 13832.381900021574,
-      "agent_result": {
+      "eval_result": {
         "turns": [
           {
             "role": "user",
@@ -642,7 +642,7 @@
       "docstring": "Ask about savings \u2014 skilled agent should mention emergency fund.",
       "class_docstring": null,
       "agent_id": "bcdf19f2-5315-4124-88f3-36677b59a55c",
-      "agent_name": "baseline",
+      "eval_name": "baseline",
       "model": "gpt-5-mini",
       "system_prompt_name": null,
       "skill_name": null
@@ -651,7 +651,7 @@
       "name": "tests/fixtures/scenario_07_skill_improvement.py::test_savings_recommendation[with-financial-skill]",
       "outcome": "passed",
       "duration_ms": 16667.318199994043,
-      "agent_result": {
+      "eval_result": {
         "turns": [
           {
             "role": "user",
@@ -850,7 +850,7 @@
       "docstring": "Ask about savings \u2014 skilled agent should mention emergency fund.",
       "class_docstring": null,
       "agent_id": "51daba5a-035d-48e8-8a71-89d451c61e3e",
-      "agent_name": "with-financial-skill",
+      "eval_name": "with-financial-skill",
       "model": "gpt-5-mini",
       "system_prompt_name": null,
       "skill_name": "financial-advisor"

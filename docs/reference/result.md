@@ -1,10 +1,10 @@
 ---
-description: "AgentResult API reference. Inspect tool calls, turns, tokens, cost, and assert on agent behavior in pytest-skill-engineering tests."
+description: "EvalResult API reference. Inspect tool calls, turns, tokens, cost, and assert on agent behavior in pytest-skill-engineering tests."
 ---
 
-# AgentResult
+# EvalResult
 
-Validate agent behavior using `AgentResult` properties and methods.
+Validate agent behavior using `EvalResult` properties and methods.
 
 ## Properties
 
@@ -28,9 +28,9 @@ The judge performs a simple YES/NO classification, so a cheap model like `gpt-5-
 ### Configuration
 
 ```python
-from pytest_skill_engineering import Agent, Provider, ClarificationDetection, ClarificationLevel
+from pytest_skill_engineering import Eval, Provider, ClarificationDetection, ClarificationLevel
 
-agent = Agent(
+agent = Eval(
     provider=Provider(model="azure/gpt-5-mini"),
     mcp_servers=[server],
     clarification_detection=ClarificationDetection(
@@ -197,7 +197,7 @@ assert result.cost_usd < 0.10  # Under 10 cents
 assert result.success
 
 # With error message on failure
-assert result.success, f"Agent failed: {result.error}"
+assert result.success, f"Eval failed: {result.error}"
 ```
 
 ### Inspect Errors
@@ -216,9 +216,9 @@ if not result.success:
 For semantic validation, use the built-in `llm_assert` fixture (powered by pydantic-evals LLM judge):
 
 ```python
-async def test_response_quality(aitest_run, agent, llm_assert):
+async def test_response_quality(eval_run, agent, llm_assert):
     """Use the llm_assert fixture for semantic validation."""
-    result = await aitest_run(agent, "What's my checking balance?")
+    result = await eval_run(agent, "What's my checking balance?")
     
     assert result.success
     assert llm_assert(result.final_response, "mentions account balance")
@@ -229,8 +229,8 @@ async def test_response_quality(aitest_run, agent, llm_assert):
 ### Testing Tool Selection
 
 ```python
-async def test_correct_tool_selection(aitest_run, agent):
-    result = await aitest_run(agent, "What's my checking balance?")
+async def test_correct_tool_selection(eval_run, agent):
+    result = await eval_run(agent, "What's my checking balance?")
     
     assert result.success
     assert result.tool_was_called("get_balance")
@@ -243,8 +243,8 @@ async def test_correct_tool_selection(aitest_run, agent):
 ### Testing Multi-Step Workflow
 
 ```python
-async def test_trip_planning(aitest_run, agent):
-    result = await aitest_run(
+async def test_trip_planning(eval_run, agent):
+    result = await eval_run(
         agent,
         "Show me both my checking and savings balances"
     )

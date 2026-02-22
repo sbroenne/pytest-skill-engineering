@@ -1,4 +1,4 @@
-"""Agent and provider configuration models."""
+"""Eval and provider configuration models."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ import re
 import uuid
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import TYPE_CHECKING, Literal, overload
+from typing import TYPE_CHECKING, Any, Literal, overload
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -41,13 +41,13 @@ class ClarificationDetection:
 
     Example:
         # Use agent's own model as judge
-        Agent(
+        Eval(
             provider=Provider(model="azure/gpt-5-mini"),
             clarification_detection=ClarificationDetection(enabled=True),
         )
 
         # Use a separate cheaper model as judge
-        Agent(
+        Eval(
             provider=Provider(model="azure/gpt-4.1"),
             clarification_detection=ClarificationDetection(
                 enabled=True,
@@ -288,18 +288,18 @@ class CLIExecution:
 
 
 @dataclass(slots=True)
-class Agent:
+class Eval:
     """AI agent configuration combining provider and servers.
 
-    The Agent is the unit of comparison in pytest-skill-engineering. Each agent has
+    The Eval is the unit of comparison in pytest-skill-engineering. Each agent has
     a unique ``id`` (auto-generated UUID) that flows through the entire
     pipeline — from test execution to report rendering.
 
     Define agents at module level and parametrize tests with them so the
-    same Agent object (same UUID) is reused across tests:
+    same Eval object (same UUID) is reused across tests:
 
     Example:
-        Agent(
+        Eval(
             name="banking-fast",
             provider=Provider(model="azure/gpt-5-mini"),
             mcp_servers=[banking_server],
@@ -310,11 +310,11 @@ class Agent:
         agents = [agent_fast, agent_smart, agent_expert]
 
         @pytest.mark.parametrize("agent", agents, ids=lambda a: a.name)
-        async def test_query(aitest_run, agent):
-            result = await aitest_run(agent, "What's my balance?")
+        async def test_query(eval_run, agent):
+            result = await eval_run(agent, "What's my balance?")
 
     Filtering tools:
-        Agent(
+        Eval(
             provider=Provider(model="azure/gpt-5-mini"),
             mcp_servers=[excel_server],
             allowed_tools=["read_cell", "write_cell"],  # Only expose these tools
@@ -356,7 +356,7 @@ class Agent:
         cli_servers: "list[CLIServer] | None" = None,
         skill: "Skill | None" = None,
         **overrides: "Any",
-    ) -> "Agent":
+    ) -> "Eval":
         """Load agent configuration from a ``.agent.md`` or ``.md`` file.
 
         Uses the agent's prompt body as ``system_prompt`` and maps the
@@ -368,23 +368,23 @@ class Agent:
             provider: LLM provider configuration.
             mcp_servers: MCP servers to attach to the agent.
             cli_servers: CLI servers to attach to the agent.
-            skill: Agent skill to load.
+            skill: Eval skill to load.
             **overrides: Additional keyword arguments forwarded to
-                :class:`Agent` (e.g. ``name``, ``max_turns``,
+                :class:`Eval` (e.g. ``name``, ``max_turns``,
                 ``allowed_tools``).
 
         Returns:
-            A fully configured :class:`Agent` instance.
+            A fully configured :class:`Eval` instance.
 
         Example::
 
-            agent = Agent.from_agent_file(
+            agent = Eval.from_agent_file(
                 ".github/agents/reviewer.agent.md",
                 provider=Provider(model="azure/gpt-5-mini"),
                 mcp_servers=[my_server],
             )
         """
-        from pytest_skill_engineering.core.agents import load_custom_agent  # noqa: PLC0415
+        from pytest_skill_engineering.core.evals import load_custom_agent  # noqa: PLC0415
 
         parsed = load_custom_agent(path)
 

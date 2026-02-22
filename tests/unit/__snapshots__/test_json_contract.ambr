@@ -17,8 +17,20 @@
     'tests': list([
       dict({
         'agent_id': 'str',
-        'agent_name': 'str',
-        'agent_result': dict({
+        'assertions': list([
+          dict({
+            'details': 'str',
+            'message': 'str',
+            'passed': 'bool',
+            'type': 'str',
+          }),
+        ]),
+        'class_docstring': 'NoneType',
+        'docstring': 'str',
+        'duration_ms': 'float',
+        'error': 'NoneType',
+        'eval_name': 'str',
+        'eval_result': dict({
           '_messages': list([
             dict({
               'content': 'str',
@@ -71,18 +83,6 @@
             }),
           ]),
         }),
-        'assertions': list([
-          dict({
-            'details': 'str',
-            'message': 'str',
-            'passed': 'bool',
-            'type': 'str',
-          }),
-        ]),
-        'class_docstring': 'NoneType',
-        'docstring': 'str',
-        'duration_ms': 'float',
-        'error': 'NoneType',
         'model': 'str',
         'name': 'str',
         'outcome': 'str',
@@ -111,8 +111,20 @@
     'tests': list([
       dict({
         'agent_id': 'str',
-        'agent_name': 'str',
-        'agent_result': dict({
+        'assertions': list([
+          dict({
+            'details': 'str',
+            'message': 'str',
+            'passed': 'bool',
+            'type': 'str',
+          }),
+        ]),
+        'class_docstring': 'NoneType',
+        'docstring': 'str',
+        'duration_ms': 'float',
+        'error': 'NoneType',
+        'eval_name': 'str',
+        'eval_result': dict({
           '_messages': list([
             dict({
               'content': 'str',
@@ -165,18 +177,6 @@
             }),
           ]),
         }),
-        'assertions': list([
-          dict({
-            'details': 'str',
-            'message': 'str',
-            'passed': 'bool',
-            'type': 'str',
-          }),
-        ]),
-        'class_docstring': 'NoneType',
-        'docstring': 'str',
-        'duration_ms': 'float',
-        'error': 'NoneType',
         'model': 'str',
         'name': 'str',
         'outcome': 'str',
@@ -205,8 +205,20 @@
     'tests': list([
       dict({
         'agent_id': 'str',
-        'agent_name': 'str',
-        'agent_result': dict({
+        'assertions': list([
+          dict({
+            'details': 'str',
+            'message': 'str',
+            'passed': 'bool',
+            'type': 'str',
+          }),
+        ]),
+        'class_docstring': 'str',
+        'docstring': 'str',
+        'duration_ms': 'float',
+        'error': 'NoneType',
+        'eval_name': 'str',
+        'eval_result': dict({
           '_messages': list([
             dict({
               'content': 'str',
@@ -259,18 +271,6 @@
             }),
           ]),
         }),
-        'assertions': list([
-          dict({
-            'details': 'str',
-            'message': 'str',
-            'passed': 'bool',
-            'type': 'str',
-          }),
-        ]),
-        'class_docstring': 'str',
-        'docstring': 'str',
-        'duration_ms': 'float',
-        'error': 'NoneType',
         'model': 'str',
         'name': 'str',
         'outcome': 'str',
@@ -299,8 +299,20 @@
     'tests': list([
       dict({
         'agent_id': 'str',
-        'agent_name': 'str',
-        'agent_result': dict({
+        'assertions': list([
+          dict({
+            'details': 'str',
+            'message': 'str',
+            'passed': 'bool',
+            'type': 'str',
+          }),
+        ]),
+        'class_docstring': 'NoneType',
+        'docstring': 'str',
+        'duration_ms': 'float',
+        'error': 'NoneType',
+        'eval_name': 'str',
+        'eval_result': dict({
           '_messages': list([
             dict({
               'content': 'str',
@@ -353,18 +365,6 @@
             }),
           ]),
         }),
-        'assertions': list([
-          dict({
-            'details': 'str',
-            'message': 'str',
-            'passed': 'bool',
-            'type': 'str',
-          }),
-        ]),
-        'class_docstring': 'NoneType',
-        'docstring': 'str',
-        'duration_ms': 'float',
-        'error': 'NoneType',
         'model': 'str',
         'name': 'str',
         'outcome': 'str',
@@ -386,8 +386,20 @@
     'tests': list([
       dict({
         'agent_id': 'str',
-        'agent_name': 'str',
-        'agent_result': dict({
+        'assertions': list([
+          dict({
+            'details': 'str',
+            'message': 'str',
+            'passed': 'bool',
+            'type': 'str',
+          }),
+        ]),
+        'class_docstring': 'NoneType',
+        'docstring': 'str',
+        'duration_ms': 'float',
+        'error': 'NoneType',
+        'eval_name': 'str',
+        'eval_result': dict({
           '_messages': list([
             '<empty>',
           ]),
@@ -438,18 +450,6 @@
             }),
           ]),
         }),
-        'assertions': list([
-          dict({
-            'details': 'str',
-            'message': 'str',
-            'passed': 'bool',
-            'type': 'str',
-          }),
-        ]),
-        'class_docstring': 'NoneType',
-        'docstring': 'str',
-        'duration_ms': 'float',
-        'error': 'NoneType',
         'iteration': 'NoneType',
         'model': 'str',
         'name': 'str',
@@ -472,8 +472,20 @@
     'tests': list([
       dict({
         'agent_id': 'str',
-        'agent_name': 'str',
-        'agent_result': dict({
+        'assertions': list([
+          dict({
+            'details': 'str',
+            'message': 'str',
+            'passed': 'bool',
+            'type': 'str',
+          }),
+        ]),
+        'class_docstring': 'NoneType',
+        'docstring': 'str',
+        'duration_ms': 'float',
+        'error': 'NoneType',
+        'eval_name': 'str',
+        'eval_result': dict({
           '_messages': list([
             '<empty>',
           ]),
@@ -524,18 +536,6 @@
             }),
           ]),
         }),
-        'assertions': list([
-          dict({
-            'details': 'str',
-            'message': 'str',
-            'passed': 'bool',
-            'type': 'str',
-          }),
-        ]),
-        'class_docstring': 'NoneType',
-        'docstring': 'str',
-        'duration_ms': 'float',
-        'error': 'NoneType',
         'iteration': 'NoneType',
         'model': 'str',
         'name': 'str',
@@ -558,8 +558,20 @@
     'tests': list([
       dict({
         'agent_id': 'str',
-        'agent_name': 'str',
-        'agent_result': dict({
+        'assertions': list([
+          dict({
+            'details': 'str',
+            'message': 'str',
+            'passed': 'bool',
+            'type': 'str',
+          }),
+        ]),
+        'class_docstring': 'str',
+        'docstring': 'str',
+        'duration_ms': 'float',
+        'error': 'NoneType',
+        'eval_name': 'str',
+        'eval_result': dict({
           '_messages': list([
             '<empty>',
           ]),
@@ -610,18 +622,6 @@
             }),
           ]),
         }),
-        'assertions': list([
-          dict({
-            'details': 'str',
-            'message': 'str',
-            'passed': 'bool',
-            'type': 'str',
-          }),
-        ]),
-        'class_docstring': 'str',
-        'docstring': 'str',
-        'duration_ms': 'float',
-        'error': 'NoneType',
         'iteration': 'NoneType',
         'model': 'str',
         'name': 'str',
@@ -644,8 +644,20 @@
     'tests': list([
       dict({
         'agent_id': 'str',
-        'agent_name': 'str',
-        'agent_result': dict({
+        'assertions': list([
+          dict({
+            'details': 'str',
+            'message': 'str',
+            'passed': 'bool',
+            'type': 'str',
+          }),
+        ]),
+        'class_docstring': 'NoneType',
+        'docstring': 'str',
+        'duration_ms': 'float',
+        'error': 'NoneType',
+        'eval_name': 'str',
+        'eval_result': dict({
           '_messages': list([
             '<empty>',
           ]),
@@ -696,18 +708,6 @@
             }),
           ]),
         }),
-        'assertions': list([
-          dict({
-            'details': 'str',
-            'message': 'str',
-            'passed': 'bool',
-            'type': 'str',
-          }),
-        ]),
-        'class_docstring': 'NoneType',
-        'docstring': 'str',
-        'duration_ms': 'float',
-        'error': 'NoneType',
         'iteration': 'NoneType',
         'model': 'str',
         'name': 'str',

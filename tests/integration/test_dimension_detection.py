@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import pytest
 
-from pytest_skill_engineering import Agent, Provider
+from pytest_skill_engineering import Eval, Provider
 
 from .conftest import (
     BANKING_PROMPT,
@@ -53,7 +53,7 @@ class TestDimensionDetection:
     )
     async def test_banking_with_all_permutations(
         self,
-        aitest_run,
+        eval_run,
         banking_server,
         model: str,
         prompt_name: str,
@@ -64,7 +64,7 @@ class TestDimensionDetection:
         This single test generates 4 runs (2 models × 2 prompts).
         The aggregator should detect both dimensions vary.
         """
-        agent = Agent(
+        agent = Eval(
             provider=Provider(
                 model=f"azure/{model}",
                 rpm=DEFAULT_RPM,
@@ -76,7 +76,7 @@ class TestDimensionDetection:
             max_turns=DEFAULT_MAX_TURNS,
         )
 
-        result = await aitest_run(agent, "What's my checking account balance?")
+        result = await eval_run(agent, "What's my checking account balance?")
 
         assert result.success
         assert result.tool_was_called("get_balance")

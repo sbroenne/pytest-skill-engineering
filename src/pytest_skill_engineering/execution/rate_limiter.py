@@ -21,7 +21,7 @@ from collections import deque
 _logger = logging.getLogger(__name__)
 
 # Global registry of rate limiters, keyed by model string.
-# Shared across all AgentEngine instances so concurrent tests
+# Shared across all EvalEngine instances so concurrent tests
 # respect the same deployment's rate limits.
 _rate_limiters: dict[str, RateLimiter] = {}
 

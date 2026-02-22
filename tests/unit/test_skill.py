@@ -8,13 +8,13 @@ from pytest_skill_engineering.core.skill import Skill, SkillError, SkillMetadata
 
 
 def test_skill_name_rejects_trailing_hyphen() -> None:
-    """Name must not end with a hyphen per Agent Skills naming rules."""
+    """Name must not end with a hyphen per Eval Skills naming rules."""
     with pytest.raises(SkillError, match="Invalid skill name"):
         SkillMetadata(name="bad-name-", description="desc")
 
 
 def test_skill_name_rejects_consecutive_hyphens() -> None:
-    """Name must not contain consecutive hyphens per Agent Skills naming rules."""
+    """Name must not contain consecutive hyphens per Eval Skills naming rules."""
     with pytest.raises(SkillError, match="Invalid skill name"):
         SkillMetadata(name="bad--name", description="desc")
 

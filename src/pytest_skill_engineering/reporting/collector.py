@@ -7,7 +7,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from pytest_skill_engineering.core.result import AgentResult
+    from pytest_skill_engineering.core.result import EvalResult
 
 
 @dataclass
@@ -18,13 +18,13 @@ class TestReport:
         name: Full test node ID (e.g., "test_balance[gpt-4o-PROMPT_V1]")
         outcome: Test outcome - "passed", "failed", or "skipped"
         duration_ms: Test duration in milliseconds
-        agent_result: Optional AgentResult from aitest_run
+        eval_result: Optional EvalResult from eval_run
         error: Error message if test failed
         assertions: List of assertion results
         docstring: Test function's docstring (first line) for human-readable description
         class_docstring: Test class docstring (first line) for human-readable group name
-        agent_id: Agent UUID (from Agent.id)
-        agent_name: Display name for the agent
+        agent_id: Eval UUID (from Eval.id)
+        eval_name: Display name for the agent
         model: LLM model name (without provider prefix)
         system_prompt_name: Label for the system prompt variant
         skill_name: Name of the skill used
@@ -33,15 +33,15 @@ class TestReport:
     name: str
     outcome: str  # "passed", "failed", "skipped"
     duration_ms: float
-    agent_result: AgentResult | None = None
+    eval_result: EvalResult | None = None
     error: str | None = None
     assertions: list[dict[str, Any]] = field(default_factory=list)
     docstring: str | None = None
     class_docstring: str | None = None
 
-    # Agent identity (populated by plugin from Agent object)
+    # Eval identity (populated by plugin from Eval object)
     agent_id: str = ""
-    agent_name: str = ""
+    eval_name: str = ""
     model: str = ""
     system_prompt_name: str | None = None
     skill_name: str | None = None
@@ -73,18 +73,18 @@ class TestReport:
 
     @property
     def tokens_used(self) -> int:
-        """Get total tokens used from agent_result if present."""
-        if self.agent_result:
-            return self.agent_result.token_usage.get(
-                "prompt", 0
-            ) + self.agent_result.token_usage.get("completion", 0)
+        """Get total tokens used from eval_result if present."""
+        if self.eval_result:
+            return self.eval_result.token_usage.get("prompt", 0) + self.eval_result.token_usage.get(
+                "completion", 0
+            )
         return 0
 
     @property
     def tool_calls(self) -> list[str]:
-        """Get tool call names from agent_result if present."""
-        if self.agent_result:
-            return [tc.name for tc in self.agent_result.all_tool_calls]
+        """Get tool call names from eval_result if present."""
+        if self.eval_result:
+            return [tc.name for tc in self.eval_result.all_tool_calls]
         return []
 
 
@@ -119,24 +119,24 @@ class SuiteReport:
         """Sum of all tokens used."""
         total = 0
         for t in self.tests:
-            if t.agent_result:
-                total += t.agent_result.token_usage.get("prompt", 0)
-                total += t.agent_result.token_usage.get("completion", 0)
+            if t.eval_result:
+                total += t.eval_result.token_usage.get("prompt", 0)
+                total += t.eval_result.token_usage.get("completion", 0)
         return total
 
     @property
     def total_cost_usd(self) -> float:
         """Sum of all costs in USD."""
-        return sum(t.agent_result.cost_usd for t in self.tests if t.agent_result)
+        return sum(t.eval_result.cost_usd for t in self.tests if t.eval_result)
 
     @property
     def token_stats(self) -> dict[str, int]:
         """Get min/max/avg token usage."""
         tokens = [
-            t.agent_result.token_usage.get("prompt", 0)
-            + t.agent_result.token_usage.get("completion", 0)
+            t.eval_result.token_usage.get("prompt", 0)
+            + t.eval_result.token_usage.get("completion", 0)
             for t in self.tests
-            if t.agent_result
+            if t.eval_result
         ]
         if not tokens:
             return {"min": 0, "max": 0, "avg": 0}

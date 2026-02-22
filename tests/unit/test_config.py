@@ -5,9 +5,9 @@ from __future__ import annotations
 import os
 from unittest.mock import patch
 
-from pytest_skill_engineering.core.agent import (
-    Agent,
+from pytest_skill_engineering.core.eval import (
     CLIServer,
+    Eval,
     MCPServer,
     Provider,
     Wait,
@@ -136,10 +136,10 @@ class TestCLIServer:
 
 
 class TestAgent:
-    """Tests for Agent configuration."""
+    """Tests for Eval configuration."""
 
     def test_minimal(self) -> None:
-        agent = Agent(provider=Provider(model="openai/gpt-4o"))
+        agent = Eval(provider=Provider(model="openai/gpt-4o"))
         assert agent.provider.model == "openai/gpt-4o"
         assert agent.mcp_servers == []
         assert agent.cli_servers == []
@@ -149,7 +149,7 @@ class TestAgent:
         mcp = MCPServer(command=["mcp-server"])
         cli = CLIServer(name="cli", command="cli-tool", tool_prefix="cli")
 
-        agent = Agent(
+        agent = Eval(
             provider=Provider(model="openai/gpt-4o"),
             mcp_servers=[mcp],
             cli_servers=[cli],

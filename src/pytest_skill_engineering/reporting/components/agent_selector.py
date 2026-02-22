@@ -1,4 +1,4 @@
-"""Agent selector component - toggle chips for agent comparison."""
+"""Eval selector component - toggle chips for agent comparison."""
 
 from __future__ import annotations
 

@@ -7,7 +7,7 @@
       "name": "tests/fixtures/scenario_04_agent_selector.py::test_balance_query[gpt-5-mini]",
       "outcome": "passed",
       "duration_ms": 11069.653200014727,
-      "agent_result": {
+      "eval_result": {
         "turns": [
           {
             "role": "user",
@@ -240,7 +240,7 @@
       "docstring": "Basic balance query \u2014 all agents should pass.",
       "class_docstring": null,
       "agent_id": "be927112-ef05-4e33-9522-fc0e896802ae",
-      "agent_name": "gpt-5-mini",
+      "eval_name": "gpt-5-mini",
       "model": "gpt-5-mini",
       "system_prompt_name": null,
       "skill_name": null
@@ -249,7 +249,7 @@
       "name": "tests/fixtures/scenario_04_agent_selector.py::test_balance_query[gpt-4.1-mini]",
       "outcome": "passed",
       "duration_ms": 6874.437800026499,
-      "agent_result": {
+      "eval_result": {
         "turns": [
           {
             "role": "user",
@@ -482,7 +482,7 @@
       "docstring": "Basic balance query \u2014 all agents should pass.",
       "class_docstring": null,
       "agent_id": "e32f86b7-b835-4ea4-8e57-d83719f1e9d9",
-      "agent_name": "gpt-4.1-mini",
+      "eval_name": "gpt-4.1-mini",
       "model": "gpt-4.1-mini",
       "system_prompt_name": null,
       "skill_name": null
@@ -491,7 +491,7 @@
       "name": "tests/fixtures/scenario_04_agent_selector.py::test_balance_query[gpt-5-mini + financial-advisor]",
       "outcome": "passed",
       "duration_ms": 8478.608599980362,
-      "agent_result": {
+      "eval_result": {
         "turns": [
           {
             "role": "user",
@@ -729,7 +729,7 @@
       "docstring": "Basic balance query \u2014 all agents should pass.",
       "class_docstring": null,
       "agent_id": "14c561dd-18dd-4730-a19e-13053d8b33f7",
-      "agent_name": "gpt-5-mini + financial-advisor",
+      "eval_name": "gpt-5-mini + financial-advisor",
       "model": "gpt-5-mini",
       "system_prompt_name": null,
       "skill_name": "financial-advisor"
@@ -738,7 +738,7 @@
       "name": "tests/fixtures/scenario_04_agent_selector.py::test_financial_planning[gpt-5-mini]",
       "outcome": "passed",
       "duration_ms": 20053.115299990168,
-      "agent_result": {
+      "eval_result": {
         "turns": [
           {
             "role": "user",
@@ -969,7 +969,7 @@
       "docstring": "Financial advice \u2014 tests differentiation between agents (skill vs no skill).",
       "class_docstring": null,
       "agent_id": "be927112-ef05-4e33-9522-fc0e896802ae",
-      "agent_name": "gpt-5-mini",
+      "eval_name": "gpt-5-mini",
       "model": "gpt-5-mini",
       "system_prompt_name": null,
       "skill_name": null
@@ -978,7 +978,7 @@
       "name": "tests/fixtures/scenario_04_agent_selector.py::test_financial_planning[gpt-4.1-mini]",
       "outcome": "failed",
       "duration_ms": 4461.012199986726,
-      "agent_result": {
+      "eval_result": {
         "turns": [
           {
             "role": "user",
@@ -1165,7 +1165,7 @@
       "docstring": "Financial advice \u2014 tests differentiation between agents (skill vs no skill).",
       "class_docstring": null,
       "agent_id": "e32f86b7-b835-4ea4-8e57-d83719f1e9d9",
-      "agent_name": "gpt-4.1-mini",
+      "eval_name": "gpt-4.1-mini",
       "model": "gpt-4.1-mini",
       "system_prompt_name": null,
       "skill_name": null
@@ -1174,7 +1174,7 @@
       "name": "tests/fixtures/scenario_04_agent_selector.py::test_financial_planning[gpt-5-mini + financial-advisor]",
       "outcome": "passed",
       "duration_ms": 24790.5982999946,
-      "agent_result": {
+      "eval_result": {
         "turns": [
           {
             "role": "user",
@@ -1410,7 +1410,7 @@
       "docstring": "Financial advice \u2014 tests differentiation between agents (skill vs no skill).",
       "class_docstring": null,
       "agent_id": "14c561dd-18dd-4730-a19e-13053d8b33f7",
-      "agent_name": "gpt-5-mini + financial-advisor",
+      "eval_name": "gpt-5-mini + financial-advisor",
       "model": "gpt-5-mini",
       "system_prompt_name": null,
       "skill_name": "financial-advisor"

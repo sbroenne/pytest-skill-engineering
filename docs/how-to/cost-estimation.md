@@ -21,9 +21,9 @@ If no pricing is found in any source, the cost is `$0.00` and the model is flagg
 Most models work out of the box via litellm. No configuration needed:
 
 ```python
-from pytest_skill_engineering import Agent, Provider
+from pytest_skill_engineering import Eval, Provider
 
-agent = Agent(
+agent = Eval(
     provider=Provider(model="azure/gpt-5-mini"),  # ✅ litellm has pricing
     mcp_servers=[server],
 )

@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-from pytest_skill_engineering import Agent, Provider, Skill
+from pytest_skill_engineering import Eval, Provider, Skill
 
 from .conftest import DEFAULT_MAX_TURNS, DEFAULT_MODEL, DEFAULT_RPM, DEFAULT_TPM
 
@@ -31,20 +31,20 @@ class TestBankingSkillImprovement:
         """Load the financial advisor skill."""
         return Skill.from_path(SHOWCASE_SKILLS_DIR / "financial-advisor")
 
-    async def test_baseline_fund_allocation_may_be_generic(self, aitest_run, banking_server):
+    async def test_baseline_fund_allocation_may_be_generic(self, eval_run, banking_server):
         """WITHOUT skill: LLM might give generic financial advice.
 
         This test establishes baseline behavior - the LLM may or may not
         check account balances before giving allocation advice.
         """
-        agent = Agent(
+        agent = Eval(
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             mcp_servers=[banking_server],
             system_prompt="You are a banking assistant. Help users manage their money.",
             max_turns=5,
         )
 
-        result = await aitest_run(
+        result = await eval_run(
             agent,
             "How should I allocate the money in my accounts?",
         )
@@ -55,16 +55,16 @@ class TestBankingSkillImprovement:
         print(f"Tools used: {[t.name for t in result.all_tool_calls]}")
 
     async def test_skilled_allocation_uses_budgeting_rules(
-        self, aitest_run, banking_server, financial_skill
+        self, eval_run, banking_server, financial_skill
     ):
-        """WITH skill: Agent ALWAYS checks balances and applies 50/30/20 rule.
+        """WITH skill: Eval ALWAYS checks balances and applies 50/30/20 rule.
 
         The financial-advisor skill instructs the agent to:
         1. Always check account balances first
         2. Apply the 50/30/20 budgeting rule
         3. Prioritize emergency fund
         """
-        agent = Agent(
+        agent = Eval(
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             mcp_servers=[banking_server],
             skill=financial_skill,
@@ -72,7 +72,7 @@ class TestBankingSkillImprovement:
             max_turns=DEFAULT_MAX_TURNS,
         )
 
-        result = await aitest_run(
+        result = await eval_run(
             agent,
             "Check my account balances and tell me how I should allocate my money.",
         )
@@ -92,16 +92,16 @@ class TestBankingSkillImprovement:
         assert has_specific_advice, "Should give specific budgeting advice"
 
     async def test_skill_identifies_financial_red_flags(
-        self, aitest_run, banking_server, financial_skill
+        self, eval_run, banking_server, financial_skill
     ):
-        """WITH skill: Agent detects financial red flags from account state.
+        """WITH skill: Eval detects financial red flags from account state.
 
         The skill defines red flags:
         - No emergency fund
         - Spending more than income
         - Low savings ratio
         """
-        agent = Agent(
+        agent = Eval(
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             mcp_servers=[banking_server],
             skill=financial_skill,
@@ -109,7 +109,7 @@ class TestBankingSkillImprovement:
             max_turns=DEFAULT_MAX_TURNS,
         )
 
-        result = await aitest_run(
+        result = await eval_run(
             agent,
             "Review my accounts and tell me if there are any financial concerns I should address.",
         )
@@ -134,20 +134,20 @@ class TestTodoSkillImprovement:
         """Load the todo organizer skill."""
         return Skill.from_path(SKILLS_DIR / "todo-organizer")
 
-    async def test_baseline_may_not_verify_operations(self, aitest_run, todo_server):
+    async def test_baseline_may_not_verify_operations(self, eval_run, todo_server):
         """WITHOUT skill: LLM might not verify task operations.
 
         Baseline behavior - the agent may add tasks without confirming
         they were added successfully.
         """
-        agent = Agent(
+        agent = Eval(
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             mcp_servers=[todo_server],
             system_prompt="You help manage tasks. Add tasks when asked.",
             max_turns=5,
         )
 
-        result = await aitest_run(
+        result = await eval_run(
             agent,
             "Add 'buy milk' to my shopping list",
         )
@@ -156,14 +156,14 @@ class TestTodoSkillImprovement:
         assert result.tool_was_called("add_task")
         print(f"Baseline verified with list_tasks: {result.tool_was_called('list_tasks')}")
 
-    async def test_skilled_always_verifies_operations(self, aitest_run, todo_server, todo_skill):
-        """WITH skill: Agent ALWAYS verifies operations with list_tasks.
+    async def test_skilled_always_verifies_operations(self, eval_run, todo_server, todo_skill):
+        """WITH skill: Eval ALWAYS verifies operations with list_tasks.
 
         The todo-organizer skill requires:
         - Call list_tasks after ANY modification
         - Show the user confirmation of the change
         """
-        agent = Agent(
+        agent = Eval(
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             mcp_servers=[todo_server],
             skill=todo_skill,
@@ -171,7 +171,7 @@ class TestTodoSkillImprovement:
             max_turns=DEFAULT_MAX_TURNS,
         )
 
-        result = await aitest_run(
+        result = await eval_run(
             agent,
             "Add 'buy milk' to my shopping list",
         )
@@ -194,12 +194,12 @@ class TestTodoSkillImprovement:
             "Should call list_tasks AFTER the final add_task to verify the operation"
         )
 
-    async def test_skilled_uses_consistent_list_names(self, aitest_run, todo_server, todo_skill):
-        """WITH skill: Agent organizes tasks into appropriate categories.
+    async def test_skilled_uses_consistent_list_names(self, eval_run, todo_server, todo_skill):
+        """WITH skill: Eval organizes tasks into appropriate categories.
 
         The skill defines standard lists: inbox, work, personal, shopping, someday
         """
-        agent = Agent(
+        agent = Eval(
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             mcp_servers=[todo_server],
             skill=todo_skill,
@@ -207,7 +207,7 @@ class TestTodoSkillImprovement:
             max_turns=DEFAULT_MAX_TURNS,
         )
 
-        result = await aitest_run(
+        result = await eval_run(
             agent,
             "I need to buy groceries, finish the quarterly report, and call my mom",
         )
@@ -228,15 +228,15 @@ class TestTodoSkillImprovement:
         else:
             print("Note: Tasks added without explicit list names (using default)")
 
-    async def test_skilled_assigns_smart_priorities(self, aitest_run, todo_server, todo_skill):
-        """WITH skill: Agent assigns priorities based on urgency signals.
+    async def test_skilled_assigns_smart_priorities(self, eval_run, todo_server, todo_skill):
+        """WITH skill: Eval assigns priorities based on urgency signals.
 
         The skill's priority guide says:
         - "deadline today" keywords → HIGH priority
         - "urgent", "ASAP" → HIGH priority
         - "someday", "no rush" → LOW priority
         """
-        agent = Agent(
+        agent = Eval(
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             mcp_servers=[todo_server],
             skill=todo_skill,
@@ -244,7 +244,7 @@ class TestTodoSkillImprovement:
             max_turns=DEFAULT_MAX_TURNS,
         )
 
-        result = await aitest_run(
+        result = await eval_run(
             agent,
             "URGENT: Submit the report by end of day! Also, someday I'd like to learn piano.",
         )
@@ -273,29 +273,29 @@ class TestTodoSkillImprovement:
 class TestSkillComparisonSummary:
     """Summary tests that clearly show skill value."""
 
-    async def test_financial_skill_increases_tool_usage(self, aitest_run, banking_server):
+    async def test_financial_skill_increases_tool_usage(self, eval_run, banking_server):
         """Compare tool usage: skilled agent uses tools more consistently."""
         financial_skill = Skill.from_path(SHOWCASE_SKILLS_DIR / "financial-advisor")
         prompt = "Check my account balances and tell me how I should manage my money."
 
         # Test WITHOUT skill
-        baseline_agent = Agent(
+        baseline_agent = Eval(
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             mcp_servers=[banking_server],
             system_prompt="You are a helpful assistant.",
             max_turns=5,
         )
-        baseline_result = await aitest_run(baseline_agent, prompt)
+        baseline_result = await eval_run(baseline_agent, prompt)
 
         # Test WITH skill
-        skilled_agent = Agent(
+        skilled_agent = Eval(
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             mcp_servers=[banking_server],
             skill=financial_skill,
             system_prompt="You are a helpful assistant.",
             max_turns=DEFAULT_MAX_TURNS,
         )
-        skilled_result = await aitest_run(skilled_agent, prompt)
+        skilled_result = await eval_run(skilled_agent, prompt)
 
         # Compare results
         print(f"\n{'=' * 60}")

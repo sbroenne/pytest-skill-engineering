@@ -7,7 +7,7 @@
       "name": "tests/fixtures/scenario_03_sessions.py::TestBankingWorkflow::test_check_balance[gpt-5-mini]",
       "outcome": "passed",
       "duration_ms": 11391.313900006935,
-      "agent_result": {
+      "eval_result": {
         "turns": [
           {
             "role": "user",
@@ -240,7 +240,7 @@
       "docstring": "First turn: check account balance.",
       "class_docstring": "Multi-turn banking session with 2 agents.",
       "agent_id": "b3fda238-c3a7-4847-8894-859dc56ba22a",
-      "agent_name": "gpt-5-mini",
+      "eval_name": "gpt-5-mini",
       "model": "gpt-5-mini",
       "system_prompt_name": null,
       "skill_name": null
@@ -249,7 +249,7 @@
       "name": "tests/fixtures/scenario_03_sessions.py::TestBankingWorkflow::test_check_balance[gpt-4.1-mini]",
       "outcome": "passed",
       "duration_ms": 6646.228499972494,
-      "agent_result": {
+      "eval_result": {
         "turns": [
           {
             "role": "user",
@@ -482,7 +482,7 @@
       "docstring": "First turn: check account balance.",
       "class_docstring": "Multi-turn banking session with 2 agents.",
       "agent_id": "90398279-ac53-4bc6-b061-bf8e18330266",
-      "agent_name": "gpt-4.1-mini",
+      "eval_name": "gpt-4.1-mini",
       "model": "gpt-4.1-mini",
       "system_prompt_name": null,
       "skill_name": null
@@ -491,7 +491,7 @@
       "name": "tests/fixtures/scenario_03_sessions.py::TestBankingWorkflow::test_transfer_funds[gpt-5-mini]",
       "outcome": "passed",
       "duration_ms": 8811.932499986142,
-      "agent_result": {
+      "eval_result": {
         "turns": [
           {
             "role": "user",
@@ -758,7 +758,7 @@
       "docstring": "Second turn: transfer money.",
       "class_docstring": "Multi-turn banking session with 2 agents.",
       "agent_id": "b3fda238-c3a7-4847-8894-859dc56ba22a",
-      "agent_name": "gpt-5-mini",
+      "eval_name": "gpt-5-mini",
       "model": "gpt-5-mini",
       "system_prompt_name": null,
       "skill_name": null
@@ -767,7 +767,7 @@
       "name": "tests/fixtures/scenario_03_sessions.py::TestBankingWorkflow::test_transfer_funds[gpt-4.1-mini]",
       "outcome": "passed",
       "duration_ms": 6759.650599997258,
-      "agent_result": {
+      "eval_result": {
         "turns": [
           {
             "role": "user",
@@ -1034,7 +1034,7 @@
       "docstring": "Second turn: transfer money.",
       "class_docstring": "Multi-turn banking session with 2 agents.",
       "agent_id": "90398279-ac53-4bc6-b061-bf8e18330266",
-      "agent_name": "gpt-4.1-mini",
+      "eval_name": "gpt-4.1-mini",
       "model": "gpt-4.1-mini",
       "system_prompt_name": null,
       "skill_name": null
@@ -1043,7 +1043,7 @@
       "name": "tests/fixtures/scenario_03_sessions.py::TestBankingWorkflow::test_verify_transfer[gpt-5-mini]",
       "outcome": "passed",
       "duration_ms": 10011.370000021998,
-      "agent_result": {
+      "eval_result": {
         "turns": [
           {
             "role": "user",
@@ -1338,7 +1338,7 @@
       "docstring": "Third turn: verify the transfer.",
       "class_docstring": "Multi-turn banking session with 2 agents.",
       "agent_id": "b3fda238-c3a7-4847-8894-859dc56ba22a",
-      "agent_name": "gpt-5-mini",
+      "eval_name": "gpt-5-mini",
       "model": "gpt-5-mini",
       "system_prompt_name": null,
       "skill_name": null
@@ -1347,7 +1347,7 @@
       "name": "tests/fixtures/scenario_03_sessions.py::TestBankingWorkflow::test_verify_transfer[gpt-4.1-mini]",
       "outcome": "passed",
       "duration_ms": 6511.315000010654,
-      "agent_result": {
+      "eval_result": {
         "turns": [
           {
             "role": "user",
@@ -1642,7 +1642,7 @@
       "docstring": "Third turn: verify the transfer.",
       "class_docstring": "Multi-turn banking session with 2 agents.",
       "agent_id": "90398279-ac53-4bc6-b061-bf8e18330266",
-      "agent_name": "gpt-4.1-mini",
+      "eval_name": "gpt-4.1-mini",
       "model": "gpt-4.1-mini",
       "system_prompt_name": null,
       "skill_name": null

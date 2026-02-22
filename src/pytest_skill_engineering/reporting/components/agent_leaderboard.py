@@ -1,4 +1,4 @@
-"""Agent leaderboard component - ranked table with medals."""
+"""Eval leaderboard component - ranked table with medals."""
 
 from __future__ import annotations
 
@@ -45,7 +45,7 @@ def _leaderboard_row(agent: AgentData, rank: int) -> Node:
     return tr(class_=row_class)[
         # Rank medal or disqualified icon
         td(".text-center.text-xl")[rank_display],
-        # Agent name
+        # Eval name
         td[
             div(".font-medium.text-text-light")[
                 span(class_="line-through" if agent.disqualified else "")[agent.name],
@@ -84,7 +84,7 @@ def _multi_agent_table(agents: list[AgentData]) -> Node:
             thead[
                 tr[
                     th(".w-10")[""],
-                    th["Agent"],
+                    th["Eval"],
                     th(".text-center")["Tests"],
                     th(".text-center")["Pass Rate"],
                     th(".text-right")["Tokens"],

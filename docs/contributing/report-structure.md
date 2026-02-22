@@ -83,7 +83,7 @@ Features:
 
 For details on what the AI analyzes and how insights are generated, see [AI Analysis](../explanation/ai-analysis.md).
 
-## 3. Agent Leaderboard
+## 3. Eval Leaderboard
 
 **Only shown when multiple agents are tested.**
 
@@ -95,9 +95,9 @@ Answers: "Which configuration should I deploy?"
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│ 🏆 Agent Leaderboard                                            │
+│ 🏆 Eval Leaderboard                                            │
 ├─────────────────────────────────────────────────────────────────┤
-│ Rank │ Agent                          │ Pass │ Tokens │ Cost   │
+│ Rank │ Eval                          │ Pass │ Tokens │ Cost   │
 ├──────┼────────────────────────────────┼──────┼────────┼────────┤
 │  🥇  │ gpt-4.1-mini / concise         │ 100% │  561 ★ │ $0.001 │
 │  🥈  │ gpt-5-mini / concise           │ 100% │  743   │ $0.001 │
@@ -115,7 +115,7 @@ Answers: "Which configuration should I deploy?"
 - **Winner row highlighting** (green background)
 - **Full agent identity**: Model + Prompt name + Skill name
 
-## 4. Agent Selector
+## 4. Eval Selector
 
 **Only shown when more than 2 agents are tested.**
 
@@ -224,7 +224,7 @@ Fullscreen mermaid diagram viewer. Hidden by default, triggered by clicking a di
 
 The report layout adapts based on what was tested:
 
-| Scenario | Leaderboard | Agent Selector | Comparison Columns |
+| Scenario | Leaderboard | Eval Selector | Comparison Columns |
 |----------|-------------|----------------|-------------------|
 | 1 agent | ❌ | ❌ | ❌ (single column) |
 | 2 agents | ✅ | ❌ | ✅ (both shown) |
@@ -291,7 +291,7 @@ Components are Python functions generating HTML via htpy:
 |------|---------|
 | `components/report.py` | Main report, header, AI analysis |
 | `components/agent_leaderboard.py` | Ranked agent table |
-| `components/agent_selector.py` | Agent comparison picker |
+| `components/agent_selector.py` | Eval comparison picker |
 | `components/test_grid.py` | Test list with filter buttons |
 | `components/test_comparison.py` | Side-by-side agent results |
 | `components/overlay.py` | Fullscreen diagram viewer |
@@ -316,7 +316,7 @@ Visual tests use stable JSON fixtures in `tests/fixtures/reports/`:
 | `01_single_agent.json` | 1 | No | Header, AI Analysis, Test grid (no comparison) |
 | `02_multi_agent.json` | 2 | No | Leaderboard, Comparison columns (no selector) |
 | `03_multi_agent_sessions.json` | 2 | Yes | Session grouping, Leaderboard (no selector) |
-| `04_agent_selector.json` | 3 | No | Agent selector, Leaderboard with medals, Selection behavior |
+| `04_agent_selector.json` | 3 | No | Eval selector, Leaderboard with medals, Selection behavior |
 
 ### Test Checklist by Fixture
 
@@ -353,7 +353,7 @@ Visual tests use stable JSON fixtures in `tests/fixtures/reports/`:
 
 - [ ] Leaderboard shows 3 agents with medals (🥇🥈🥉)
 - [ ] Winner row highlighted
-- [ ] Agent selector shows 3 chips
+- [ ] Eval selector shows 3 chips
 - [ ] Exactly 2 agents selected by default
 - [ ] Clicking 3rd agent swaps selection
 - [ ] Cannot deselect to less than 2

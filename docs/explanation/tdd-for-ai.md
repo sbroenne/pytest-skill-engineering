@@ -23,12 +23,12 @@ The classic Red/Green/Refactor cycle maps directly to AI interface development:
 Start with what a user would say. Don't think about implementation — think about intent:
 
 ```python
-async def test_balance_check(aitest_run):
-    agent = Agent(
+async def test_balance_check(eval_run):
+    agent = Eval(
         provider=Provider(model="azure/gpt-5-mini"),
         mcp_servers=[banking_server],
     )
-    result = await aitest_run(agent, "What's my checking account balance?")
+    result = await eval_run(agent, "What's my checking account balance?")
 
     assert result.success
     assert result.tool_was_called("get_balance")
@@ -81,7 +81,7 @@ In traditional TDD, you design functions and classes. In pytest-skill-engineerin
 |-----------------|-----------------|
 | Function signatures | Tool descriptions |
 | Type definitions | Parameter schemas |
-| API documentation | Agent skills |
+| API documentation | Eval skills |
 | Serialized responses | MCP prompt templates |
 | — | Custom agent instructions |
 

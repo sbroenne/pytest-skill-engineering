@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from pytest_skill_engineering.core.result import AgentResult, ToolCall, Turn
+from pytest_skill_engineering.core.result import EvalResult, ToolCall, Turn
 from pytest_skill_engineering.reporting.collector import SuiteReport
 from pytest_skill_engineering.reporting.collector import TestReport as ReportTest
 from pytest_skill_engineering.reporting.insights import _build_analysis_input
@@ -12,7 +12,7 @@ class TestBuildAnalysisInput:
     """Tests for compact analysis input generation."""
 
     def test_compact_omits_passed_conversation_but_keeps_failed(self) -> None:
-        passed_result = AgentResult(
+        passed_result = EvalResult(
             turns=[
                 Turn(
                     role="assistant",
@@ -31,7 +31,7 @@ class TestBuildAnalysisInput:
             token_usage={"prompt": 10, "completion": 5},
             cost_usd=0.001,
         )
-        failed_result = AgentResult(
+        failed_result = EvalResult(
             turns=[
                 Turn(
                     role="assistant",
@@ -55,16 +55,16 @@ class TestBuildAnalysisInput:
                     name="tests/test_demo.py::test_passed",
                     outcome="passed",
                     duration_ms=100,
-                    agent_result=passed_result,
-                    agent_name="agent-a",
+                    eval_result=passed_result,
+                    eval_name="agent-a",
                     model="gpt-5-mini",
                 ),
                 ReportTest(
                     name="tests/test_demo.py::test_failed",
                     outcome="failed",
                     duration_ms=120,
-                    agent_result=failed_result,
-                    agent_name="agent-a",
+                    eval_result=failed_result,
+                    eval_name="agent-a",
                     model="gpt-5-mini",
                     error="boom",
                 ),

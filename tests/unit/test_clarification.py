@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-from pytest_skill_engineering.core.agent import (
-    Agent,
+from pytest_skill_engineering.core.eval import (
     ClarificationDetection,
     ClarificationLevel,
+    Eval,
     Provider,
 )
-from pytest_skill_engineering.core.result import AgentResult, ClarificationStats, Turn
+from pytest_skill_engineering.core.result import ClarificationStats, EvalResult, Turn
 
 
 class TestClarificationDetectionConfig:
@@ -38,13 +38,13 @@ class TestClarificationDetectionConfig:
         assert config.judge_model == "azure/gpt-5-mini"
 
     def test_agent_default_no_detection(self) -> None:
-        """Agent has detection disabled by default."""
-        agent = Agent(provider=Provider(model="azure/gpt-5-mini"))
+        """Eval has detection disabled by default."""
+        agent = Eval(provider=Provider(model="azure/gpt-5-mini"))
         assert not agent.clarification_detection.enabled
 
     def test_agent_with_detection(self) -> None:
-        """Agent can be configured with clarification detection."""
-        agent = Agent(
+        """Eval can be configured with clarification detection."""
+        agent = Eval(
             provider=Provider(model="azure/gpt-5-mini"),
             clarification_detection=ClarificationDetection(enabled=True),
         )
@@ -77,11 +77,11 @@ class TestClarificationStats:
 
 
 class TestAgentResultClarification:
-    """Test AgentResult clarification properties."""
+    """Test EvalResult clarification properties."""
 
     def test_no_detection_configured(self) -> None:
         """When detection not enabled, stats are None."""
-        result = AgentResult(
+        result = EvalResult(
             turns=[Turn(role="assistant", content="Hello")],
             success=True,
         )
@@ -91,7 +91,7 @@ class TestAgentResultClarification:
 
     def test_detection_enabled_no_clarification(self) -> None:
         """Detection enabled but no clarification found."""
-        result = AgentResult(
+        result = EvalResult(
             turns=[Turn(role="assistant", content="Your balance is $1,500.")],
             success=True,
             clarification_stats=ClarificationStats(),
@@ -102,7 +102,7 @@ class TestAgentResultClarification:
 
     def test_clarification_detected(self) -> None:
         """Clarification detected in response."""
-        result = AgentResult(
+        result = EvalResult(
             turns=[Turn(role="assistant", content="Would you like me to check?")],
             success=True,
             clarification_stats=ClarificationStats(
@@ -116,7 +116,7 @@ class TestAgentResultClarification:
 
     def test_multiple_clarifications(self) -> None:
         """Multiple clarification requests tracked."""
-        result = AgentResult(
+        result = EvalResult(
             turns=[
                 Turn(role="assistant", content="Which account?"),
                 Turn(role="assistant", content="Should I proceed?"),
@@ -139,7 +139,7 @@ class TestClarificationSerialization:
         """No clarification stats serializes as None."""
         from pytest_skill_engineering.core.serialization import serialize_dataclass
 
-        result = AgentResult(
+        result = EvalResult(
             turns=[Turn(role="assistant", content="Hello")],
             success=True,
         )
@@ -150,7 +150,7 @@ class TestClarificationSerialization:
         """Clarification stats serialize correctly."""
         from pytest_skill_engineering.core.serialization import serialize_dataclass
 
-        result = AgentResult(
+        result = EvalResult(
             turns=[Turn(role="assistant", content="Would you like...?")],
             success=True,
             clarification_stats=ClarificationStats(
@@ -184,7 +184,7 @@ class TestClarificationSerialization:
                     name="test_clarification",
                     outcome="passed",
                     duration_ms=500,
-                    agent_result=AgentResult(
+                    eval_result=EvalResult(
                         turns=[Turn(role="assistant", content="Should I?")],
                         success=True,
                         clarification_stats=ClarificationStats(
@@ -194,7 +194,7 @@ class TestClarificationSerialization:
                         ),
                     ),
                     agent_id="test-id",
-                    agent_name="test-agent",
+                    eval_name="test-agent",
                     model="gpt-5-mini",
                 ),
             ],
@@ -208,7 +208,7 @@ class TestClarificationSerialization:
         restored = deserialize_suite_report(loaded)
 
         # Verify stats survived
-        ar = restored.tests[0].agent_result
+        ar = restored.tests[0].eval_result
         assert ar is not None
         assert ar.clarification_stats is not None
         assert ar.clarification_stats.count == 1
@@ -235,12 +235,12 @@ class TestClarificationSerialization:
                     name="test_no_detection",
                     outcome="passed",
                     duration_ms=500,
-                    agent_result=AgentResult(
+                    eval_result=EvalResult(
                         turns=[Turn(role="assistant", content="Balance: $1500")],
                         success=True,
                     ),
                     agent_id="test-id",
-                    agent_name="test-agent",
+                    eval_name="test-agent",
                     model="gpt-5-mini",
                 ),
             ],
@@ -252,7 +252,7 @@ class TestClarificationSerialization:
         loaded = json.loads(json_str)
         restored = deserialize_suite_report(loaded)
 
-        ar = restored.tests[0].agent_result
+        ar = restored.tests[0].eval_result
         assert ar is not None
         assert ar.clarification_stats is None
         assert not ar.asked_for_clarification

@@ -13,16 +13,16 @@ This installs the `github-copilot-sdk` package alongside pytest-skill-engineerin
 ## Quick Start
 
 ```python
-from pytest_skill_engineering.copilot import CopilotAgent
+from pytest_skill_engineering.copilot import CopilotEval
 
 @pytest.mark.copilot
-async def test_creates_module(copilot_run, tmp_path):
-    agent = CopilotAgent(
+async def test_creates_module(copilot_eval, tmp_path):
+    agent = CopilotEval(
         name="coder",
         instructions="Create production-quality Python code.",
         working_directory=str(tmp_path),
     )
-    result = await copilot_run(
+    result = await copilot_eval(
         agent,
         "Create calculator.py with add, subtract, multiply, divide functions.",
     )
@@ -30,14 +30,14 @@ async def test_creates_module(copilot_run, tmp_path):
     assert (tmp_path / "calculator.py").exists()
 ```
 
-## CopilotAgent Configuration
+## CopilotEval Configuration
 
-`CopilotAgent` is the configuration object for Copilot SDK sessions:
+`CopilotEval` is the configuration object for Copilot SDK sessions:
 
 ```python
-from pytest_skill_engineering.copilot import CopilotAgent
+from pytest_skill_engineering.copilot import CopilotEval
 
-agent = CopilotAgent(
+agent = CopilotEval(
     name="my-agent",                    # Required: unique agent name
     instructions="Your instructions.",   # System prompt for the agent
     model="gpt-5.2",                     # Optional: model override
@@ -59,19 +59,19 @@ agent = CopilotAgent(
 
 ## Fixtures
 
-### `copilot_run`
+### `copilot_eval`
 
 Runs a single Copilot agent against a task:
 
 ```python
-result = await copilot_run(agent, "Create hello.py with print('hello')")
+result = await copilot_eval(agent, "Create hello.py with print('hello')")
 ```
 
 Returns a `CopilotResult` with:
 
 - `result.success` — Whether the session completed without errors
 - `result.error` — Error message if failed
-- `result.final_response` — Agent's final text response
+- `result.final_response` — Eval's final text response
 - `result.all_tool_calls` — List of `ToolCall` objects
 - `result.tool_was_called("name")` — Check if a tool was called
 - `result.tool_names_called` — Set of tool names used
@@ -90,8 +90,8 @@ Runs two agents against the same task in isolated directories:
 ```python
 @pytest.mark.copilot
 async def test_ab_comparison(ab_run, tmp_path):
-    baseline = CopilotAgent(name="baseline", instructions="Write minimal code.")
-    treatment = CopilotAgent(name="treatment", instructions="Write documented code.")
+    baseline = CopilotEval(name="baseline", instructions="Write minimal code.")
+    treatment = CopilotEval(name="treatment", instructions="Write documented code.")
 
     b, t = await ab_run(baseline, treatment, "Create calculator.py with add and subtract.")
 
@@ -104,7 +104,7 @@ async def test_ab_comparison(ab_run, tmp_path):
 Define subagents that the main agent can delegate to:
 
 ```python
-agent = CopilotAgent(
+agent = CopilotEval(
     name="orchestrator",
     instructions="Delegate test writing to the test-writer agent.",
     custom_agents=[
@@ -124,18 +124,18 @@ Use `load_custom_agent()` to load a `.agent.md` file into a custom agent dict:
 
 ```python
 from pytest_skill_engineering import load_custom_agent
-from pytest_skill_engineering.copilot import CopilotAgent
+from pytest_skill_engineering.copilot import CopilotEval
 
 test_writer = load_custom_agent(".github/agents/test-writer.agent.md")
 
 @pytest.mark.copilot
-async def test_orchestrator_delegates_test_writing(copilot_run):
-    agent = CopilotAgent(
+async def test_orchestrator_delegates_test_writing(copilot_eval):
+    agent = CopilotEval(
         name="orchestrator",
         instructions="Delegate test writing to the test-writer agent.",
         custom_agents=[test_writer],
     )
-    result = await copilot_run(agent, "Write unit tests for calculator.py")
+    result = await copilot_eval(agent, "Write unit tests for calculator.py")
     assert result.success
 ```
 
@@ -153,13 +153,13 @@ subagents = load_custom_agents(
 )
 
 @pytest.mark.copilot
-async def test_full_agent_team(copilot_run):
-    agent = CopilotAgent(
+async def test_full_agent_team(copilot_eval):
+    agent = CopilotEval(
         name="orchestrator",
         instructions="Delegate tasks to the appropriate specialist.",
         custom_agents=subagents,
     )
-    result = await copilot_run(agent, "Create and test a calculator module.")
+    result = await copilot_eval(agent, "Create and test a calculator module.")
     assert result.success
 ```
 
@@ -174,16 +174,16 @@ from pytest_skill_engineering import load_custom_agent, load_custom_agents
 `CopilotResult.subagent_invocations` tracks which sub-agents were dispatched:
 
 ```python
-async def test_correct_subagent_is_invoked(copilot_run):
+async def test_correct_subagent_is_invoked(copilot_eval):
     agents = load_custom_agents(".github/agents/")
-    agent = CopilotAgent(
+    agent = CopilotEval(
         name="orchestrator",
         instructions="Use specialist agents for each task.",
         custom_agents=agents,
     )
-    result = await copilot_run(agent, "Write unit tests for the billing module.")
+    result = await copilot_eval(agent, "Write unit tests for the billing module.")
 
-    invoked = [s.agent_name for s in result.subagent_invocations]
+    invoked = [s.eval_name for s in result.subagent_invocations]
     assert "test-writer" in invoked
 ```
 
@@ -192,15 +192,15 @@ async def test_correct_subagent_is_invoked(copilot_run):
 Skills are domain knowledge packages loaded from a directory containing a `SKILL.md` file. Use `skill_directories` to inject a skill into a Copilot session — this is the right way to test Copilot skills, as it exercises the same loading path end users experience.
 
 ```python
-from pytest_skill_engineering.copilot import CopilotAgent
+from pytest_skill_engineering.copilot import CopilotEval
 
-async def test_skill_presents_scenarios(copilot_run):
-    agent = CopilotAgent(
+async def test_skill_presents_scenarios(copilot_eval):
+    agent = CopilotEval(
         name="with-skill",
         skill_directories=["skills/my-skill"],  # loads SKILL.md + references/
         max_turns=10,
     )
-    result = await copilot_run(agent, "What can you help me with?")
+    result = await copilot_eval(agent, "What can you help me with?")
     assert result.success
     assert "scenario-a" in result.final_response.lower()
 ```
@@ -208,38 +208,38 @@ async def test_skill_presents_scenarios(copilot_run):
 ### Comparing with and without skill
 
 ```python
-async def test_skill_improves_routing(copilot_run):
-    without = CopilotAgent(name="no-skill", max_turns=10)
-    with_skill = CopilotAgent(
+async def test_skill_improves_routing(copilot_eval):
+    without = CopilotEval(name="no-skill", max_turns=10)
+    with_skill = CopilotEval(
         name="with-skill",
         skill_directories=["skills/my-skill"],
         max_turns=10,
     )
 
-    r_without = await copilot_run(without, "Get the ACR baseline for TPID 12345.")
-    r_with    = await copilot_run(with_skill, "Get the ACR baseline for TPID 12345.")
+    r_without = await copilot_eval(without, "Get the ACR baseline for TPID 12345.")
+    r_with    = await copilot_eval(with_skill, "Get the ACR baseline for TPID 12345.")
 
     # Skill should cause the agent to call the right tool
     assert r_with.tool_was_called("ExecuteQueries")
 ```
 
-### When to use `CopilotAgent` vs `Agent` + `Skill`
+### When to use `CopilotEval` vs `Eval` + `Skill`
 
-| | `CopilotAgent` + `skill_directories` | `Agent` + `Skill.from_path()` |
+| | `CopilotEval` + `skill_directories` | `Eval` + `Skill.from_path()` |
 |---|---|---|
 | **What runs the agent** | Real GitHub Copilot (CLI SDK) | PydanticAI synthetic loop |
 | **Skill loading** | Native Copilot skill loading | Injected as virtual reference tools |
 | **MCP auth** | Handled by Copilot CLI (OAuth cached) | Managed by test process (token required) |
 | **Use when** | Testing a Copilot skill end-to-end | Testing MCP servers / tool descriptions |
 
-> **Rule of thumb:** If you built a `SKILL.md` for Copilot users, test it with `CopilotAgent`. If you're testing whether your MCP server tools are discoverable and usable, use `Agent`.
+> **Rule of thumb:** If you built a `SKILL.md` for Copilot users, test it with `CopilotEval`. If you're testing whether your MCP server tools are discoverable and usable, use `Eval`.
 
 ## Skill Directories
 
 Load skill files that inject domain knowledge into the agent:
 
 ```python
-agent = CopilotAgent(
+agent = CopilotEval(
     name="with-skills",
     instructions="Apply all standards from your skills.",
     skill_directories=["./skills"],
@@ -251,18 +251,18 @@ agent = CopilotAgent(
 Block specific tools to control agent behavior:
 
 ```python
-agent = CopilotAgent(
+agent = CopilotEval(
     name="no-terminal",
     instructions="Create files only.",
     excluded_tools=["run_in_terminal"],
 )
-result = await copilot_run(agent, "Create hello.py")
+result = await copilot_eval(agent, "Create hello.py")
 assert not result.tool_was_called("run_in_terminal")
 ```
 
 ## Reporting
 
-Copilot test results flow into the same HTML report as synthetic tests. The report auto-detects whether tests used `aitest_run` (synthetic) or `copilot_run` (coding agent) and adapts the AI analysis accordingly.
+Copilot test results flow into the same HTML report as synthetic tests. The report auto-detects whether tests used `eval_run` (synthetic) or `copilot_eval` (coding agent) and adapts the AI analysis accordingly.
 
 ## Copilot as Model Provider
 

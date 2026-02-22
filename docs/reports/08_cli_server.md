@@ -136,13 +136,13 @@ Optional tool-response optimization can further reduce costs but is not required
 ```mermaid
 sequenceDiagram
     participant User
-    participant Agent
+    participant Eval
     participant Tools
 
-    User->>Agent: "Echo the message 'Hello from CLI'"
-    Agent->>Tools: "echo_execute({'args': 'Hello from CLI'})"
-    Tools-->>Agent: "{'exit_code': 0, 'stdout': 'Hello\r\nfrom\r\nCLI\r\n', 'stde"
-    Agent->>User: "Hello from CLI"
+    User->>Eval: "Echo the message 'Hello from CLI'"
+    Eval->>Tools: "echo_execute({'args': 'Hello from CLI'})"
+    Tools-->>Eval: "{'exit_code': 0, 'stdout': 'Hello\r\nfrom\r\nCLI\r\n', 'stde"
+    Eval->>User: "Hello from CLI"
 ```
 
 </details>
@@ -176,13 +176,13 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant User
-    participant Agent
+    participant Eval
     participant Tools
 
-    User->>Agent: "Use the echo command to say 'pytest-skill-engineering works' and confirm it worked"
-    Agent->>Tools: "echo_execute({'args': 'pytest-skill-engineering works'})"
-    Tools-->>Agent: "{'exit_code': 0, 'stdout': 'pytest-skill-engineering\r\nworks\r\n', 'st"
-    Agent->>User: "I ran the echo command with 'pytest-skill-engineering works'. Output (stdout): pytest-aites"
+    User->>Eval: "Use the echo command to say 'pytest-skill-engineering works' and confirm it worked"
+    Eval->>Tools: "echo_execute({'args': 'pytest-skill-engineering works'})"
+    Tools-->>Eval: "{'exit_code': 0, 'stdout': 'pytest-skill-engineering\r\nworks\r\n', 'st"
+    Eval->>User: "I ran the echo command with 'pytest-skill-engineering works'. Output (stdout): pytest-aites"
 ```
 
 </details>

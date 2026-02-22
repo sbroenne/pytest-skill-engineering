@@ -53,16 +53,16 @@ The simplest tests verify the agent can use individual tools correctly.
 class TestBasicOperations:
     """Basic single-tool operations demonstrating core functionality."""
 
-    async def test_check_single_balance(self, aitest_run, banking_server):
+    async def test_check_single_balance(self, eval_run, banking_server):
         """Check balance of one account - simplest possible test."""
-        agent = Agent(
+        agent = Eval(
             provider=Provider(model=f"azure/{DEFAULT_MODEL}"),
             mcp_servers=[banking_server],
             system_prompt=BANKING_PROMPT_BASE,
             max_turns=8,
         )
 
-        result = await aitest_run(agent, "What's my checking account balance?")
+        result = await eval_run(agent, "What's my checking account balance?")
 
         assert result.success
         assert result.tool_was_called("get_balance")
@@ -82,16 +82,16 @@ Complex operations require coordinating multiple tools in sequence.
 class TestMultiToolWorkflows:
     """Complex workflows requiring coordination of multiple tools."""
 
-    async def test_transfer_and_verify(self, aitest_run, llm_assert, banking_server):
+    async def test_transfer_and_verify(self, eval_run, llm_assert, banking_server):
         """Transfer money and verify the result with balance check."""
-        agent = Agent(
+        agent = Eval(
             provider=Provider(model=f"azure/{DEFAULT_MODEL}"),
             mcp_servers=[banking_server],
             system_prompt=BANKING_PROMPT_BASE,
             max_turns=8,
         )
 
-        result = await aitest_run(
+        result = await eval_run(
             agent,
             "Transfer $100 from checking to savings, then show me my new balances.",
         )
@@ -127,9 +127,9 @@ class TestSavingsPlanningSession:
     - Turn 3: Verify the result
     """
 
-    async def test_01_establish_context(self, aitest_run, llm_assert, banking_server):
+    async def test_01_establish_context(self, eval_run, llm_assert, banking_server):
         """First turn: check balances and discuss savings goals."""
-        agent = Agent(
+        agent = Eval(
             name="savings-01",
             provider=Provider(model=f"azure/{DEFAULT_MODEL}"),
             mcp_servers=[banking_server],
@@ -137,7 +137,7 @@ class TestSavingsPlanningSession:
             max_turns=8,
         )
 
-        result = await aitest_run(
+        result = await eval_run(
             agent,
             "I want to save more money. Can you check my accounts and suggest "
             "how much I could transfer to savings each month?",
@@ -146,9 +146,9 @@ class TestSavingsPlanningSession:
         assert result.success
         assert result.tool_was_called("get_all_balances") or result.tool_was_called("get_balance")
 
-    async def test_02_reference_without_naming(self, aitest_run, llm_assert, banking_server):
+    async def test_02_reference_without_naming(self, eval_run, llm_assert, banking_server):
         """Second turn: reference previous context."""
-        agent = Agent(
+        agent = Eval(
             name="savings-02",
             provider=Provider(model=f"azure/{DEFAULT_MODEL}"),
             mcp_servers=[banking_server],
@@ -156,13 +156,13 @@ class TestSavingsPlanningSession:
             max_turns=8,
         )
 
-        result = await aitest_run(
+        result = await eval_run(
             agent,
             "That sounds good. Let's start by moving $200 to savings right now.",
         )
 
         assert result.success
-        # Agent should remember context and execute the transfer
+        # Eval should remember context and execute the transfer
         assert result.tool_was_called("transfer")
 ```
 
@@ -183,16 +183,16 @@ class TestModelComparison:
     """Compare how different models handle complex financial advice."""
 
     @pytest.mark.parametrize("model", BENCHMARK_MODELS)
-    async def test_financial_advice_quality(self, aitest_run, llm_assert, banking_server, model: str):
+    async def test_financial_advice_quality(self, eval_run, llm_assert, banking_server, model: str):
         """Compare models on providing comprehensive financial advice."""
-        agent = Agent(
+        agent = Eval(
             provider=Provider(model=f"azure/{model}"),
             mcp_servers=[banking_server],
             system_prompt=BANKING_PROMPT_BASE,
             max_turns=8,
         )
 
-        result = await aitest_run(
+        result = await eval_run(
             agent,
             "I want to reach my vacation savings goal faster. Analyze my current "
             "financial situation and recommend a concrete savings plan.",
@@ -253,16 +253,16 @@ class TestPromptComparison:
     """Compare how different prompt styles affect financial advice."""
 
     @pytest.mark.parametrize("prompt", ADVISOR_PROMPTS, ids=lambda p: p.name)
-    async def test_advice_style_comparison(self, aitest_run, llm_assert, banking_server, prompt):
+    async def test_advice_style_comparison(self, eval_run, llm_assert, banking_server, prompt):
         """Compare concise vs detailed vs friendly advisory styles."""
-        agent = Agent(
+        agent = Eval(
             provider=Provider(model=f"azure/{DEFAULT_MODEL}"),
             mcp_servers=[banking_server],
             system_prompt=prompt.system_prompt,
             max_turns=8,
         )
 
-        result = await aitest_run(
+        result = await eval_run(
             agent,
             "I'm worried about my spending. Can you check my accounts "
             "and give me advice on managing my money better?",
@@ -313,10 +313,10 @@ class TestSkillEnhancement:
     """Test how skills improve financial advice quality."""
 
     async def test_with_financial_skill(
-        self, aitest_run, llm_assert, banking_server, financial_advisor_skill
+        self, eval_run, llm_assert, banking_server, financial_advisor_skill
     ):
-        """Agent with financial advisor skill should give better advice."""
-        agent = Agent(
+        """Eval with financial advisor skill should give better advice."""
+        agent = Eval(
             provider=Provider(model=f"azure/{DEFAULT_MODEL}"),
             mcp_servers=[banking_server],
             system_prompt=BANKING_PROMPT_BASE,
@@ -324,7 +324,7 @@ class TestSkillEnhancement:
             max_turns=8,
         )
 
-        result = await aitest_run(
+        result = await eval_run(
             agent,
             "I have $1500 in checking. Should I keep it there or move some to savings? "
             "What's a good emergency fund target for someone like me?",
@@ -351,16 +351,16 @@ Test graceful recovery from invalid operations.
 class TestErrorHandling:
     """Test graceful handling of edge cases and errors."""
 
-    async def test_insufficient_funds_recovery(self, aitest_run, llm_assert, banking_server):
-        """Agent should handle insufficient funds gracefully."""
-        agent = Agent(
+    async def test_insufficient_funds_recovery(self, eval_run, llm_assert, banking_server):
+        """Eval should handle insufficient funds gracefully."""
+        agent = Eval(
             provider=Provider(model=f"azure/{DEFAULT_MODEL}"),
             mcp_servers=[banking_server],
             system_prompt=BANKING_PROMPT_BASE + " If an operation fails, explain why and suggest alternatives.",
             max_turns=8,
         )
 
-        result = await aitest_run(
+        result = await eval_run(
             agent,
             "Transfer $50,000 from my checking to savings.",  # Way more than available!
         )
@@ -392,7 +392,7 @@ class TestErrorHandling:
 
 | Assertion | Purpose |
 |-----------|---------|
-| `result.success` | Agent completed without errors |
+| `result.success` | Eval completed without errors |
 | `result.tool_was_called("name")` | Specific tool was invoked |
 | `result.tool_call_count("name") >= N` | Tool called at least N times |
 | `len(result.all_tool_calls) >= N` | Total tool calls threshold |

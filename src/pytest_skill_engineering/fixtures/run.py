@@ -1,4 +1,4 @@
-"""Agent run fixture."""
+"""Eval run fixture."""
 
 from __future__ import annotations
 
@@ -8,9 +8,9 @@ from typing import TYPE_CHECKING, Any
 
 import pytest
 
-from pytest_skill_engineering.core.agent import Agent
-from pytest_skill_engineering.core.result import AgentResult
-from pytest_skill_engineering.execution.engine import AgentEngine
+from pytest_skill_engineering.core.eval import Eval
+from pytest_skill_engineering.core.result import EvalResult
+from pytest_skill_engineering.execution.engine import EvalEngine
 from pytest_skill_engineering.plugin import SESSION_MESSAGES_KEY
 
 if TYPE_CHECKING:
@@ -45,7 +45,7 @@ def _get_session_key(request: pytest.FixtureRequest) -> str | None:
 
 
 @pytest.fixture
-def aitest_run(
+def eval_run(
     request: pytest.FixtureRequest,
 ) -> Callable[..., Any]:
     """Fixture providing a function to run agent interactions.
@@ -54,54 +54,54 @@ def aitest_run(
 
     Example:
         @pytest.mark.parametrize("model", ["openai/gpt-4o", "openai/gpt-4o-mini"])
-        async def test_model_comparison(aitest_run, model):
-            agent = Agent(
+        async def test_model_comparison(eval_run, model):
+            agent = Eval(
                 provider=Provider(model=model),
                 system_prompt="You are a helpful assistant.",
             )
-            result = await aitest_run(agent, "Hello!")
+            result = await eval_run(agent, "Hello!")
             assert result.success
 
         @pytest.mark.parametrize("prompt", [PROMPT_V1, PROMPT_V2])
-        async def test_prompt_comparison(aitest_run, prompt):
-            agent = Agent(
+        async def test_prompt_comparison(eval_run, prompt):
+            agent = Eval(
                 provider=Provider(model="openai/gpt-4o-mini"),
                 system_prompt=prompt.system_prompt,
             )
-            result = await aitest_run(agent, "Hello!")
+            result = await eval_run(agent, "Hello!")
             assert result.success
 
     Session continuity with @pytest.mark.session:
 
         @pytest.mark.session("banking_session")
-        async def test_check_balance(aitest_run):
-            result = await aitest_run(agent, "What's my checking balance?")
+        async def test_check_balance(eval_run):
+            result = await eval_run(agent, "What's my checking balance?")
             assert result.success
 
         @pytest.mark.session("banking_session")
-        async def test_followup_transfer(aitest_run):
+        async def test_followup_transfer(eval_run):
             # Messages from previous test are automatically injected
-            result = await aitest_run(agent, "Transfer $100 to savings")
+            result = await eval_run(agent, "Transfer $100 to savings")
             assert result.success
     """
-    engines: list[AgentEngine] = []
-    results: list[AgentResult] = []
+    engines: list[EvalEngine] = []
+    results: list[EvalResult] = []
 
     # Get session key for this test (if @pytest.mark.session is present)
     session_key = _get_session_key(request)
 
     async def run_agent(
-        agent: Agent,
+        agent: Eval,
         prompt: str,
         *,
         max_turns: int | None = None,
         timeout_ms: int = 60000,
         messages: list[Any] | None = None,
-    ) -> AgentResult:
+    ) -> EvalResult:
         """Run an agent with the given prompt.
 
         Args:
-            agent: Agent configuration with provider and servers
+            agent: Eval configuration with provider and servers
             prompt: User prompt to send
             max_turns: Maximum conversation turns (default: agent.max_turns)
             timeout_ms: Timeout for the entire run (default: 60000)
@@ -112,7 +112,7 @@ def aitest_run(
                      messages from the previous test in the session are used automatically.
 
         Returns:
-            AgentResult with conversation history and tool calls
+            EvalResult with conversation history and tool calls
         """
         # Auto-inject session messages if not explicitly provided
         effective_messages = messages
@@ -120,7 +120,7 @@ def aitest_run(
             session_storage = request.config.stash.get(SESSION_MESSAGES_KEY, {})
             effective_messages = session_storage.get(session_key)
 
-        engine = AgentEngine(agent)
+        engine = EvalEngine(agent)
         engines.append(engine)
 
         await engine.initialize()

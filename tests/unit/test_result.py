@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from pytest_skill_engineering.core.result import AgentResult, ToolCall, Turn
+from pytest_skill_engineering.core.result import EvalResult, ToolCall, Turn
 
 
 class TestToolCall:
@@ -52,21 +52,21 @@ class TestTurn:
 
 
 class TestAgentResult:
-    """Tests for AgentResult dataclass."""
+    """Tests for EvalResult dataclass."""
 
     def test_success(self) -> None:
         turns = [
             Turn(role="user", content="Hello"),
             Turn(role="assistant", content="Hi there!"),
         ]
-        result = AgentResult(turns=turns, success=True, duration_ms=100.0)
+        result = EvalResult(turns=turns, success=True, duration_ms=100.0)
 
         assert result.success
         assert bool(result) is True
         assert result.error is None
 
     def test_failure(self) -> None:
-        result = AgentResult(turns=[], success=False, error="Timeout")
+        result = EvalResult(turns=[], success=False, error="Timeout")
         assert not result.success
         assert bool(result) is False
         assert result.error == "Timeout"
@@ -78,11 +78,11 @@ class TestAgentResult:
             Turn(role="user", content="More"),
             Turn(role="assistant", content="Final response"),
         ]
-        result = AgentResult(turns=turns, success=True)
+        result = EvalResult(turns=turns, success=True)
         assert result.final_response == "Final response"
 
     def test_final_response_empty(self) -> None:
-        result = AgentResult(turns=[], success=True)
+        result = EvalResult(turns=[], success=True)
         assert result.final_response == ""
 
     def test_all_responses(self) -> None:
@@ -92,7 +92,7 @@ class TestAgentResult:
             Turn(role="user", content="More"),
             Turn(role="assistant", content="Response 2"),
         ]
-        result = AgentResult(turns=turns, success=True)
+        result = EvalResult(turns=turns, success=True)
         assert result.all_responses == ["Response 1", "Response 2"]
 
     def test_all_tool_calls(self) -> None:
@@ -102,7 +102,7 @@ class TestAgentResult:
             Turn(role="assistant", content="", tool_calls=[tc1]),
             Turn(role="assistant", content="", tool_calls=[tc2]),
         ]
-        result = AgentResult(turns=turns, success=True)
+        result = EvalResult(turns=turns, success=True)
 
         assert len(result.all_tool_calls) == 2
         assert result.tool_names_called == {"tool1", "tool2"}
@@ -110,7 +110,7 @@ class TestAgentResult:
     def test_tool_was_called(self) -> None:
         tc = ToolCall(name="read_file", arguments={}, result="ok")
         turns = [Turn(role="assistant", content="", tool_calls=[tc])]
-        result = AgentResult(turns=turns, success=True)
+        result = EvalResult(turns=turns, success=True)
 
         assert result.tool_was_called("read_file")
         assert not result.tool_was_called("write_file")
@@ -120,7 +120,7 @@ class TestAgentResult:
         tc2 = ToolCall(name="read_file", arguments={"path": "b.txt"}, result="b")
         tc3 = ToolCall(name="write_file", arguments={"path": "c.txt"}, result="ok")
         turns = [Turn(role="assistant", content="", tool_calls=[tc1, tc2, tc3])]
-        result = AgentResult(turns=turns, success=True)
+        result = EvalResult(turns=turns, success=True)
 
         read_calls = result.tool_calls_for("read_file")
         assert len(read_calls) == 2
@@ -131,7 +131,7 @@ class TestAgentResult:
             Turn(role="user", content="Hello"),
             Turn(role="assistant", content="Hi there!"),
         ]
-        result = AgentResult(turns=turns, success=True, duration_ms=150.5)
+        result = EvalResult(turns=turns, success=True, duration_ms=150.5)
 
         repr_str = repr(result)
         assert "SUCCESS" in repr_str
@@ -139,14 +139,14 @@ class TestAgentResult:
         assert "Hi there!" in repr_str
 
     def test_repr_failure(self) -> None:
-        result = AgentResult(turns=[], success=False, error="Network error")
+        result = EvalResult(turns=[], success=False, error="Network error")
         repr_str = repr(result)
         assert "FAILED" in repr_str
         assert "Network error" in repr_str
 
     def test_session_not_continuation(self) -> None:
         """Test fresh conversation has no session context."""
-        result = AgentResult(
+        result = EvalResult(
             turns=[Turn(role="user", content="Hello")],
             success=True,
             session_context_count=0,
@@ -156,7 +156,7 @@ class TestAgentResult:
 
     def test_session_continuation(self) -> None:
         """Test conversation with prior messages is a session continuation."""
-        result = AgentResult(
+        result = EvalResult(
             turns=[Turn(role="user", content="Follow up")],
             success=True,
             session_context_count=5,  # 5 prior messages
@@ -167,7 +167,7 @@ class TestAgentResult:
     def test_messages_property_returns_copy(self) -> None:
         """Test messages property returns a copy to prevent mutation."""
         original_messages = [{"role": "user", "content": "Hello"}]
-        result = AgentResult(
+        result = EvalResult(
             turns=[Turn(role="user", content="Hello")],
             success=True,
             _messages=original_messages,

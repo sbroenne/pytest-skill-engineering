@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from pytest_skill_engineering.core.agent import Agent, MCPServer, Provider, Wait
-from pytest_skill_engineering.core.result import AgentResult, SkillInfo, ToolCall, Turn
+from pytest_skill_engineering.core.eval import Eval, MCPServer, Provider, Wait
+from pytest_skill_engineering.core.result import EvalResult, SkillInfo, ToolCall, Turn
 from pytest_skill_engineering.plugin import _add_junit_properties
 
 
@@ -22,11 +22,11 @@ class TestAddJunitProperties:
     def test_basic_agent_identity(self) -> None:
         """Test agent name and model are added."""
         report = MockReport()
-        result = AgentResult(
+        result = EvalResult(
             turns=[],
             success=True,
         )
-        agent = Agent(
+        agent = Eval(
             name="test-agent",
             provider=Provider(model="azure/gpt-5-mini"),
         )
@@ -41,7 +41,7 @@ class TestAddJunitProperties:
     def test_skill_info(self) -> None:
         """Test skill name is added."""
         report = MockReport()
-        result = AgentResult(
+        result = EvalResult(
             turns=[],
             success=True,
             skill_info=SkillInfo(
@@ -59,8 +59,8 @@ class TestAddJunitProperties:
     def test_prompt_from_agent(self) -> None:
         """Test system prompt name from agent."""
         report = MockReport()
-        result = AgentResult(turns=[], success=True)
-        agent = Agent(
+        result = EvalResult(turns=[], success=True)
+        agent = Eval(
             provider=Provider(model="azure/gpt-5-mini"),
             system_prompt_name="concise",
         )
@@ -73,7 +73,7 @@ class TestAddJunitProperties:
     def test_token_usage(self) -> None:
         """Test token counts are added."""
         report = MockReport()
-        result = AgentResult(
+        result = EvalResult(
             turns=[],
             success=True,
             token_usage={
@@ -92,7 +92,7 @@ class TestAddJunitProperties:
     def test_cost(self) -> None:
         """Test cost is added with proper formatting."""
         report = MockReport()
-        result = AgentResult(
+        result = EvalResult(
             turns=[],
             success=True,
             cost_usd=0.000425,
@@ -106,7 +106,7 @@ class TestAddJunitProperties:
     def test_turns_count(self) -> None:
         """Test turn count is added."""
         report = MockReport()
-        result = AgentResult(
+        result = EvalResult(
             turns=[
                 Turn(role="user", content="Hello"),
                 Turn(role="assistant", content="Hi there"),
@@ -123,7 +123,7 @@ class TestAddJunitProperties:
     def test_tools_called(self) -> None:
         """Test tools called are listed."""
         report = MockReport()
-        result = AgentResult(
+        result = EvalResult(
             turns=[
                 Turn(
                     role="assistant",
@@ -160,7 +160,7 @@ class TestAddJunitProperties:
     def test_failure_status(self) -> None:
         """Test failed agent shows false."""
         report = MockReport()
-        result = AgentResult(turns=[], success=False, error="Timeout")
+        result = EvalResult(turns=[], success=False, error="Timeout")
 
         _add_junit_properties(report, result, None)
 
@@ -174,7 +174,7 @@ class TestAddJunitProperties:
             pass
 
         report = BareReport()
-        result = AgentResult(turns=[], success=True)
+        result = EvalResult(turns=[], success=True)
 
         # Should not raise
         _add_junit_properties(report, result, None)
@@ -182,7 +182,7 @@ class TestAddJunitProperties:
     def test_full_example(self) -> None:
         """Test complete example with all fields populated."""
         report = MockReport()
-        result = AgentResult(
+        result = EvalResult(
             turns=[
                 Turn(
                     role="assistant",
@@ -195,7 +195,7 @@ class TestAddJunitProperties:
             token_usage={"prompt": 500, "completion": 50},
             cost_usd=0.00125,
         )
-        agent = Agent(
+        agent = Eval(
             name="banking-agent",
             provider=Provider(model="azure/gpt-5-mini"),
             system_prompt_name="detailed",
@@ -219,8 +219,8 @@ class TestAddJunitProperties:
     def test_mcp_servers(self) -> None:
         """Test MCP server names are added from agent config."""
         report = MockReport()
-        result = AgentResult(turns=[], success=True)
-        agent = Agent(
+        result = EvalResult(turns=[], success=True)
+        agent = Eval(
             provider=Provider(model="azure/gpt-5-mini"),
             mcp_servers=[
                 MCPServer(
@@ -242,8 +242,8 @@ class TestAddJunitProperties:
     def test_allowed_tools(self) -> None:
         """Test allowed_tools filter is added from agent config."""
         report = MockReport()
-        result = AgentResult(turns=[], success=True)
-        agent = Agent(
+        result = EvalResult(turns=[], success=True)
+        agent = Eval(
             provider=Provider(model="azure/gpt-5-mini"),
             allowed_tools=["get_balance", "transfer"],
         )
@@ -256,7 +256,7 @@ class TestAddJunitProperties:
     def test_full_example_with_agent(self) -> None:
         """Test complete example with agent config included."""
         report = MockReport()
-        result = AgentResult(
+        result = EvalResult(
             turns=[
                 Turn(
                     role="assistant",
@@ -269,7 +269,7 @@ class TestAddJunitProperties:
             token_usage={"prompt": 500, "completion": 50},
             cost_usd=0.00125,
         )
-        agent = Agent(
+        agent = Eval(
             name="banking-agent",
             provider=Provider(model="azure/gpt-5-mini"),
             system_prompt_name="detailed",

@@ -3,7 +3,7 @@
 3 agents - Tests:
 - Leaderboard shows 3 agents with medals (🥇🥈🥉)
 - Winner row highlighted
-- Agent selector shows 3 chips
+- Eval selector shows 3 chips
 - Exactly 2 agents selected by default
 - Clicking 3rd agent swaps selection
 - Cannot deselect to less than 2
@@ -52,13 +52,13 @@ class TestAgentSelectorExists:
     """Test agent selector presence and structure."""
 
     def test_agent_selector_exists(self, page: Page, agent_selector_report: Path):
-        """Agent selector should exist when > 2 agents (contains agent chips)."""
+        """Eval selector should exist when > 2 agents (contains agent chips)."""
         page.goto(f"file://{agent_selector_report}")
         page.wait_for_load_state("networkidle")
 
-        # Agent selector is identified by having agent chips with checkboxes
+        # Eval selector is identified by having agent chips with checkboxes
         chips = page.locator(".agent-chip")
-        assert chips.count() > 2, "Agent selector not found (expected > 2 agent chips)"
+        assert chips.count() > 2, "Eval selector not found (expected > 2 agent chips)"
 
     def test_correct_number_of_checkboxes(self, page: Page, agent_selector_report: Path):
         """Should have 3 agent checkboxes."""

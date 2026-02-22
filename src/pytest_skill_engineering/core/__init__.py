@@ -1,22 +1,22 @@
 """Core module - agent configuration and result types."""
 
-from pytest_skill_engineering.core.agent import (
-    Agent,
+from pytest_skill_engineering.core.errors import AITestError, EngineTimeoutError, ServerStartError
+from pytest_skill_engineering.core.eval import (
     ClarificationDetection,
     ClarificationLevel,
     CLIExecution,
     CLIServer,
+    Eval,
     MCPServer,
     Provider,
     Wait,
 )
-from pytest_skill_engineering.core.agents import (
+from pytest_skill_engineering.core.evals import (
     load_custom_agent,
     load_custom_agents,
     load_prompt_file,
     load_prompt_files,
 )
-from pytest_skill_engineering.core.errors import AITestError, EngineTimeoutError, ServerStartError
 from pytest_skill_engineering.core.prompt import (
     Prompt,
     load_prompt,
@@ -24,8 +24,8 @@ from pytest_skill_engineering.core.prompt import (
     load_system_prompts,
 )
 from pytest_skill_engineering.core.result import (
-    AgentResult,
     ClarificationStats,
+    EvalResult,
     ImageContent,
     MCPPrompt,
     MCPPromptArgument,
@@ -39,8 +39,8 @@ from pytest_skill_engineering.core.skill import Skill, SkillError, SkillMetadata
 
 __all__ = [
     "AITestError",
-    "Agent",
-    "AgentResult",
+    "Eval",
+    "EvalResult",
     "CLIExecution",
     "CLIServer",
     "ClarificationDetection",

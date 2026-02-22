@@ -1,7 +1,7 @@
 """Integration tests for optimize_instruction().
 
 These tests require:
-- GitHub Copilot credentials (for copilot_run to produce a real result)
+- GitHub Copilot credentials (for copilot_eval to produce a real result)
 - At least one accessible judge model provider (Azure/OpenAI/Copilot)
 
 Fails fast when no configured provider can access a model.
@@ -12,21 +12,21 @@ from __future__ import annotations
 import pytest
 
 from pytest_skill_engineering import InstructionSuggestion, optimize_instruction
-from pytest_skill_engineering.copilot.agent import CopilotAgent
+from pytest_skill_engineering.copilot.eval import CopilotEval
 
 
 @pytest.mark.copilot
 class TestOptimizeInstructionIntegration:
     """Integration tests for optimize_instruction() with real provider calls."""
 
-    async def test_returns_valid_suggestion(self, copilot_run, tmp_path, integration_judge_model):
+    async def test_returns_valid_suggestion(self, copilot_eval, tmp_path, integration_judge_model):
         """optimize_instruction returns an InstructionSuggestion with non-empty fields."""
-        agent = CopilotAgent(
+        agent = CopilotEval(
             name="minimal-coder",
             instructions="Write Python code.",
             working_directory=str(tmp_path),
         )
-        result = await copilot_run(
+        result = await copilot_eval(
             agent,
             "Create calc.py with add(a, b) and subtract(a, b).",
         )
@@ -46,15 +46,15 @@ class TestOptimizeInstructionIntegration:
         assert len(suggestion.instruction) > 20, "Instruction too short to be useful"
 
     async def test_suggestion_str_is_human_readable(
-        self, copilot_run, tmp_path, integration_judge_model
+        self, copilot_eval, tmp_path, integration_judge_model
     ):
         """str(InstructionSuggestion) is readable and contains all fields."""
-        agent = CopilotAgent(
+        agent = CopilotEval(
             name="coder",
             instructions="Write Python code.",
             working_directory=str(tmp_path),
         )
-        result = await copilot_run(agent, "Create utils.py with a helper function.")
+        result = await copilot_eval(agent, "Create utils.py with a helper function.")
         assert result.success
 
         suggestion = await optimize_instruction(
@@ -70,15 +70,15 @@ class TestOptimizeInstructionIntegration:
         assert suggestion.changes in text
 
     async def test_suggestion_is_relevant_to_criterion(
-        self, copilot_run, tmp_path, integration_judge_model
+        self, copilot_eval, tmp_path, integration_judge_model
     ):
         """Optimizer returns a suggestion that addresses the given criterion."""
-        agent = CopilotAgent(
+        agent = CopilotEval(
             name="coder",
             instructions="Write Python code.",
             working_directory=str(tmp_path),
         )
-        result = await copilot_run(
+        result = await copilot_eval(
             agent,
             "Create math.py with add(a, b) and multiply(a, b).",
         )
@@ -100,7 +100,7 @@ class TestOptimizeInstructionIntegration:
             f"Reasoning: {suggestion.reasoning}"
         )
 
-    async def test_full_optimize_loop(self, copilot_run, tmp_path, integration_judge_model):
+    async def test_full_optimize_loop(self, copilot_eval, tmp_path, integration_judge_model):
         """Full test→optimize→test loop: weak instruction fails, improved instruction passes.
 
         This is the hero use case: verify that optimize_instruction() produces
@@ -117,13 +117,13 @@ class TestOptimizeInstructionIntegration:
         TASK = "Create calculator.py with add(a, b) and subtract(a, b) functions."
 
         # --- Round 1: weak instruction, expect no docstrings ---
-        weak_agent = CopilotAgent(
+        weak_agent = CopilotEval(
             name="weak-coder",
             instructions="Write minimal Python code. No comments or documentation needed.",
             working_directory=str(tmp_path / "round1"),
         )
         (tmp_path / "round1").mkdir()
-        result1 = await copilot_run(weak_agent, TASK)
+        result1 = await copilot_eval(weak_agent, TASK)
         assert result1.success, "Round 1 Copilot run failed"
 
         code1 = result1.file("calculator.py") or ""
@@ -140,13 +140,13 @@ class TestOptimizeInstructionIntegration:
         print(f"\n💡 Suggested instruction:\n{suggestion}")  # visible in -s output
 
         # --- Round 2: improved instruction ---
-        improved_agent = CopilotAgent(
+        improved_agent = CopilotEval(
             name="improved-coder",
             instructions=suggestion.instruction,
             working_directory=str(tmp_path / "round2"),
         )
         (tmp_path / "round2").mkdir()
-        result2 = await copilot_run(improved_agent, TASK)
+        result2 = await copilot_eval(improved_agent, TASK)
         assert result2.success, "Round 2 Copilot run failed"
 
         code2 = result2.file("calculator.py") or ""

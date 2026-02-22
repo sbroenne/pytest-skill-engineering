@@ -10,15 +10,15 @@ import os
 import sys
 from typing import TYPE_CHECKING, Any
 
-from pytest_skill_engineering.core.agent import _expand_env
 from pytest_skill_engineering.core.errors import ServerStartError
+from pytest_skill_engineering.core.eval import _expand_env
 
 _logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from mcp import ClientSession
 
-    from pytest_skill_engineering.core.agent import CLIServer, MCPServer
+    from pytest_skill_engineering.core.eval import CLIServer, MCPServer
 
 
 class MCPServerProcess:
@@ -49,7 +49,7 @@ class MCPServerProcess:
         """Start or connect to the MCP server and discover tools and prompts."""
         from mcp import ClientSession as _ClientSession
 
-        from pytest_skill_engineering.core.agent import WaitStrategy
+        from pytest_skill_engineering.core.eval import WaitStrategy
 
         self._exit_stack = contextlib.AsyncExitStack()
         label = self._transport_label()
@@ -257,7 +257,7 @@ class MCPServerProcess:
 
             messages = await server.get_prompt("code_review", {"code": "def hello(): ..."})
             # [{"role": "user", "content": "Please review this code: def hello(): ..."}]
-            result = await aitest_run(agent, messages[0]["content"])
+            result = await eval_run(agent, messages[0]["content"])
         """
         if not self._session:
             raise RuntimeError("Server not started")

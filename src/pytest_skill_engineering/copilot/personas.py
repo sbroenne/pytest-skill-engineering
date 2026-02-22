@@ -27,16 +27,16 @@ Built-in personas
 
 Usage::
 
-    from pytest_skill_engineering.copilot import CopilotAgent, VSCodePersona, ClaudeCodePersona
+    from pytest_skill_engineering.copilot import CopilotEval, VSCodePersona, ClaudeCodePersona
 
     # Explicit — recommended for clarity
-    agent = CopilotAgent(persona=VSCodePersona(), custom_agents=[...])
+    agent = CopilotEval(persona=VSCodePersona(), custom_agents=[...])
 
     # Default — VSCodePersona is used automatically
-    agent = CopilotAgent(custom_agents=[...])
+    agent = CopilotEval(custom_agents=[...])
 
     # Headless — no IDE context, no polyfills
-    agent = CopilotAgent(persona=HeadlessPersona())
+    agent = CopilotEval(persona=HeadlessPersona())
 """
 
 from __future__ import annotations
@@ -47,7 +47,7 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from copilot.types import Tool, ToolInvocation, ToolResult
 
-    from pytest_skill_engineering.copilot.agent import CopilotAgent
+    from pytest_skill_engineering.copilot.eval import CopilotEval
     from pytest_skill_engineering.copilot.events import EventMapper
 
 
@@ -72,14 +72,14 @@ class Persona:
 
     def apply(
         self,
-        agent: "CopilotAgent",
+        agent: "CopilotEval",
         session_config: dict[str, Any],
         mapper: "EventMapper",
     ) -> None:
         """Modify *session_config* in-place to match this persona's environment.
 
         Args:
-            agent: The ``CopilotAgent`` being executed (read-only).
+            agent: The ``CopilotEval`` being executed (read-only).
             session_config: The session config dict built from ``agent``.
                 Mutate this to inject tools, update system_message, etc.
             mapper: The ``EventMapper`` for the current run.  Pass to
@@ -122,7 +122,7 @@ class CopilotCLIPersona(Persona):
 
     def apply(
         self,
-        agent: "CopilotAgent",
+        agent: "CopilotEval",
         session_config: dict[str, Any],
         mapper: "EventMapper",
     ) -> None:
@@ -156,7 +156,7 @@ class VSCodePersona(Persona):
 
     def apply(
         self,
-        agent: "CopilotAgent",
+        agent: "CopilotEval",
         session_config: dict[str, Any],
         mapper: "EventMapper",
     ) -> None:
@@ -194,7 +194,7 @@ class ClaudeCodePersona(Persona):
 
     def apply(
         self,
-        agent: "CopilotAgent",
+        agent: "CopilotEval",
         session_config: dict[str, Any],
         mapper: "EventMapper",
     ) -> None:
@@ -289,7 +289,7 @@ def _build_agents_block(custom_agents: list[dict[str, Any]], tool_name: str = "r
 
 
 def _make_runsubagent_tool(
-    parent_agent: "CopilotAgent",
+    parent_agent: "CopilotEval",
     custom_agents: list[dict[str, Any]],
     mapper: "EventMapper",
 ) -> "Tool":
@@ -298,7 +298,7 @@ def _make_runsubagent_tool(
 
 
 def _make_task_tool(
-    parent_agent: "CopilotAgent",
+    parent_agent: "CopilotEval",
     custom_agents: list[dict[str, Any]],
     mapper: "EventMapper",
 ) -> "Tool":
@@ -308,7 +308,7 @@ def _make_task_tool(
 
 def _make_subagent_dispatch_tool(
     tool_name: str,
-    parent_agent: "CopilotAgent",
+    parent_agent: "CopilotEval",
     custom_agents: list[dict[str, Any]],
     mapper: "EventMapper",
 ) -> "Tool":
@@ -321,7 +321,7 @@ def _make_subagent_dispatch_tool(
     Args:
         tool_name: Name to register the tool as (``"runSubagent"`` for VS Code,
             ``"task"`` for Claude Code).
-        parent_agent: The orchestrator ``CopilotAgent`` being executed.
+        parent_agent: The orchestrator ``CopilotEval`` being executed.
         custom_agents: List of custom agent config dicts (each with at least
             a ``name`` key, optionally ``prompt``, ``description``).
         mapper: The ``EventMapper`` for the current run, used to record
@@ -329,7 +329,7 @@ def _make_subagent_dispatch_tool(
     """
     from copilot.types import Tool, ToolResult
 
-    from pytest_skill_engineering.copilot.agent import CopilotAgent as _CopilotAgent
+    from pytest_skill_engineering.copilot.eval import CopilotEval as _CopilotAgent
     from pytest_skill_engineering.copilot.runner import run_copilot
 
     agent_map: dict[str, dict[str, Any]] = {a["name"]: a for a in custom_agents}
@@ -337,9 +337,7 @@ def _make_subagent_dispatch_tool(
     async def _handler(invocation: "ToolInvocation") -> "ToolResult":
         args: dict[str, Any] = invocation.get("arguments") or {}  # type: ignore[assignment]
 
-        agent_name: str | None = (
-            args.get("agent_name") or args.get("agent") or args.get("agentName")
-        )
+        eval_name: str | None = args.get("eval_name") or args.get("agent") or args.get("agentName")
         prompt_text: str = (
             args.get("prompt")
             or args.get("message")
@@ -348,25 +346,25 @@ def _make_subagent_dispatch_tool(
             or ""
         )
 
-        if not agent_name:
+        if not eval_name:
             available = sorted(agent_map)
             return ToolResult(
-                textResultForLlm=(f"Error: agent_name is required. Available agents: {available}"),
+                textResultForLlm=(f"Error: eval_name is required. Available agents: {available}"),
                 resultType="failure",
             )
 
-        agent_cfg = agent_map.get(agent_name)
+        agent_cfg = agent_map.get(eval_name)
         if agent_cfg is None:
             available = sorted(agent_map)
             return ToolResult(
-                textResultForLlm=(f"Error: agent '{agent_name}' not found. Available: {available}"),
+                textResultForLlm=(f"Error: agent '{eval_name}' not found. Available: {available}"),
                 resultType="failure",
             )
 
-        mapper.record_subagent_start(agent_name)
+        mapper.record_subagent_start(eval_name)
 
         sub_agent = _CopilotAgent(
-            name=agent_name,
+            name=eval_name,
             model=parent_agent.model,
             instructions=agent_cfg.get("prompt"),
             working_directory=parent_agent.working_directory,
@@ -378,15 +376,15 @@ def _make_subagent_dispatch_tool(
         sub_result = await run_copilot(sub_agent, prompt_text)
 
         if sub_result.success:
-            mapper.record_subagent_complete(agent_name)
+            mapper.record_subagent_complete(eval_name)
             return ToolResult(
                 textResultForLlm=sub_result.final_response or "Sub-agent completed.",
                 resultType="success",
             )
 
-        mapper.record_subagent_failed(agent_name)
+        mapper.record_subagent_failed(eval_name)
         return ToolResult(
-            textResultForLlm=f"Sub-agent '{agent_name}' failed: {sub_result.error}",
+            textResultForLlm=f"Sub-agent '{eval_name}' failed: {sub_result.error}",
             resultType="failure",
         )
 
@@ -401,7 +399,7 @@ def _make_subagent_dispatch_tool(
         parameters={
             "type": "object",
             "properties": {
-                "agent_name": {
+                "eval_name": {
                     "type": "string",
                     "description": "Name of the agent to dispatch.",
                     "enum": sorted(agent_map),
@@ -411,6 +409,6 @@ def _make_subagent_dispatch_tool(
                     "description": "Task or message to send to the agent.",
                 },
             },
-            "required": ["agent_name", "prompt"],
+            "required": ["eval_name", "prompt"],
         },
     )

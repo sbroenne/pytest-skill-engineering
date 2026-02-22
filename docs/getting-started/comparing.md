@@ -11,18 +11,18 @@ The power of pytest-skill-engineering is comparing different configurations to f
 Define agents with meaningful names when testing distinct approaches:
 
 ```python
-from pytest_skill_engineering import Agent, Provider, MCPServer, Skill, load_custom_agent
+from pytest_skill_engineering import Eval, Provider, MCPServer, Skill, load_custom_agent
 
 banking_server = MCPServer(command=["python", "banking_mcp.py"])
 
 # Compare: no skill vs with skill
-agent_baseline = Agent(
+agent_baseline = Eval(
     name="baseline",
     provider=Provider(model="azure/gpt-5-mini"),
     mcp_servers=[banking_server],
 )
 
-agent_with_skill = Agent(
+agent_with_skill = Eval(
     name="with-skill",
     provider=Provider(model="azure/gpt-5-mini"),
     mcp_servers=[banking_server],
@@ -30,14 +30,14 @@ agent_with_skill = Agent(
 )
 
 # Compare: two versions of a custom agent file
-agent_v1 = Agent.from_agent_file(
+agent_v1 = Eval.from_agent_file(
     ".github/agents/advisor-v1.agent.md",
     name="advisor-v1",
     provider=Provider(model="azure/gpt-5-mini"),
     mcp_servers=[banking_server],
 )
 
-agent_v2 = Agent.from_agent_file(
+agent_v2 = Eval.from_agent_file(
     ".github/agents/advisor-v2.agent.md",
     name="advisor-v2",
     provider=Provider(model="azure/gpt-5-mini"),
@@ -47,9 +47,9 @@ agent_v2 = Agent.from_agent_file(
 AGENTS = [agent_baseline, agent_with_skill, agent_v1, agent_v2]
 
 @pytest.mark.parametrize("agent", AGENTS, ids=lambda a: a.name)
-async def test_balance_query(aitest_run, agent):
+async def test_balance_query(eval_run, agent):
     """Which configuration handles balance queries best?"""
-    result = await aitest_run(agent, "What's my checking balance?")
+    result = await eval_run(agent, "What's my checking balance?")
     assert result.success
 ```
 
@@ -65,7 +65,7 @@ Generate configurations from all permutations for systematic testing:
 
 ```python
 from pathlib import Path
-from pytest_skill_engineering import Agent, Provider, MCPServer, Skill
+from pytest_skill_engineering import Eval, Provider, MCPServer, Skill
 
 MODELS = ["gpt-5-mini", "gpt-4.1"]
 SKILL_VERSIONS = {
@@ -77,7 +77,7 @@ banking_server = MCPServer(command=["python", "banking_mcp.py"])
 
 # Generate all combinations: 2 models × N skill versions
 AGENTS = [
-    Agent(
+    Eval(
         name=f"{model}-{skill_name}",
         provider=Provider(model=f"azure/{model}"),
         mcp_servers=[banking_server],
@@ -88,9 +88,9 @@ AGENTS = [
 ]
 
 @pytest.mark.parametrize("agent", AGENTS, ids=lambda a: a.name)
-async def test_balance_query(aitest_run, agent):
+async def test_balance_query(eval_run, agent):
     """Test MCP server with different model/skill combinations."""
-    result = await aitest_run(agent, "What's my checking balance?")
+    result = await eval_run(agent, "What's my checking balance?")
     assert result.success
 ```
 
@@ -102,9 +102,9 @@ async def test_balance_query(aitest_run, agent):
 
 ## What the Report Shows
 
-The report shows an **Agent Leaderboard** (auto-detected when multiple agents are tested):
+The report shows an **Eval Leaderboard** (auto-detected when multiple agents are tested):
 
-| Agent | Pass Rate | Tokens | Cost |
+| Eval | Pass Rate | Tokens | Cost |
 |-------|-----------|--------|------|
 | gpt-5-mini-v2 | 100% | 747 | $0.002 |
 | gpt-4.1-v2 | 100% | 560 | $0.008 |

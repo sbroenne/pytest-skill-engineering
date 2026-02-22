@@ -20,7 +20,7 @@ from pathlib import Path
 
 import pytest
 
-from pytest_skill_engineering import Agent, MCPServer, Provider, Skill, Wait, load_system_prompts
+from pytest_skill_engineering import Eval, MCPServer, Provider, Skill, Wait, load_system_prompts
 
 # Mark all tests as showcase
 pytestmark = [pytest.mark.showcase]
@@ -54,7 +54,7 @@ based on the tool's output. If an operation fails, explain why and suggest alter
 
 # =============================================================================
 # Agents — defined once at module level, reused across tests.
-# Same Agent object = same UUID = correct grouping in reports.
+# Same Eval object = same UUID = correct grouping in reports.
 # =============================================================================
 
 BANKING_SERVER = MCPServer(
@@ -73,7 +73,7 @@ BANKING_SERVER = MCPServer(
 
 # Core agents — one per model, same prompt → fair leaderboard
 CORE_AGENTS = [
-    Agent(
+    Eval(
         provider=Provider(model=f"azure/{model}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
         mcp_servers=[BANKING_SERVER],
         system_prompt=BANKING_PROMPT,
@@ -87,7 +87,7 @@ PROMPTS_DIR = Path(__file__).parent / "prompts"
 ADVISOR_PROMPTS = load_system_prompts(PROMPTS_DIR) if PROMPTS_DIR.exists() else {}
 
 PROMPT_AGENTS = [
-    Agent(
+    Eval(
         provider=Provider(model=f"azure/{model}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
         mcp_servers=[BANKING_SERVER],
         system_prompt=system_prompt,
@@ -104,7 +104,7 @@ _FINANCIAL_SKILL = Skill.from_path(_SKILL_PATH) if _SKILL_PATH.exists() else Non
 
 SKILL_AGENTS = (
     [
-        Agent(
+        Eval(
             provider=Provider(model=f"azure/{model}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             mcp_servers=[BANKING_SERVER],
             system_prompt=BANKING_PROMPT,
@@ -132,18 +132,18 @@ class TestCoreOperations:
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("agent", CORE_AGENTS, ids=lambda a: a.name)
-    async def test_check_balance(self, aitest_run, agent):
+    async def test_check_balance(self, eval_run, agent):
         """Check account balance."""
-        result = await aitest_run(agent, "What's my checking account balance?")
+        result = await eval_run(agent, "What's my checking account balance?")
 
         assert result.success
         assert result.tool_was_called("get_balance")
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("agent", CORE_AGENTS, ids=lambda a: a.name)
-    async def test_transfer_funds(self, aitest_run, agent):
+    async def test_transfer_funds(self, eval_run, agent):
         """Transfer funds between accounts."""
-        result = await aitest_run(
+        result = await eval_run(
             agent,
             "Move $100 from my checking account to my savings account.",
         )
@@ -153,9 +153,9 @@ class TestCoreOperations:
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("agent", CORE_AGENTS, ids=lambda a: a.name)
-    async def test_error_handling(self, aitest_run, llm_assert, agent):
+    async def test_error_handling(self, eval_run, llm_assert, agent):
         """Handle insufficient funds gracefully."""
-        result = await aitest_run(
+        result = await eval_run(
             agent,
             "Transfer $50,000 from my checking to savings.",
         )
@@ -184,18 +184,18 @@ class TestSavingsPlanningSession:
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("agent", CORE_AGENTS, ids=lambda a: a.name)
-    async def test_01_check_balances(self, aitest_run, agent):
+    async def test_01_check_balances(self, eval_run, agent):
         """First turn: check account balances."""
-        result = await aitest_run(agent, "Show me all my account balances.")
+        result = await eval_run(agent, "Show me all my account balances.")
 
         assert result.success
         assert result.tool_was_called("get_all_balances") or result.tool_was_called("get_balance")
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("agent", CORE_AGENTS, ids=lambda a: a.name)
-    async def test_02_transfer_funds(self, aitest_run, agent):
+    async def test_02_transfer_funds(self, eval_run, agent):
         """Second turn: transfer based on previous context."""
-        result = await aitest_run(
+        result = await eval_run(
             agent,
             "Move $200 from checking to savings.",
         )
@@ -215,9 +215,9 @@ class TestPromptComparison:
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("agent", PROMPT_AGENTS, ids=lambda a: a.name)
-    async def test_advice_style(self, aitest_run, agent):
+    async def test_advice_style(self, eval_run, agent):
         """Compare advisory styles across prompts."""
-        result = await aitest_run(
+        result = await eval_run(
             agent,
             "Check my accounts and give me advice on managing my money better.",
         )
@@ -237,9 +237,9 @@ class TestSkillEnhancement:
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("agent", SKILL_AGENTS, ids=lambda a: a.name)
-    async def test_with_financial_skill(self, aitest_run, llm_assert, agent):
-        """Agent with financial advisor skill gives better advice."""
-        result = await aitest_run(
+    async def test_with_financial_skill(self, eval_run, llm_assert, agent):
+        """Eval with financial advisor skill gives better advice."""
+        result = await eval_run(
             agent,
             "I have $1500 in checking. Should I keep it there or move some to savings? "
             "What's a good emergency fund target?",

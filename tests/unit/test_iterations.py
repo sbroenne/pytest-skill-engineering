@@ -7,7 +7,7 @@ Covers:
 - Iteration rendering in test_comparison and test_grid
 - Markdown iteration table output
 - Serialization round-trip for iteration field
-- Agent.retries field
+- Eval.retries field
 - CLIServer.timeout field
 - pytest_generate_tests hook parametrization
 """
@@ -18,8 +18,8 @@ from pathlib import Path
 
 import pytest
 
-from pytest_skill_engineering.core.agent import Agent, CLIServer, Provider
-from pytest_skill_engineering.core.result import AgentResult, ToolCall, Turn
+from pytest_skill_engineering.core.eval import CLIServer, Eval, Provider
+from pytest_skill_engineering.core.result import EvalResult, ToolCall, Turn
 from pytest_skill_engineering.core.serialization import (
     deserialize_suite_report,
     serialize_dataclass,
@@ -42,9 +42,9 @@ def _make_agent_result(
     prompt_tokens: int = 200,
     completion_tokens: int = 100,
     duration_ms: float = 150.0,
-) -> AgentResult:
-    """Create a minimal AgentResult for testing."""
-    return AgentResult(
+) -> EvalResult:
+    """Create a minimal EvalResult for testing."""
+    return EvalResult(
         turns=[
             Turn(role="user", content="test prompt"),
             Turn(role="assistant", content="test response"),
@@ -59,9 +59,9 @@ def _make_agent_result(
 def _make_agent_result_with_tools(
     success: bool = True,
     cost: float = 0.003,
-) -> AgentResult:
-    """Create an AgentResult that includes tool calls."""
-    return AgentResult(
+) -> EvalResult:
+    """Create an EvalResult that includes tool calls."""
+    return EvalResult(
         turns=[
             Turn(role="user", content="What's my balance?"),
             Turn(
@@ -88,8 +88,8 @@ def _make_test_report(
     name: str = "tests/test_foo.py::test_example",
     outcome: str = "passed",
     duration_ms: float = 100.0,
-    agent_result: AgentResult | None = None,
-    agent_name: str = "agent-1",
+    eval_result: EvalResult | None = None,
+    eval_name: str = "agent-1",
     model: str = "gpt-5-mini",
     iteration: int | None = None,
     error: str | None = None,
@@ -100,9 +100,9 @@ def _make_test_report(
         name=name,
         outcome=outcome,
         duration_ms=duration_ms,
-        agent_result=agent_result or _make_agent_result(success=(outcome == "passed")),
-        agent_id=agent_name,
-        agent_name=agent_name,
+        eval_result=eval_result or _make_agent_result(success=(outcome == "passed")),
+        agent_id=eval_name,
+        eval_name=eval_name,
         model=model,
         iteration=iteration,
         error=error,
@@ -198,7 +198,7 @@ class TestExtractTestResultFields:
     """Tests for the _extract_test_result_fields helper."""
 
     def test_extracts_tool_calls(self) -> None:
-        test = _make_test_report(agent_result=_make_agent_result_with_tools())
+        test = _make_test_report(eval_result=_make_agent_result_with_tools())
         tool_calls, _, _, _, _, _, _ = _extract_test_result_fields(test)
         assert len(tool_calls) == 1
         assert tool_calls[0].name == "get_balance"
@@ -218,30 +218,30 @@ class TestExtractTestResultFields:
         assert assertions[1].passed is False
 
     def test_extracts_turn_count(self) -> None:
-        test = _make_test_report(agent_result=_make_agent_result_with_tools())
+        test = _make_test_report(eval_result=_make_agent_result_with_tools())
         _, _, _, turn_count, _, _, _ = _extract_test_result_fields(test)
         assert turn_count == 3  # user + tool_call + final assistant
 
     def test_extracts_tokens(self) -> None:
         test = _make_test_report(
-            agent_result=_make_agent_result(prompt_tokens=500, completion_tokens=200)
+            eval_result=_make_agent_result(prompt_tokens=500, completion_tokens=200)
         )
         _, _, _, _, tokens, _, _ = _extract_test_result_fields(test)
         assert tokens == 700
 
     def test_generates_mermaid(self) -> None:
-        test = _make_test_report(agent_result=_make_agent_result_with_tools())
+        test = _make_test_report(eval_result=_make_agent_result_with_tools())
         _, _, _, _, _, mermaid, _ = _extract_test_result_fields(test)
         assert mermaid is not None
         assert "sequenceDiagram" in mermaid
 
     def test_extracts_final_response(self) -> None:
-        test = _make_test_report(agent_result=_make_agent_result_with_tools())
+        test = _make_test_report(eval_result=_make_agent_result_with_tools())
         _, _, _, _, _, _, final_resp = _extract_test_result_fields(test)
         assert final_resp == "Your balance is $1,500."
 
     def test_handles_no_agent_result(self) -> None:
-        test = TestReport(name="test_foo", outcome="passed", duration_ms=100.0, agent_result=None)
+        test = TestReport(name="test_foo", outcome="passed", duration_ms=100.0, eval_result=None)
         tool_calls, _, _, turn_count, tokens, mermaid, final_resp = _extract_test_result_fields(
             test
         )
@@ -304,15 +304,11 @@ class TestBuildResultForAgent:
         tests = [
             _make_test_report(
                 iteration=1,
-                agent_result=_make_agent_result(
-                    prompt_tokens=100, completion_tokens=50, cost=0.001
-                ),
+                eval_result=_make_agent_result(prompt_tokens=100, completion_tokens=50, cost=0.001),
             ),
             _make_test_report(
                 iteration=2,
-                agent_result=_make_agent_result(
-                    prompt_tokens=200, completion_tokens=80, cost=0.002
-                ),
+                eval_result=_make_agent_result(prompt_tokens=200, completion_tokens=80, cost=0.002),
             ),
         ]
         result = _build_result_for_agent(tests)
@@ -322,8 +318,8 @@ class TestBuildResultForAgent:
     def test_uses_last_iteration_for_tool_calls(self) -> None:
         """Tool calls and mermaid come from the last iteration."""
         tests = [
-            _make_test_report(iteration=1, agent_result=_make_agent_result()),
-            _make_test_report(iteration=2, agent_result=_make_agent_result_with_tools()),
+            _make_test_report(iteration=1, eval_result=_make_agent_result()),
+            _make_test_report(iteration=2, eval_result=_make_agent_result_with_tools()),
         ]
         result = _build_result_for_agent(tests)
         assert result.tool_count == 1
@@ -336,14 +332,14 @@ class TestBuildResultForAgent:
             iteration=1,
             outcome="passed",
             duration_ms=200.0,
-            agent_result=_make_agent_result(prompt_tokens=100, completion_tokens=50, cost=0.001),
+            eval_result=_make_agent_result(prompt_tokens=100, completion_tokens=50, cost=0.001),
         )
         test2 = _make_test_report(
             iteration=2,
             outcome="failed",
             duration_ms=300.0,
             error="Failed assertion",
-            agent_result=_make_agent_result(
+            eval_result=_make_agent_result(
                 prompt_tokens=150, completion_tokens=80, cost=0.002, success=False
             ),
         )
@@ -387,19 +383,19 @@ class TestBuildResultForAgent:
 
 
 # ---------------------------------------------------------------------------
-# Agent.retries and CLIServer.timeout tests
+# Eval.retries and CLIServer.timeout tests
 # ---------------------------------------------------------------------------
 
 
 class TestAgentRetries:
-    """Tests for Agent.retries field."""
+    """Tests for Eval.retries field."""
 
     def test_default_retries_is_one(self) -> None:
-        agent = Agent(provider=Provider(model="test/model"))
+        agent = Eval(provider=Provider(model="test/model"))
         assert agent.retries == 1
 
     def test_custom_retries(self) -> None:
-        agent = Agent(provider=Provider(model="test/model"), retries=5)
+        agent = Eval(provider=Provider(model="test/model"), retries=5)
         assert agent.retries == 5
 
 
@@ -517,11 +513,11 @@ class TestIterationInReports:
                     name="tests/test_banking.py::test_balance",
                     outcome=outcome,
                     duration_ms=100.0 * i,
-                    agent_name="banking-agent",
+                    eval_name="banking-agent",
                     model="gpt-5-mini",
                     iteration=i,
                     error="Assertion failed" if outcome == "failed" else None,
-                    agent_result=_make_agent_result(
+                    eval_result=_make_agent_result(
                         success=(outcome == "passed"),
                         cost=0.001 * i,
                         prompt_tokens=100 * i,

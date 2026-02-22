@@ -16,7 +16,7 @@ from pathlib import Path
 
 import pytest
 
-from pytest_skill_engineering import Agent, MCPServer, Provider, Wait, load_system_prompts
+from pytest_skill_engineering import Eval, MCPServer, Provider, Wait, load_system_prompts
 
 pytestmark = [pytest.mark.integration]
 
@@ -33,7 +33,7 @@ banking_server = MCPServer(
 
 # Create one agent per prompt style
 AGENTS = [
-    Agent(
+    Eval(
         provider=Provider(model="azure/gpt-5-mini", rpm=10, tpm=10000),
         mcp_servers=[banking_server],
         system_prompt=prompt_text,
@@ -53,19 +53,19 @@ def _reset_agents():
 
 
 @pytest.mark.parametrize("agent", AGENTS, ids=lambda a: a.name)
-async def test_balance_check(aitest_run, agent, llm_assert):
+async def test_balance_check(eval_run, agent, llm_assert):
     """Balance query — tests how prompt style affects response format."""
-    result = await aitest_run(agent, "What's my checking account balance?")
+    result = await eval_run(agent, "What's my checking account balance?")
     assert result.success
     assert result.tool_was_called("get_balance")
     assert llm_assert(result.final_response, "states the checking account balance")
 
 
 @pytest.mark.parametrize("agent", AGENTS, ids=lambda a: a.name)
-async def test_transfer_with_explanation(aitest_run, agent, llm_assert):
+async def test_transfer_with_explanation(eval_run, agent, llm_assert):
     """Transfer with explanation — tests prompt impact on response quality."""
     agent.max_turns = 8
-    result = await aitest_run(
+    result = await eval_run(
         agent, "Transfer $300 from checking to savings and explain what happened"
     )
     assert result.success

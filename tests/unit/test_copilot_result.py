@@ -202,9 +202,9 @@ class TestFileHelpers:
     """Tests for file helper methods."""
 
     def _result_with_workdir(self, path) -> CopilotResult:
-        from pytest_skill_engineering.copilot.agent import CopilotAgent
+        from pytest_skill_engineering.copilot.eval import CopilotEval
 
-        agent = CopilotAgent(working_directory=str(path))
+        agent = CopilotEval(working_directory=str(path))
         result = CopilotResult()
         result.agent = agent
         return result

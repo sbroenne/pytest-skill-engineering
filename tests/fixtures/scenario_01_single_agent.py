@@ -15,7 +15,7 @@ import sys
 
 import pytest
 
-from pytest_skill_engineering import Agent, MCPServer, Provider, Wait
+from pytest_skill_engineering import Eval, MCPServer, Provider, Wait
 
 pytestmark = [pytest.mark.integration]
 
@@ -30,7 +30,7 @@ banking_server = MCPServer(
     ),
 )
 
-agent = Agent(
+agent = Eval(
     name="banking-agent",
     provider=Provider(model="azure/gpt-5-mini", rpm=10, tpm=10000),
     mcp_servers=[banking_server],
@@ -46,9 +46,9 @@ def _reset_agent():
     agent.max_turns = 5
 
 
-async def test_check_balance(aitest_run, llm_assert):
+async def test_check_balance(eval_run, llm_assert):
     """Basic balance check — should pass."""
-    result = await aitest_run(agent, "What's my checking account balance?")
+    result = await eval_run(agent, "What's my checking account balance?")
     assert result.success
     assert result.tool_was_called("get_balance")
     assert result.tool_call_arg("get_balance", "account") == "checking"
@@ -56,9 +56,9 @@ async def test_check_balance(aitest_run, llm_assert):
     assert result.cost_usd < 0.05
 
 
-async def test_transfer_between_accounts(aitest_run, llm_assert):
+async def test_transfer_between_accounts(eval_run, llm_assert):
     """Transfer money — tests the transfer tool."""
-    result = await aitest_run(agent, "Transfer $200 from checking to savings")
+    result = await eval_run(agent, "Transfer $200 from checking to savings")
     assert result.success
     assert result.tool_was_called("transfer")
     assert result.tool_call_arg("transfer", "from_account") == "checking"
@@ -67,23 +67,23 @@ async def test_transfer_between_accounts(aitest_run, llm_assert):
     assert llm_assert(result.final_response, "confirms the transfer was completed")
 
 
-async def test_transaction_history(aitest_run, llm_assert):
+async def test_transaction_history(eval_run, llm_assert):
     """View transactions — multiple tool calls possible."""
     agent.max_turns = 8
-    result = await aitest_run(agent, "Show me recent transactions for all accounts")
+    result = await eval_run(agent, "Show me recent transactions for all accounts")
     assert result.success
     assert result.tool_was_called("get_transactions") or result.tool_was_called("get_all_balances")
     assert llm_assert(result.final_response, "shows transaction or balance information")
 
 
-async def test_expected_failure(aitest_run):
+async def test_expected_failure(eval_run):
     """Test that fails due to turn limit — for report variety."""
     agent.max_turns = 1
-    await aitest_run(
+    await eval_run(
         agent,
         "Check all balances, transfer $500 from checking to savings, then show me updated balances and transaction history",
     )
     # Intentional failure to demonstrate error display in reports
     raise AssertionError(
-        "Agent exceeded turn limit - unable to process multi-step request (max_turns=1)"
+        "Eval exceeded turn limit - unable to process multi-step request (max_turns=1)"
     )
