@@ -175,8 +175,8 @@ def _build_analysis_input(
                 sections.append("")
                 break
 
-        # All agents ranked
-        sections.append("**All Agents (ranked):**\n")
+        # All evals ranked
+        sections.append("**All Evals (ranked):**\n")
         sections.append("| Rank | Eval | Pass Rate | Tests | Cost | Tokens | Status |")
         sections.append("|------|-------|-----------|-------|------|--------|--------|")
         for rank, (_aid, st) in enumerate(ranked, 1):

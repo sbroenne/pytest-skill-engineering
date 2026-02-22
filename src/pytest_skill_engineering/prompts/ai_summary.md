@@ -80,7 +80,7 @@ Use these sections as needed (skip sections with no content):
 </div>
 <div class="metric-card blue">
 <div class="metric-value blue">2</div>
-<div class="metric-label">Agents</div>
+<div class="metric-label">Eval Configs</div>
 </div>
 <div class="metric-card amber">
 <div class="metric-value amber">3.2</div>
@@ -90,7 +90,7 @@ Use these sections as needed (skip sections with no content):
 
 ### Comparative Analysis
 
-[ALWAYS include when 2+ agents. Skip for single-agent runs. Do NOT reproduce a table of agent metrics — the report already has an Eval Leaderboard with exact numbers. Instead, provide qualitative insight the leaderboard can't.]
+[ALWAYS include when 2+ eval configurations. Skip for single-config runs. Do NOT reproduce a table of eval metrics — the report already has an Eval Leaderboard with exact numbers. Instead, provide qualitative insight the leaderboard can't.]
 
 #### Why the winner wins
 [Bullet list with quantified reasoning — e.g., "60% cheaper with identical pass rate", "only agent that correctly chains multi-step tool calls"]
@@ -249,8 +249,8 @@ Use these sections as needed (skip sections with no content):
 - **Model comparison?** Focus on which model achieves lower cost while handling tools correctly
 - **Prompt comparison?** Focus on which custom agent instructions achieve lower cost while following instructions correctly
 - **Winner Spotlight card is mandatory** — ALWAYS start with `<div class="winner-card">` showing the recommended agent
-- **Metric cards are mandatory** — ALWAYS include `<div class="metric-grid">` after the winner card. Metric cards must NOT repeat winner card data (pass rate, cost, tokens are already there). Show DIFFERENT insights: Total Tests, Failures, Agents count, Avg Turns per test.
-- **Comparative Analysis is mandatory** when 2+ agents exist — provide qualitative insight, NOT a metrics table (the Eval Leaderboard section already shows exact per-agent numbers)
+- **Metric cards are mandatory** — ALWAYS include `<div class="metric-grid">` after the winner card. Metric cards must NOT repeat winner card data (pass rate, cost, tokens are already there). Show DIFFERENT insights: Total Tests, Failures, Eval Configs count, Avg Turns per test.
+- **Comparative Analysis is mandatory** when 2+ eval configurations exist — provide qualitative insight, NOT a metrics table (the Eval Leaderboard section already shows exact per-configuration numbers)
 - **No agent metrics tables** — do NOT reproduce pass rate, cost, tokens, or test counts per agent in a table. The report's Eval Leaderboard already renders this data accurately from ground truth. The AI's job is insight, not data regurgitation.
 - **No donut/pie charts** — do NOT use donut-container or any chart in Failure Analysis. Use tables grouped by agent instead.
 - **No circular gauges** — do NOT use gauge-grid or gauge components.

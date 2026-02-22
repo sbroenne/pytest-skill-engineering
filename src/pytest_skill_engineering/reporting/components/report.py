@@ -26,7 +26,7 @@ from htpy import (
 )
 from markupsafe import Markup
 
-from .agent_leaderboard import agent_leaderboard, format_cost
+from .agent_leaderboard import eval_leaderboard, format_cost
 from .agent_selector import agent_selector
 from .overlay import overlay
 from .test_grid import test_grid
@@ -212,12 +212,12 @@ def _ai_insights_section(insights: AIInsightsData) -> Node | None:
     ]
 
 
-def _agent_leaderboard_section(agents: list[AgentData]) -> Node | None:
-    """Render the agent leaderboard section."""
+def _eval_leaderboard_section(agents: list[AgentData]) -> Node | None:
+    """Render the eval leaderboard section."""
     if not agents or len(agents) <= 1:
         return None
 
-    leaderboard = agent_leaderboard(agents)
+    leaderboard = eval_leaderboard(agents)
     if not leaderboard:
         return None
 
@@ -414,7 +414,7 @@ def full_report(ctx: ReportContext) -> Node:
             div(".max-w-6xl.mx-auto.px-6.py-8")[
                 _report_header(ctx.report),
                 _ai_insights_section(ctx.insights),
-                _agent_leaderboard_section(ctx.agents),
+                _eval_leaderboard_section(ctx.agents),
                 _agent_selector_section(ctx.agents, ctx.selected_agent_ids),
                 _test_results_section(ctx),
             ],

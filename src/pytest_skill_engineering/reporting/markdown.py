@@ -96,8 +96,8 @@ def _medal(rank: int) -> str:
     return medals.get(rank, str(rank))
 
 
-def _agent_leaderboard_multi(agents: list[AgentData]) -> str:
-    """Render ranked leaderboard table for multiple agents."""
+def _eval_leaderboard_multi(agents: list[AgentData]) -> str:
+    """Render ranked leaderboard table for multiple eval configurations."""
     parts: list[str] = []
     parts.append(Header.atx(level=_H2, title="Eval Leaderboard"))
 
@@ -148,13 +148,13 @@ def _agent_summary_card(agent: AgentData) -> str:
     )
 
 
-def _agent_leaderboard(agents: list[AgentData]) -> str:
-    """Render the agent leaderboard section."""
+def _eval_leaderboard(agents: list[AgentData]) -> str:
+    """Render the eval leaderboard section."""
     if not agents:
         return ""
     if len(agents) == 1:
         return _agent_summary_card(agents[0])
-    return _agent_leaderboard_multi(agents)
+    return _eval_leaderboard_multi(agents)
 
 
 # ---------------------------------------------------------------------------
@@ -446,7 +446,7 @@ def render_markdown_report(ctx: ReportContext) -> str:
     sections.append(_report_header(ctx.report))
 
     # 2. Eval leaderboard (table for multi, card for single)
-    sections.append(_agent_leaderboard(ctx.agents))
+    sections.append(_eval_leaderboard(ctx.agents))
 
     # 3. AI analysis
     if ctx.insights:

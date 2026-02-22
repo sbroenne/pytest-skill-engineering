@@ -6,7 +6,7 @@ All report partials are implemented as functions returning htpy elements.
 
 from __future__ import annotations
 
-from .agent_leaderboard import agent_leaderboard
+from .agent_leaderboard import eval_leaderboard
 from .agent_selector import agent_selector
 from .overlay import overlay
 from .report import full_report
@@ -14,7 +14,8 @@ from .test_comparison import test_comparison
 from .test_grid import test_grid
 
 __all__ = [
-    "agent_leaderboard",
+    "eval_leaderboard",
+    "agent_leaderboard",  # backward-compat alias
     "agent_selector",
     "full_report",
     "overlay",

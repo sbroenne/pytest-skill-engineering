@@ -116,18 +116,18 @@ def _single_agent_card(agent: AgentData) -> Node:
     ]
 
 
-def agent_leaderboard(agents: list[AgentData]) -> Node | None:
-    """Render the agent leaderboard.
+def eval_leaderboard(agents: list[AgentData]) -> Node | None:
+    """Render the eval leaderboard.
 
-    For multiple agents: Shows ranked table with medals.
-    For single agent: Shows summary card.
-    For no agents: Returns None.
+    For multiple eval configurations: Shows ranked table with medals.
+    For single eval configuration: Shows summary card.
+    For no configurations: Returns None.
 
     Args:
-        agents: List of agents sorted by pass_rate desc, cost asc.
+        agents: List of eval configurations sorted by pass_rate desc, cost asc.
 
     Returns:
-        htpy Node or None if no agents.
+        htpy Node or None if no configurations.
     """
     if not agents:
         return None
@@ -136,3 +136,7 @@ def agent_leaderboard(agents: list[AgentData]) -> Node | None:
         return _single_agent_card(agents[0])
 
     return _multi_agent_table(agents)
+
+
+# Keep backward-compatible alias
+agent_leaderboard = eval_leaderboard
