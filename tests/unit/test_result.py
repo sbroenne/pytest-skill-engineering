@@ -2,7 +2,14 @@
 
 from __future__ import annotations
 
-from pytest_skill_engineering.core.result import EvalResult, ToolCall, Turn
+from pytest_skill_engineering.core.result import (
+    CustomAgentInfo,
+    EvalResult,
+    MCPPrompt,
+    MCPPromptArgument,
+    ToolCall,
+    Turn,
+)
 
 
 class TestToolCall:
@@ -51,7 +58,7 @@ class TestTurn:
         assert "..." in repr_str  # Should be truncated
 
 
-class TestAgentResult:
+class TestEvalResult:
     """Tests for EvalResult dataclass."""
 
     def test_success(self) -> None:
@@ -180,3 +187,81 @@ class TestAgentResult:
         # Original should be unchanged
         assert len(result._messages) == 1
         assert len(result.messages) == 1
+
+
+class TestEvalResultNewFields:
+    """Tests for new EvalResult fields added in the latest API."""
+
+    def test_mcp_prompts_default_empty(self) -> None:
+        """mcp_prompts defaults to empty list."""
+        result = EvalResult(turns=[], success=True)
+        assert result.mcp_prompts == []
+
+    def test_mcp_prompts_set(self) -> None:
+        """mcp_prompts can be populated with MCPPrompt instances."""
+        arg = MCPPromptArgument(name="language", description="Target language", required=True)
+        prompt = MCPPrompt(name="translate", description="Translate text", arguments=[arg])
+        result = EvalResult(turns=[], success=True, mcp_prompts=[prompt])
+        assert len(result.mcp_prompts) == 1
+        assert result.mcp_prompts[0].name == "translate"
+        assert result.mcp_prompts[0].description == "Translate text"
+        assert result.mcp_prompts[0].arguments[0].name == "language"
+        assert result.mcp_prompts[0].arguments[0].required is True
+
+    def test_prompt_name_default_none(self) -> None:
+        """prompt_name defaults to None."""
+        result = EvalResult(turns=[], success=True)
+        assert result.prompt_name is None
+
+    def test_prompt_name_set(self) -> None:
+        """prompt_name can be set to track the prompt file used."""
+        result = EvalResult(turns=[], success=True, prompt_name="review")
+        assert result.prompt_name == "review"
+
+    def test_custom_agent_info_default_none(self) -> None:
+        """custom_agent_info defaults to None."""
+        result = EvalResult(turns=[], success=True)
+        assert result.custom_agent_info is None
+
+    def test_custom_agent_info_set(self) -> None:
+        """custom_agent_info can be set with CustomAgentInfo."""
+        info = CustomAgentInfo(
+            name="reviewer",
+            description="Code reviewer agent",
+            file_path=".github/agents/reviewer.agent.md",
+        )
+        result = EvalResult(turns=[], success=True, custom_agent_info=info)
+        assert result.custom_agent_info is not None
+        assert result.custom_agent_info.name == "reviewer"
+        assert result.custom_agent_info.description == "Code reviewer agent"
+        assert result.custom_agent_info.file_path == ".github/agents/reviewer.agent.md"
+
+    def test_premium_requests_default_zero(self) -> None:
+        """premium_requests defaults to 0.0."""
+        result = EvalResult(turns=[], success=True)
+        assert result.premium_requests == 0.0
+
+    def test_premium_requests_set(self) -> None:
+        """premium_requests tracks Copilot billing units."""
+        result = EvalResult(turns=[], success=True, premium_requests=2.5)
+        assert result.premium_requests == 2.5
+
+    def test_mcp_prompt_repr(self) -> None:
+        """MCPPrompt repr includes name and argument count."""
+        prompt = MCPPrompt(name="summarize", arguments=[MCPPromptArgument(name="text")])
+        r = repr(prompt)
+        assert "summarize" in r
+        assert "1 args" in r
+
+    def test_mcp_prompt_argument_repr(self) -> None:
+        """MCPPromptArgument repr includes name and required flag."""
+        arg = MCPPromptArgument(name="query", required=True)
+        r = repr(arg)
+        assert "query" in r
+        assert "required" in r
+
+    def test_custom_agent_info_repr(self) -> None:
+        """CustomAgentInfo repr includes name."""
+        info = CustomAgentInfo(name="coder")
+        r = repr(info)
+        assert "coder" in r

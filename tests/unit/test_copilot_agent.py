@@ -5,7 +5,7 @@ from __future__ import annotations
 from pytest_skill_engineering.copilot.eval import CopilotEval, _parse_agent_file
 
 
-class TestCopilotAgentDefaults:
+class TestCopilotEvalDefaults:
     """Test default values."""
 
     def test_default_values(self):

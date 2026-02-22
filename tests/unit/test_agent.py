@@ -7,7 +7,7 @@ from pathlib import Path
 from pytest_skill_engineering.core.eval import Eval, MCPServer, Provider, Wait
 
 
-class TestAgent:
+class TestEval:
     """Tests for Eval dataclass."""
 
     def test_minimal_agent(self) -> None:
@@ -65,12 +65,14 @@ class TestAgent:
         assert agent.name == "gpt-4.1"
 
     def test_auto_name_with_prompt(self) -> None:
-        """Auto-name includes system_prompt_name dimension."""
-        agent = Eval(
+        """from_instructions sets the agent name to the given label."""
+        agent = Eval.from_instructions(
+            "concise",
+            "Be concise.",
             provider=Provider(model="azure/gpt-5-mini"),
-            system_prompt_name="concise",
         )
-        assert agent.name == "gpt-5-mini + concise"
+        assert agent.name == "concise"
+        assert agent.custom_agent_name == "concise"
 
     def test_auto_name_with_skill(self) -> None:
         """Auto-name includes skill dimension."""
@@ -88,7 +90,7 @@ class TestAgent:
         assert agent.name == "gpt-5-mini + financial-advisor"
 
     def test_auto_name_with_all_dimensions(self) -> None:
-        """Auto-name includes all dimensions."""
+        """Auto-name includes model and skill dimensions."""
         from pytest_skill_engineering.core.skill import Skill, SkillMetadata
 
         skill = Skill(
@@ -98,19 +100,46 @@ class TestAgent:
         )
         agent = Eval(
             provider=Provider(model="azure/gpt-4.1"),
-            system_prompt_name="detailed",
             skill=skill,
         )
-        assert agent.name == "gpt-4.1 + detailed + financial-advisor"
+        assert agent.name == "gpt-4.1 + financial-advisor"
 
     def test_explicit_name_not_overridden(self) -> None:
         """Explicit name is preserved — not overridden by auto-construction."""
         agent = Eval(
             name="my-custom-agent",
             provider=Provider(model="azure/gpt-5-mini"),
-            system_prompt_name="concise",
         )
         assert agent.name == "my-custom-agent"
+
+    def test_from_instructions_sets_fields(self) -> None:
+        """from_instructions sets name, system_prompt, and custom_agent fields."""
+        agent = Eval.from_instructions(
+            "financial-advisor",
+            "You are a financial advisor.",
+            description="Handles account queries",
+            provider=Provider(model="azure/gpt-5-mini"),
+        )
+        assert agent.name == "financial-advisor"
+        assert agent.system_prompt == "You are a financial advisor."
+        assert agent.custom_agent_name == "financial-advisor"
+        assert agent.custom_agent_description == "Handles account queries"
+
+    def test_from_agent_file(self, tmp_path) -> None:
+        """from_agent_file loads name, prompt, and description from .agent.md."""
+        agent_file = tmp_path / "reviewer.agent.md"
+        agent_file.write_text(
+            "---\nname: reviewer\ndescription: Code reviewer\n---\nReview code carefully.",
+            encoding="utf-8",
+        )
+        agent = Eval.from_agent_file(
+            agent_file,
+            provider=Provider(model="azure/gpt-5-mini"),
+        )
+        assert agent.name == "reviewer"
+        assert agent.system_prompt == "Review code carefully."
+        assert agent.custom_agent_name == "reviewer"
+        assert agent.custom_agent_description == "Code reviewer"
 
     def test_auto_name_no_provider_prefix(self) -> None:
         """Auto-name works without provider prefix."""

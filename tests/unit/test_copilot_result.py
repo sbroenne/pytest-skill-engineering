@@ -279,3 +279,25 @@ class TestFileHelpers:
         result = self._result_with_workdir(tmp_path)
         names = [p.name for p in result.files_matching("*.py")]
         assert names == sorted(names)
+
+
+class TestPremiumRequests:
+    """Tests for total_premium_requests field."""
+
+    def test_default_zero(self):
+        """total_premium_requests defaults to 0.0."""
+        result = CopilotResult()
+        assert result.total_premium_requests == 0.0
+
+    def test_set_value(self):
+        """total_premium_requests can be set to track Copilot billing units."""
+        result = CopilotResult(total_premium_requests=3.5)
+        assert result.total_premium_requests == 3.5
+
+    def test_nonzero_when_premium_used(self):
+        """total_premium_requests is positive when premium model was used."""
+        result = CopilotResult(
+            turns=[Turn(role="assistant", content="Done!")],
+            total_premium_requests=1.0,
+        )
+        assert result.total_premium_requests > 0

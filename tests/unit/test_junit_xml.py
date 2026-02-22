@@ -57,18 +57,19 @@ class TestAddJunitProperties:
         assert props["aitest.skill"] == "financial-advisor"
 
     def test_prompt_from_agent(self) -> None:
-        """Test system prompt name from agent."""
+        """Test agent name from from_instructions() appears in properties."""
         report = MockReport()
         result = EvalResult(turns=[], success=True)
-        agent = Eval(
+        agent = Eval.from_instructions(
+            "concise",
+            "Be concise.",
             provider=Provider(model="azure/gpt-5-mini"),
-            system_prompt_name="concise",
         )
 
         _add_junit_properties(report, result, agent)
 
         props = dict(report.user_properties)
-        assert props["aitest.prompt"] == "concise"
+        assert props["aitest.agent.name"] == "concise"
 
     def test_token_usage(self) -> None:
         """Test token counts are added."""
@@ -198,7 +199,6 @@ class TestAddJunitProperties:
         agent = Eval(
             name="banking-agent",
             provider=Provider(model="azure/gpt-5-mini"),
-            system_prompt_name="detailed",
         )
 
         _add_junit_properties(report, result, agent)
@@ -207,7 +207,6 @@ class TestAddJunitProperties:
         assert props["aitest.agent.name"] == "banking-agent"
         assert props["aitest.model"] == "gpt-5-mini"
         assert props["aitest.skill"] == "financial-advisor"
-        assert props["aitest.prompt"] == "detailed"
         assert props["aitest.tokens.input"] == "500"
         assert props["aitest.tokens.output"] == "50"
         assert props["aitest.tokens.total"] == "550"
@@ -272,7 +271,6 @@ class TestAddJunitProperties:
         agent = Eval(
             name="banking-agent",
             provider=Provider(model="azure/gpt-5-mini"),
-            system_prompt_name="detailed",
             mcp_servers=[
                 MCPServer(command=["python", "-m", "banking_mcp"], wait=Wait.ready()),
             ],

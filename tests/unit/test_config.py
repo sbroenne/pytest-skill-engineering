@@ -135,7 +135,7 @@ class TestCLIServer:
             assert server.env["API_KEY"] == "value123"
 
 
-class TestAgent:
+class TestEval:
     """Tests for Eval configuration."""
 
     def test_minimal(self) -> None:
