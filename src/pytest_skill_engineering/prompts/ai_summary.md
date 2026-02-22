@@ -178,6 +178,18 @@ Use these sections as needed (skip sections with no content):
 - **Issue:** [What's unclear, ambiguous, or consistently causing failures?]
 - **Suggested change:** [Exact text to add/remove/replace]
 
+## 📜 Custom Instructions Feedback
+
+[For each custom instruction file - skip if no instruction files used:]
+
+### instruction_name (followed/partial/ignored)
+- **File:** path/to/file (if available)
+- **Apply to:** glob pattern (if present, e.g. `**/*.py`)
+- **Pass rate:** N/M tests passed
+- **Adherence analysis:** [Did the LLM follow the conventions in this file? Cite specific test evidence — e.g., "followed naming conventions in 3/4 tests but ignored the 'no abbreviations' rule in test_X"]
+- **Gap:** [Which specific conventions were NOT followed? Quote the rule and cite the test where it was violated]
+- **Suggested change:** [Exact text to add/remove/replace in the instruction file to improve adherence]
+
 ## 📝 Custom Eval Instructions Feedback
 
 [For each custom agent instruction variant - skip if single variant worked well or no custom agent instructions were tested:]
@@ -286,6 +298,12 @@ Use these sections as needed (skip sections with no content):
 - **Consistent underperformers**: Prompt files with < 50% pass rate need attention
 - **Ambiguous phrasing**: Identify words that prime cautious/clarification-seeking behavior vs action-taking
 - Skip if no prompt files were tested
+
+### Custom Instructions Feedback
+- **Focus on convention adherence**: Did the LLM actually follow the stated coding standards?
+- **Quote the rules**: Reference specific lines from the instruction file when identifying gaps
+- **Test-level attribution**: Name the specific test where a convention was violated
+- Skip if no instruction files were tested
 
 ### Custom Eval Instructions Feedback
 - **Effective**: Eval followed instructions correctly

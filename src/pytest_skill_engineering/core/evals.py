@@ -351,3 +351,124 @@ def load_prompt_files(
             continue  # skip empty files
 
     return sorted(prompts, key=lambda p: p["name"])
+
+
+def _instruction_name_from_path(path: Path) -> str:
+    """Derive instruction name from filename.
+
+    ``coding-standards.instructions.md`` → ``coding-standards``
+    ``copilot-instructions.md``          → ``copilot-instructions``
+    ``AGENTS.md``                        → ``AGENTS``
+    """
+    name = path.name
+    if name.endswith(".instructions.md"):
+        return name[: -len(".instructions.md")]
+    return path.stem
+
+
+def load_instruction_file(path: Path | str) -> dict[str, Any]:
+    """Load a custom instruction file.
+
+    Supports VS Code instruction files (``.github/copilot-instructions.md``,
+    ``*.instructions.md``), AGENTS.md (Codex), and CLAUDE.md (Claude Code).
+    YAML frontmatter is stripped; ``applyTo`` field maps to the ``apply_to`` key.
+
+    Args:
+        path: Path to the instruction file.
+
+    Returns:
+        Dict with keys ``name`` (str), ``content`` (str, the instruction text),
+        ``apply_to`` (str, glob pattern or empty), ``description`` (str),
+        and ``metadata`` (dict, full frontmatter).
+
+    Raises:
+        FileNotFoundError: If the file does not exist.
+        ValueError: If the file has no content after frontmatter stripping.
+    """
+    path = Path(path)
+    if not path.exists():
+        msg = f"Instruction file not found: {path}"
+        raise FileNotFoundError(msg)
+
+    content = path.read_text(encoding="utf-8")
+    metadata, body = _extract_frontmatter(content)
+    body = body.strip()
+
+    if not body:
+        msg = f"Instruction file has no content after frontmatter: {path}"
+        raise ValueError(msg)
+
+    return {
+        "name": _instruction_name_from_path(path),
+        "content": body,
+        "apply_to": metadata.get("applyTo", ""),
+        "description": metadata.get("description", ""),
+        "metadata": metadata,
+        "path": str(path),
+    }
+
+
+def load_instruction_files(
+    directory: Path | str,
+    *,
+    include: set[str] | None = None,
+    exclude: set[str] | None = None,
+) -> list[dict[str, Any]]:
+    """Load all instruction files from a directory.
+
+    Loads ``*.instructions.md`` files and well-known files:
+    ``copilot-instructions.md``, ``AGENTS.md``, ``CLAUDE.md``.
+    Sorted by name.
+
+    Args:
+        directory: Path to directory (or parent) containing instruction files.
+        include: If set, only load files with these names.
+        exclude: File names to skip.
+
+    Returns:
+        List of instruction file dicts (see :func:`load_instruction_file`), sorted by name.
+
+    Raises:
+        FileNotFoundError: If the directory does not exist.
+    """
+    directory = Path(directory)
+    if not directory.is_dir():
+        msg = f"Instruction directory not found: {directory}"
+        raise FileNotFoundError(msg)
+
+    instructions: list[dict[str, Any]] = []
+    seen: set[str] = set()
+
+    # Load *.instructions.md files
+    for path in sorted(directory.glob("*.instructions.md")):
+        name = _instruction_name_from_path(path)
+        if include is not None and name not in include:
+            continue
+        if exclude is not None and name in exclude:
+            continue
+        try:
+            instructions.append(load_instruction_file(path))
+            seen.add(name)
+        except ValueError:
+            continue  # skip empty files
+
+    # Also check for well-known files: copilot-instructions.md, AGENTS.md, CLAUDE.md
+    well_known = ["copilot-instructions.md", "AGENTS.md", "CLAUDE.md"]
+    for filename in well_known:
+        path = directory / filename
+        if not path.exists():
+            continue
+        name = _instruction_name_from_path(path)
+        if name in seen:
+            continue
+        if include is not None and name not in include:
+            continue
+        if exclude is not None and name in exclude:
+            continue
+        try:
+            instructions.append(load_instruction_file(path))
+            seen.add(name)
+        except ValueError:
+            continue  # skip empty files
+
+    return sorted(instructions, key=lambda p: p["name"])

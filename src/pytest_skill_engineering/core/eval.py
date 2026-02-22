@@ -335,6 +335,7 @@ class Eval:
     clarification_detection: ClarificationDetection = field(default_factory=ClarificationDetection)
     custom_agent_name: str | None = None  # Name from .agent.md file
     custom_agent_description: str | None = None  # Description from .agent.md file
+    instruction_files: list[dict[str, Any]] = field(default_factory=list)  # loaded instruction file dicts
 
     def __post_init__(self) -> None:
         """Auto-construct name from dimensions if not explicitly set."""
@@ -452,5 +453,58 @@ class Eval:
             system_prompt=instructions,
             custom_agent_name=name,
             custom_agent_description=description,
+            **kwargs,
+        )
+
+    @classmethod
+    def from_instruction_files(
+        cls,
+        paths: "list[str | Path]",
+        provider: "Provider",
+        *,
+        name: str = "",
+        mcp_servers: "list[MCPServer] | None" = None,
+        cli_servers: "list[CLIServer] | None" = None,
+        skill: "Skill | None" = None,
+        **kwargs: "Any",
+    ) -> "Eval":
+        """Create an eval with custom instruction files.
+
+        Loads instruction files and concatenates them as system prompt.
+        Each file contributes its content to the combined instructions.
+
+        Args:
+            paths: List of paths to instruction files.
+            provider: LLM provider configuration.
+            name: Optional name (defaults to instruction file names joined by " + ").
+            mcp_servers: MCP servers to attach.
+            cli_servers: CLI servers to attach.
+            skill: Eval skill to load.
+            **kwargs: Additional keyword arguments forwarded to Eval.
+
+        Returns:
+            A fully configured :class:`Eval` instance.
+
+        Example::
+
+            agent = Eval.from_instruction_files(
+                [".github/copilot-instructions.md", "coding-standards.instructions.md"],
+                provider=Provider(model="azure/gpt-5-mini"),
+            )
+        """
+        from pytest_skill_engineering.core.evals import load_instruction_file  # noqa: PLC0415
+
+        loaded = [load_instruction_file(p) for p in paths]
+        combined_instructions = "\n\n".join(f["content"] for f in loaded)
+        auto_name = name or " + ".join(f["name"] for f in loaded)
+
+        return cls(
+            name=auto_name,
+            provider=provider,
+            mcp_servers=mcp_servers or [],
+            cli_servers=cli_servers or [],
+            skill=skill,
+            system_prompt=combined_instructions,
+            instruction_files=loaded,
             **kwargs,
         )

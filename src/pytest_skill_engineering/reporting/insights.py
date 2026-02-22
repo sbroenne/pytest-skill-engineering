@@ -14,7 +14,13 @@ from typing import TYPE_CHECKING, Any
 from pytest_skill_engineering.execution.cost import estimate_cost, models_without_pricing
 
 if TYPE_CHECKING:
-    from pytest_skill_engineering.core.result import CustomAgentInfo, MCPPrompt, SkillInfo, ToolInfo
+    from pytest_skill_engineering.core.result import (
+        CustomAgentInfo,
+        InstructionFileInfo,
+        MCPPrompt,
+        SkillInfo,
+        ToolInfo,
+    )
     from pytest_skill_engineering.reporting.collector import SuiteReport
 
 
@@ -56,6 +62,7 @@ def _build_analysis_input(
     mcp_prompt_info: list[MCPPrompt] | None = None,
     custom_agent_info: list[CustomAgentInfo] | None = None,
     prompt_names: list[str] | None = None,
+    instruction_file_info: list[InstructionFileInfo] | None = None,
     min_pass_rate: int | None = None,
     compact: bool = False,
 ) -> str:
@@ -399,6 +406,35 @@ def _build_analysis_input(
             sections.append(f"- **{name}**: {rate} tests passed")
         sections.append("")
 
+    # Custom instruction files used in tests
+    if instruction_file_info:
+        sections.append("\n## Custom Instruction Files\n")
+        # Compute pass rates per instruction file name
+        instr_stats: dict[str, dict[str, int]] = {}
+        for test in suite_report.tests:
+            for inf in (
+                getattr(test.eval_result, "instruction_files", []) if test.eval_result else []
+            ):
+                if inf.name not in instr_stats:
+                    instr_stats[inf.name] = {"passed": 0, "total": 0}
+                instr_stats[inf.name]["total"] += 1
+                if test.outcome == "passed":
+                    instr_stats[inf.name]["passed"] += 1
+        for inf in instruction_file_info:
+            sections.append(f"### {inf.name}")
+            if inf.file_path:
+                sections.append(f"File: {inf.file_path}")
+            if inf.apply_to:
+                sections.append(f"Apply to: {inf.apply_to}")
+            if inf.description:
+                sections.append(f"Description: {inf.description}")
+            stats = instr_stats.get(inf.name, {"passed": 0, "total": 0})
+            total = stats["total"]
+            passed = stats["passed"]
+            rate = f"{passed}/{total}" if total > 0 else "N/A"
+            sections.append(f"Pass rate: {rate}")
+            sections.append("")
+
     return "\n".join(sections)
 
 
@@ -432,6 +468,7 @@ async def generate_insights(
     mcp_prompt_info: list[MCPPrompt] | None = None,
     custom_agent_info: list[CustomAgentInfo] | None = None,
     prompt_names: list[str] | None = None,
+    instruction_file_info: list[InstructionFileInfo] | None = None,
     model: str = "azure/gpt-5-mini",
     cache_dir: Path | None = None,
     min_pass_rate: int | None = None,
@@ -448,6 +485,7 @@ async def generate_insights(
         mcp_prompt_info: MCP prompt templates (optional)
         custom_agent_info: Custom agent metadata (optional)
         prompt_names: Names of prompt files tested (optional)
+        instruction_file_info: Custom instruction file metadata (optional)
         model: Model identifier (e.g., "azure/gpt-5-mini", "openai/gpt-5-mini")
         cache_dir: Directory for caching results (optional)
         min_pass_rate: Minimum pass rate threshold for disqualifying agents
@@ -499,6 +537,7 @@ async def generate_insights(
         mcp_prompt_info=mcp_prompt_info,
         custom_agent_info=custom_agent_info,
         prompt_names=prompt_names,
+        instruction_file_info=instruction_file_info,
         min_pass_rate=min_pass_rate,
         compact=compact,
     )

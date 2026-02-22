@@ -14,6 +14,7 @@ from pytest_skill_engineering.core.result import (
     ClarificationStats,
     CustomAgentInfo,
     EvalResult,
+    InstructionFileInfo,
     MCPPrompt,
     SkillInfo,
     ToolInfo,
@@ -55,6 +56,7 @@ class EvalEngine:
         self._mcp_prompts: list[MCPPrompt] = []
         self._skill_info: SkillInfo | None = None
         self._custom_agent_info: CustomAgentInfo | None = None
+        self._instruction_files_info: list[InstructionFileInfo] = []
         self._effective_system_prompt: str = ""
         self._rate_limiter = get_rate_limiter(
             agent.provider.model,
@@ -114,6 +116,17 @@ class EvalEngine:
                 name=self.agent.custom_agent_name,
                 description=self.agent.custom_agent_description or "",
             )
+
+        # Build InstructionFileInfo list for AI analysis
+        self._instruction_files_info = [
+            InstructionFileInfo(
+                name=f.get("name", ""),
+                file_path=str(f.get("path", "")),
+                apply_to=f.get("apply_to", ""),
+                description=f.get("description", ""),
+            )
+            for f in (self.agent.instruction_files or [])
+        ]
 
         # Store effective system prompt
         prompt = build_system_prompt(self.agent)
@@ -192,6 +205,7 @@ class EvalEngine:
                 session_context_count=session_context_count,
                 mcp_prompts=self._mcp_prompts,
                 custom_agent_info=self._custom_agent_info,
+                instruction_files=self._instruction_files_info,
             )
 
             # Post-processing: clarification detection
@@ -214,6 +228,7 @@ class EvalEngine:
                 effective_system_prompt=self._effective_system_prompt,
                 mcp_prompts=self._mcp_prompts,
                 custom_agent_info=self._custom_agent_info,
+                instruction_files=self._instruction_files_info,
             )
         except Exception as e:
             duration_ms = (time.perf_counter() - start_time) * 1000
@@ -227,6 +242,7 @@ class EvalEngine:
                 effective_system_prompt=self._effective_system_prompt,
                 mcp_prompts=self._mcp_prompts,
                 custom_agent_info=self._custom_agent_info,
+                instruction_files=self._instruction_files_info,
             )
 
     async def _run_clarification_detection(self, result: EvalResult) -> ClarificationStats:

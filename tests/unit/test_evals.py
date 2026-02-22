@@ -4,7 +4,13 @@ from __future__ import annotations
 
 import pytest
 
-from pytest_skill_engineering.core.evals import load_custom_agents, load_prompt_file, load_prompt_files
+from pytest_skill_engineering.core.evals import (
+    load_custom_agents,
+    load_instruction_file,
+    load_instruction_files,
+    load_prompt_file,
+    load_prompt_files,
+)
 
 
 class TestLoadPromptFile:
@@ -138,3 +144,124 @@ class TestLoadCustomAgents:
         agent_file.write_text("---\ndescription: Security\n---\nReview for vulns.")
         agents = load_custom_agents(tmp_path)
         assert agents[0]["name"] == "security-reviewer"
+
+
+class TestLoadInstructionFile:
+    """Tests for load_instruction_file()."""
+
+    def test_instructions_md_with_frontmatter(self, tmp_path) -> None:
+        f = tmp_path / "coding-standards.instructions.md"
+        f.write_text("---\napplyTo: '**/*.py'\ndescription: Python standards\n---\nUse snake_case.")
+        result = load_instruction_file(f)
+        assert result["name"] == "coding-standards"
+        assert result["content"] == "Use snake_case."
+        assert result["apply_to"] == "**/*.py"
+        assert result["description"] == "Python standards"
+
+    def test_plain_md_no_frontmatter(self, tmp_path) -> None:
+        f = tmp_path / "AGENTS.md"
+        f.write_text("Always write tests before implementation.")
+        result = load_instruction_file(f)
+        assert result["name"] == "AGENTS"
+        assert result["content"] == "Always write tests before implementation."
+        assert result["apply_to"] == ""
+
+    def test_file_not_found(self, tmp_path) -> None:
+        with pytest.raises(FileNotFoundError):
+            load_instruction_file(tmp_path / "nonexistent.instructions.md")
+
+    def test_path_stored(self, tmp_path) -> None:
+        f = tmp_path / "style.instructions.md"
+        f.write_text("Use 4-space indentation.")
+        result = load_instruction_file(f)
+        assert str(f) in result["path"]
+
+    def test_copilot_instructions_name(self, tmp_path) -> None:
+        f = tmp_path / "copilot-instructions.md"
+        f.write_text("Follow our coding conventions.")
+        result = load_instruction_file(f)
+        assert result["name"] == "copilot-instructions"
+
+
+class TestLoadInstructionFiles:
+    """Tests for load_instruction_files()."""
+
+    def test_loads_instructions_md_files(self, tmp_path) -> None:
+        (tmp_path / "a.instructions.md").write_text("Rule A")
+        (tmp_path / "b.instructions.md").write_text("Rule B")
+        results = load_instruction_files(tmp_path)
+        assert len(results) == 2
+        names = [r["name"] for r in results]
+        assert "a" in names and "b" in names
+
+    def test_loads_well_known_files(self, tmp_path) -> None:
+        (tmp_path / "AGENTS.md").write_text("Always write tests.")
+        (tmp_path / "CLAUDE.md").write_text("Follow TDD.")
+        results = load_instruction_files(tmp_path)
+        names = [r["name"] for r in results]
+        assert "AGENTS" in names
+        assert "CLAUDE" in names
+
+    def test_empty_directory(self, tmp_path) -> None:
+        results = load_instruction_files(tmp_path)
+        assert results == []
+
+    def test_exclude_by_name(self, tmp_path) -> None:
+        (tmp_path / "a.instructions.md").write_text("Rule A")
+        (tmp_path / "b.instructions.md").write_text("Rule B")
+        results = load_instruction_files(tmp_path, exclude={"a"})
+        assert len(results) == 1
+        assert results[0]["name"] == "b"
+
+    def test_sorted_by_name(self, tmp_path) -> None:
+        (tmp_path / "z.instructions.md").write_text("Z rule")
+        (tmp_path / "a.instructions.md").write_text("A rule")
+        results = load_instruction_files(tmp_path)
+        assert results[0]["name"] == "a"
+        assert results[1]["name"] == "z"
+
+
+class TestEvalFromInstructionFiles:
+    """Tests for Eval.from_instruction_files()."""
+
+    def test_creates_eval_with_combined_prompt(self, tmp_path) -> None:
+        from pytest_skill_engineering.core.eval import Eval, Provider
+
+        f1 = tmp_path / "base.instructions.md"
+        f1.write_text("Rule one.")
+        f2 = tmp_path / "style.instructions.md"
+        f2.write_text("Rule two.")
+
+        eval_obj = Eval.from_instruction_files(
+            [f1, f2],
+            provider=Provider(model="openai/gpt-4o-mini"),
+        )
+
+        assert "Rule one." in (eval_obj.system_prompt or "")
+        assert "Rule two." in (eval_obj.system_prompt or "")
+        assert len(eval_obj.instruction_files) == 2
+
+    def test_auto_name_from_files(self, tmp_path) -> None:
+        from pytest_skill_engineering.core.eval import Eval, Provider
+
+        f = tmp_path / "coding-standards.instructions.md"
+        f.write_text("Use PEP 8.")
+
+        eval_obj = Eval.from_instruction_files(
+            [f],
+            provider=Provider(model="openai/gpt-4o-mini"),
+        )
+        assert eval_obj.name == "coding-standards"
+
+    def test_explicit_name_overrides_auto(self, tmp_path) -> None:
+        from pytest_skill_engineering.core.eval import Eval, Provider
+
+        f = tmp_path / "style.instructions.md"
+        f.write_text("Follow style guide.")
+
+        eval_obj = Eval.from_instruction_files(
+            [f],
+            provider=Provider(model="openai/gpt-4o-mini"),
+            name="my-custom-name",
+        )
+        assert eval_obj.name == "my-custom-name"

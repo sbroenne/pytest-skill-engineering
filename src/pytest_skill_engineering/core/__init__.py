@@ -14,6 +14,8 @@ from pytest_skill_engineering.core.eval import (
 from pytest_skill_engineering.core.evals import (
     load_custom_agent,
     load_custom_agents,
+    load_instruction_file,
+    load_instruction_files,
     load_prompt_file,
     load_prompt_files,
 )
@@ -65,6 +67,8 @@ __all__ = [
     "Wait",
     "load_custom_agent",
     "load_custom_agents",
+    "load_instruction_file",
+    "load_instruction_files",
     "load_prompt_file",
     "load_prompt_files",
     "load_prompt",

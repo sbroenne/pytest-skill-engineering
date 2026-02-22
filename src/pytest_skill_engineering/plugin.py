@@ -856,6 +856,7 @@ def _generate_structured_insights(
         mcp_prompt_info: list[Any] = []
         custom_agent_info: list[Any] = []
         prompt_names: list[str] = []
+        instruction_file_info: list[Any] = []
         prompts: dict[str, str] = {}
 
         for test in report.tests:
@@ -889,6 +890,11 @@ def _generate_structured_insights(
                 if pn and pn not in prompt_names:
                     prompt_names.append(pn)
 
+                # Collect instruction file info (deduplicate by name)
+                for inf in getattr(test.eval_result, "instruction_files", []) or []:
+                    if inf.name not in {i.name for i in instruction_file_info}:
+                        instruction_file_info.append(inf)
+
                 # Collect effective system prompts as prompt variants
                 effective_prompt = getattr(test.eval_result, "effective_system_prompt", "")
                 if effective_prompt:
@@ -917,6 +923,7 @@ def _generate_structured_insights(
                 mcp_prompt_info=mcp_prompt_info,
                 custom_agent_info=custom_agent_info,
                 prompt_names=prompt_names,
+                instruction_file_info=instruction_file_info,
                 prompts=prompts,
                 model=model,
                 min_pass_rate=config.getoption("--aitest-min-pass-rate"),

@@ -113,6 +113,19 @@ class CustomAgentInfo:
 
 
 @dataclass(slots=True)
+class InstructionFileInfo:
+    """Metadata about a custom instruction file under evaluation."""
+
+    name: str
+    file_path: str = ""
+    apply_to: str = ""  # glob pattern from frontmatter (e.g. "**/*.py")
+    description: str = ""
+
+    def __repr__(self) -> str:
+        return f"InstructionFileInfo({self.name!r})"
+
+
+@dataclass(slots=True)
 class SkillInfo:
     """Metadata about a skill for AI analysis.
 
@@ -236,6 +249,7 @@ class EvalResult:
     prompt_name: str | None = None
     custom_agent_info: CustomAgentInfo | None = None
     premium_requests: float = 0.0
+    instruction_files: list[InstructionFileInfo] = field(default_factory=list)
 
     # Clarification detection
     clarification_stats: ClarificationStats | None = None

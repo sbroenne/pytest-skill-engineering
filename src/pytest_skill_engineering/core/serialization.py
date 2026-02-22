@@ -163,7 +163,7 @@ def deserialize_suite_report(data: dict[str, Any]) -> SuiteReport:
                 )
 
             # Reconstruct custom agent info if present
-            from pytest_skill_engineering.core.result import CustomAgentInfo
+            from pytest_skill_engineering.core.result import CustomAgentInfo, InstructionFileInfo
 
             custom_agent_info = None
             ca_data = ar_data.get("custom_agent_info")
@@ -172,6 +172,18 @@ def deserialize_suite_report(data: dict[str, Any]) -> SuiteReport:
                     name=ca_data["name"],
                     description=ca_data.get("description", ""),
                     file_path=ca_data.get("file_path", ""),
+                )
+
+            # Reconstruct instruction files if present
+            instruction_files = []
+            for if_data in ar_data.get("instruction_files", []):
+                instruction_files.append(
+                    InstructionFileInfo(
+                        name=if_data["name"],
+                        file_path=if_data.get("file_path", ""),
+                        apply_to=if_data.get("apply_to", ""),
+                        description=if_data.get("description", ""),
+                    )
                 )
 
             # Reconstruct agent result
@@ -192,6 +204,7 @@ def deserialize_suite_report(data: dict[str, Any]) -> SuiteReport:
                 prompt_name=ar_data.get("prompt_name"),
                 custom_agent_info=custom_agent_info,
                 premium_requests=ar_data.get("premium_requests", 0.0),
+                instruction_files=instruction_files,
             )
 
         # Read identity from typed fields (support both new and legacy field names)
