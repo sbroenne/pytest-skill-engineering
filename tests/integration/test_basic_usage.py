@@ -42,11 +42,11 @@ class TestBankingWorkflows:
         - Verification after mutation
         - AI judge for semantic validation
         """
-        agent = Eval(
-            name="balance-transfer",
+        agent = Eval.from_instructions(
+            "balance-transfer",
+            BANKING_PROMPT,
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             mcp_servers=[banking_server],
-            system_prompt=BANKING_PROMPT,
             max_turns=10,
         )
 
@@ -83,11 +83,11 @@ class TestBankingWorkflows:
         - Different tool usage (deposit vs withdraw)
         - Balance awareness across operations
         """
-        agent = Eval(
-            name="deposit-withdraw",
+        agent = Eval.from_instructions(
+            "deposit-withdraw",
+            BANKING_PROMPT,
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             mcp_servers=[banking_server],
-            system_prompt=BANKING_PROMPT,
             max_turns=10,
         )
 
@@ -113,11 +113,11 @@ class TestBankingWorkflows:
         - Decision making based on discovered data
         - Follow-up action based on analysis
         """
-        agent = Eval(
-            name="account-explorer",
+        agent = Eval.from_instructions(
+            "account-explorer",
+            BANKING_PROMPT,
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             mcp_servers=[banking_server],
-            system_prompt=BANKING_PROMPT,
             max_turns=10,
         )
 
@@ -143,11 +143,11 @@ class TestBankingWorkflows:
         - Data aggregation and analysis
         - Structured output from transaction log
         """
-        agent = Eval(
-            name="transaction-analyst",
+        agent = Eval.from_instructions(
+            "transaction-analyst",
+            BANKING_PROMPT,
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             mcp_servers=[banking_server],
-            system_prompt=BANKING_PROMPT,
             max_turns=12,
         )
 
@@ -173,11 +173,11 @@ class TestBankingWorkflows:
         - Recovery behavior
         - Graceful degradation
         """
-        agent = Eval(
-            name="error-handler",
+        agent = Eval.from_instructions(
+            "error-handler",
+            BANKING_PROMPT,
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             mcp_servers=[banking_server],
-            system_prompt=BANKING_PROMPT,
             max_turns=8,
         )
 
@@ -211,11 +211,11 @@ class TestTodoWorkflows:
         - State persistence between calls
         - Verification via read
         """
-        agent = Eval(
-            name="project-setup",
+        agent = Eval.from_instructions(
+            "project-setup",
+            TODO_PROMPT,
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             mcp_servers=[todo_server],
-            system_prompt=TODO_PROMPT,
             max_turns=12,
         )
 
@@ -246,11 +246,11 @@ class TestTodoWorkflows:
         - State verification after mutations
         - AI judge for semantic validation
         """
-        agent = Eval(
-            name="task-lifecycle",
+        agent = Eval.from_instructions(
+            "task-lifecycle",
+            TODO_PROMPT,
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             mcp_servers=[todo_server],
-            system_prompt=TODO_PROMPT,
             max_turns=10,
         )
 
@@ -285,11 +285,11 @@ class TestTodoWorkflows:
         - Querying/filtering results
         - Understanding of priority semantics
         """
-        agent = Eval(
-            name="priority-manager",
+        agent = Eval.from_instructions(
+            "priority-manager",
+            TODO_PROMPT,
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             mcp_servers=[todo_server],
-            system_prompt=TODO_PROMPT,
             max_turns=12,
         )
 
@@ -321,11 +321,11 @@ class TestTodoWorkflows:
         - State tracking across operations
         - Filtering (remaining vs completed)
         """
-        agent = Eval(
-            name="batch-completer",
+        agent = Eval.from_instructions(
+            "batch-completer",
+            TODO_PROMPT,
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             mcp_servers=[todo_server],
-            system_prompt=TODO_PROMPT,
             max_turns=15,
         )
 
@@ -356,11 +356,11 @@ class TestTodoWorkflows:
         - Understanding list semantics
         - Cross-list queries
         """
-        agent = Eval(
-            name="multi-list-organizer",
+        agent = Eval.from_instructions(
+            "multi-list-organizer",
+            TODO_PROMPT,
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             mcp_servers=[todo_server],
-            system_prompt=TODO_PROMPT,
             max_turns=12,
         )
 
@@ -398,11 +398,11 @@ class TestAdvancedPatterns:
         - Intelligent defaults or clarification
         - Graceful handling of underspecified input
         """
-        agent = Eval(
-            name="ambiguity-handler",
+        agent = Eval.from_instructions(
+            "ambiguity-handler",
+            BANKING_PROMPT,
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             mcp_servers=[banking_server],
-            system_prompt=BANKING_PROMPT,
             max_turns=8,
         )
 
@@ -427,11 +427,11 @@ class TestAdvancedPatterns:
         - Conditional branching based on data
         - State-aware decision making
         """
-        agent = Eval(
-            name="conditional-logic",
+        agent = Eval.from_instructions(
+            "conditional-logic",
+            TODO_PROMPT,
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             mcp_servers=[todo_server],
-            system_prompt=TODO_PROMPT,
             max_turns=10,
         )
 
@@ -466,11 +466,11 @@ class TestClarificationDetection:
     @pytest.mark.asyncio
     async def test_no_clarification_on_clear_request(self, eval_run, banking_server):
         """Eval should not ask for clarification on a clear request."""
-        agent = Eval(
-            name="no-clarification",
+        agent = Eval.from_instructions(
+            "no-clarification",
+            BANKING_PROMPT,
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             mcp_servers=[banking_server],
-            system_prompt=BANKING_PROMPT,
             max_turns=DEFAULT_MAX_TURNS,
             clarification_detection=ClarificationDetection(
                 enabled=True,

@@ -48,11 +48,11 @@ class TestModelPromptMatrix:
     )
     async def test_balance_check(self, eval_run, model, prompt_name, system_prompt, llm_assert):
         """Balance query across all model × prompt permutations."""
-        agent = Eval(
+        agent = Eval.from_instructions(
+            prompt_name,
+            system_prompt,
             provider=Provider(model=f"azure/{model}", rpm=10, tpm=10000),
             mcp_servers=[banking_server],
-            system_prompt=system_prompt,
-            system_prompt_name=prompt_name,
             max_turns=5,
         )
         result = await eval_run(agent, "What's my checking account balance?")
@@ -66,11 +66,11 @@ class TestModelPromptMatrix:
     )
     async def test_transfer_workflow(self, eval_run, model, prompt_name, system_prompt, llm_assert):
         """Transfer workflow across all permutations."""
-        agent = Eval(
+        agent = Eval.from_instructions(
+            prompt_name,
+            system_prompt,
             provider=Provider(model=f"azure/{model}", rpm=10, tpm=10000),
             mcp_servers=[banking_server],
-            system_prompt=system_prompt,
-            system_prompt_name=prompt_name,
             max_turns=8,
         )
         result = await eval_run(agent, "Transfer $100 from checking to savings")

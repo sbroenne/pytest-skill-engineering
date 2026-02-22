@@ -23,11 +23,11 @@ echo_server = CLIServer(
     tool_prefix="echo",
 )
 
-agent = Eval(
-    name="cli-agent",
+agent = Eval.from_instructions(
+    "cli-agent",
+    "You are a helpful assistant. Use echo_execute to echo messages back.",
     provider=Provider(model="azure/gpt-5-mini", rpm=10, tpm=10000),
     cli_servers=[echo_server],
-    system_prompt="You are a helpful assistant. Use echo_execute to echo messages back.",
     max_turns=5,
 )
 

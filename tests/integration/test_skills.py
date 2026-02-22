@@ -88,11 +88,11 @@ class TestSkillWithAgent:
         skill = load_skill(SKILLS_DIR / "simple-assistant")
 
         # The skill instructs to always include "Hello" in greetings
-        agent = Eval(
-            name="skill-prepend-test",
+        agent = Eval.from_instructions(
+            "skill-prepend-test",
+            "Be extremely brief.",
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             skill=skill,
-            system_prompt="Be extremely brief.",  # This comes after skill content
             max_turns=5,
         )
 
@@ -112,15 +112,15 @@ class TestSkillWithAgent:
             wait=Wait.for_tools(["get_balance"]),
         )
 
-        agent = Eval(
-            name="skill-references-test",
-            provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
-            skill=skill,
-            mcp_servers=[banking_server],
-            system_prompt=(
+        agent = Eval.from_instructions(
+            "skill-references-test",
+            (
                 "You MUST use the available tools to look up formulas. "
                 "Start by listing available references, then read the formulas file."
             ),
+            provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
+            skill=skill,
+            mcp_servers=[banking_server],
             max_turns=10,
         )
 
@@ -139,14 +139,14 @@ class TestSkillWithAgent:
         """The list_skill_references tool should return available filenames."""
         skill = load_skill(SKILLS_DIR / "math-helper")
 
-        agent = Eval(
-            name="skill-list-refs-test",
-            provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
-            skill=skill,
-            system_prompt=(
+        agent = Eval.from_instructions(
+            "skill-list-refs-test",
+            (
                 "When asked to list references, use the list_skill_references tool. "
                 "Report exactly what files are available."
             ),
+            provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
+            skill=skill,
             max_turns=5,
         )
 
@@ -162,14 +162,14 @@ class TestSkillWithAgent:
         """The read_skill_reference tool should return file content."""
         skill = load_skill(SKILLS_DIR / "math-helper")
 
-        agent = Eval(
-            name="skill-read-ref-test",
-            provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
-            skill=skill,
-            system_prompt=(
+        agent = Eval.from_instructions(
+            "skill-read-ref-test",
+            (
                 "When asked about Pythagorean theorem, use read_skill_reference to read "
                 "formulas.md and then quote the exact formula from the reference."
             ),
+            provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
+            skill=skill,
             max_turns=5,
         )
 

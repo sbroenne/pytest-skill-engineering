@@ -102,11 +102,11 @@ class TestServerABComparison:
         else:
             system_prompt = "You help with banking. Use tools to get data."
 
-        agent = Eval(
-            name=f"banking-{server_version}",
+        agent = Eval.from_instructions(
+            f"banking-{server_version}",
+            system_prompt,
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             mcp_servers=[banking_server_v1],
-            system_prompt=system_prompt,
             max_turns=DEFAULT_MAX_TURNS,
         )
 
@@ -128,11 +128,11 @@ class TestServerABComparison:
         else:
             system_prompt = "You help with banking. Use tools to get data."
 
-        agent = Eval(
-            name=f"banking-transfer-{server_version}",
+        agent = Eval.from_instructions(
+            f"banking-transfer-{server_version}",
+            system_prompt,
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             mcp_servers=[banking_server_v1],
-            system_prompt=system_prompt,
             max_turns=8,
         )
 
@@ -177,11 +177,11 @@ class TestToolDescriptionImpact:
         else:
             system_prompt = "You manage bank accounts."
 
-        agent = Eval(
-            name=f"ambiguous-{description_quality}",
+        agent = Eval.from_instructions(
+            f"ambiguous-{description_quality}",
+            system_prompt,
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             mcp_servers=[banking_server_v1],
-            system_prompt=system_prompt,
             max_turns=8,
         )
 
@@ -221,11 +221,11 @@ class TestServerMigration:
         This test could be run against v1 and v2 servers to ensure
         a migration doesn't regress functionality.
         """
-        agent = Eval(
-            name="todo-migration-test",
+        agent = Eval.from_instructions(
+            "todo-migration-test",
+            "You manage tasks. Add, complete, and list tasks as requested.",
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             mcp_servers=[todo_server_v1],
-            system_prompt="You manage tasks. Add, complete, and list tasks as requested.",
             max_turns=10,
         )
 

@@ -55,18 +55,20 @@ def eval_run(
     Example:
         @pytest.mark.parametrize("model", ["openai/gpt-4o", "openai/gpt-4o-mini"])
         async def test_model_comparison(eval_run, model):
-            agent = Eval(
+            agent = Eval.from_instructions(
+                "default",
+                "You are a helpful assistant.",
                 provider=Provider(model=model),
-                system_prompt="You are a helpful assistant.",
             )
             result = await eval_run(agent, "Hello!")
             assert result.success
 
         @pytest.mark.parametrize("prompt", [PROMPT_V1, PROMPT_V2])
         async def test_prompt_comparison(eval_run, prompt):
-            agent = Eval(
+            agent = Eval.from_instructions(
+                prompt.name,
+                prompt.system_prompt,
                 provider=Provider(model="openai/gpt-4o-mini"),
-                system_prompt=prompt.system_prompt,
             )
             result = await eval_run(agent, "Hello!")
             assert result.success

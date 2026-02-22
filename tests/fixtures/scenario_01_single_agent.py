@@ -30,11 +30,11 @@ banking_server = MCPServer(
     ),
 )
 
-agent = Eval(
-    name="banking-agent",
+agent = Eval.from_instructions(
+    "banking-agent",
+    BANKING_PROMPT,
     provider=Provider(model="azure/gpt-5-mini", rpm=10, tpm=10000),
     mcp_servers=[banking_server],
-    system_prompt=BANKING_PROMPT,
     max_turns=5,
 )
 

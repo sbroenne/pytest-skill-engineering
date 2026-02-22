@@ -149,11 +149,12 @@ class TestAgent:
         mcp = MCPServer(command=["mcp-server"])
         cli = CLIServer(name="cli", command="cli-tool", tool_prefix="cli")
 
-        agent = Eval(
+        agent = Eval.from_instructions(
+            "default",
+            "Be helpful.",
             provider=Provider(model="openai/gpt-4o"),
             mcp_servers=[mcp],
             cli_servers=[cli],
-            system_prompt="Be helpful.",
             max_turns=5,
         )
 

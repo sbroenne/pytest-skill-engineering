@@ -20,7 +20,7 @@ from pathlib import Path
 
 import pytest
 
-from pytest_skill_engineering import Eval, MCPServer, Provider, Skill, Wait, load_system_prompts
+from pytest_skill_engineering import Eval, MCPServer, Provider, Skill, Wait, load_custom_agents
 
 # Mark all tests as showcase
 pytestmark = [pytest.mark.showcase]
@@ -73,10 +73,11 @@ BANKING_SERVER = MCPServer(
 
 # Core agents — one per model, same prompt → fair leaderboard
 CORE_AGENTS = [
-    Eval(
+    Eval.from_instructions(
+        "default",
+        BANKING_PROMPT,
         provider=Provider(model=f"azure/{model}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
         mcp_servers=[BANKING_SERVER],
-        system_prompt=BANKING_PROMPT,
         max_turns=DEFAULT_MAX_TURNS,
     )
     for model in BENCHMARK_MODELS
@@ -84,18 +85,18 @@ CORE_AGENTS = [
 
 # Prompt agents — model × prompt combinations
 PROMPTS_DIR = Path(__file__).parent / "prompts"
-ADVISOR_PROMPTS = load_system_prompts(PROMPTS_DIR) if PROMPTS_DIR.exists() else {}
+ADVISOR_PROMPTS_DATA = load_custom_agents(PROMPTS_DIR) if PROMPTS_DIR.exists() else []
 
 PROMPT_AGENTS = [
-    Eval(
+    Eval.from_instructions(
+        agent_data["name"],
+        agent_data["prompt"],
         provider=Provider(model=f"azure/{model}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
         mcp_servers=[BANKING_SERVER],
-        system_prompt=system_prompt,
-        system_prompt_name=prompt_name,
         max_turns=DEFAULT_MAX_TURNS,
     )
     for model in BENCHMARK_MODELS
-    for prompt_name, system_prompt in ADVISOR_PROMPTS.items()
+    for agent_data in ADVISOR_PROMPTS_DATA
 ]
 
 # Skill agents — core agent + financial advisor skill
@@ -104,10 +105,11 @@ _FINANCIAL_SKILL = Skill.from_path(_SKILL_PATH) if _SKILL_PATH.exists() else Non
 
 SKILL_AGENTS = (
     [
-        Eval(
+        Eval.from_instructions(
+            "default",
+            BANKING_PROMPT,
             provider=Provider(model=f"azure/{model}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             mcp_servers=[BANKING_SERVER],
-            system_prompt=BANKING_PROMPT,
             skill=_FINANCIAL_SKILL,
             max_turns=DEFAULT_MAX_TURNS,
         )

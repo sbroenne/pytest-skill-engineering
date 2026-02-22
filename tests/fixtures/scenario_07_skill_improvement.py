@@ -35,18 +35,18 @@ SKILLS_DIR = Path(__file__).parent.parent / "showcase" / "skills"
 FINANCIAL_SKILL = Skill.from_path(SKILLS_DIR / "financial-advisor")
 
 AGENTS = [
-    Eval(
-        name="baseline",
+    Eval.from_instructions(
+        "baseline",
+        BANKING_PROMPT,
         provider=Provider(model="azure/gpt-5-mini", rpm=10, tpm=10000),
         mcp_servers=[banking_server],
-        system_prompt=BANKING_PROMPT,
         max_turns=5,
     ),
-    Eval(
-        name="with-financial-skill",
+    Eval.from_instructions(
+        "with-financial-skill",
+        BANKING_PROMPT,
         provider=Provider(model="azure/gpt-5-mini", rpm=10, tpm=10000),
         mcp_servers=[banking_server],
-        system_prompt=BANKING_PROMPT,
         skill=FINANCIAL_SKILL,
         max_turns=5,
     ),

@@ -43,18 +43,18 @@ banking_server = MCPServer(
 )
 
 AGENTS = [
-    Eval(
-        name="verbose-prompt",
+    Eval.from_instructions(
+        "verbose-prompt",
+        VERBOSE_PROMPT,
         provider=Provider(model="azure/gpt-5-mini", rpm=10, tpm=10000),
         mcp_servers=[banking_server],
-        system_prompt=VERBOSE_PROMPT,
         max_turns=5,
     ),
-    Eval(
-        name="terse-prompt",
+    Eval.from_instructions(
+        "terse-prompt",
+        TERSE_PROMPT,
         provider=Provider(model="azure/gpt-5-mini", rpm=10, tpm=10000),
         mcp_servers=[banking_server],
-        system_prompt=TERSE_PROMPT,
         max_turns=5,
     ),
 ]

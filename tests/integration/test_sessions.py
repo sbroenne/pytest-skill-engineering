@@ -119,11 +119,11 @@ class TestBankingWorkflow:
         verified in later tests. The agent should check account balances
         and acknowledge the trip planning context.
         """
-        agent = Eval(
-            name="banking-session-01",
+        agent = Eval.from_instructions(
+            "banking-session-01",
+            BANKING_PROMPT,
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             mcp_servers=[banking_server],
-            system_prompt=BANKING_PROMPT,
             max_turns=10,
         )
 
@@ -158,11 +158,11 @@ class TestBankingWorkflow:
         This tests implicit context retention - the agent should understand
         the reference without us restating it explicitly.
         """
-        agent = Eval(
-            name="banking-session-02",
+        agent = Eval.from_instructions(
+            "banking-session-02",
+            BANKING_PROMPT,
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             mcp_servers=[banking_server],
-            system_prompt=BANKING_PROMPT,
             max_turns=10,
         )
 
@@ -196,11 +196,11 @@ class TestBankingWorkflow:
         The agent MUST retrieve "Paris" from the conversation history established
         in test_01. If sessions don't work, this test fails.
         """
-        agent = Eval(
-            name="banking-session-03",
+        agent = Eval.from_instructions(
+            "banking-session-03",
+            BANKING_PROMPT,
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             mcp_servers=[banking_server],
-            system_prompt=BANKING_PROMPT,
             max_turns=10,
         )
 
@@ -229,11 +229,11 @@ class TestBankingWorkflow:
             2. Tool call: Check current savings balance
             3. Reasoning: Calculate months to afford $800 flight
         """
-        agent = Eval(
-            name="banking-session-04",
+        agent = Eval.from_instructions(
+            "banking-session-04",
+            BANKING_PROMPT,
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             mcp_servers=[banking_server],
-            system_prompt=BANKING_PROMPT,
             max_turns=10,
         )
 
@@ -266,11 +266,11 @@ class TestBankingWorkflow:
             - The $500 transfer
             - The flight cost calculation
         """
-        agent = Eval(
-            name="banking-session-05",
+        agent = Eval.from_instructions(
+            "banking-session-05",
+            BANKING_PROMPT,
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             mcp_servers=[banking_server],
-            system_prompt=BANKING_PROMPT,
             max_turns=10,
         )
 
@@ -314,11 +314,11 @@ class TestSessionIsolation:
         different session name, even though the server state (account
         balances) reflects changes from the prior test class.
         """
-        agent = Eval(
-            name="isolated-session-test",
+        agent = Eval.from_instructions(
+            "isolated-session-test",
+            BANKING_PROMPT,
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             mcp_servers=[banking_server],
-            system_prompt=BANKING_PROMPT,
             max_turns=10,
         )
 
@@ -358,11 +358,11 @@ class TestModelSessionComparison:
         This runs a complete session in a single test to compare models fairly.
         Each model gets the same prompts and must demonstrate context retention.
         """
-        agent = Eval(
-            name=f"model-comparison-{model}",
+        agent = Eval.from_instructions(
+            f"model-comparison-{model}",
+            BANKING_PROMPT,
             provider=Provider(model=f"azure/{model}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             mcp_servers=[banking_server],
-            system_prompt=BANKING_PROMPT,
             max_turns=10,
         )
         messages: list = []

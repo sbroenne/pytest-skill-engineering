@@ -44,11 +44,11 @@ class TestAgent:
             command=["python", "-m", "banking_server"],
             wait=Wait.for_tools(["get_balance"]),
         )
-        agent = Eval(
-            name="test-agent",
+        agent = Eval.from_instructions(
+            "test-agent",
+            "Be helpful.",
             provider=Provider(model="azure/gpt-5-mini", temperature=0.7),
             mcp_servers=[server],
-            system_prompt="Be helpful.",
             max_turns=5,
             allowed_tools=["get_balance"],
         )

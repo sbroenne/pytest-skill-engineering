@@ -48,11 +48,11 @@ class TestDimensionDetection:
     )
     async def test_balance_with_all_permutations(self, eval_run, model, prompt_name, system_prompt):
         """Balance query across 2 models × 2 prompts = 4 runs."""
-        agent = Eval(
+        agent = Eval.from_instructions(
+            prompt_name,
+            system_prompt,
             provider=Provider(model=f"azure/{model}", rpm=10, tpm=10000),
             mcp_servers=[banking_server],
-            system_prompt=system_prompt,
-            system_prompt_name=prompt_name,
             max_turns=5,
         )
         result = await eval_run(agent, "What's my checking account balance?")

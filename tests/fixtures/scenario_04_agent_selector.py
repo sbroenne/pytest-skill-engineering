@@ -40,22 +40,25 @@ FINANCIAL_SKILL = (
 )
 
 AGENTS = [
-    Eval(
+    Eval.from_instructions(
+        "default",
+        BANKING_PROMPT,
         provider=Provider(model="azure/gpt-5-mini", rpm=10, tpm=10000),
         mcp_servers=[banking_server],
-        system_prompt=BANKING_PROMPT,
         max_turns=5,
     ),
-    Eval(
+    Eval.from_instructions(
+        "default",
+        BANKING_PROMPT,
         provider=Provider(model="azure/gpt-4.1-mini", rpm=10, tpm=10000),
         mcp_servers=[banking_server],
-        system_prompt=BANKING_PROMPT,
         max_turns=5,
     ),
-    Eval(
+    Eval.from_instructions(
+        "default",
+        BANKING_PROMPT,
         provider=Provider(model="azure/gpt-5-mini", rpm=10, tpm=10000),
         mcp_servers=[banking_server],
-        system_prompt=BANKING_PROMPT,
         skill=FINANCIAL_SKILL,
         max_turns=5,
     ),

@@ -79,11 +79,11 @@ class TestCLIServerBasicUsage:
     @pytest.mark.asyncio
     async def test_list_directory(self, eval_run, ls_cli_server, cat_cli_server):
         """Eval can list files using ls_execute tool."""
-        agent = Eval(
-            name="ls-test",
+        agent = Eval.from_instructions(
+            "ls-test",
+            FILE_CLI_PROMPT,
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             cli_servers=[ls_cli_server, cat_cli_server],
-            system_prompt=FILE_CLI_PROMPT,
             max_turns=DEFAULT_MAX_TURNS,
         )
 
@@ -98,11 +98,11 @@ class TestCLIServerBasicUsage:
     @pytest.mark.asyncio
     async def test_read_file_contents(self, eval_run, ls_cli_server, cat_cli_server):
         """Eval can read file contents using cat_execute tool."""
-        agent = Eval(
-            name="cat-test",
+        agent = Eval.from_instructions(
+            "cat-test",
+            FILE_CLI_PROMPT,
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             cli_servers=[ls_cli_server, cat_cli_server],
-            system_prompt=FILE_CLI_PROMPT,
             max_turns=DEFAULT_MAX_TURNS,
         )
 
@@ -120,11 +120,11 @@ class TestCLIServerBasicUsage:
     @pytest.mark.asyncio
     async def test_echo_command(self, eval_run, echo_cli_server):
         """Eval can use echo command."""
-        agent = Eval(
-            name="echo-test",
+        agent = Eval.from_instructions(
+            "echo-test",
+            ECHO_CLI_PROMPT,
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             cli_servers=[echo_cli_server],
-            system_prompt=ECHO_CLI_PROMPT,
             max_turns=DEFAULT_MAX_TURNS,
         )
 
@@ -143,11 +143,11 @@ class TestCLIServerMultiStep:
     @pytest.mark.asyncio
     async def test_explore_and_read(self, eval_run, ls_cli_server, cat_cli_server):
         """Eval lists directory, then reads a specific file."""
-        agent = Eval(
-            name="explore-read",
+        agent = Eval.from_instructions(
+            "explore-read",
+            FILE_CLI_PROMPT,
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             cli_servers=[ls_cli_server, cat_cli_server],
-            system_prompt=FILE_CLI_PROMPT,
             max_turns=8,
         )
 
@@ -164,11 +164,11 @@ class TestCLIServerMultiStep:
     @pytest.mark.asyncio
     async def test_file_analysis(self, eval_run, ls_cli_server, cat_cli_server, llm_assert):
         """Eval analyzes a file using multiple CLI tools."""
-        agent = Eval(
-            name="file-analysis",
+        agent = Eval.from_instructions(
+            "file-analysis",
+            FILE_CLI_PROMPT,
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             cli_servers=[ls_cli_server, cat_cli_server],
-            system_prompt=FILE_CLI_PROMPT,
             max_turns=8,
         )
 
@@ -191,11 +191,11 @@ class TestCLIServerErrorHandling:
     @pytest.mark.asyncio
     async def test_nonexistent_file(self, eval_run, ls_cli_server, cat_cli_server):
         """Eval handles errors when file doesn't exist."""
-        agent = Eval(
-            name="error-handling",
+        agent = Eval.from_instructions(
+            "error-handling",
+            FILE_CLI_PROMPT,
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             cli_servers=[ls_cli_server, cat_cli_server],
-            system_prompt=FILE_CLI_PROMPT,
             max_turns=DEFAULT_MAX_TURNS,
         )
 

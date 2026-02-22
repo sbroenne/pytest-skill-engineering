@@ -56,11 +56,11 @@ class TestPromptScoring:
 
     async def test_verbose_prompt_score(self, eval_run, banking_server, llm_score):
         """Score a verbose system prompt — expect lower conciseness."""
-        agent = Eval(
-            name="verbose-prompt",
+        agent = Eval.from_instructions(
+            "verbose-prompt",
+            VERBOSE_PROMPT,
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             mcp_servers=[banking_server],
-            system_prompt=VERBOSE_PROMPT,
             max_turns=DEFAULT_MAX_TURNS,
         )
         result = await eval_run(agent, "What are all my account balances?")
@@ -75,11 +75,11 @@ class TestPromptScoring:
 
     async def test_direct_prompt_score(self, eval_run, banking_server, llm_score):
         """Score a direct system prompt — expect higher conciseness."""
-        agent = Eval(
-            name="direct-prompt",
+        agent = Eval.from_instructions(
+            "direct-prompt",
+            DIRECT_PROMPT,
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             mcp_servers=[banking_server],
-            system_prompt=DIRECT_PROMPT,
             max_turns=DEFAULT_MAX_TURNS,
         )
         result = await eval_run(agent, "What are all my account balances?")

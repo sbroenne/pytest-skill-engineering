@@ -51,10 +51,11 @@ class TestIterationBaseline:
     @pytest.mark.asyncio
     async def test_balance_check_reliability(self, eval_run, banking_server):
         """Check balance — should be 100% reliable."""
-        agent = Eval(
+        agent = Eval.from_instructions(
+            "default",
+            BANKING_PROMPT,
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             mcp_servers=[banking_server],
-            system_prompt=BANKING_PROMPT,
             max_turns=DEFAULT_MAX_TURNS,
         )
         result = await eval_run(agent, "What's my checking account balance?")
@@ -64,10 +65,11 @@ class TestIterationBaseline:
     @pytest.mark.asyncio
     async def test_transfer_reliability(self, eval_run, banking_server):
         """Transfer money — may show flakiness across iterations."""
-        agent = Eval(
+        agent = Eval.from_instructions(
+            "default",
+            BANKING_PROMPT,
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             mcp_servers=[banking_server],
-            system_prompt=BANKING_PROMPT,
             max_turns=DEFAULT_MAX_TURNS,
         )
         result = await eval_run(
@@ -80,10 +82,11 @@ class TestIterationBaseline:
     @pytest.mark.asyncio
     async def test_multi_tool_reliability(self, eval_run, banking_server):
         """Multi-tool query — checks stability of complex operations."""
-        agent = Eval(
+        agent = Eval.from_instructions(
+            "default",
+            BANKING_PROMPT,
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             mcp_servers=[banking_server],
-            system_prompt=BANKING_PROMPT,
             max_turns=DEFAULT_MAX_TURNS,
         )
         result = await eval_run(

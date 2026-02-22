@@ -37,10 +37,11 @@ class TestBankingSkillImprovement:
         This test establishes baseline behavior - the LLM may or may not
         check account balances before giving allocation advice.
         """
-        agent = Eval(
+        agent = Eval.from_instructions(
+            "default",
+            "You are a banking assistant. Help users manage their money.",
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             mcp_servers=[banking_server],
-            system_prompt="You are a banking assistant. Help users manage their money.",
             max_turns=5,
         )
 
@@ -64,11 +65,12 @@ class TestBankingSkillImprovement:
         2. Apply the 50/30/20 budgeting rule
         3. Prioritize emergency fund
         """
-        agent = Eval(
+        agent = Eval.from_instructions(
+            "default",
+            "Help users manage their money.",
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             mcp_servers=[banking_server],
             skill=financial_skill,
-            system_prompt="Help users manage their money.",
             max_turns=DEFAULT_MAX_TURNS,
         )
 
@@ -101,11 +103,12 @@ class TestBankingSkillImprovement:
         - Spending more than income
         - Low savings ratio
         """
-        agent = Eval(
+        agent = Eval.from_instructions(
+            "default",
+            "You are a financial health advisor.",
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             mcp_servers=[banking_server],
             skill=financial_skill,
-            system_prompt="You are a financial health advisor.",
             max_turns=DEFAULT_MAX_TURNS,
         )
 
@@ -140,10 +143,11 @@ class TestTodoSkillImprovement:
         Baseline behavior - the agent may add tasks without confirming
         they were added successfully.
         """
-        agent = Eval(
+        agent = Eval.from_instructions(
+            "default",
+            "You help manage tasks. Add tasks when asked.",
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             mcp_servers=[todo_server],
-            system_prompt="You help manage tasks. Add tasks when asked.",
             max_turns=5,
         )
 
@@ -163,11 +167,12 @@ class TestTodoSkillImprovement:
         - Call list_tasks after ANY modification
         - Show the user confirmation of the change
         """
-        agent = Eval(
+        agent = Eval.from_instructions(
+            "default",
+            "Help manage the user's tasks.",
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             mcp_servers=[todo_server],
             skill=todo_skill,
-            system_prompt="Help manage the user's tasks.",
             max_turns=DEFAULT_MAX_TURNS,
         )
 
@@ -199,11 +204,12 @@ class TestTodoSkillImprovement:
 
         The skill defines standard lists: inbox, work, personal, shopping, someday
         """
-        agent = Eval(
+        agent = Eval.from_instructions(
+            "default",
+            "Organize the user's tasks efficiently.",
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             mcp_servers=[todo_server],
             skill=todo_skill,
-            system_prompt="Organize the user's tasks efficiently.",
             max_turns=DEFAULT_MAX_TURNS,
         )
 
@@ -236,11 +242,12 @@ class TestTodoSkillImprovement:
         - "urgent", "ASAP" → HIGH priority
         - "someday", "no rush" → LOW priority
         """
-        agent = Eval(
+        agent = Eval.from_instructions(
+            "default",
+            "Help manage tasks with appropriate priorities.",
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             mcp_servers=[todo_server],
             skill=todo_skill,
-            system_prompt="Help manage tasks with appropriate priorities.",
             max_turns=DEFAULT_MAX_TURNS,
         )
 
@@ -279,20 +286,22 @@ class TestSkillComparisonSummary:
         prompt = "Check my account balances and tell me how I should manage my money."
 
         # Test WITHOUT skill
-        baseline_agent = Eval(
+        baseline_agent = Eval.from_instructions(
+            "default",
+            "You are a helpful assistant.",
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             mcp_servers=[banking_server],
-            system_prompt="You are a helpful assistant.",
             max_turns=5,
         )
         baseline_result = await eval_run(baseline_agent, prompt)
 
         # Test WITH skill
-        skilled_agent = Eval(
+        skilled_agent = Eval.from_instructions(
+            "default",
+            "You are a helpful assistant.",
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             mcp_servers=[banking_server],
             skill=financial_skill,
-            system_prompt="You are a helpful assistant.",
             max_turns=DEFAULT_MAX_TURNS,
         )
         skilled_result = await eval_run(skilled_agent, prompt)

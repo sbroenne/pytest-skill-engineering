@@ -11,11 +11,11 @@ Example:
 
     @pytest.mark.asyncio
     async def test_banking(eval_run, banking_server):
-        agent = Eval(
-            name="banking-test",
+        agent = Eval.from_instructions(
+            "banking-test",
+            BANKING_PROMPT,
             provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
             mcp_servers=[banking_server],
-            system_prompt=BANKING_PROMPT,
             max_turns=DEFAULT_MAX_TURNS,
         )
         result = await eval_run(agent, "What's my checking balance?")

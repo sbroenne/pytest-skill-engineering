@@ -16,13 +16,13 @@ from pathlib import Path
 
 import pytest
 
-from pytest_skill_engineering import Eval, MCPServer, Provider, Wait, load_system_prompts
+from pytest_skill_engineering import Eval, MCPServer, Provider, Wait, load_custom_agents
 
 pytestmark = [pytest.mark.integration]
 
-# Load prompts from .md files
+# Load prompts from .agent.md files
 PROMPTS_DIR = Path(__file__).parent.parent / "integration" / "prompts"
-PROMPTS = load_system_prompts(PROMPTS_DIR)
+AGENTS_DATA = load_custom_agents(PROMPTS_DIR)
 
 banking_server = MCPServer(
     command=[sys.executable, "-u", "-m", "pytest_skill_engineering.testing.banking_mcp"],
@@ -33,14 +33,14 @@ banking_server = MCPServer(
 
 # Create one agent per prompt style
 AGENTS = [
-    Eval(
+    Eval.from_instructions(
+        agent_data["name"],
+        agent_data["prompt"],
         provider=Provider(model="azure/gpt-5-mini", rpm=10, tpm=10000),
         mcp_servers=[banking_server],
-        system_prompt=prompt_text,
-        system_prompt_name=prompt_name,
         max_turns=5,
     )
-    for prompt_name, prompt_text in PROMPTS.items()
+    for agent_data in AGENTS_DATA
 ]
 
 

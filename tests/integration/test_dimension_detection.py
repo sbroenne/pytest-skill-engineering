@@ -64,15 +64,15 @@ class TestDimensionDetection:
         This single test generates 4 runs (2 models × 2 prompts).
         The aggregator should detect both dimensions vary.
         """
-        agent = Eval(
+        agent = Eval.from_instructions(
+            prompt_name,
+            system_prompt,
             provider=Provider(
                 model=f"azure/{model}",
                 rpm=DEFAULT_RPM,
                 tpm=DEFAULT_TPM,
             ),
             mcp_servers=[banking_server],
-            system_prompt=system_prompt,
-            system_prompt_name=prompt_name,
             max_turns=DEFAULT_MAX_TURNS,
         )
 
