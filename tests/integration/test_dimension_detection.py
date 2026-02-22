@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import pytest
 
-from pytest_aitest import Agent, Provider
+from pytest_skill_engineering import Agent, Provider
 
 from .conftest import (
     BANKING_PROMPT,

@@ -1,10 +1,10 @@
 ---
-description: "Comprehensive assertion examples for pytest-aitest. Covers tool calls, output validation, performance checks, CLI results, and more — all using plain pytest assertions."
+description: "Comprehensive assertion examples for pytest-skill-engineering. Covers tool calls, output validation, performance checks, CLI results, and more — all using plain pytest assertions."
 ---
 
 # Assertions Cookbook
 
-pytest-aitest uses **plain pytest assertions**. There's no custom DSL — you write Python:
+pytest-skill-engineering uses **plain pytest assertions**. There's no custom DSL — you write Python:
 
 ```python
 assert result.success
@@ -167,7 +167,7 @@ pytest --llm-model=azure/gpt-5.2-chat
 Use the `llm_score` fixture for rubric-based evaluation across multiple dimensions:
 
 ```python
-from pytest_aitest import ScoringDimension, assert_score
+from pytest_skill_engineering import ScoringDimension, assert_score
 
 RUBRIC = [
     ScoringDimension("accuracy", "Correct and factual content"),

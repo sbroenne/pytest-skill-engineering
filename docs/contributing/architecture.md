@@ -1,16 +1,16 @@
 ---
-description: "Internal architecture of pytest-aitest: test execution pipeline, tool dispatch, server lifecycle, and reporting system."
+description: "Internal architecture of pytest-skill-engineering: test execution pipeline, tool dispatch, server lifecycle, and reporting system."
 ---
 
 # Architecture
 
-How pytest-aitest executes tests and dispatches tools.
+How pytest-skill-engineering executes tests and dispatches tools.
 
 ## Overview
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│                     pytest-aitest                        │
+│                     pytest-skill-engineering                        │
 ├─────────────────────────────────────────────────────────┤
 │  Test: "What's my checking balance?"                      │
 │                         │                                │

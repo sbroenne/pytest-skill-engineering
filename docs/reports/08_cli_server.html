@@ -1,5 +1,5 @@
-<!doctype html><html lang="en" class="dark"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>pytest-aitest - Test Report</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&amp;family=Roboto+Mono&amp;display=swap" rel="stylesheet"><script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script><style>/* ============================================================
-   pytest-aitest Report Styles
+<!doctype html><html lang="en" class="dark"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>pytest-skill-engineering - Test Report</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&amp;family=Roboto+Mono&amp;display=swap" rel="stylesheet"><script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script><style>/* ============================================================
+   pytest-skill-engineering Report Styles
    Hand-written CSS — replaces Tailwind CSS build pipeline
    Matches mkdocs-material slate/indigo theme
    ============================================================ */
@@ -1039,14 +1039,14 @@ a:hover {
 <pre><code class="language-json">// Current (~28 tokens)
 {
   &quot;exit_code&quot;: 0,
-  &quot;stdout&quot;: &quot;pytest-aitest\r\nworks\r\n&quot;,
+  &quot;stdout&quot;: &quot;pytest-skill-engineering\r\nworks\r\n&quot;,
   &quot;stderr&quot;: &quot;&quot;
 }
 
 // Optimized (~14 tokens)
 {
   &quot;exit_code&quot;: 0,
-  &quot;stdout&quot;: &quot;pytest-aitest works&quot;,
+  &quot;stdout&quot;: &quot;pytest-skill-engineering works&quot;,
   &quot;stderr&quot;: &quot;&quot;
 }
 </code></pre>
@@ -1101,19 +1101,19 @@ CLI</div></div></div></div></div></div><div class="test-row border-b border-whit
     participant Agent
     participant Tools
 
-    User-&gt;&gt;Agent: &#34;Use the echo command to say &#39;pytest-aitest works&#39; and confirm it worked&#34;
-    Agent-&gt;&gt;Tools: &#34;echo_execute({&#39;args&#39;: &#39;pytest-aitest works&#39;})&#34;
-    Tools--&gt;&gt;Agent: &#34;{&#39;exit_code&#39;: 0, &#39;stdout&#39;: &#39;pytest-aitest\r\nworks\r\n&#39;, &#39;st&#34;
-    Agent-&gt;&gt;User: &#34;I ran the echo command with &#39;pytest-aitest works&#39;. Output (stdout): pytest-aites&#34;"><div class="mermaid text-xs">sequenceDiagram
+    User-&gt;&gt;Agent: &#34;Use the echo command to say &#39;pytest-skill-engineering works&#39; and confirm it worked&#34;
+    Agent-&gt;&gt;Tools: &#34;echo_execute({&#39;args&#39;: &#39;pytest-skill-engineering works&#39;})&#34;
+    Tools--&gt;&gt;Agent: &#34;{&#39;exit_code&#39;: 0, &#39;stdout&#39;: &#39;pytest-skill-engineering\r\nworks\r\n&#39;, &#39;st&#34;
+    Agent-&gt;&gt;User: &#34;I ran the echo command with &#39;pytest-skill-engineering works&#39;. Output (stdout): pytest-aites&#34;"><div class="mermaid text-xs">sequenceDiagram
     participant User
     participant Agent
     participant Tools
 
-    User->>Agent: "Use the echo command to say 'pytest-aitest works' and confirm it worked"
-    Agent->>Tools: "echo_execute({'args': 'pytest-aitest works'})"
-    Tools-->>Agent: "{'exit_code': 0, 'stdout': 'pytest-aitest\r\nworks\r\n', 'st"
-    Agent->>User: "I ran the echo command with 'pytest-aitest works'. Output (stdout): pytest-aites"</div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>🔧</span><span>Tool Calls</span></div><div class="space-y-1"><div class="flex items-center gap-2 text-sm p-2 rounded bg-green-500/5"><span class="text-green-400">✅</span><code class="tool-name">echo_execute</code></div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>✓</span><span>Assertions</span></div><div class="space-y-2"><div class="flex items-center gap-2 text-sm p-2 rounded bg-green-500/5"><span class="text-green-400">✅</span><code class="text-text-muted">llm</code><span class="text-text">confirms the echo command executed successfully</span></div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>💬</span><span>Response</span></div><div style="padding: 1rem; background-color: var(--color-surface-elevated); border-radius: 0.5rem; color: var(--color-text); white-space: pre-wrap; word-wrap: break-word; line-height: 1.625;">I ran the echo command with &#34;pytest-aitest works&#34;. Output (stdout):
-pytest-aitest
+    User->>Agent: "Use the echo command to say 'pytest-skill-engineering works' and confirm it worked"
+    Agent->>Tools: "echo_execute({'args': 'pytest-skill-engineering works'})"
+    Tools-->>Agent: "{'exit_code': 0, 'stdout': 'pytest-skill-engineering\r\nworks\r\n', 'st"
+    Agent->>User: "I ran the echo command with 'pytest-skill-engineering works'. Output (stdout): pytest-aites"</div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>🔧</span><span>Tool Calls</span></div><div class="space-y-1"><div class="flex items-center gap-2 text-sm p-2 rounded bg-green-500/5"><span class="text-green-400">✅</span><code class="tool-name">echo_execute</code></div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>✓</span><span>Assertions</span></div><div class="space-y-2"><div class="flex items-center gap-2 text-sm p-2 rounded bg-green-500/5"><span class="text-green-400">✅</span><code class="text-text-muted">llm</code><span class="text-text">confirms the echo command executed successfully</span></div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>💬</span><span>Response</span></div><div style="padding: 1rem; background-color: var(--color-surface-elevated); border-radius: 0.5rem; color: var(--color-text); white-space: pre-wrap; word-wrap: break-word; line-height: 1.625;">I ran the echo command with &#34;pytest-skill-engineering works&#34;. Output (stdout):
+pytest-skill-engineering
 works
 
 Exit code: 0 — so it worked.</div></div></div></div></div></div></div></div></div><style>
@@ -1142,7 +1142,7 @@ Exit code: 0 — so it worked.</div></div></div></div></div></div></div></div></
     min-height: 60vh;
 }
 </style><script>
-// pytest-aitest Report Scripts
+// pytest-skill-engineering Report Scripts
 
 // Initialize Mermaid with dark theme
 mermaid.initialize({ 

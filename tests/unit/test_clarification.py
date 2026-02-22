@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-from pytest_aitest.core.agent import (
+from pytest_skill_engineering.core.agent import (
     Agent,
     ClarificationDetection,
     ClarificationLevel,
     Provider,
 )
-from pytest_aitest.core.result import AgentResult, ClarificationStats, Turn
+from pytest_skill_engineering.core.result import AgentResult, ClarificationStats, Turn
 
 
 class TestClarificationDetectionConfig:
@@ -137,7 +137,7 @@ class TestClarificationSerialization:
 
     def test_serialize_no_stats(self) -> None:
         """No clarification stats serializes as None."""
-        from pytest_aitest.core.serialization import serialize_dataclass
+        from pytest_skill_engineering.core.serialization import serialize_dataclass
 
         result = AgentResult(
             turns=[Turn(role="assistant", content="Hello")],
@@ -148,7 +148,7 @@ class TestClarificationSerialization:
 
     def test_serialize_with_stats(self) -> None:
         """Clarification stats serialize correctly."""
-        from pytest_aitest.core.serialization import serialize_dataclass
+        from pytest_skill_engineering.core.serialization import serialize_dataclass
 
         result = AgentResult(
             turns=[Turn(role="assistant", content="Would you like...?")],
@@ -169,11 +169,11 @@ class TestClarificationSerialization:
         """ClarificationStats survives JSON roundtrip."""
         import json
 
-        from pytest_aitest.core.serialization import (
+        from pytest_skill_engineering.core.serialization import (
             deserialize_suite_report,
             serialize_dataclass,
         )
-        from pytest_aitest.reporting.collector import SuiteReport, TestReport
+        from pytest_skill_engineering.reporting.collector import SuiteReport, TestReport
 
         suite = SuiteReport(
             name="test",
@@ -220,11 +220,11 @@ class TestClarificationSerialization:
         """None clarification stats survives JSON roundtrip."""
         import json
 
-        from pytest_aitest.core.serialization import (
+        from pytest_skill_engineering.core.serialization import (
             deserialize_suite_report,
             serialize_dataclass,
         )
-        from pytest_aitest.reporting.collector import SuiteReport, TestReport
+        from pytest_skill_engineering.reporting.collector import SuiteReport, TestReport
 
         suite = SuiteReport(
             name="test",

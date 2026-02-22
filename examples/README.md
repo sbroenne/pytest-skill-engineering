@@ -1,6 +1,6 @@
 # Examples
 
-Working examples are in `tests/integration/` — they are the best reference for how to use pytest-aitest.
+Working examples are in `tests/integration/` — they are the best reference for how to use pytest-skill-engineering.
 
 ## Test Files
 
@@ -15,7 +15,7 @@ Working examples are in `tests/integration/` — they are the best reference for
 
 ```bash
 # Prerequisites
-uv add pytest-aitest
+uv add pytest-skill-engineering
 az login               # For Azure OpenAI
 
 # Run basic usage tests
@@ -34,7 +34,7 @@ Two built-in test servers for natural language testing:
 @pytest.fixture(scope="module")
 def banking_server():
     return MCPServer(
-        command=["python", "-m", "pytest_aitest.testing.banking_mcp"],
+        command=["python", "-m", "pytest_skill_engineering.testing.banking_mcp"],
         wait=Wait.for_tools(["get_balance", "transfer"]),
     )
 
@@ -46,7 +46,7 @@ def banking_server():
 @pytest.fixture(scope="module")
 def todo_server():
     return MCPServer(
-        command=["python", "-m", "pytest_aitest.testing.todo_mcp"],
+        command=["python", "-m", "pytest_skill_engineering.testing.todo_mcp"],
         wait=Wait.for_tools(["add_task", "list_tasks"]),
     )
 

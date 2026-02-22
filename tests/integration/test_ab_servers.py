@@ -17,7 +17,7 @@ import sys
 
 import pytest
 
-from pytest_aitest import Agent, MCPServer, Provider, Wait
+from pytest_skill_engineering import Agent, MCPServer, Provider, Wait
 
 from .conftest import (
     BANKING_PROMPT,
@@ -43,7 +43,7 @@ def banking_server_v1():
             sys.executable,
             "-u",
             "-m",
-            "pytest_aitest.testing.banking_mcp",
+            "pytest_skill_engineering.testing.banking_mcp",
         ],
         wait=Wait.for_tools(
             [
@@ -66,7 +66,7 @@ def todo_server_v1():
             sys.executable,
             "-u",
             "-m",
-            "pytest_aitest.testing.todo_mcp",
+            "pytest_skill_engineering.testing.todo_mcp",
         ],
         wait=Wait.for_tools(["add_task", "list_tasks", "complete_task"]),
     )

@@ -15,7 +15,7 @@ import sys
 
 import pytest
 
-from pytest_aitest import Agent, MCPServer, Provider, Wait
+from pytest_skill_engineering import Agent, MCPServer, Provider, Wait
 
 pytestmark = [pytest.mark.integration]
 
@@ -24,7 +24,7 @@ Use the available tools to manage accounts and transactions.
 Always use tools - never make up balances or account data."""
 
 banking_server = MCPServer(
-    command=[sys.executable, "-u", "-m", "pytest_aitest.testing.banking_mcp"],
+    command=[sys.executable, "-u", "-m", "pytest_skill_engineering.testing.banking_mcp"],
     wait=Wait.for_tools(
         ["get_balance", "get_all_balances", "transfer", "deposit", "withdraw", "get_transactions"]
     ),

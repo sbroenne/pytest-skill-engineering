@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from pytest_aitest.core.skill import Skill, SkillError, SkillMetadata
+from pytest_skill_engineering.core.skill import Skill, SkillError, SkillMetadata
 
 
 def test_skill_name_rejects_trailing_hyphen() -> None:

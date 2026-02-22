@@ -5,7 +5,7 @@ for ALL auxiliary LLM call sites: text generation, structured output,
 llm_assert, llm_score, clarification detection, insights, and optimizer.
 
 These tests require:
-- ``pytest-aitest[copilot]`` installed
+- ``pytest-skill-engineering[copilot]`` installed
 - Copilot authentication (``gh auth login`` or ``GITHUB_TOKEN``)
 """
 
@@ -15,8 +15,8 @@ import base64
 
 import pytest
 
-from pytest_aitest.copilot.model import CopilotModel
-from pytest_aitest.execution.pydantic_adapter import build_model_from_string
+from pytest_skill_engineering.copilot.model import CopilotModel
+from pytest_skill_engineering.execution.pydantic_adapter import build_model_from_string
 
 # ---------------------------------------------------------------------------
 # Core model functionality
@@ -109,7 +109,7 @@ class TestCopilotModelLlmScore:
 
     async def test_llm_score_rubric(self) -> None:
         """llm_score returns structured scores via CopilotModel."""
-        from pytest_aitest.fixtures.llm_score import LLMScore, ScoringDimension
+        from pytest_skill_engineering.fixtures.llm_score import LLMScore, ScoringDimension
 
         model = build_model_from_string("copilot/gpt-5-mini")
         scorer = LLMScore(model=model)
@@ -138,7 +138,7 @@ class TestCopilotModelLlmAssertImage:
 
     async def test_llm_assert_image_executes(self) -> None:
         """Vision assertion path executes with copilot/ model without errors."""
-        from pytest_aitest.fixtures.llm_assert_image import LLMAssertImage
+        from pytest_skill_engineering.fixtures.llm_assert_image import LLMAssertImage
 
         # 1x1 transparent PNG
         png_bytes = base64.b64decode(
@@ -158,7 +158,7 @@ class TestCopilotModelClarification:
 
     async def test_detects_clarification(self) -> None:
         """CopilotModel correctly detects a clarification question."""
-        from pytest_aitest.execution.clarification import check_clarification
+        from pytest_skill_engineering.execution.clarification import check_clarification
 
         model = build_model_from_string("copilot/gpt-5-mini")
         is_clarification = await check_clarification(
@@ -171,7 +171,7 @@ class TestCopilotModelClarification:
 
     async def test_no_clarification(self) -> None:
         """CopilotModel correctly identifies a completed action."""
-        from pytest_aitest.execution.clarification import check_clarification
+        from pytest_skill_engineering.execution.clarification import check_clarification
 
         model = build_model_from_string("copilot/gpt-5-mini")
         is_clarification = await check_clarification(
@@ -188,8 +188,8 @@ class TestCopilotModelInsights:
 
     async def test_generate_insights(self) -> None:
         """generate_insights produces a summary via CopilotModel."""
-        from pytest_aitest.reporting.collector import build_suite_report
-        from pytest_aitest.reporting.insights import generate_insights
+        from pytest_skill_engineering.reporting.collector import build_suite_report
+        from pytest_skill_engineering.reporting.insights import generate_insights
 
         suite = build_suite_report([], name="copilot-model-test")
         insights = await generate_insights(suite, model="copilot/gpt-5-mini")
@@ -203,8 +203,8 @@ class TestCopilotModelOptimizer:
 
     async def test_optimize_instruction(self) -> None:
         """optimize_instruction returns a suggestion via CopilotModel."""
-        from pytest_aitest.core.result import AgentResult, Turn
-        from pytest_aitest.execution.optimizer import optimize_instruction
+        from pytest_skill_engineering.core.result import AgentResult, Turn
+        from pytest_skill_engineering.execution.optimizer import optimize_instruction
 
         # Build a minimal AgentResult representing a failed test
         result = AgentResult(

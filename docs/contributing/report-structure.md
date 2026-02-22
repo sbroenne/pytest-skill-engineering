@@ -4,7 +4,7 @@ description: "HTML report component structure: agent leaderboard, test grid, com
 
 # Report Structure
 
-The visual structure and components of pytest-aitest HTML reports.
+The visual structure and components of pytest-skill-engineering HTML reports.
 
 ## Design Philosophy
 
@@ -19,7 +19,7 @@ Every visual element supports this goal through:
 
 ## Implementation
 
-Reports are generated using [htpy](https://htpy.dev/) - a type-safe HTML generation library. Components are Python functions in `src/pytest_aitest/reporting/components/`.
+Reports are generated using [htpy](https://htpy.dev/) - a type-safe HTML generation library. Components are Python functions in `src/pytest_skill_engineering/reporting/components/`.
 
 ## Report Sections
 

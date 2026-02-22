@@ -28,7 +28,7 @@ repos:
         name: "Docs Build"
         entry: uv run python -X utf8 -m mkdocs build --strict
         language: system
-        files: ^(docs/|mkdocs\.yml|src/pytest_aitest/)
+        files: ^(docs/|mkdocs\.yml|src/pytest_skill_engineering/)
         pass_filenames: false
 
 # Note: CodeQL ❌ runs on GitHub Actions (not pre-commit)

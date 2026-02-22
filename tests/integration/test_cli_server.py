@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import pytest
 
-from pytest_aitest import Agent, CLIServer, Provider
+from pytest_skill_engineering import Agent, CLIServer, Provider
 
 from .conftest import (
     DEFAULT_MAX_TURNS,
@@ -115,7 +115,7 @@ class TestCLIServerBasicUsage:
         assert result.tool_was_called("cat_execute")
         # Should mention the package name from pyproject.toml
         response_lower = result.final_response.lower()
-        assert "pytest-aitest" in response_lower or "aitest" in response_lower
+        assert "pytest-skill-engineering" in response_lower or "aitest" in response_lower
 
     @pytest.mark.asyncio
     async def test_echo_command(self, aitest_run, echo_cli_server):
@@ -130,7 +130,7 @@ class TestCLIServerBasicUsage:
 
         result = await aitest_run(
             agent,
-            "Echo the message: Hello from pytest-aitest!",
+            "Echo the message: Hello from pytest-skill-engineering!",
         )
 
         assert result.success

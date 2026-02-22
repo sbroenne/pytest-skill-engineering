@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from pytest_aitest.core.agent import Agent, MCPServer, Provider, Wait
+from pytest_skill_engineering.core.agent import Agent, MCPServer, Provider, Wait
 
 
 class TestAgent:
@@ -74,7 +74,7 @@ class TestAgent:
 
     def test_auto_name_with_skill(self) -> None:
         """Auto-name includes skill dimension."""
-        from pytest_aitest.core.skill import Skill, SkillMetadata
+        from pytest_skill_engineering.core.skill import Skill, SkillMetadata
 
         skill = Skill(
             path=Path("skills/financial-advisor"),
@@ -89,7 +89,7 @@ class TestAgent:
 
     def test_auto_name_with_all_dimensions(self) -> None:
         """Auto-name includes all dimensions."""
-        from pytest_aitest.core.skill import Skill, SkillMetadata
+        from pytest_skill_engineering.core.skill import Skill, SkillMetadata
 
         skill = Skill(
             path=Path("skills/financial-advisor"),
@@ -225,6 +225,7 @@ class TestMCPServer:
                 url="http://localhost:8000/sse",
                 headers={"Authorization": "Bearer ${TEST_MCP_TOKEN}"},
             )
-            assert server.headers["Authorization"] == "Bearer secret-123"
+            # Headers store the raw template; expansion is deferred to connection time
+            assert server.headers["Authorization"] == "Bearer ${TEST_MCP_TOKEN}"
         finally:
             del os.environ["TEST_MCP_TOKEN"]

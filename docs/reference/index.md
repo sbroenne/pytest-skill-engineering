@@ -1,10 +1,10 @@
 ---
-description: "API reference, CLI options, configuration, and AgentResult documentation for pytest-aitest."
+description: "API reference, CLI options, configuration, and AgentResult documentation for pytest-skill-engineering."
 ---
 
 # Reference
 
-Technical documentation for pytest-aitest types and configuration.
+Technical documentation for pytest-skill-engineering types and configuration.
 
 ## Guides
 

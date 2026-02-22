@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-from pytest_aitest import Agent, MCPServer, Provider, SkillError, Wait, load_skill
+from pytest_skill_engineering import Agent, MCPServer, Provider, SkillError, Wait, load_skill
 
 from .conftest import DEFAULT_MODEL, DEFAULT_RPM, DEFAULT_TPM
 
@@ -108,7 +108,7 @@ class TestSkillWithAgent:
         skill = load_skill(SKILLS_DIR / "math-helper")
 
         banking_server = MCPServer(
-            command=[sys.executable, "-u", "-m", "pytest_aitest.testing.banking_mcp"],
+            command=[sys.executable, "-u", "-m", "pytest_skill_engineering.testing.banking_mcp"],
             wait=Wait.for_tools(["get_balance"]),
         )
 

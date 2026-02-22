@@ -13,7 +13,7 @@ class TestCodingAgentAnalysisPrompt:
         prompt_path = (
             Path(__file__).parent.parent.parent
             / "src"
-            / "pytest_aitest"
+            / "pytest_skill_engineering"
             / "prompts"
             / "coding_agent_analysis.md"
         )
@@ -24,7 +24,7 @@ class TestCodingAgentAnalysisPrompt:
         prompt_path = (
             Path(__file__).parent.parent.parent
             / "src"
-            / "pytest_aitest"
+            / "pytest_skill_engineering"
             / "prompts"
             / "coding_agent_analysis.md"
         )
@@ -36,7 +36,7 @@ class TestCodingAgentAnalysisPrompt:
         prompt_path = (
             Path(__file__).parent.parent.parent
             / "src"
-            / "pytest_aitest"
+            / "pytest_skill_engineering"
             / "prompts"
             / "coding_agent_analysis.md"
         )
@@ -54,7 +54,7 @@ class TestCodingAgentAnalysisPrompt:
         prompt_path = (
             Path(__file__).parent.parent.parent
             / "src"
-            / "pytest_aitest"
+            / "pytest_skill_engineering"
             / "prompts"
             / "coding_agent_analysis.md"
         )

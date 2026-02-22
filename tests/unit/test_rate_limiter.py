@@ -6,7 +6,11 @@ import time
 
 import pytest
 
-from pytest_aitest.execution.rate_limiter import RateLimiter, get_rate_limiter, reset_rate_limiters
+from pytest_skill_engineering.execution.rate_limiter import (
+    RateLimiter,
+    get_rate_limiter,
+    reset_rate_limiters,
+)
 
 
 class TestRateLimiter:

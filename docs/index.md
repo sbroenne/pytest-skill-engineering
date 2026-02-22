@@ -1,12 +1,12 @@
 ---
 title: "Test your AI interfaces. AI analyzes your results."
-description: "A pytest plugin for testing MCP servers, tools, system prompts, and agent skills with real LLMs. AI analyzes results and tells you what to fix."
+description: "A pytest plugin for testing MCP servers, tools, agent skills, and custom agents with real LLMs. AI analyzes results and tells you what to fix."
 icon: material/flask-outline
 ---
 
 # Test your AI interfaces. AI analyzes your results.
 
-A pytest plugin for validating whether language models can understand and operate your MCP servers, tools, prompts, and skills. AI analyzes your test results and tells you *what to fix*, not just *what failed*.
+A pytest plugin for validating whether language models can understand and operate your MCP servers, tools, prompts, skills, and custom agents. AI analyzes your test results and tells you *what to fix*, not just *what failed*.
 
 ## The Problem
 
@@ -15,23 +15,23 @@ Your MCP server passes all unit tests. Then an LLM tries to use it and:
 - Picks the wrong tool
 - Passes garbage parameters
 - Can't recover from errors
-- Ignores your system prompt instructions
+- Ignores the skill instructions you bundled with it
 
 **Why?** Because you tested the code, not the AI interface.
 
-For LLMs, your API isn't functions and types — it's **tool descriptions, system prompts, skills, and schemas**. These are what the LLM actually sees. Traditional tests can't validate them.
+For LLMs, your API isn't functions and types — it's **tool descriptions, agent skills, custom agent instructions, and schemas**. These are what the LLM actually sees. Traditional tests can't validate them.
 
 ## The Solution
 
-Write tests as natural language prompts. An **Agent** is your test harness — it combines an LLM provider, MCP servers, and optional configuration:
+Write tests as natural language prompts. An **Agent** is your test harness — it combines an LLM provider, MCP servers, and the configuration you want to evaluate:
 
 ```python
 async def test_balance_and_transfer(aitest_run, banking_server):
     agent = Agent(
         provider=Provider(model="azure/gpt-5-mini"),   # LLM provider
         mcp_servers=[banking_server],                  # MCP servers with tools
-        system_prompt="Be concise.",                   # System Prompt (optional)
         skill=financial_skill,                         # Agent Skill (optional)
+        custom_agents=[load_custom_agent("agents/advisor.agent.md")],  # Custom agents (optional)
     )
 
     result = await aitest_run(
@@ -43,17 +43,19 @@ async def test_balance_and_transfer(aitest_run, banking_server):
     assert result.tool_was_called("transfer")
 ```
 
-The agent runs your prompt, calls tools, and returns results. You assert on what happened. If the test fails, your tool descriptions need work — not your code.
+The agent runs your prompt, calls tools, and returns results. You assert on what happened. If the test fails, your tool descriptions or skill need work — not your code.
 
-This is **test-driven development for AI interfaces**: write a test, watch it fail, fix your tool descriptions until it passes, then let AI analysis tell you what else to improve. See [TDD for AI Interfaces](explanation/tdd-for-ai.md) for the full concept.
+This is **skill engineering**: design a test for what a user would say, watch the LLM fail, refine your tool descriptions until it passes, then let AI analysis tell you what else to optimize. See [Skill Engineering](explanation/skill-engineering.md) for the full concept.
 
 **What you're testing:**
 
 | Component | Question It Answers |
 |-----------|---------------------|
-| MCP Server | Can an LLM understand and use my tools? |
-| System Prompt | Does this behavior definition produce the results I want? |
+| MCP Server Tools | Can an LLM understand and use my tools? |
+| MCP Server Prompts | Do my bundled prompt templates render correctly and produce the right LLM behavior? |
+| Prompt Files (Slash Commands) | Does invoking `/my-command` produce the right agent behavior? |
 | Agent Skill | Does this domain knowledge help the agent perform? |
+| Custom Agent | Do my `.agent.md` instructions produce the right behavior and subagent dispatch? |
 
 ## What Makes This Different?
 
@@ -77,7 +79,7 @@ AI analyzes your test results and tells you **what to fix**, not just what faile
 ## Quick Start
 
 ```python
-from pytest_aitest import Agent, Provider, MCPServer
+from pytest_skill_engineering import Agent, Provider, MCPServer
 
 banking_server = MCPServer(command=["python", "banking_mcp.py"])
 
@@ -93,20 +95,23 @@ async def test_balance_check(aitest_run):
     assert result.tool_was_called("get_balance")
 ```
 
-> 📁 See [test_basic_usage.py](https://github.com/sbroenne/pytest-aitest/blob/main/tests/integration/test_basic_usage.py) for complete examples.
+> 📁 See [test_basic_usage.py](https://github.com/sbroenne/pytest-skill-engineering/blob/main/tests/integration/test_basic_usage.py) for complete examples.
 
 ## Features
 
-- **Test MCP Servers** — Verify LLMs can discover and use your tools
+- **MCP Server Testing** — Real models against real tool interfaces; verify LLMs can discover and use your tools
+- **MCP Server Prompts** — Test bundled prompt templates exposed via `prompts/list`; verify they render correctly and produce the right LLM behavior
+- **Prompt File Testing** — Test VS Code `.prompt.md` and Claude Code command files (slash commands) with `load_prompt_file()` / `load_prompt_files()`
 - **A/B Test Servers** — Compare MCP server versions or implementations
 - **Test CLI Tools** — Wrap command-line interfaces as testable servers
 - **Compare Models** — Benchmark different LLMs against your tools
-- **Compare System Prompts** — Find the system prompt that works best
-- **Multi-Turn Sessions** — Test conversations that build on context
 - **Agent Skills** — Add domain knowledge following [agentskills.io](https://agentskills.io)
-- **Coding Agent Testing** — Test real coding agents like GitHub Copilot via the SDK
+- **Custom Agents** — Test `.agent.md` custom agent files with `Agent.from_agent_file()` or load them as subagents in `CopilotAgent`; A/B test agent instruction versions
+- **Coding Agent Testing** — Test real coding agents like GitHub Copilot via the SDK (native OAuth, skill loading, exact user experience)
+- **Agent Leaderboard** — Auto-ranked by pass rate and cost; AI analysis tells you what to fix
+- **Multi-Turn Sessions** — Test conversations that build on context
 - **Copilot Model Provider** — Use `copilot/gpt-5-mini` for all LLM calls — zero Azure/OpenAI setup
-- **AI Analysis** — Tells you what to fix, not just what failed
+- **Clarification Detection** — Catch agents that ask questions instead of acting
 - **Semantic Assertions** — `llm_assert` for binary pass/fail checks on response content
 - **Multi-Dimension Scoring** — `llm_score` for granular quality measurement across named dimensions
 - **Image Assertions** — AI-graded visual evaluation of screenshots and visual tool output
@@ -115,13 +120,14 @@ async def test_balance_check(aitest_run):
 ## Installation
 
 ```bash
-uv add pytest-aitest
+uv add pytest-skill-engineering
 ```
 
 ## Who This Is For
 
 - **MCP server authors** — Validate tool descriptions work
 - **Agent builders** — Compare models and prompts
+- **Copilot skill and agent authors** — Test exactly what your users experience, before you ship
 - **Teams shipping AI systems** — Catch LLM-facing regressions
 
 ## Why pytest?

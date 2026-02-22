@@ -21,7 +21,7 @@ What you expected to happen.
 What actually happened.
 
 ## Environment
-- pytest-aitest version: 
+- pytest-skill-engineering version: 
 - Python version: 
 - OS: 
 - LLM provider/model: 

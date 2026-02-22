@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import pytest
 
-from pytest_aitest.reporting.collector import SuiteReport, TestReport
+from pytest_skill_engineering.reporting.collector import SuiteReport, TestReport
 
 pytestmark = [pytest.mark.integration]
 
@@ -50,7 +50,7 @@ class TestAIInsightsGeneration:
     @pytest.mark.asyncio
     async def test_insights_returns_markdown_string(self):
         """Insights should return a markdown string."""
-        from pytest_aitest.reporting.insights import generate_insights
+        from pytest_skill_engineering.reporting.insights import generate_insights
 
         tests = [
             _make_test_report("test_balance_check", "passed", model="gpt-5-mini"),
@@ -73,7 +73,7 @@ class TestAIInsightsGeneration:
     @pytest.mark.asyncio
     async def test_insights_contains_recommendation(self):
         """Insights markdown should contain recommendation section."""
-        from pytest_aitest.reporting.insights import generate_insights
+        from pytest_skill_engineering.reporting.insights import generate_insights
 
         tests = [
             _make_test_report("test_a", "passed", model="gpt-5-mini"),
@@ -98,7 +98,7 @@ class TestAIInsightsGeneration:
     @pytest.mark.asyncio
     async def test_insights_with_failures(self):
         """Insights should analyze failures when present."""
-        from pytest_aitest.reporting.insights import generate_insights
+        from pytest_skill_engineering.reporting.insights import generate_insights
 
         tests = [
             _make_test_report("test_passing", "passed", model="gpt-5-mini"),
@@ -123,7 +123,7 @@ class TestAIInsightsGeneration:
     @pytest.mark.asyncio
     async def test_insights_returns_metadata(self):
         """Insights should return analysis metadata."""
-        from pytest_aitest.reporting.insights import generate_insights
+        from pytest_skill_engineering.reporting.insights import generate_insights
 
         tests = [_make_test_report("test_one", "passed", model="gpt-5-mini")]
         suite = _make_suite_report(tests)
@@ -147,16 +147,16 @@ class TestPromptLoading:
 
     def test_report_analysis_prompt_loads(self):
         """The AI summary prompt should load successfully."""
-        from pytest_aitest.prompts import get_ai_summary_prompt
+        from pytest_skill_engineering.prompts import get_ai_summary_prompt
 
         prompt = get_ai_summary_prompt()
         assert prompt, "Prompt should not be empty"
-        assert "pytest-aitest" in prompt.lower() or "analysis" in prompt.lower()
+        assert "pytest-skill-engineering" in prompt.lower() or "analysis" in prompt.lower()
         assert len(prompt) > 100, "Prompt should have substantial content"
 
     def test_prompt_is_cached(self):
         """Prompt should be cached after first load."""
-        from pytest_aitest.prompts import get_ai_summary_prompt
+        from pytest_skill_engineering.prompts import get_ai_summary_prompt
 
         prompt1 = get_ai_summary_prompt()
         prompt2 = get_ai_summary_prompt()

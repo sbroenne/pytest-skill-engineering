@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from pytest_aitest.execution.pydantic_adapter import _apply_tool_filter
+from pytest_skill_engineering.execution.pydantic_adapter import _apply_tool_filter
 
 
 class TestApplyToolFilter:

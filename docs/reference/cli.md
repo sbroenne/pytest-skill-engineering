@@ -1,5 +1,5 @@
 ---
-description: "Command-line options for pytest-aitest: configure reports, AI analysis models, minimum pass rates, and more."
+description: "Command-line options for pytest-skill-engineering: configure reports, AI analysis models, minimum pass rates, and more."
 ---
 
 # CLI Options
@@ -35,7 +35,7 @@ Then just `pytest tests/` — reports are generated automatically.
 | `--llm-vision-model=MODEL` | Vision model for `llm_assert_image` assertions (defaults to `--llm-model`) | No |
 
 !!! note
-    **JSON is always generated** after every test run, even without `--aitest-summary-model`. HTML and Markdown reports require a summary model for AI-powered analysis. JSON output contains raw test data that can be used later to regenerate reports via `pytest-aitest-report`.
+    **JSON is always generated** after every test run, even without `--aitest-summary-model`. HTML and Markdown reports require a summary model for AI-powered analysis. JSON output contains raw test data that can be used later to regenerate reports via `pytest-skill-engineering-report`.
 
 ### CLI Examples
 
@@ -75,12 +75,12 @@ pytest tests/ \
     --aitest-print-analysis-prompt
 ```
 
-## pytest-aitest-report CLI
+## pytest-skill-engineering-report CLI
 
 Regenerate reports from saved JSON without re-running tests.
 
 ```bash
-pytest-aitest-report <json-file> [options]
+pytest-skill-engineering-report <json-file> [options]
 ```
 
 | Option | Description | Required |
@@ -93,28 +93,28 @@ pytest-aitest-report <json-file> [options]
 | `--compact` | Omit full conversation turns for passed tests (reduces tokens) | No |
 | `--print-analysis-prompt` | Print resolved analysis prompt source/path before summary generation | No |
 
-`--summary-model` can also be set via `AITEST_SUMMARY_MODEL` env var or `[tool.pytest-aitest-report]` in `pyproject.toml`.
+`--summary-model` can also be set via `AITEST_SUMMARY_MODEL` env var or `[tool.pytest-skill-engineering-report]` in `pyproject.toml`.
 
 ### Examples
 
 ```bash
 # Regenerate HTML from existing JSON (uses insights already in JSON)
-pytest-aitest-report results.json --html report.html
+pytest-skill-engineering-report results.json --html report.html
 
 # Generate Markdown report
-pytest-aitest-report results.json --md report.md
+pytest-skill-engineering-report results.json --md report.md
 
 # Generate both formats
-pytest-aitest-report results.json --html report.html --md report.md
+pytest-skill-engineering-report results.json --html report.html --md report.md
 
 # Generate with fresh AI analysis
-pytest-aitest-report results.json \
+pytest-skill-engineering-report results.json \
     --html report.html \
     --summary \
     --summary-model azure/gpt-5.2-chat
 
 # Debug which prompt source is used (file vs built-in)
-pytest-aitest-report results.json \
+pytest-skill-engineering-report results.json \
     --html report.html \
     --summary \
     --summary-model azure/gpt-5.2-chat \

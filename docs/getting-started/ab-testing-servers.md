@@ -21,7 +21,7 @@ A/B testing answers these questions with data.
 Compare two versions of your MCP server:
 
 ```python
-from pytest_aitest import Agent, Provider, MCPServer
+from pytest_skill_engineering import Agent, Provider, MCPServer
 
 # Two versions to compare
 banking_v1 = MCPServer(command=["python", "banking_v1.py"])
@@ -182,4 +182,4 @@ Description is clear and well-targeted.
 - [Comparing Configurations](comparing.md) — More comparison patterns
 - [Generate Reports](../how-to/generate-reports.md) — Get AI insights on your comparison
 
-> 📁 **Real Example:** [test_ab_servers.py](https://github.com/sbroenne/pytest-aitest/blob/main/tests/integration/test_ab_servers.py) — Server version comparison and tool description impact testing
+> 📁 **Real Example:** [test_ab_servers.py](https://github.com/sbroenne/pytest-skill-engineering/blob/main/tests/integration/test_ab_servers.py) — Server version comparison and tool description impact testing

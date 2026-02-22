@@ -12,10 +12,10 @@ from pathlib import Path
 
 import pytest
 
-from pytest_aitest.cli import load_suite_report
-from pytest_aitest.reporting.components import full_report
-from pytest_aitest.reporting.generator import _build_report_context
-from pytest_aitest.reporting.insights import InsightsResult
+from pytest_skill_engineering.cli import load_suite_report
+from pytest_skill_engineering.reporting.components import full_report
+from pytest_skill_engineering.reporting.generator import _build_report_context
+from pytest_skill_engineering.reporting.insights import InsightsResult
 
 FIXTURES_DIR = Path(__file__).parent.parent / "fixtures" / "reports"
 
@@ -465,4 +465,4 @@ class TestCrossCuttingFeatures:
     )
     def test_has_footer(self, fixture_name: str) -> None:
         html = _render_html(fixture_name)
-        assert "pytest-aitest" in html
+        assert "pytest-skill-engineering" in html

@@ -6,9 +6,9 @@ from pathlib import Path
 
 import pytest
 
-from pytest_aitest.core.result import AgentResult, ToolCall, Turn
-from pytest_aitest.reporting import SuiteReport, TestReport, generate_md
-from pytest_aitest.reporting.insights import InsightsResult
+from pytest_skill_engineering.core.result import AgentResult, ToolCall, Turn
+from pytest_skill_engineering.reporting import SuiteReport, TestReport, generate_md
+from pytest_skill_engineering.reporting.insights import InsightsResult
 
 
 @pytest.fixture
@@ -257,7 +257,7 @@ class TestGenerateMd:
         output = tmp_path / "report.md"
         generate_md(single_agent_suite, output, insights=insights)
         md = output.read_text(encoding="utf-8")
-        assert "pytest-aitest" in md
+        assert "pytest-skill-engineering" in md
         assert "---" in md
 
     def test_uses_docstring_as_display_name(
@@ -320,7 +320,7 @@ class TestGenerateMdCli:
     def test_generate_md_from_cli(self, tmp_path: Path) -> None:
         import json
 
-        from pytest_aitest.cli import main
+        from pytest_skill_engineering.cli import main
 
         json_data = {
             "schema_version": "3.0",
@@ -363,7 +363,7 @@ class TestGenerateMdCli:
         """Report generation fails when JSON has no AI insights."""
         import json
 
-        from pytest_aitest.cli import main
+        from pytest_skill_engineering.cli import main
 
         json_data = {
             "schema_version": "3.0",
@@ -396,7 +396,7 @@ class TestGenerateMdCli:
     def test_no_output_format_fails(self, tmp_path: Path) -> None:
         import json
 
-        from pytest_aitest.cli import main
+        from pytest_skill_engineering.cli import main
 
         json_data = {
             "schema_version": "3.0",
@@ -416,7 +416,7 @@ class TestGenerateMdCli:
     def test_both_html_and_md(self, tmp_path: Path) -> None:
         import json
 
-        from pytest_aitest.cli import main
+        from pytest_skill_engineering.cli import main
 
         json_data = {
             "schema_version": "3.0",

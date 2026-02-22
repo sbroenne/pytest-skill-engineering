@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from pytest_aitest.copilot.agents import (
+from pytest_skill_engineering.copilot.agents import (
     _extract_frontmatter,
     _name_from_path,
     load_custom_agent,

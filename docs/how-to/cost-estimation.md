@@ -4,7 +4,7 @@ description: "Configure cost estimation for accurate spending analysis. Use lite
 
 # Cost Estimation
 
-pytest-aitest estimates the USD cost of each LLM call based on token counts and model pricing data. Costs appear in reports, agent leaderboards, and AI insights analysis.
+pytest-skill-engineering estimates the USD cost of each LLM call based on token counts and model pricing data. Costs appear in reports, agent leaderboards, and AI insights analysis.
 
 ## How It Works
 
@@ -21,7 +21,7 @@ If no pricing is found in any source, the cost is `$0.00` and the model is flagg
 Most models work out of the box via litellm. No configuration needed:
 
 ```python
-from pytest_aitest import Agent, Provider
+from pytest_skill_engineering import Agent, Provider
 
 agent = Agent(
     provider=Provider(model="azure/gpt-5-mini"),  # ✅ litellm has pricing

@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import pytest
 
-from pytest_aitest import Agent, CLIServer, Provider
+from pytest_skill_engineering import Agent, CLIServer, Provider
 
 pytestmark = [pytest.mark.integration]
 
@@ -42,7 +42,7 @@ async def test_cli_echo_basic(aitest_run):
 async def test_cli_echo_with_reasoning(aitest_run, llm_assert):
     """CLI tool with reasoning — echo and explain."""
     result = await aitest_run(
-        agent, "Use the echo command to say 'pytest-aitest works' and confirm it worked"
+        agent, "Use the echo command to say 'pytest-skill-engineering works' and confirm it worked"
     )
     assert result.success
     assert result.tool_was_called("echo_execute")

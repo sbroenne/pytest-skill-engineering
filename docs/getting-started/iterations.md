@@ -86,7 +86,7 @@ The report generator groups these by test name + agent and computes aggregated m
 
 ## Combining with Other Features
 
-Iterations work seamlessly with all other pytest-aitest features:
+Iterations work seamlessly with all other pytest-skill-engineering features:
 
 ### With Model Comparison
 
@@ -143,4 +143,4 @@ pytest tests/ --aitest-iterations=3 --aitest-min-pass-rate=80
 - [Generate Reports](../how-to/generate-reports.md) — Report generation details
 
 > **Real Examples:**
-> - [test_iterations.py](https://github.com/sbroenne/pytest-aitest/blob/main/tests/integration/test_iterations.py) — Iteration baseline tests
+> - [test_iterations.py](https://github.com/sbroenne/pytest-skill-engineering/blob/main/tests/integration/test_iterations.py) — Iteration baseline tests

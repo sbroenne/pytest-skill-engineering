@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from pytest_aitest.core.agent import Agent, MCPServer, Provider, Wait
-from pytest_aitest.core.result import AgentResult, SkillInfo, ToolCall, Turn
-from pytest_aitest.plugin import _add_junit_properties
+from pytest_skill_engineering.core.agent import Agent, MCPServer, Provider, Wait
+from pytest_skill_engineering.core.result import AgentResult, SkillInfo, ToolCall, Turn
+from pytest_skill_engineering.plugin import _add_junit_properties
 
 
 @dataclass

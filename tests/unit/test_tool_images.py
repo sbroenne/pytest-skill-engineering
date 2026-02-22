@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from pytest_aitest.core.result import AgentResult, ImageContent, ToolCall, Turn
+from pytest_skill_engineering.core.result import AgentResult, ImageContent, ToolCall, Turn
 
 
 class TestImageContent:

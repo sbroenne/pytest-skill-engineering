@@ -1,10 +1,10 @@
 ---
-description: "How to release a new version of pytest-aitest"
+description: "How to release a new version of pytest-skill-engineering"
 ---
 
 # Releasing
 
-This guide explains how to create a new release of pytest-aitest.
+This guide explains how to create a new release of pytest-skill-engineering.
 
 ## Release Process
 
@@ -12,7 +12,7 @@ Releases are triggered via **GitHub Actions workflow dispatch**. No manual taggi
 
 ### Steps
 
-1. Navigate to [Actions → Release](https://github.com/sbroenne/pytest-aitest/actions/workflows/release.yml)
+1. Navigate to [Actions → Release](https://github.com/sbroenne/pytest-skill-engineering/actions/workflows/release.yml)
 2. Click **"Run workflow"**
 3. Select the branch (typically `main`)
 4. Choose the version bump type:

@@ -36,7 +36,7 @@ import sys
 
 import pytest
 
-from pytest_aitest import Agent, MCPServer, Provider, Wait
+from pytest_skill_engineering import Agent, MCPServer, Provider, Wait
 
 from .conftest import BENCHMARK_MODELS, DEFAULT_RPM, DEFAULT_TPM
 
@@ -79,7 +79,7 @@ def banking_server():
         - Savings: $3,000.00
     """
     return MCPServer(
-        command=[sys.executable, "-u", "-m", "pytest_aitest.testing.banking_mcp"],
+        command=[sys.executable, "-u", "-m", "pytest_skill_engineering.testing.banking_mcp"],
         wait=Wait.for_tools(["get_balance", "transfer", "get_transactions"]),
     )
 

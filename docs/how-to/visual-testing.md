@@ -8,7 +8,7 @@ Validate HTML report rendering and UI interactions using Playwright browser auto
 
 ## Overview
 
-pytest-aitest includes a comprehensive visual test suite that verifies:
+pytest-skill-engineering includes a comprehensive visual test suite that verifies:
 
 - **Report Rendering** — Headers, metrics, sections display correctly
 - **UI Interactions** — Expand/collapse, filters, agent selector toggling

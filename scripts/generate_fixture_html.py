@@ -21,9 +21,11 @@ from pathlib import Path
 ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
-from pytest_aitest.cli import load_suite_report  # noqa: E402
-from pytest_aitest.reporting.generator import generate_html as _generate_html  # noqa: E402
-from pytest_aitest.reporting.generator import generate_md as _generate_md  # noqa: E402
+from pytest_skill_engineering.cli import load_suite_report  # noqa: E402
+from pytest_skill_engineering.reporting.generator import (
+    generate_html as _generate_html,  # noqa: E402
+)
+from pytest_skill_engineering.reporting.generator import generate_md as _generate_md  # noqa: E402
 
 FIXTURES_DIR = ROOT / "tests" / "fixtures" / "reports"
 # Output to docs/reports for public viewing (tracked in git)

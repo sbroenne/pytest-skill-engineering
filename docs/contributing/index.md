@@ -1,17 +1,17 @@
 ---
-description: "Contribute to pytest-aitest: development setup, coding standards, and project architecture."
+description: "Contribute to pytest-skill-engineering: development setup, coding standards, and project architecture."
 ---
 
 # Contributing
 
-Resources for contributors and developers working on pytest-aitest itself.
+Resources for contributors and developers working on pytest-skill-engineering itself.
 
 ## Development Setup
 
 1. Clone and install:
     ```bash
-    git clone https://github.com/sbroenne/pytest-aitest.git
-    cd pytest-aitest
+    git clone https://github.com/sbroenne/pytest-skill-engineering.git
+    cd pytest-skill-engineering
     uv sync --all-extras
     pre-commit install
     ```
@@ -23,7 +23,7 @@ Resources for contributors and developers working on pytest-aitest itself.
     pytest tests/integration/ -v  # Integration tests (requires LLM credentials)
     ```
 
-All PRs are **squash merged**. See [CONTRIBUTING.md](https://github.com/sbroenne/pytest-aitest/blob/main/CONTRIBUTING.md) for the full guide.
+All PRs are **squash merged**. See [CONTRIBUTING.md](https://github.com/sbroenne/pytest-skill-engineering/blob/main/CONTRIBUTING.md) for the full guide.
 
 ## Guides
 

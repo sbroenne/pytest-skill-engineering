@@ -128,7 +128,7 @@ jobs:
 
       - name: Verify installation
         run: |
-          python -c "from pytest_aitest import plugin; print('Import successful')"
+          python -c "from pytest_skill_engineering import plugin; print('Import successful')"
 
   create-tag:
     name: Create Git Tag
@@ -166,7 +166,7 @@ jobs:
     needs: [build, test, create-tag]
     environment:
       name: pypi
-      url: https://pypi.org/project/pytest-aitest/
+      url: https://pypi.org/project/pytest-skill-engineering/
     permissions:
       id-token: write
     steps:

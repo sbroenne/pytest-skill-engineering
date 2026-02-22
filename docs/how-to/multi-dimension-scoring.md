@@ -18,7 +18,7 @@ Use `llm_assert` for binary assertions ("does the response mention X?"). Use `ll
 ## Quick Start
 
 ```python
-from pytest_aitest import ScoringDimension, assert_score
+from pytest_skill_engineering import ScoringDimension, assert_score
 
 RUBRIC = [
     ScoringDimension("accuracy", "Factually correct"),
@@ -51,7 +51,7 @@ A rubric is a list of `ScoringDimension` objects. Each dimension has:
 | `weight` | `float` | `1.0` | Relative weight for composite score |
 
 ```python
-from pytest_aitest import ScoringDimension
+from pytest_skill_engineering import ScoringDimension
 
 RUBRIC = [
     ScoringDimension(
@@ -141,7 +141,7 @@ print(result.reasoning)
 Use `assert_score()` for clean threshold checks:
 
 ```python
-from pytest_aitest import assert_score
+from pytest_skill_engineering import assert_score
 
 # Minimum total score
 assert_score(result, min_total=10)
@@ -195,7 +195,7 @@ Compare agent variants by scoring both on the same rubric:
 
 ```python
 import pytest
-from pytest_aitest import Agent, Provider, ScoringDimension, assert_score
+from pytest_skill_engineering import Agent, Provider, ScoringDimension, assert_score
 
 RUBRIC = [
     ScoringDimension("accuracy", "Factually correct"),
@@ -221,7 +221,7 @@ async def test_plan_quality(aitest_run, agent, llm_score):
     assert_score(scores, min_total=10)
 ```
 
-The pytest-aitest HTML report shows scores per agent for comparison.
+The pytest-skill-engineering HTML report shows scores per agent for comparison.
 
 ## Judge Model Configuration
 
@@ -232,7 +232,7 @@ The judge model is resolved in this order:
 3. `openai/gpt-5-mini` as final fallback
 
 ```bash
-# GitHub Copilot (no extra setup if pytest-aitest[copilot] installed)
+# GitHub Copilot (no extra setup if pytest-skill-engineering[copilot] installed)
 pytest --llm-model=copilot/gpt-5-mini
 
 # Azure OpenAI
@@ -250,7 +250,7 @@ pytest --aitest-summary-model=azure/gpt-5.2-chat
 from pathlib import Path
 
 import pytest
-from pytest_aitest import ScoringDimension, assert_score
+from pytest_skill_engineering import ScoringDimension, assert_score
 
 RUBRIC = [
     ScoringDimension(

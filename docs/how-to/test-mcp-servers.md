@@ -1,5 +1,5 @@
 ---
-description: "Test MCP servers with real LLMs. Verify tool discovery, parameter handling, and error recovery using pytest-aitest."
+description: "Test MCP servers with real LLMs. Verify tool discovery, parameter handling, and error recovery using pytest-skill-engineering."
 ---
 
 # How to Test MCP Servers
@@ -8,7 +8,7 @@ Test your Model Context Protocol (MCP) servers by running LLM agents against the
 
 ## How It Works
 
-pytest-aitest uses the [official MCP Python SDK](https://github.com/modelcontextprotocol/python-sdk) to connect to MCP servers:
+pytest-skill-engineering uses the [official MCP Python SDK](https://github.com/modelcontextprotocol/python-sdk) to connect to MCP servers:
 
 1. **Connects** to the server via stdio, SSE, or Streamable HTTP transport
 2. **Discovers tools** via MCP protocol
@@ -17,7 +17,7 @@ pytest-aitest uses the [official MCP Python SDK](https://github.com/modelcontext
 
 ## Transports
 
-pytest-aitest supports all three MCP transports.
+pytest-skill-engineering supports all three MCP transports.
 
 ### stdio (default)
 
@@ -25,7 +25,7 @@ Launches a local subprocess and communicates via stdin/stdout:
 
 ```python
 import pytest
-from pytest_aitest import MCPServer, Wait
+from pytest_skill_engineering import MCPServer, Wait
 
 @pytest.fixture(scope="module")
 def banking_server():
@@ -109,7 +109,7 @@ MCPServer(
 
 ### Wait Strategies
 
-Control how pytest-aitest waits for the server to be ready.
+Control how pytest-skill-engineering waits for the server to be ready.
 
 **Wait.ready()** — Wait briefly for the process to start (default):
 
@@ -167,7 +167,7 @@ def api_server():
 
 ```python
 import pytest
-from pytest_aitest import Agent, MCPServer, Provider, Wait
+from pytest_skill_engineering import Agent, MCPServer, Provider, Wait
 
 @pytest.fixture(scope="module")
 def banking_server():
@@ -238,6 +238,60 @@ def balance_agent(banking_server):
         allowed_tools=["get_balance", "get_all_balances"],
         system_prompt="You check account balances.",
     )
+```
+
+## MCP Server Prompts
+
+MCP servers can bundle **prompt templates** alongside their tools — reusable message templates that surface in VS Code as slash commands (e.g. `/mcp.servername.code_review`). pytest-skill-engineering can discover and test these.
+
+Use `MCPServerProcess` directly to interact with the MCP protocol:
+
+```python
+import pytest
+from pytest_skill_engineering import Agent, MCPPrompt, MCPServer, Provider
+from pytest_skill_engineering.execution.servers import MCPServerProcess
+
+@pytest.fixture(scope="module")
+async def server_process(banking_server):
+    """Start the server and expose the raw MCP session."""
+    proc = MCPServerProcess(banking_server)
+    await proc.start()
+    yield proc
+    await proc.stop()
+
+async def test_prompts_are_discoverable(server_process):
+    """The server exposes the expected prompt templates."""
+    prompts = await server_process.list_prompts()
+    names = [p.name for p in prompts]
+    assert "balance_summary" in names
+
+async def test_balance_summary_prompt(aitest_run, server_process, banking_server):
+    """The balance_summary prompt produces a coherent LLM response."""
+    # Render the template (like VS Code does when user invokes the slash command)
+    messages = await server_process.get_prompt(
+        "balance_summary",
+        {"account_type": "checking"},
+    )
+    assert messages, "Prompt returned no messages"
+
+    # Run the rendered prompt through the LLM
+    agent = Agent(
+        provider=Provider(model="azure/gpt-5-mini"),
+        mcp_servers=[banking_server],
+    )
+    result = await aitest_run(agent, messages[0]["content"])
+    assert result.success
+```
+
+### What `get_prompt` Returns
+
+`get_prompt` returns a list of `{"role": str, "content": str}` dicts — the assembled messages the MCP server produces for that template. Use `messages[0]["content"]` as the test prompt, or assert on the rendered content directly:
+
+```python
+messages = await server_process.get_prompt("code_review", {"code": "def hello(): ..."})
+# Structural assertion: prompt was rendered
+assert len(messages) > 0
+assert "hello" in messages[0]["content"]  # Template filled argument in
 ```
 
 ## Troubleshooting

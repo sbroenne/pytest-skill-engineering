@@ -1,8 +1,8 @@
-"""Tests for pytest-aitest result models."""
+"""Tests for pytest-skill-engineering result models."""
 
 from __future__ import annotations
 
-from pytest_aitest.core.result import AgentResult, ToolCall, Turn
+from pytest_skill_engineering.core.result import AgentResult, ToolCall, Turn
 
 
 class TestToolCall:

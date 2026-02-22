@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-from pytest_aitest import Agent, Provider, Skill
+from pytest_skill_engineering import Agent, Provider, Skill
 
 from .conftest import DEFAULT_MAX_TURNS, DEFAULT_MODEL, DEFAULT_RPM, DEFAULT_TPM
 

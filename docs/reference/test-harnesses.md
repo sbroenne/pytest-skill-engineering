@@ -38,13 +38,13 @@ Stateful task management for testing CRUD operations.
 
 ```python
 import sys
-from pytest_aitest import Agent, Provider, MCPServer, Wait
-from pytest_aitest.testing import TodoStore
+from pytest_skill_engineering import Agent, Provider, MCPServer, Wait
+from pytest_skill_engineering.testing import TodoStore
 
 @pytest.fixture(scope="module")
 def todo_server():
     return MCPServer(
-        command=[sys.executable, "-m", "pytest_aitest.testing.todo_mcp"],
+        command=[sys.executable, "-m", "pytest_skill_engineering.testing.todo_mcp"],
         wait=Wait.for_tools(["add_task", "list_tasks", "complete_task"]),
     )
 
@@ -74,7 +74,7 @@ async def test_add_and_complete(aitest_run, todo_agent):
 ### Direct Usage
 
 ```python
-from pytest_aitest.testing import TodoStore
+from pytest_skill_engineering.testing import TodoStore
 
 store = TodoStore()
 
@@ -121,12 +121,12 @@ Stateful banking service for multi-turn session testing.
 
 ```python
 import sys
-from pytest_aitest import Agent, Provider, MCPServer, Wait
+from pytest_skill_engineering import Agent, Provider, MCPServer, Wait
 
 @pytest.fixture(scope="module")
 def banking_server():
     return MCPServer(
-        command=[sys.executable, "-m", "pytest_aitest.testing.banking_mcp"],
+        command=[sys.executable, "-m", "pytest_skill_engineering.testing.banking_mcp"],
         wait=Wait.for_tools(["get_balance", "transfer", "get_transactions"]),
     )
 
@@ -163,7 +163,7 @@ class TestBankingWorkflow:
 ### Direct Usage
 
 ```python
-from pytest_aitest.testing.banking import BankingService
+from pytest_skill_engineering.testing.banking import BankingService
 
 service = BankingService()
 
@@ -183,7 +183,7 @@ print(result.value["total_formatted"])  # "$4,500.00"
 
 ```python
 from dataclasses import dataclass
-from pytest_aitest.testing.types import ToolResult
+from pytest_skill_engineering.testing.types import ToolResult
 
 @dataclass
 class MyStore:

@@ -9,7 +9,7 @@ Wrap command-line tools as MCP-like servers for testing CLI-based interfaces.
 ## Basic Setup
 
 ```python
-from pytest_aitest import CLIServer
+from pytest_skill_engineering import CLIServer
 
 @pytest.fixture(scope="module")
 def git_server():
@@ -153,7 +153,7 @@ Tool results are JSON with structured output:
 
 ```python
 import pytest
-from pytest_aitest import Agent, CLIServer, Provider
+from pytest_skill_engineering import Agent, CLIServer, Provider
 
 @pytest.fixture(scope="module")
 def git_server():
@@ -267,4 +267,4 @@ CLIServer(
 )
 ```
 
-> 📁 **Real Example:** [test_cli_server.py](https://github.com/sbroenne/pytest-aitest/blob/main/tests/integration/test_cli_server.py) — CLI server testing with ls and cat commands
+> 📁 **Real Example:** [test_cli_server.py](https://github.com/sbroenne/pytest-skill-engineering/blob/main/tests/integration/test_cli_server.py) — CLI server testing with ls and cat commands

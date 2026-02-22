@@ -1,6 +1,6 @@
 """Hero test suite for README showcase.
 
-A lean banking scenario demonstrating ALL pytest-aitest capabilities
+A lean banking scenario demonstrating ALL pytest-skill-engineering capabilities
 with minimal test count for fast execution:
 
 1. Model Comparison - 3 core tests across 2 models -> agent leaderboard
@@ -20,7 +20,7 @@ from pathlib import Path
 
 import pytest
 
-from pytest_aitest import Agent, MCPServer, Provider, Skill, Wait, load_system_prompts
+from pytest_skill_engineering import Agent, MCPServer, Provider, Skill, Wait, load_system_prompts
 
 # Mark all tests as showcase
 pytestmark = [pytest.mark.showcase]
@@ -58,7 +58,7 @@ based on the tool's output. If an operation fails, explain why and suggest alter
 # =============================================================================
 
 BANKING_SERVER = MCPServer(
-    command=[sys.executable, "-u", "-m", "pytest_aitest.testing.banking_mcp"],
+    command=[sys.executable, "-u", "-m", "pytest_skill_engineering.testing.banking_mcp"],
     wait=Wait.for_tools(
         [
             "get_balance",

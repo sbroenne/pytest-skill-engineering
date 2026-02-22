@@ -22,7 +22,7 @@ Use the `@pytest.mark.session` marker:
 
 ```python
 import pytest
-from pytest_aitest import Agent, Provider, MCPServer
+from pytest_skill_engineering import Agent, Provider, MCPServer
 
 banking_server = MCPServer(command=["python", "banking_mcp.py"])
 
@@ -136,4 +136,4 @@ The report shows each session as a complete flow with all turns visualized.
 - [Comparing Configurations](comparing.md) — Pattern for parametrized tests
 - [Generate Reports](../how-to/generate-reports.md) — Understand report output
 
-> 📁 **Real Example:** [test_sessions.py](https://github.com/sbroenne/pytest-aitest/blob/main/tests/integration/test_sessions.py) — Banking workflow with session continuity
+> 📁 **Real Example:** [test_sessions.py](https://github.com/sbroenne/pytest-skill-engineering/blob/main/tests/integration/test_sessions.py) — Banking workflow with session continuity

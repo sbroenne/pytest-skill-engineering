@@ -1,10 +1,10 @@
 ---
-description: "Complete end-to-end example demonstrating all pytest-aitest capabilities in a banking scenario: multi-agent testing, sessions, skills, and AI analysis."
+description: "Complete end-to-end example demonstrating all pytest-skill-engineering capabilities in a banking scenario: multi-agent testing, sessions, skills, and AI analysis."
 ---
 
 # Complete Example: Tying It All Together
 
-This guide walks through the **hero test suite** — a comprehensive example demonstrating all pytest-aitest capabilities in a single, cohesive banking scenario.
+This guide walks through the **hero test suite** — a comprehensive example demonstrating all pytest-skill-engineering capabilities in a single, cohesive banking scenario.
 
 !!! tip "Generate the Report"
     Run `pytest tests/showcase/ -v --aitest-html=report.html` to generate the hero report.
@@ -245,7 +245,7 @@ system_prompt: |
 Then parametrize tests with them:
 
 ```python
-from pytest_aitest import load_prompts
+from pytest_skill_engineering import load_prompts
 
 ADVISOR_PROMPTS = load_prompts(Path(__file__).parent / "prompts")
 

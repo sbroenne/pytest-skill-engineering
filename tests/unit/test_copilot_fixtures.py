@@ -6,8 +6,8 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from pytest_aitest.copilot.agent import CopilotAgent
-from pytest_aitest.copilot.result import CopilotResult
+from pytest_skill_engineering.copilot.agent import CopilotAgent
+from pytest_skill_engineering.copilot.result import CopilotResult
 
 
 def _make_result(success: bool = True) -> CopilotResult:
@@ -20,7 +20,9 @@ class TestAbRunFixture:
     @pytest.fixture(autouse=True)
     def _no_stash(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Prevent ab_run from registering test reports in the plugin stash."""
-        monkeypatch.setattr("pytest_aitest.copilot.fixtures.stash_on_item", lambda *a: None)
+        monkeypatch.setattr(
+            "pytest_skill_engineering.copilot.fixtures.stash_on_item", lambda *a: None
+        )
 
     @pytest.fixture
     def baseline_agent(self) -> CopilotAgent:
@@ -38,7 +40,7 @@ class TestAbRunFixture:
         treatment_result = _make_result(success=True)
 
         with patch(
-            "pytest_aitest.copilot.fixtures.run_copilot",
+            "pytest_skill_engineering.copilot.fixtures.run_copilot",
             new=AsyncMock(side_effect=[baseline_result, treatment_result]),
         ):
             b, t = await ab_run(baseline_agent, treatment_agent, "Write math.py")
@@ -58,7 +60,7 @@ class TestAbRunFixture:
             captured_agents.append(agent)
             return _make_result()
 
-        with patch("pytest_aitest.copilot.fixtures.run_copilot", side_effect=_capture):
+        with patch("pytest_skill_engineering.copilot.fixtures.run_copilot", side_effect=_capture):
             await ab_run(baseline_agent, treatment_agent, "some task")
 
         baseline_dir = tmp_path / "baseline"
@@ -77,7 +79,7 @@ class TestAbRunFixture:
             captured.append(agent)
             return _make_result()
 
-        with patch("pytest_aitest.copilot.fixtures.run_copilot", side_effect=_capture):
+        with patch("pytest_skill_engineering.copilot.fixtures.run_copilot", side_effect=_capture):
             await ab_run(original_baseline, original_treatment, "task")
 
         assert captured[0].working_directory == str(tmp_path / "baseline")
@@ -94,7 +96,7 @@ class TestAbRunFixture:
             captured.append(agent)
             return _make_result()
 
-        with patch("pytest_aitest.copilot.fixtures.run_copilot", side_effect=_capture):
+        with patch("pytest_skill_engineering.copilot.fixtures.run_copilot", side_effect=_capture):
             await ab_run(baseline, treatment, "task")
 
         assert captured[0].working_directory == str(tmp_path / "baseline")
@@ -111,7 +113,7 @@ class TestAbRunFixture:
         baseline = CopilotAgent(name="baseline")
         treatment = CopilotAgent(name="treatment")
 
-        with patch("pytest_aitest.copilot.fixtures.run_copilot", side_effect=_capture):
+        with patch("pytest_skill_engineering.copilot.fixtures.run_copilot", side_effect=_capture):
             await ab_run(baseline, treatment, "task")
 
         assert call_order == ["baseline", "treatment"]
@@ -122,7 +124,7 @@ class TestAbRunFixture:
         original_treatment = CopilotAgent(name="t", working_directory=None)
 
         with patch(
-            "pytest_aitest.copilot.fixtures.run_copilot",
+            "pytest_skill_engineering.copilot.fixtures.run_copilot",
             new=AsyncMock(return_value=_make_result()),
         ):
             await ab_run(original_baseline, original_treatment, "task")
@@ -138,10 +140,10 @@ class TestAbRunFixture:
 
         with (
             patch(
-                "pytest_aitest.copilot.fixtures.run_copilot",
+                "pytest_skill_engineering.copilot.fixtures.run_copilot",
                 new=AsyncMock(side_effect=[_make_result(), treatment_result]),
             ),
-            patch("pytest_aitest.copilot.fixtures.stash_on_item") as mock_stash,
+            patch("pytest_skill_engineering.copilot.fixtures.stash_on_item") as mock_stash,
         ):
             await ab_run(CopilotAgent(name="baseline"), treatment, "task")
 
@@ -158,7 +160,7 @@ class TestAbRunFixture:
             captured_tasks.append(task)
             return _make_result()
 
-        with patch("pytest_aitest.copilot.fixtures.run_copilot", side_effect=_capture):
+        with patch("pytest_skill_engineering.copilot.fixtures.run_copilot", side_effect=_capture):
             await ab_run(CopilotAgent(), CopilotAgent(), "my specific task")
 
         assert captured_tasks == ["my specific task", "my specific task"]

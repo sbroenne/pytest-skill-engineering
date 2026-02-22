@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from pytest_aitest.core.result import AgentResult, ToolCall, Turn
-from pytest_aitest.reporting.collector import SuiteReport
-from pytest_aitest.reporting.collector import TestReport as ReportTest
-from pytest_aitest.reporting.insights import _build_analysis_input
+from pytest_skill_engineering.core.result import AgentResult, ToolCall, Turn
+from pytest_skill_engineering.reporting.collector import SuiteReport
+from pytest_skill_engineering.reporting.collector import TestReport as ReportTest
+from pytest_skill_engineering.reporting.insights import _build_analysis_input
 
 
 class TestBuildAnalysisInput:

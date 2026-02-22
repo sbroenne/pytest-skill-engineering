@@ -7,7 +7,7 @@ SDK itself, not agent behavior.
 Covered properties:
     result.reasoning_traces     — reasoning effort configuration works
     result.usage                — token counts and cost are captured
-    result.token_usage          — pytest-aitest compatible dict format
+    result.token_usage          — pytest-skill-engineering compatible dict format
     result.raw_events           — full event stream captured for debugging
     result.model_used           — model selection is reflected in result
 """
@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import pytest
 
-from pytest_aitest.copilot.agent import CopilotAgent
+from pytest_skill_engineering.copilot.agent import CopilotAgent
 
 
 @pytest.mark.copilot
@@ -65,9 +65,9 @@ class TestUsageTracking:
         )
 
     async def test_token_usage_dict_is_aitest_compatible(self, copilot_run, tmp_path):
-        """token_usage property returns a pytest-aitest compatible dict.
+        """token_usage property returns a pytest-skill-engineering compatible dict.
 
-        pytest-aitest reads prompt/completion/total keys from this dict
+        pytest-skill-engineering reads prompt/completion/total keys from this dict
         for its AI analysis report. The keys must match exactly.
         """
         agent = CopilotAgent(

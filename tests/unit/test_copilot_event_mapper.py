@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
-from pytest_aitest.copilot.events import EventMapper
+from pytest_skill_engineering.copilot.events import EventMapper
 
 
 def _make_event(event_type: str, **data_fields) -> SimpleNamespace:

@@ -1,4 +1,4 @@
-"""Tests for pytest-aitest reporting module."""
+"""Tests for pytest-skill-engineering reporting module."""
 
 from __future__ import annotations
 
@@ -6,15 +6,15 @@ from pathlib import Path
 
 import pytest
 
-from pytest_aitest.core.result import AgentResult, ToolCall, Turn
-from pytest_aitest.reporting import (
+from pytest_skill_engineering.core.result import AgentResult, ToolCall, Turn
+from pytest_skill_engineering.reporting import (
     SuiteReport,
     TestReport,
     build_suite_report,
     generate_html,
     generate_mermaid_sequence,
 )
-from pytest_aitest.reporting.insights import InsightsResult
+from pytest_skill_engineering.reporting.insights import InsightsResult
 
 _TEST_INSIGHTS = InsightsResult(
     markdown_summary="Test insights.",

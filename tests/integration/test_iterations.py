@@ -12,7 +12,7 @@ import sys
 
 import pytest
 
-from pytest_aitest import Agent, MCPServer, Provider, Wait
+from pytest_skill_engineering import Agent, MCPServer, Provider, Wait
 
 from .conftest import BANKING_PROMPT, DEFAULT_MAX_TURNS, DEFAULT_MODEL, DEFAULT_RPM, DEFAULT_TPM
 
@@ -29,7 +29,7 @@ def banking_server():
             sys.executable,
             "-u",
             "-m",
-            "pytest_aitest.testing.banking_mcp",
+            "pytest_skill_engineering.testing.banking_mcp",
         ],
         wait=Wait.for_tools(["get_balance", "get_all_balances", "transfer"]),
     )

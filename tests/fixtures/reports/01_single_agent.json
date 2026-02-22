@@ -1,5 +1,5 @@
 {
-  "name": "pytest-aitest",
+  "name": "pytest-skill-engineering",
   "timestamp": "2026-02-07T19:19:20.752801",
   "duration_ms": 37155.369799991604,
   "tests": [
@@ -103,7 +103,7 @@
                 "account"
               ]
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "get_all_balances",
@@ -112,7 +112,7 @@
               "type": "object",
               "properties": {}
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "transfer",
@@ -147,7 +147,7 @@
                 "amount"
               ]
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "deposit",
@@ -173,7 +173,7 @@
                 "amount"
               ]
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "withdraw",
@@ -199,7 +199,7 @@
                 "amount"
               ]
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "get_transactions",
@@ -222,7 +222,7 @@
                 }
               }
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           }
         ],
         "skill_info": null,
@@ -347,7 +347,7 @@
                 "account"
               ]
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "get_all_balances",
@@ -356,7 +356,7 @@
               "type": "object",
               "properties": {}
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "transfer",
@@ -391,7 +391,7 @@
                 "amount"
               ]
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "deposit",
@@ -417,7 +417,7 @@
                 "amount"
               ]
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "withdraw",
@@ -443,7 +443,7 @@
                 "amount"
               ]
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "get_transactions",
@@ -466,7 +466,7 @@
                 }
               }
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           }
         ],
         "skill_info": null,
@@ -589,7 +589,7 @@
                 "account"
               ]
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "get_all_balances",
@@ -598,7 +598,7 @@
               "type": "object",
               "properties": {}
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "transfer",
@@ -633,7 +633,7 @@
                 "amount"
               ]
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "deposit",
@@ -659,7 +659,7 @@
                 "amount"
               ]
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "withdraw",
@@ -685,7 +685,7 @@
                 "amount"
               ]
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "get_transactions",
@@ -708,7 +708,7 @@
                 }
               }
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           }
         ],
         "skill_info": null,
@@ -820,7 +820,7 @@
                 "account"
               ]
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "get_all_balances",
@@ -829,7 +829,7 @@
               "type": "object",
               "properties": {}
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "transfer",
@@ -864,7 +864,7 @@
                 "amount"
               ]
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "deposit",
@@ -890,7 +890,7 @@
                 "amount"
               ]
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "withdraw",
@@ -916,7 +916,7 @@
                 "amount"
               ]
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "get_transactions",
@@ -939,7 +939,7 @@
                 }
               }
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           }
         ],
         "skill_info": null,
@@ -962,7 +962,7 @@
   "suite_docstring": "Single agent tests - basic report without comparison UI.",
   "schema_version": "3.0",
   "insights": {
-    "markdown_summary": "## \ud83c\udfaf Recommendation\n\n**Deploy: banking-agent (gpt-5-mini, default prompt)**\n\n**Reasoning:** Achieves a 75% pass rate (3/4) at very low cost ($0.002151 total across all tests). All core single-step banking actions (balance, transfer, transactions) pass reliably and use tools correctly. The only failure is due to a configured turn limit, not tool misuse or model behavior.\n\n**Alternatives:** None \u2014 only one configuration tested.\n\n## \u274c Failure Analysis\n\n### Test that fails due to turn limit \u2014 for report variety. (banking-agent)\n- **Problem:** The agent could not complete a multi-step request (check balances \u2192 transfer \u2192 show updated balances \u2192 show transactions) because the test enforces `max_turns=1`.\n- **Root Cause:** Test configuration limits the session to a single turn, but the user request explicitly requires multiple tool calls and responses. The agent correctly initiated the first step (`get_all_balances`) but was blocked before completing the sequence.\n- **Fix:** Increase allowed turns for this test.\n  - **Exact change:** Set `max_turns` from `1` to `4` (or higher) for this test case.\n  - **Alternative fix (if max_turns must remain 1):** Split into separate tests:\n    1. \u201cCheck all balances \u2014 should pass\u201d\n    2. \u201cTransfer $500 from checking to savings \u2014 should pass\u201d\n    3. \u201cShow updated balances and transaction history \u2014 should pass\u201d\n\n## \ud83d\udd27 MCP Tool Feedback\n\n### pytest_aitest.testing.banking_mcp\nOverall, tools are discoverable and used correctly. Naming is clear and aligned with user intents.\n\n| Tool | Status | Calls | Issues |\n|------|--------|-------|--------|\n| get_balance | \u2705 | 1 | Working well |\n| transfer | \u2705 | 1 | Working well |\n| get_transactions | \u2705 | 1 | Working well |\n| get_all_balances | \u26a0\ufe0f | 1 | Tool works, but multi-step usage blocked by test turn limit |\n| deposit | \u2705 | 0 | Not exercised in tests |\n| withdraw | \u2705 | 0 | Not exercised in tests |\n\n## \ud83d\udcdd System Prompt Feedback\n\n### default (mixed)\n- **Token count:** ~24 tokens\n- **Problem:** The prompt does not address multi-step planning or constraints like turn limits. In multi-action requests, the agent attempts to proceed sequentially, which conflicts with tests that cap turns.\n- **Suggested change:** Add an explicit instruction to batch tool usage when possible.\n  - **Exact text to append:**\n    ```\n    If a user request requires multiple actions and turn limits may apply, plan all required tool calls up front and execute them in the minimum number of turns.\n    ```\n\n## \ud83d\udca1 Optimizations\n\n1. **Align test turn limits with realistic user tasks** (recommended)\n   - Current: Complex, multi-action requests are tested with `max_turns=1`.\n   - Change: Allow 3\u20134 turns for composite banking workflows or decompose them into atomic tests.\n   - Impact: Prevents false negatives; improves effective pass rate from 75% to 100% with no additional model cost.\n\n2. **Reduce verbose assistant follow-ups** (suggestion)\n   - Current: Assistant frequently asks multiple follow-up questions after completing tasks.\n   - Change: Add instruction to ask at most one follow-up question or offer a concise menu.\n   - Impact: Minor cost reduction (~5\u201310% fewer tokens per test).\n\n## \ud83d\udce6 Tool Response Optimization\n\n### get_balance (from pytest_aitest.testing.banking_mcp)\n- **Current response size:** ~18 tokens\n- **Issues found:** Redundant formatted string duplicates numeric balance.\n- **Suggested optimization:** Omit `formatted` and let the assistant format.\n- **Estimated savings:** ~6 tokens per call (~33% reduction)\n\n**Example current vs optimized:**\n```json\n// Current (~18 tokens)\n{\"account\":\"checking\",\"balance\":1500.0,\"formatted\":\"$1,500.00\"}\n\n// Optimized (~12 tokens)\n{\"account\":\"checking\",\"balance\":1500.0}\n```\n\n### transfer (from pytest_aitest.testing.banking_mcp)\n- **Current response size:** ~45 tokens\n- **Issues found:** Both `message` and formatted fields duplicate information already present in structured fields.\n- **Suggested optimization:** Remove `message` and `amount_formatted`.\n- **Estimated savings:** ~15 tokens per call (~33% reduction)\n\n**Example current vs optimized:**\n```json\n// Current (~45 tokens)\n{\n  \"transaction_id\":\"TX0001\",\n  \"type\":\"transfer\",\n  \"from_account\":\"checking\",\n  \"to_account\":\"savings\",\n  \"amount\":200,\n  \"amount_formatted\":\"$200.00\",\n  \"new_balance_from\":1300.0,\n  \"new_balance_to\":3200.0,\n  \"message\":\"Successfully transferred $200.00 from checking to savings.\"\n}\n\n// Optimized (~30 tokens)\n{\n  \"transaction_id\":\"TX0001\",\n  \"from_account\":\"checking\",\n  \"to_account\":\"savings\",\n  \"amount\":200,\n  \"new_balance_from\":1300.0,\n  \"new_balance_to\":3200.0\n}\n```\n\n### get_transactions (from pytest_aitest.testing.banking_mcp)\n- **Current response size:** ~14 tokens\n- **Issues found:** Includes `filter: null`, which is unused.\n- **Suggested optimization:** Omit null fields.\n- **Estimated savings:** ~2 tokens per call (~14% reduction)\n\n**Example current vs optimized:**\n```json\n// Current (~14 tokens)\n{\"transactions\":[],\"count\":0,\"filter\":null}\n\n// Optimized (~12 tokens)\n{\"transactions\":[],\"count\":0}\n```",
+    "markdown_summary": "## \ud83c\udfaf Recommendation\n\n**Deploy: banking-agent (gpt-5-mini, default prompt)**\n\n**Reasoning:** Achieves a 75% pass rate (3/4) at very low cost ($0.002151 total across all tests). All core single-step banking actions (balance, transfer, transactions) pass reliably and use tools correctly. The only failure is due to a configured turn limit, not tool misuse or model behavior.\n\n**Alternatives:** None \u2014 only one configuration tested.\n\n## \u274c Failure Analysis\n\n### Test that fails due to turn limit \u2014 for report variety. (banking-agent)\n- **Problem:** The agent could not complete a multi-step request (check balances \u2192 transfer \u2192 show updated balances \u2192 show transactions) because the test enforces `max_turns=1`.\n- **Root Cause:** Test configuration limits the session to a single turn, but the user request explicitly requires multiple tool calls and responses. The agent correctly initiated the first step (`get_all_balances`) but was blocked before completing the sequence.\n- **Fix:** Increase allowed turns for this test.\n  - **Exact change:** Set `max_turns` from `1` to `4` (or higher) for this test case.\n  - **Alternative fix (if max_turns must remain 1):** Split into separate tests:\n    1. \u201cCheck all balances \u2014 should pass\u201d\n    2. \u201cTransfer $500 from checking to savings \u2014 should pass\u201d\n    3. \u201cShow updated balances and transaction history \u2014 should pass\u201d\n\n## \ud83d\udd27 MCP Tool Feedback\n\n### pytest_skill_engineering.testing.banking_mcp\nOverall, tools are discoverable and used correctly. Naming is clear and aligned with user intents.\n\n| Tool | Status | Calls | Issues |\n|------|--------|-------|--------|\n| get_balance | \u2705 | 1 | Working well |\n| transfer | \u2705 | 1 | Working well |\n| get_transactions | \u2705 | 1 | Working well |\n| get_all_balances | \u26a0\ufe0f | 1 | Tool works, but multi-step usage blocked by test turn limit |\n| deposit | \u2705 | 0 | Not exercised in tests |\n| withdraw | \u2705 | 0 | Not exercised in tests |\n\n## \ud83d\udcdd System Prompt Feedback\n\n### default (mixed)\n- **Token count:** ~24 tokens\n- **Problem:** The prompt does not address multi-step planning or constraints like turn limits. In multi-action requests, the agent attempts to proceed sequentially, which conflicts with tests that cap turns.\n- **Suggested change:** Add an explicit instruction to batch tool usage when possible.\n  - **Exact text to append:**\n    ```\n    If a user request requires multiple actions and turn limits may apply, plan all required tool calls up front and execute them in the minimum number of turns.\n    ```\n\n## \ud83d\udca1 Optimizations\n\n1. **Align test turn limits with realistic user tasks** (recommended)\n   - Current: Complex, multi-action requests are tested with `max_turns=1`.\n   - Change: Allow 3\u20134 turns for composite banking workflows or decompose them into atomic tests.\n   - Impact: Prevents false negatives; improves effective pass rate from 75% to 100% with no additional model cost.\n\n2. **Reduce verbose assistant follow-ups** (suggestion)\n   - Current: Assistant frequently asks multiple follow-up questions after completing tasks.\n   - Change: Add instruction to ask at most one follow-up question or offer a concise menu.\n   - Impact: Minor cost reduction (~5\u201310% fewer tokens per test).\n\n## \ud83d\udce6 Tool Response Optimization\n\n### get_balance (from pytest_skill_engineering.testing.banking_mcp)\n- **Current response size:** ~18 tokens\n- **Issues found:** Redundant formatted string duplicates numeric balance.\n- **Suggested optimization:** Omit `formatted` and let the assistant format.\n- **Estimated savings:** ~6 tokens per call (~33% reduction)\n\n**Example current vs optimized:**\n```json\n// Current (~18 tokens)\n{\"account\":\"checking\",\"balance\":1500.0,\"formatted\":\"$1,500.00\"}\n\n// Optimized (~12 tokens)\n{\"account\":\"checking\",\"balance\":1500.0}\n```\n\n### transfer (from pytest_skill_engineering.testing.banking_mcp)\n- **Current response size:** ~45 tokens\n- **Issues found:** Both `message` and formatted fields duplicate information already present in structured fields.\n- **Suggested optimization:** Remove `message` and `amount_formatted`.\n- **Estimated savings:** ~15 tokens per call (~33% reduction)\n\n**Example current vs optimized:**\n```json\n// Current (~45 tokens)\n{\n  \"transaction_id\":\"TX0001\",\n  \"type\":\"transfer\",\n  \"from_account\":\"checking\",\n  \"to_account\":\"savings\",\n  \"amount\":200,\n  \"amount_formatted\":\"$200.00\",\n  \"new_balance_from\":1300.0,\n  \"new_balance_to\":3200.0,\n  \"message\":\"Successfully transferred $200.00 from checking to savings.\"\n}\n\n// Optimized (~30 tokens)\n{\n  \"transaction_id\":\"TX0001\",\n  \"from_account\":\"checking\",\n  \"to_account\":\"savings\",\n  \"amount\":200,\n  \"new_balance_from\":1300.0,\n  \"new_balance_to\":3200.0\n}\n```\n\n### get_transactions (from pytest_skill_engineering.testing.banking_mcp)\n- **Current response size:** ~14 tokens\n- **Issues found:** Includes `filter: null`, which is unused.\n- **Suggested optimization:** Omit null fields.\n- **Estimated savings:** ~2 tokens per call (~14% reduction)\n\n**Example current vs optimized:**\n```json\n// Current (~14 tokens)\n{\"transactions\":[],\"count\":0,\"filter\":null}\n\n// Optimized (~12 tokens)\n{\"transactions\":[],\"count\":0}\n```",
     "cost_usd": 0.0234675,
     "tokens_used": 4856,
     "cached": false

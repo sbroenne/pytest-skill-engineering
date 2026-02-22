@@ -1,5 +1,5 @@
 ---
-description: "Step-by-step guides for testing MCP servers, CLI tools, generating AI-analyzed reports, and more with pytest-aitest."
+description: "Step-by-step guides for testing MCP servers, CLI tools, generating AI-analyzed reports, and more with pytest-skill-engineering."
 ---
 
 # How-To Guides

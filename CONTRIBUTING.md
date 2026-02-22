@@ -1,11 +1,11 @@
-# Contributing to pytest-aitest
+# Contributing to pytest-skill-engineering
 
 ## Development Setup
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/sbroenne/pytest-aitest.git
-   cd pytest-aitest
+   git clone https://github.com/sbroenne/pytest-skill-engineering.git
+   cd pytest-skill-engineering
    ```
 
 2. Install in editable mode with dev dependencies:
@@ -13,7 +13,7 @@
    uv sync --all-extras
    ```
 
-   This installs the package from your local source code. Any changes you make to `src/pytest_aitest/` are immediately available — no reinstall needed.
+   This installs the package from your local source code. Any changes you make to `src/pytest_skill_engineering/` are immediately available — no reinstall needed.
 
 3. Install pre-commit hooks:
    ```bash
@@ -26,7 +26,7 @@ Python has two install modes:
 
 | Mode | Command | Use case |
 |------|---------|----------|
-| **Regular** | `uv add pytest-aitest` | End users, pulls from PyPI |
+| **Regular** | `uv add pytest-skill-engineering` | End users, pulls from PyPI |
 | **Editable** | `uv sync` (in project dir) | Developers, uses local source |
 
 With editable mode, Python points to your source folder instead of copying files. Edit code → run tests → see changes instantly.
@@ -39,18 +39,18 @@ To test your local changes in another project while developing:
 # In your other project directory
 cd d:\source\my-mcp-server
 
-# Add pytest-aitest as an editable dependency
-uv add --editable d:\source\pytest-aitest
+# Add pytest-skill-engineering as an editable dependency
+uv add --editable d:\source\pytest-skill-engineering
 ```
 
 This adds a local reference to your `pyproject.toml`:
 ```toml
 dependencies = [
-    "pytest-aitest @ file:///d:/source/pytest-aitest",
+    "pytest-skill-engineering @ file:///d:/source/pytest-skill-engineering",
 ]
 ```
 
-Now your other project uses your local source. Changes to pytest-aitest are immediately available — no reinstall needed.
+Now your other project uses your local source. Changes to pytest-skill-engineering are immediately available — no reinstall needed.
 
 ## Code Quality
 
@@ -95,7 +95,7 @@ pytest tests/integration/ -v
 pytest -v
 ```
 
-For architecture details, report structure, and developer guides, see the **[Contributing docs](https://sbroenne.github.io/pytest-aitest/contributing/)**.
+For architecture details, report structure, and developer guides, see the **[Contributing docs](https://sbroenne.github.io/pytest-skill-engineering/contributing/)**.
 
 ### Integration Tests
 
@@ -114,8 +114,8 @@ gcloud auth application-default login
 ## Project Structure
 
 ```
-pytest-aitest/
-├── src/pytest_aitest/
+pytest-skill-engineering/
+├── src/pytest_skill_engineering/
 │   ├── __init__.py      # Package exports
 │   ├── cli.py           # CLI for report regeneration
 │   ├── plugin.py        # pytest plugin hooks
@@ -154,7 +154,7 @@ All PRs are **squash merged** to keep a clean commit history on main.
 
 Releases are triggered via GitHub Actions workflow dispatch:
 
-1. Go to [Actions → Release](https://github.com/sbroenne/pytest-aitest/actions/workflows/release.yml)
+1. Go to [Actions → Release](https://github.com/sbroenne/pytest-skill-engineering/actions/workflows/release.yml)
 2. Click "Run workflow"
 3. Select the version bump type:
    - **patch** (default) — Bug fixes, backwards-compatible (e.g., 0.2.0 → 0.2.1)

@@ -1,10 +1,10 @@
 ---
-description: "Run pytest-aitest in CI/CD pipelines with JUnit XML, GitHub Actions, and Azure Pipelines. Includes OIDC authentication setup."
+description: "Run pytest-skill-engineering in CI/CD pipelines with JUnit XML, GitHub Actions, and Azure Pipelines. Includes OIDC authentication setup."
 ---
 
 # CI/CD Integration
 
-Run pytest-aitest in CI pipelines with JUnit XML reporting and automated report generation.
+Run pytest-skill-engineering in CI pipelines with JUnit XML reporting and automated report generation.
 
 ## JUnit XML for CI Pipelines
 
@@ -26,7 +26,7 @@ pytest tests/ \
 
 ## JUnit XML Properties
 
-pytest-aitest automatically enriches JUnit XML with agent metadata as `<property>` elements:
+pytest-skill-engineering automatically enriches JUnit XML with agent metadata as `<property>` elements:
 
 ```xml
 <testcase name="test_balance" time="2.34">

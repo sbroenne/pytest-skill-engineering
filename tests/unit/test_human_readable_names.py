@@ -17,9 +17,9 @@ from pathlib import Path
 
 import pytest
 
-from pytest_aitest.core.result import AgentResult, Turn
-from pytest_aitest.reporting import SuiteReport, TestReport, generate_html, generate_md
-from pytest_aitest.reporting.insights import (
+from pytest_skill_engineering.core.result import AgentResult, Turn
+from pytest_skill_engineering.reporting import SuiteReport, TestReport, generate_html, generate_md
+from pytest_skill_engineering.reporting.insights import (
     InsightsResult,
     _build_analysis_input,
 )

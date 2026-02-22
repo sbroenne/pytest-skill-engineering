@@ -1,4 +1,4 @@
-# Copilot Instructions for pytest-aitest
+# Copilot Instructions for pytest-skill-engineering
 
 ## CRITICAL: No Backward Compatibility
 
@@ -54,12 +54,12 @@ In documentation, always show `uv add` instead of `pip install`.
 **We do NOT test agents. We USE agents to test:**
 - **MCP Servers** — Can an LLM understand and use these tools?
 - **CLI Tools** — Can an LLM operate this command-line interface?
-- **System Prompts** — Do these instructions produce the desired behavior?
 - **Agent Skills** — Does this domain knowledge improve performance?
+- **Custom Agents** — Do these `.agent.md` instructions produce the right behavior and subagent dispatch?
 
-**The Agent is the test harness**, not the thing being tested. It bundles an LLM provider with the tools/prompts/skills you want to evaluate.
+**System prompts are NOT a standalone test concept.** A custom agent's body IS its system prompt. Testing agent instructions = testing a custom agent file. The `system_prompt=` param on `Agent` exists for raw synthetic tests only — not a primary concept.
 
-NEVER say "test agents" or "testing AI agents". Always say "test MCP servers", "test tools", "test prompts", or "test skills".
+**The Agent is the test harness**, not the thing being tested. It bundles an LLM provider with the tools/prompts/skills/custom agents you want to evaluate.
 
 ## Why This Project Exists
 
@@ -80,20 +80,19 @@ For LLMs, your API isn't functions and types — it's **tool descriptions, syste
 
 **MANDATORY STEPS AFTER EVERY CODE CHANGE:**
 
-1. **RUN UNIT TESTS** (non-negotiable)
-   ```bash
-   uv run pytest tests/unit/test_html_reports.py -q
-   ```
-   - All 74 tests MUST PASS
-   - Tests verify HTML structure via string assertions
-   - Do NOT proceed if any test fails
-
-2. **REGENERATE ALL REPORTS** (non-negotiable)
+1. **REGENERATE ALL REPORTS** (non-negotiable)
    ```bash
    uv run python scripts/generate_fixture_html.py
    ```
    - Generates fixture reports in docs/reports/
    - Do NOT skip this step
+
+2. **RUN HTML INTEGRATION TESTS** (non-negotiable)
+   ```bash
+   uv run pytest tests/integration/test_basic_usage.py -q
+   ```
+   - Verifies end-to-end report generation
+   - Fix ALL failures — no exceptions
 
 3. **VERIFY CHANGES IN ACTUAL HTML** (non-negotiable)
    ```bash
@@ -103,7 +102,6 @@ For LLMs, your API isn't functions and types — it's **tool descriptions, syste
    - Open in browser when feasible
 
 **WHAT NOT TO DO:**
-- ❌ Assume tests passing means feature works
 - ❌ Skip report regeneration
 - ❌ Modify fixture JSONs directly - regenerate via pytest
 - ❌ Commit without verifying in browser
@@ -191,7 +189,7 @@ uv run pytest tests/integration -v
 ### Import Conventions
 - Group imports: stdlib → third-party → local
 - Use `TYPE_CHECKING` block for type-only imports
-- Import from package root when possible (`from pytest_aitest import Agent`)
+- Import from package root when possible (`from pytest_skill_engineering import Agent`)
 
 ```python
 from __future__ import annotations
@@ -202,27 +200,27 @@ from typing import TYPE_CHECKING, Any
 import pydantic_ai
 from mcp import ClientSession
 
-from pytest_aitest.core.result import AgentResult
+from pytest_skill_engineering.core.result import AgentResult
 
 if TYPE_CHECKING:
-    from pytest_aitest.core.agent import Agent
+    from pytest_skill_engineering.core.agent import Agent
 ```
 
 ## What We're Building
 
-**pytest-aitest** is a pytest plugin for testing MCP servers and CLIs. You write tests as natural language prompts, and an LLM executes them against your tools. Reports tell you **what to fix**, not just **what failed**.
+**pytest-skill-engineering** is a pytest plugin for testing MCP servers and CLIs. You write tests as natural language prompts, and an LLM executes them against your tools. Reports tell you **what to fix**, not just **what failed**.
 
 ### Core Features
 
 1. **Base Testing**: Define test agents, run tests against MCP/CLI tool servers
-   - Agent = Provider (LLM) + System Prompt + MCP/CLI Servers + optional Skill
+   - Agent = Provider (LLM) + System Prompt + MCP/CLI Servers + optional Skill + optional Custom Agents
    - Use `aitest_run` fixture to execute agent and verify tool usage
    - Assert on `result.success`, `result.tool_was_called("tool_name")`, `result.final_response`
 
 2. **Agent Leaderboard**: When you test multiple agents, the report shows a leaderboard
    - 1 agent → Just results
    - Multiple agents → Agent Leaderboard (always)
-   - AI detects what varies (Model, Prompt, Skill, Server) to focus its analysis
+   - AI detects what varies (Model, Skill, Custom Agent, Server) to focus its analysis
 
 3. **Winning Criteria**: Highest pass rate → Lowest cost (tiebreaker)
    - Use `--aitest-min-pass-rate=N` to fail the session if overall pass rate falls below N%
@@ -237,7 +235,12 @@ if TYPE_CHECKING:
    - Skills inject structured knowledge into agent context
    - Reports analyze skill effectiveness and suggest improvements
 
-6. **Clarification Detection**: Catch agents that ask questions instead of acting
+6. **Custom Agent Testing**: Test `.agent.md` custom agent files (VS Code / Claude Code format)
+   - `Agent.from_agent_file(path, provider, ...)` — agent file becomes the system prompt; test it synthetically
+   - `load_custom_agent(path)` + `CopilotAgent(custom_agents=[...])` — test real subagent dispatch through Copilot
+   - Both approaches are first-class: same prominence as Skill Testing
+
+7. **Clarification Detection**: Catch agents that ask questions instead of acting
    - LLM-as-judge detects "Would you like me to...?" style responses
    - Configure with `ClarificationDetection(enabled=True)` on Agent
    - Assert with `result.asked_for_clarification` / `result.clarification_count`
@@ -261,13 +264,13 @@ Reports include:
 pytest tests/ --aitest-html=report.html --aitest-summary-model=azure/gpt-5.2-chat
 
 # Regenerate report with new AI insights from existing JSON (no re-run)
-pytest-aitest-report results.json --html report.html --summary --summary-model azure/gpt-5-mini
+pytest-skill-engineering-report results.json --html report.html --summary --summary-model azure/gpt-5-mini
 ```
 
 ### Key Types
 
 ```python
-from pytest_aitest import Agent, Provider, MCPServer, Skill, load_system_prompts
+from pytest_skill_engineering import Agent, Provider, MCPServer, Skill, load_system_prompts, load_custom_agent
 
 # Define an agent (auth via AZURE_API_BASE env var)
 agent = Agent(
@@ -276,6 +279,19 @@ agent = Agent(
     system_prompt="You are helpful...",
     skill=Skill.from_path("skills/financial-advisor"),  # Optional domain knowledge
     max_turns=10,
+)
+
+# Load a custom agent file as the agent under test (synthetic testing)
+agent = Agent.from_agent_file(
+    "skills/my-skill/agent.md",
+    provider=Provider(model="azure/gpt-5-mini"),
+    mcp_servers=[my_server],
+)
+
+# Load a custom agent as a subagent for CopilotAgent (real Copilot dispatch)
+from pytest_skill_engineering.copilot import CopilotAgent
+copilot_agent = CopilotAgent(
+    custom_agents=[load_custom_agent("skills/my-skill/agent.md")],
 )
 
 # Load system prompts from .md files - returns dict[str, str]
@@ -314,7 +330,7 @@ prompts = load_system_prompts(Path("prompts/"))
 # {"concise": "Be brief...", "detailed": "Explain..."}
 
 # Or load .yaml files as Prompt objects - returns list[Prompt]
-from pytest_aitest import load_prompts
+from pytest_skill_engineering import load_prompts
 prompt_list = load_prompts(Path("prompts/"))
 
 # Use with pytest parametrize
@@ -353,6 +369,17 @@ This is a testing framework that uses LLMs to test tools, prompts, and skills. T
 - Accept that integration tests take 5-30+ seconds per test
 - Run integration tests BEFORE declaring a feature complete
 
+## CRITICAL: No Such Thing as a Pre-Existing Failure
+
+**Every test failure is YOUR responsibility to fix. There are no "pre-existing" or "unrelated" failures.**
+
+- NEVER skip a failing test because it was failing before your change
+- NEVER label failures as "pre-existing" and move on
+- NEVER say "this failure is unrelated to my change"
+- If a test fails, fix it — full stop
+- If a test is wrong (not the code), fix the test
+- The baseline must be **zero failures** before and after your change
+
 ## CRITICAL: Efficient Test Execution
 
 **Integration tests are EXPENSIVE. Never re-run passing tests unnecessarily.**
@@ -376,10 +403,10 @@ pytest tests/integration/test_foo.py::TestClass::test_name -v
 ```
 
 ### Rules for the AI assistant:
-1. **NEVER run all integration tests** unless explicitly asked
-2. **After fixing a test, run ONLY that specific test**
-3. **Use `--lf` to re-run only failed tests**
-4. **Check `--cache-show` to see current failure state before running**
+1. **After making changes, run the relevant integration tests** — not unit tests
+2. **After fixing a test, run ONLY that specific test** to confirm
+3. **Use `--lf` to re-run only failed tests** after a full run
+4. **Fix ALL failures** — no exceptions, no "pre-existing" excuses
 5. **Quote the specific test paths when running individual tests**
 
 ## Azure Configuration
@@ -407,7 +434,7 @@ az cognitiveservices account deployment list \
 ## Copilot Model Provider
 
 Use the `copilot/` prefix to route LLM calls through the Copilot SDK instead of Azure/OpenAI.
-Requires `pytest-aitest[copilot]` and Copilot auth (`gh auth login` or `GITHUB_TOKEN`).
+Requires `pytest-skill-engineering[copilot]` and Copilot auth (`gh auth login` or `GITHUB_TOKEN`).
 
 ```bash
 # Use Copilot for AI insights
@@ -423,7 +450,7 @@ Available models are dynamic (whatever Copilot exposes).
 ## Project Structure
 
 ```
-src/pytest_aitest/
+src/pytest_skill_engineering/
 ├── core/                  # Core types
 │   ├── agent.py           # Agent, Provider, MCPServer, CLIServer, Wait
 │   ├── auth.py            # Shared Azure AD auth (get_azure_ad_token_provider)
@@ -501,7 +528,7 @@ DEFAULT_MAX_TURNS = 5
 
 **Pattern for writing tests:**
 ```python
-from pytest_aitest import Agent, Provider
+from pytest_skill_engineering import Agent, Provider
 from .conftest import DEFAULT_MODEL, DEFAULT_RPM, DEFAULT_TPM, DEFAULT_MAX_TURNS
 
 async def test_balance(aitest_run, banking_server):
@@ -536,7 +563,7 @@ The report pipeline flows:
 **Test Execution → Plugin (list[TestReport]) → build_suite_report() → AI Insights → generate_html()/generate_json() → HTML/JSON**
 
 ```
-src/pytest_aitest/reporting/
+src/pytest_skill_engineering/reporting/
 ├── collector.py       # TestReport, SuiteReport dataclasses + build_suite_report()
 ├── insights.py        # AI analysis engine (mandatory) → InsightsResult
 ├── generator.py       # generate_html(), generate_json() module-level functions
@@ -560,7 +587,7 @@ Every htpy component has a **typed data contract** in `components/types.py`. Thi
 ### Template Structure
 
 ```
-src/pytest_aitest/templates/
+src/pytest_skill_engineering/templates/
 └── partials/
     ├── report.css           # Hand-written CSS (edit directly)
     └── scripts.js           # JS: Mermaid, copy buttons, expand/collapse, agent filtering
@@ -579,8 +606,8 @@ The CSS provides:
 - Markdown content styling
 
 To modify styles:
-1. Edit `src/pytest_aitest/templates/partials/report.css`
-2. Regenerate report: `uv run pytest-aitest-report aitest-reports/results.json --html aitest-reports/test.html`
+1. Edit `src/pytest_skill_engineering/templates/partials/report.css`
+2. Regenerate report: `uv run pytest-skill-engineering-report aitest-reports/results.json --html aitest-reports/test.html`
 3. Open in browser and verify
 
 ### Report Sources
@@ -619,19 +646,16 @@ pytest tests/showcase/ -v --aitest-html=docs/demo/hero-report.html
 
 ### Manual Testing Workflow (Pre-PR)
 
-**Integration tests use real LLM calls and are expensive. Run manually before PRs.**
+**Integration tests use real LLM calls and are expensive. Run the relevant integration tests after every change.**
 
 ```bash
-# 1. Run unit tests first (fast, free)
-uv run pytest tests/unit/ -v
+# 1. Run the integration test(s) that cover your change
+uv run pytest tests/integration/test_basic_usage.py -v
 
-# 2. Run ONE integration test to verify changes
-uv run pytest tests/integration/test_basic_usage.py::TestBankingWorkflows::test_balance_check_and_transfer -v
-
-# 3. Run failed tests only (if any)
+# 2. Run all failed tests (if a broader run previously failed)
 uv run pytest --lf tests/integration/ -v
 
-# 4. Generate hero report (before major releases)
+# 3. Generate hero report (before major releases)
 uv run pytest tests/showcase/ -v --aitest-html=docs/demo/hero-report.html
 ```
 
@@ -641,7 +665,7 @@ uv run pytest tests/showcase/ -v --aitest-html=docs/demo/hero-report.html
 
 ```bash
 # CORRECT - Regenerate HTML from existing JSON (instant, no LLM cost)
-uv run pytest-aitest-report aitest-reports/results.json --html aitest-reports/test.html
+uv run pytest-skill-engineering-report aitest-reports/results.json --html aitest-reports/test.html
 
 # WRONG - Never re-run tests just to see template changes!
 # uv run pytest tests/showcase/ ...  ← DON'T DO THIS
@@ -659,10 +683,10 @@ uv run pytest-aitest-report aitest-reports/results.json --html aitest-reports/te
 - Data contract changes (if backward compatible)
 
 **Workflow for template development:**
-1. Edit CSS in `src/pytest_aitest/templates/partials/report.css` or htpy components
+1. Edit CSS in `src/pytest_skill_engineering/templates/partials/report.css` or htpy components
 2. Regenerate report from existing JSON:
    ```bash
-   uv run pytest-aitest-report aitest-reports/results.json --html aitest-reports/test.html
+   uv run pytest-skill-engineering-report aitest-reports/results.json --html aitest-reports/test.html
    ```
 3. Open the HTML file in browser
 4. Repeat steps 1-3 until satisfied

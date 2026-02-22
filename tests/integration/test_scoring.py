@@ -8,8 +8,8 @@ not MCP server mechanics (which binary assertions already cover).
 
 from __future__ import annotations
 
-from pytest_aitest import Agent, Provider
-from pytest_aitest.fixtures.llm_score import ScoringDimension, assert_score
+from pytest_skill_engineering import Agent, Provider
+from pytest_skill_engineering.fixtures.llm_score import ScoringDimension, assert_score
 
 from .conftest import (
     DEFAULT_MAX_TURNS,

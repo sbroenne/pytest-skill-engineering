@@ -18,7 +18,7 @@ from pydantic_ai.messages import (
 )
 from pydantic_ai.models import ModelRequestParameters
 
-from pytest_aitest.copilot.model import CopilotModel, _convert_messages
+from pytest_skill_engineering.copilot.model import CopilotModel, _convert_messages
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -191,14 +191,14 @@ class TestBuildModelFromString:
     """Test that copilot/ prefix is handled correctly."""
 
     def test_copilot_prefix_creates_copilot_model(self) -> None:
-        from pytest_aitest.execution.pydantic_adapter import build_model_from_string
+        from pytest_skill_engineering.execution.pydantic_adapter import build_model_from_string
 
         model = build_model_from_string("copilot/gpt-5-mini")
         assert isinstance(model, CopilotModel)
         assert model.model_name == "copilot:gpt-5-mini"
 
     def test_copilot_prefix_preserves_model_name(self) -> None:
-        from pytest_aitest.execution.pydantic_adapter import build_model_from_string
+        from pytest_skill_engineering.execution.pydantic_adapter import build_model_from_string
 
         model = build_model_from_string("copilot/claude-opus-4.5")
         assert isinstance(model, CopilotModel)
@@ -242,7 +242,9 @@ class TestRequest:
         mock_client = AsyncMock()
         mock_client.create_session = AsyncMock(return_value=mock_session)
 
-        with patch("pytest_aitest.copilot.model._get_or_create_client", return_value=mock_client):
+        with patch(
+            "pytest_skill_engineering.copilot.model._get_or_create_client", return_value=mock_client
+        ):
             messages = [
                 ModelRequest(parts=[UserPromptPart(content="What is the meaning of life?")])
             ]
@@ -300,8 +302,14 @@ class TestRequest:
         mock_client.create_session = AsyncMock(return_value=mock_session)
 
         with (
-            patch("pytest_aitest.copilot.model._get_or_create_client", return_value=mock_client),
-            patch("pytest_aitest.copilot.model._build_copilot_tools", side_effect=fake_build_tools),
+            patch(
+                "pytest_skill_engineering.copilot.model._get_or_create_client",
+                return_value=mock_client,
+            ),
+            patch(
+                "pytest_skill_engineering.copilot.model._build_copilot_tools",
+                side_effect=fake_build_tools,
+            ),
         ):
             messages = [ModelRequest(parts=[UserPromptPart(content="What's my balance?")])]
             response = await model.request(messages, None, params)
@@ -329,7 +337,9 @@ class TestRequest:
         mock_client = AsyncMock()
         mock_client.create_session = mock_create_session
 
-        with patch("pytest_aitest.copilot.model._get_or_create_client", return_value=mock_client):
+        with patch(
+            "pytest_skill_engineering.copilot.model._get_or_create_client", return_value=mock_client
+        ):
             messages = [
                 ModelRequest(
                     parts=[
@@ -366,7 +376,10 @@ class TestRequest:
                 "prompted_output_instructions",
                 new_callable=lambda: property(lambda self: "Output JSON: {schema}"),
             ),
-            patch("pytest_aitest.copilot.model._get_or_create_client", return_value=mock_client),
+            patch(
+                "pytest_skill_engineering.copilot.model._get_or_create_client",
+                return_value=mock_client,
+            ),
         ):
             messages = [
                 ModelRequest(
@@ -393,7 +406,9 @@ class TestRequest:
         mock_client = AsyncMock()
         mock_client.create_session = AsyncMock(return_value=mock_session)
 
-        with patch("pytest_aitest.copilot.model._get_or_create_client", return_value=mock_client):
+        with patch(
+            "pytest_skill_engineering.copilot.model._get_or_create_client", return_value=mock_client
+        ):
             messages = [ModelRequest(parts=[UserPromptPart(content="Silence")])]
             response = await model.request(messages, None, mock_request_params)
 
@@ -418,7 +433,9 @@ class TestRequest:
         mock_client = AsyncMock()
         mock_client.create_session = mock_create_session
 
-        with patch("pytest_aitest.copilot.model._get_or_create_client", return_value=mock_client):
+        with patch(
+            "pytest_skill_engineering.copilot.model._get_or_create_client", return_value=mock_client
+        ):
             messages = [ModelRequest(parts=[UserPromptPart(content="Hi")])]
             await model.request(messages, None, mock_request_params)
 
@@ -435,7 +452,9 @@ class TestRequest:
         mock_client = AsyncMock()
         mock_client.create_session = AsyncMock(return_value=mock_session)
 
-        with patch("pytest_aitest.copilot.model._get_or_create_client", return_value=mock_client):
+        with patch(
+            "pytest_skill_engineering.copilot.model._get_or_create_client", return_value=mock_client
+        ):
             messages = [ModelRequest(parts=[UserPromptPart(content="Hi")])]
             response = await model.request(messages, None, mock_request_params)
 
@@ -452,7 +471,7 @@ class TestClientLifecycle:
 
     async def test_shutdown_when_no_client(self) -> None:
         """Shutdown is a no-op when no client exists."""
-        from pytest_aitest.copilot.model import shutdown_copilot_model_client
+        from pytest_skill_engineering.copilot.model import shutdown_copilot_model_client
 
         # Should not raise
         await shutdown_copilot_model_client()

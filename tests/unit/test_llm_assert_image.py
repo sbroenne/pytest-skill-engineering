@@ -6,8 +6,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from pytest_aitest.core.result import ImageContent
-from pytest_aitest.fixtures.llm_assert_image import LLMAssertImage
+from pytest_skill_engineering.core.result import ImageContent
+from pytest_skill_engineering.fixtures.llm_assert_image import LLMAssertImage
 
 
 class TestLLMAssertImage:
@@ -20,7 +20,7 @@ class TestLLMAssertImage:
         mock_grading.reason = "Image shows charts"
 
         with patch(
-            "pytest_aitest.fixtures.llm_assert_image.LLMAssertImage.__call__",
+            "pytest_skill_engineering.fixtures.llm_assert_image.LLMAssertImage.__call__",
             wraps=None,
         ):
             # Test the type normalization logic directly
@@ -49,7 +49,7 @@ class TestLLMAssertImage:
 
     def test_result_is_assertion_result(self) -> None:
         """Returns AssertionResult with correct fields."""
-        from pytest_aitest.fixtures.llm_assert import AssertionResult
+        from pytest_skill_engineering.fixtures.llm_assert import AssertionResult
 
         # Create a mock result directly
         result = AssertionResult(
@@ -65,7 +65,7 @@ class TestLLMAssertImage:
 
     def test_result_bool_false_on_failure(self) -> None:
         """AssertionResult is falsy when criterion not met."""
-        from pytest_aitest.fixtures.llm_assert import AssertionResult
+        from pytest_skill_engineering.fixtures.llm_assert import AssertionResult
 
         result = AssertionResult(
             passed=False,

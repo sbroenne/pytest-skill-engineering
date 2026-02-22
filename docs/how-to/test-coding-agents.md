@@ -1,19 +1,19 @@
 # Test Coding Agents
 
-pytest-aitest can test **real coding agents** like GitHub Copilot — not just synthetic agents backed by MCP servers.
+pytest-skill-engineering can test **real coding agents** like GitHub Copilot — not just synthetic agents backed by MCP servers.
 
 ## Install
 
 ```bash
-uv add pytest-aitest[copilot]
+uv add pytest-skill-engineering[copilot]
 ```
 
-This installs the `github-copilot-sdk` package alongside pytest-aitest.
+This installs the `github-copilot-sdk` package alongside pytest-skill-engineering.
 
 ## Quick Start
 
 ```python
-from pytest_aitest.copilot import CopilotAgent
+from pytest_skill_engineering.copilot import CopilotAgent
 
 @pytest.mark.copilot
 async def test_creates_module(copilot_run, tmp_path):
@@ -35,7 +35,7 @@ async def test_creates_module(copilot_run, tmp_path):
 `CopilotAgent` is the configuration object for Copilot SDK sessions:
 
 ```python
-from pytest_aitest.copilot import CopilotAgent
+from pytest_skill_engineering.copilot import CopilotAgent
 
 agent = CopilotAgent(
     name="my-agent",                    # Required: unique agent name
@@ -118,6 +118,122 @@ agent = CopilotAgent(
 )
 ```
 
+### Loading from a file
+
+Use `load_custom_agent()` to load a `.agent.md` file into a custom agent dict:
+
+```python
+from pytest_skill_engineering import load_custom_agent
+from pytest_skill_engineering.copilot import CopilotAgent
+
+test_writer = load_custom_agent(".github/agents/test-writer.agent.md")
+
+@pytest.mark.copilot
+async def test_orchestrator_delegates_test_writing(copilot_run):
+    agent = CopilotAgent(
+        name="orchestrator",
+        instructions="Delegate test writing to the test-writer agent.",
+        custom_agents=[test_writer],
+    )
+    result = await copilot_run(agent, "Write unit tests for calculator.py")
+    assert result.success
+```
+
+### Loading all agents from a directory
+
+Use `load_custom_agents()` to load all `.agent.md` files from a directory:
+
+```python
+from pytest_skill_engineering import load_custom_agents
+
+# Load all sub-agents except the orchestrator
+subagents = load_custom_agents(
+    ".github/agents/",
+    exclude={"orchestrator"},
+)
+
+@pytest.mark.copilot
+async def test_full_agent_team(copilot_run):
+    agent = CopilotAgent(
+        name="orchestrator",
+        instructions="Delegate tasks to the appropriate specialist.",
+        custom_agents=subagents,
+    )
+    result = await copilot_run(agent, "Create and test a calculator module.")
+    assert result.success
+```
+
+Both functions are available directly from `pytest_skill_engineering` (no `[copilot]` extra required for loading):
+
+```python
+from pytest_skill_engineering import load_custom_agent, load_custom_agents
+```
+
+### Asserting on `result.subagent_invocations`
+
+`CopilotResult.subagent_invocations` tracks which sub-agents were dispatched:
+
+```python
+async def test_correct_subagent_is_invoked(copilot_run):
+    agents = load_custom_agents(".github/agents/")
+    agent = CopilotAgent(
+        name="orchestrator",
+        instructions="Use specialist agents for each task.",
+        custom_agents=agents,
+    )
+    result = await copilot_run(agent, "Write unit tests for the billing module.")
+
+    invoked = [s.agent_name for s in result.subagent_invocations]
+    assert "test-writer" in invoked
+```
+
+## Testing Skills
+
+Skills are domain knowledge packages loaded from a directory containing a `SKILL.md` file. Use `skill_directories` to inject a skill into a Copilot session — this is the right way to test Copilot skills, as it exercises the same loading path end users experience.
+
+```python
+from pytest_skill_engineering.copilot import CopilotAgent
+
+async def test_skill_presents_scenarios(copilot_run):
+    agent = CopilotAgent(
+        name="with-skill",
+        skill_directories=["skills/my-skill"],  # loads SKILL.md + references/
+        max_turns=10,
+    )
+    result = await copilot_run(agent, "What can you help me with?")
+    assert result.success
+    assert "scenario-a" in result.final_response.lower()
+```
+
+### Comparing with and without skill
+
+```python
+async def test_skill_improves_routing(copilot_run):
+    without = CopilotAgent(name="no-skill", max_turns=10)
+    with_skill = CopilotAgent(
+        name="with-skill",
+        skill_directories=["skills/my-skill"],
+        max_turns=10,
+    )
+
+    r_without = await copilot_run(without, "Get the ACR baseline for TPID 12345.")
+    r_with    = await copilot_run(with_skill, "Get the ACR baseline for TPID 12345.")
+
+    # Skill should cause the agent to call the right tool
+    assert r_with.tool_was_called("ExecuteQueries")
+```
+
+### When to use `CopilotAgent` vs `Agent` + `Skill`
+
+| | `CopilotAgent` + `skill_directories` | `Agent` + `Skill.from_path()` |
+|---|---|---|
+| **What runs the agent** | Real GitHub Copilot (CLI SDK) | PydanticAI synthetic loop |
+| **Skill loading** | Native Copilot skill loading | Injected as virtual reference tools |
+| **MCP auth** | Handled by Copilot CLI (OAuth cached) | Managed by test process (token required) |
+| **Use when** | Testing a Copilot skill end-to-end | Testing MCP servers / tool descriptions |
+
+> **Rule of thumb:** If you built a `SKILL.md` for Copilot users, test it with `CopilotAgent`. If you're testing whether your MCP server tools are discoverable and usable, use `Agent`.
+
 ## Skill Directories
 
 Load skill files that inject domain knowledge into the agent:
@@ -150,7 +266,7 @@ Copilot test results flow into the same HTML report as synthetic tests. The repo
 
 ## Copilot as Model Provider
 
-If you have `pytest-aitest[copilot]` installed, you can use Copilot-accessible models for **all** LLM calls in aitest — judge assertions, AI insights, scoring, and prompt optimization — without needing a separate Azure or OpenAI subscription.
+If you have `pytest-skill-engineering[copilot]` installed, you can use Copilot-accessible models for **all** LLM calls in aitest — judge assertions, AI insights, scoring, and prompt optimization — without needing a separate Azure or OpenAI subscription.
 
 Use the `copilot/` prefix:
 
@@ -169,7 +285,7 @@ This routes calls through the Copilot SDK, authenticated via `gh auth login` or 
 `optimize_instruction` works with any model provider, including Copilot:
 
 ```python
-from pytest_aitest import optimize_instruction
+from pytest_skill_engineering import optimize_instruction
 
 async def test_optimize_system_prompt(optimize_instruction):
     result = await optimize_instruction(
@@ -189,7 +305,7 @@ When writing integration tests that need an auxiliary LLM (for judge assertions,
 ```python
 # tests/integration/conftest.py or your conftest
 
-# The fixture is provided by pytest_aitest and probes providers automatically.
+# The fixture is provided by pytest_skill_engineering and probes providers automatically.
 # Override with env var if needed:
 # AITEST_INTEGRATION_JUDGE_MODEL=copilot/gpt-5-mini pytest ...
 ```

@@ -8,8 +8,8 @@ from unittest.mock import patch
 
 import pytest
 
-from pytest_aitest.core.agent import CLIServer
-from pytest_aitest.execution.servers import CLIServerProcess
+from pytest_skill_engineering.core.agent import CLIServer
+from pytest_skill_engineering.execution.servers import CLIServerProcess
 
 
 class TestToolNameGeneration:

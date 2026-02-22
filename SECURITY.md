@@ -8,7 +8,7 @@
 
 ## Reporting a Vulnerability
 
-If you discover a security vulnerability in pytest-aitest, please report it by emailing the maintainers directly rather than opening a public issue.
+If you discover a security vulnerability in pytest-skill-engineering, please report it by emailing the maintainers directly rather than opening a public issue.
 
 **Please include:**
 - Description of the vulnerability
@@ -20,7 +20,7 @@ We will acknowledge receipt within 48 hours and provide a timeline for a fix.
 
 ## Security Considerations
 
-This library makes calls to external LLM APIs and can execute MCP servers and CLI tools. When using pytest-aitest:
+This library makes calls to external LLM APIs and can execute MCP servers and CLI tools. When using pytest-skill-engineering:
 
 - **API Keys**: Never commit API keys to version control. Use environment variables.
 - **Sensitive Data**: Be cautious about what content you send to LLM providers for evaluation.

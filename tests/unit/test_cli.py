@@ -7,13 +7,13 @@ import os
 from pathlib import Path
 from unittest import mock
 
-from pytest_aitest.cli import (
+from pytest_skill_engineering.cli import (
     get_config_value,
     load_config_from_pyproject,
     load_suite_report,
     main,
 )
-from pytest_aitest.reporting.collector import SuiteReport
+from pytest_skill_engineering.reporting.collector import SuiteReport
 
 
 class TestConfigLoading:
@@ -27,7 +27,7 @@ class TestConfigLoading:
     def test_env_var_over_pyproject(self, tmp_path: Path, monkeypatch: mock.MagicMock) -> None:
         # Create pyproject.toml
         pyproject = tmp_path / "pyproject.toml"
-        pyproject.write_text('[tool.pytest-aitest-report]\nsummary-model = "toml-model"')
+        pyproject.write_text('[tool.pytest-skill-engineering-report]\nsummary-model = "toml-model"')
 
         monkeypatch.chdir(tmp_path)
         with mock.patch.dict(os.environ, {"AITEST_SUMMARY_MODEL": "env-model"}):
@@ -37,7 +37,7 @@ class TestConfigLoading:
     def test_pyproject_fallback(self, tmp_path: Path, monkeypatch: mock.MagicMock) -> None:
         # Create pyproject.toml
         pyproject = tmp_path / "pyproject.toml"
-        pyproject.write_text('[tool.pytest-aitest-report]\nsummary-model = "toml-model"')
+        pyproject.write_text('[tool.pytest-skill-engineering-report]\nsummary-model = "toml-model"')
 
         monkeypatch.chdir(tmp_path)
         # Clear env var if set
@@ -299,7 +299,7 @@ class TestMainCLI:
         json_path.write_text(json.dumps(json_data), encoding="utf-8")
         html_path = tmp_path / "report.html"
 
-        with mock.patch("pytest_aitest.cli.generate_ai_summary") as mock_summary:
+        with mock.patch("pytest_skill_engineering.cli.generate_ai_summary") as mock_summary:
             mock_summary.return_value = mock.MagicMock(
                 markdown_summary="Fresh insights",
                 model="test-model",
@@ -346,7 +346,7 @@ class TestMainCLI:
         json_path.write_text(json.dumps(json_data), encoding="utf-8")
         html_path = tmp_path / "report.html"
 
-        with mock.patch("pytest_aitest.cli.generate_ai_summary") as mock_summary:
+        with mock.patch("pytest_skill_engineering.cli.generate_ai_summary") as mock_summary:
             mock_summary.return_value = mock.MagicMock(
                 markdown_summary="Fresh insights",
                 model="test-model",
@@ -396,7 +396,7 @@ class TestMainCLI:
         prompt_path = tmp_path / "analysis_prompt.md"
         prompt_path.write_text("Custom prompt", encoding="utf-8")
 
-        with mock.patch("pytest_aitest.cli.generate_ai_summary") as mock_summary:
+        with mock.patch("pytest_skill_engineering.cli.generate_ai_summary") as mock_summary:
             mock_summary.return_value = mock.MagicMock(
                 markdown_summary="Fresh insights",
                 model="test-model",

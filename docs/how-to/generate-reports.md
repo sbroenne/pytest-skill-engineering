@@ -71,20 +71,20 @@ Regenerate reports from saved JSON without re-running tests:
 
 ```bash
 # Regenerate HTML from saved JSON (reuses existing AI insights)
-pytest-aitest-report aitest-reports/results.json \
+pytest-skill-engineering-report aitest-reports/results.json \
     --html report.html
 
 # Generate Markdown report
-pytest-aitest-report aitest-reports/results.json \
+pytest-skill-engineering-report aitest-reports/results.json \
     --md report.md
 
 # Generate both HTML and Markdown
-pytest-aitest-report results.json \
+pytest-skill-engineering-report results.json \
     --html report.html \
     --md report.md
 
 # Regenerate with fresh AI insights from a different model
-pytest-aitest-report results.json \
+pytest-skill-engineering-report results.json \
     --html report.html \
     --summary --summary-model azure/gpt-4.1
 ```
@@ -114,7 +114,7 @@ The AI detects *what varies* between agents to focus its analysis:
 | What Varies | AI Analysis Focuses On |
 |-------------|------------------------|
 | Model | Which model works best |
-| System Prompt | Which instructions work best |
+| Custom Agent | Which agent instructions work best |
 | Skill | Whether domain knowledge helps |
 | Server | Which implementation is more reliable |
 

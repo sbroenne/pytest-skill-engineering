@@ -1,10 +1,10 @@
 ---
-description: "Test-driven development for AI interfaces. Write tests first, then iterate on tool descriptions, schemas, and prompts until LLMs can use them."
+description: "Moved — see Skill Engineering."
 ---
 
 # Test-Driven Development for AI Interfaces
 
-pytest-aitest enables TDD for the parts of your system that no compiler can check: tool descriptions, schemas, system prompts, and skills.
+> This page has moved. See **[Skill Engineering](skill-engineering.md)** for the updated content.
 
 ## The Problem TDD Solves
 
@@ -12,7 +12,7 @@ Traditional code has a fast feedback loop. Write a function, the compiler catche
 
 AI interfaces have **no feedback loop**. You write a tool description, deploy it, and discover it's broken when users complain that the LLM picks the wrong tool. There's no compiler for "this description is confusing to an LLM." There's no linter for "this parameter name is ambiguous."
 
-pytest-aitest creates that missing feedback loop.
+pytest-skill-engineering creates that missing feedback loop.
 
 ## The TDD Cycle
 
@@ -38,7 +38,7 @@ Run it. The LLM reads your tool descriptions, tries to use them, and fails. Mayb
 
 ### Green: Fix the Interface
 
-Now improve the thing the LLM actually sees — your tool descriptions, schemas, or system prompt:
+Now improve the thing the LLM actually sees — your tool descriptions, schemas, or skill instructions:
 
 ```python
 # Before: LLM confused get_balance with get_all_balances
@@ -75,16 +75,17 @@ You didn't know this was a problem. The AI found it by analyzing actual LLM beha
 
 ## What You're Designing
 
-In traditional TDD, you design functions and classes. In pytest-aitest, you design **what the LLM sees**:
+In traditional TDD, you design functions and classes. In pytest-skill-engineering, you design the **skill engineering stack** — the modular, callable capabilities the LLM actually sees and has to orchestrate:
 
-| Traditional TDD | AI Interface TDD |
+| Traditional TDD | Skill Engineering TDD |
 |-----------------|-----------------|
 | Function signatures | Tool descriptions |
 | Type definitions | Parameter schemas |
-| API documentation | System prompts |
-| — | Agent skills |
+| API documentation | Agent skills |
+| Serialized responses | MCP prompt templates |
+| — | Custom agent instructions |
 
-These are your "code." They have no type system, no compiler, no static analysis. The only way to validate them is to let an LLM try to use them — which is exactly what pytest-aitest does.
+These are your "code." They have no type system, no compiler, no static analysis. The only way to validate them is to let an LLM try to use them — which is exactly what pytest-skill-engineering does.
 
 ## Why Not Just Manual Testing?
 
@@ -95,7 +96,7 @@ You could test manually: open a chat, type a prompt, see if the LLM uses the rig
 - **No CI/CD** — You can't gate deployments on "I chatted with it and it seemed fine."
 - **No analysis** — You see what failed, but not *why* or *how to fix it*.
 
-pytest-aitest gives you automated, repeatable, analyzable tests for your AI interfaces — the same guarantees TDD gives you for code.
+pytest-skill-engineering gives you automated, repeatable, analyzable tests for your AI interfaces — the same guarantees TDD gives you for code.
 
 ## The Feedback Loop
 
@@ -105,7 +106,7 @@ The key insight: **AI analysis closes the loop that traditional testing leaves o
 Write test → Run → Fail → Fix interface → Pass → AI analysis → Improve further → ...
 ```
 
-Traditional test frameworks stop at pass/fail. pytest-aitest continues: the AI reads your results and produces specific, actionable suggestions for tool descriptions, system prompts, and cost optimization. This is the refactoring step that makes TDD powerful — applied to AI interfaces.
+Traditional test frameworks stop at pass/fail. pytest-skill-engineering continues: the AI reads your results and produces specific, actionable suggestions for tool descriptions, skill engineering, and cost optimization. This is the refactoring step that makes TDD powerful — applied to AI interfaces.
 
 ## Getting Started
 

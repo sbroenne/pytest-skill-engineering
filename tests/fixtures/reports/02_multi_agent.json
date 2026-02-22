@@ -1,5 +1,5 @@
 {
-  "name": "pytest-aitest",
+  "name": "pytest-skill-engineering",
   "timestamp": "2026-02-07T19:20:54.668270",
   "duration_ms": 55774.01089994237,
   "tests": [
@@ -103,7 +103,7 @@
                 "account"
               ]
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "get_all_balances",
@@ -112,7 +112,7 @@
               "type": "object",
               "properties": {}
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "transfer",
@@ -147,7 +147,7 @@
                 "amount"
               ]
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "deposit",
@@ -173,7 +173,7 @@
                 "amount"
               ]
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "withdraw",
@@ -199,7 +199,7 @@
                 "amount"
               ]
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "get_transactions",
@@ -222,7 +222,7 @@
                 }
               }
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           }
         ],
         "skill_info": null,
@@ -345,7 +345,7 @@
                 "account"
               ]
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "get_all_balances",
@@ -354,7 +354,7 @@
               "type": "object",
               "properties": {}
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "transfer",
@@ -389,7 +389,7 @@
                 "amount"
               ]
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "deposit",
@@ -415,7 +415,7 @@
                 "amount"
               ]
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "withdraw",
@@ -441,7 +441,7 @@
                 "amount"
               ]
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "get_transactions",
@@ -464,7 +464,7 @@
                 }
               }
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           }
         ],
         "skill_info": null,
@@ -609,7 +609,7 @@
                 "account"
               ]
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "get_all_balances",
@@ -618,7 +618,7 @@
               "type": "object",
               "properties": {}
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "transfer",
@@ -653,7 +653,7 @@
                 "amount"
               ]
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "deposit",
@@ -679,7 +679,7 @@
                 "amount"
               ]
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "withdraw",
@@ -705,7 +705,7 @@
                 "amount"
               ]
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "get_transactions",
@@ -728,7 +728,7 @@
                 }
               }
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           }
         ],
         "skill_info": null,
@@ -873,7 +873,7 @@
                 "account"
               ]
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "get_all_balances",
@@ -882,7 +882,7 @@
               "type": "object",
               "properties": {}
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "transfer",
@@ -917,7 +917,7 @@
                 "amount"
               ]
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "deposit",
@@ -943,7 +943,7 @@
                 "amount"
               ]
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "withdraw",
@@ -969,7 +969,7 @@
                 "amount"
               ]
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "get_transactions",
@@ -992,7 +992,7 @@
                 }
               }
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           }
         ],
         "skill_info": null,
@@ -1153,7 +1153,7 @@
                 "account"
               ]
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "get_all_balances",
@@ -1162,7 +1162,7 @@
               "type": "object",
               "properties": {}
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "transfer",
@@ -1197,7 +1197,7 @@
                 "amount"
               ]
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "deposit",
@@ -1223,7 +1223,7 @@
                 "amount"
               ]
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "withdraw",
@@ -1249,7 +1249,7 @@
                 "amount"
               ]
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "get_transactions",
@@ -1272,7 +1272,7 @@
                 }
               }
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           }
         ],
         "skill_info": null,
@@ -1395,7 +1395,7 @@
                 "account"
               ]
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "get_all_balances",
@@ -1404,7 +1404,7 @@
               "type": "object",
               "properties": {}
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "transfer",
@@ -1439,7 +1439,7 @@
                 "amount"
               ]
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "deposit",
@@ -1465,7 +1465,7 @@
                 "amount"
               ]
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "withdraw",
@@ -1491,7 +1491,7 @@
                 "amount"
               ]
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "get_transactions",
@@ -1514,7 +1514,7 @@
                 }
               }
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           }
         ],
         "skill_info": null,
@@ -1537,7 +1537,7 @@
   "suite_docstring": "Two agents compared side-by-side.",
   "schema_version": "3.0",
   "insights": {
-    "markdown_summary": "## \ud83c\udfaf Recommendation\n\n**Deploy: gpt-5-mini with default system prompt**\n\nAchieves **100% pass rate** across all tests with correct tool usage, at the cost of **higher spend** but **zero functional failures**.\n\n**Reasoning:**  \n- **Pass rate:** gpt-5-mini passed **3/3 tests (100%)**, while gpt-4.1-mini passed **2/3 (67%)** and is therefore disqualified for deployment.  \n- **Cost:** gpt-5-mini cost **$0.00331 total**, versus **$0.00125 total** for gpt-4.1-mini. Despite being ~**165% more expensive**, gpt-5-mini is the **only configuration that meets correctness requirements**.  \n- **Response quality:** gpt-5-mini consistently followed the instruction to *always use tools*, including attempting the `withdraw` tool even when the action would fail.\n\n**Alternatives:**  \n- **gpt-4.1-mini (disqualified):** ~62% lower cost, but fails the insufficient funds test by skipping the required `withdraw` tool call, violating test expectations and system prompt constraints.\n\n## \u274c Failure Analysis\n\n### Insufficient funds \u2014 tests error recovery. (gpt-4.1-mini)\n- **Problem:** The agent did not call the `withdraw` tool when asked to withdraw $50,000, causing the test assertion `tool_was_called('withdraw')` to fail.\n- **Root Cause:** The model pre-validated the balance using `get_balance` and short-circuited the workflow, opting to explain the failure in natural language instead of attempting the withdrawal. This contradicts both the **system prompt** (\u201cAlways use tools\u201d) and the test\u2019s expectation that error handling occurs via the tool.\n- **Fix:** Strengthen the system prompt to explicitly require attempting the requested action tool even if failure is expected.\n\n**Exact system prompt change:**\n```\nYou are a helpful banking assistant.\nUse the available tools to manage accounts and transactions.\nAlways use tools for requested actions, even if you expect them to fail (e.g., insufficient funds).\nNever make up balances or account data.\n```\n\n## \ud83d\udd27 MCP Tool Feedback\n\n### pytest_aitest.testing.banking_mcp\nOverall, tools are clear and consistently used. Error behavior is surfaced correctly to the agent.\n\n| Tool | Status | Calls | Issues |\n|------|--------|-------|--------|\n| get_balance | \u2705 | 3 | Working well |\n| get_all_balances | \u2705 | 3 | Working well |\n| transfer | \u2705 | 2 | Working well |\n| withdraw | \u2705 | 1 | Error handling works as intended |\n| deposit | \u2705 | 0 | Not exercised |\n| get_transactions | \u2705 | 0 | Not exercised |\n\nNo description rewrites required; tool naming and schemas are unambiguous.\n\n## \ud83d\udcdd System Prompt Feedback\n\n### default (mixed effectiveness)\n- **Token count:** ~27 tokens\n- **Problem:** The instruction \u201cAlways use tools\u201d is underspecified for failure scenarios. gpt-4.1-mini interpreted it as \u201cuse tools to fetch data,\u201d not \u201cattempt the requested action.\u201d\n- **Suggested change:** Add explicit guidance for error paths.\n\n**Exact replacement:**\n```\nYou are a helpful banking assistant.\nUse the available tools to manage accounts and transactions.\nAlways use tools for requested actions, even if you expect them to fail (for example, insufficient funds).\nNever make up balances or account data.\n```\n\n## \ud83d\udca1 Optimizations\n\n1. **Clarify mandatory action-tool usage** (recommended)\n   - Current: Prompt allows models to short-circuit actions based on reasoning.\n   - Change: Explicitly require calling the action tool (`withdraw`, `transfer`, etc.) whenever the user requests an action.\n   - Impact: Eliminates action-skipping failures; prevents disqualification of lower-cost models, potentially enabling **>60% cost reduction** if gpt-4.1-mini becomes compliant.\n\n2. **Reduce verbose recovery messaging** (suggestion)\n   - Current: gpt-5-mini produces long option lists after failures (e.g., insufficient funds), increasing token usage.\n   - Change: Limit recovery suggestions to 1\u20132 concise options unless the user asks for details.\n   - Impact: ~10\u201315% cost reduction on failure-path interactions.\n\n## \ud83d\udce6 Tool Response Optimization\n\n### withdraw (from pytest_aitest.testing.banking_mcp)\n- **Current response size:** ~20\u201325 tokens (error string)\n- **Issues found:** Error is plain text; agent does not need full sentence phrasing.\n- **Suggested optimization:** Return a compact, structured error object.\n\n**Example current vs optimized:**\n```json\n// Current (~22 tokens)\n\"Insufficient funds. checking has $1,500.00.\"\n\n// Optimized (~10 tokens)\n{\"error\":\"INSUFFICIENT_FUNDS\",\"balance\":1500}\n```\n- **Estimated savings:** ~12 tokens per failed call (~50% reduction)\n\nThis optimization is optional but would further reduce costs on negative paths without affecting correctness.",
+    "markdown_summary": "## \ud83c\udfaf Recommendation\n\n**Deploy: gpt-5-mini with default system prompt**\n\nAchieves **100% pass rate** across all tests with correct tool usage, at the cost of **higher spend** but **zero functional failures**.\n\n**Reasoning:**  \n- **Pass rate:** gpt-5-mini passed **3/3 tests (100%)**, while gpt-4.1-mini passed **2/3 (67%)** and is therefore disqualified for deployment.  \n- **Cost:** gpt-5-mini cost **$0.00331 total**, versus **$0.00125 total** for gpt-4.1-mini. Despite being ~**165% more expensive**, gpt-5-mini is the **only configuration that meets correctness requirements**.  \n- **Response quality:** gpt-5-mini consistently followed the instruction to *always use tools*, including attempting the `withdraw` tool even when the action would fail.\n\n**Alternatives:**  \n- **gpt-4.1-mini (disqualified):** ~62% lower cost, but fails the insufficient funds test by skipping the required `withdraw` tool call, violating test expectations and system prompt constraints.\n\n## \u274c Failure Analysis\n\n### Insufficient funds \u2014 tests error recovery. (gpt-4.1-mini)\n- **Problem:** The agent did not call the `withdraw` tool when asked to withdraw $50,000, causing the test assertion `tool_was_called('withdraw')` to fail.\n- **Root Cause:** The model pre-validated the balance using `get_balance` and short-circuited the workflow, opting to explain the failure in natural language instead of attempting the withdrawal. This contradicts both the **system prompt** (\u201cAlways use tools\u201d) and the test\u2019s expectation that error handling occurs via the tool.\n- **Fix:** Strengthen the system prompt to explicitly require attempting the requested action tool even if failure is expected.\n\n**Exact system prompt change:**\n```\nYou are a helpful banking assistant.\nUse the available tools to manage accounts and transactions.\nAlways use tools for requested actions, even if you expect them to fail (e.g., insufficient funds).\nNever make up balances or account data.\n```\n\n## \ud83d\udd27 MCP Tool Feedback\n\n### pytest_skill_engineering.testing.banking_mcp\nOverall, tools are clear and consistently used. Error behavior is surfaced correctly to the agent.\n\n| Tool | Status | Calls | Issues |\n|------|--------|-------|--------|\n| get_balance | \u2705 | 3 | Working well |\n| get_all_balances | \u2705 | 3 | Working well |\n| transfer | \u2705 | 2 | Working well |\n| withdraw | \u2705 | 1 | Error handling works as intended |\n| deposit | \u2705 | 0 | Not exercised |\n| get_transactions | \u2705 | 0 | Not exercised |\n\nNo description rewrites required; tool naming and schemas are unambiguous.\n\n## \ud83d\udcdd System Prompt Feedback\n\n### default (mixed effectiveness)\n- **Token count:** ~27 tokens\n- **Problem:** The instruction \u201cAlways use tools\u201d is underspecified for failure scenarios. gpt-4.1-mini interpreted it as \u201cuse tools to fetch data,\u201d not \u201cattempt the requested action.\u201d\n- **Suggested change:** Add explicit guidance for error paths.\n\n**Exact replacement:**\n```\nYou are a helpful banking assistant.\nUse the available tools to manage accounts and transactions.\nAlways use tools for requested actions, even if you expect them to fail (for example, insufficient funds).\nNever make up balances or account data.\n```\n\n## \ud83d\udca1 Optimizations\n\n1. **Clarify mandatory action-tool usage** (recommended)\n   - Current: Prompt allows models to short-circuit actions based on reasoning.\n   - Change: Explicitly require calling the action tool (`withdraw`, `transfer`, etc.) whenever the user requests an action.\n   - Impact: Eliminates action-skipping failures; prevents disqualification of lower-cost models, potentially enabling **>60% cost reduction** if gpt-4.1-mini becomes compliant.\n\n2. **Reduce verbose recovery messaging** (suggestion)\n   - Current: gpt-5-mini produces long option lists after failures (e.g., insufficient funds), increasing token usage.\n   - Change: Limit recovery suggestions to 1\u20132 concise options unless the user asks for details.\n   - Impact: ~10\u201315% cost reduction on failure-path interactions.\n\n## \ud83d\udce6 Tool Response Optimization\n\n### withdraw (from pytest_skill_engineering.testing.banking_mcp)\n- **Current response size:** ~20\u201325 tokens (error string)\n- **Issues found:** Error is plain text; agent does not need full sentence phrasing.\n- **Suggested optimization:** Return a compact, structured error object.\n\n**Example current vs optimized:**\n```json\n// Current (~22 tokens)\n\"Insufficient funds. checking has $1,500.00.\"\n\n// Optimized (~10 tokens)\n{\"error\":\"INSUFFICIENT_FUNDS\",\"balance\":1500}\n```\n- **Estimated savings:** ~12 tokens per failed call (~50% reduction)\n\nThis optimization is optional but would further reduce costs on negative paths without affecting correctness.",
     "cost_usd": 0.0200571,
     "tokens_used": 5598,
     "cached": false

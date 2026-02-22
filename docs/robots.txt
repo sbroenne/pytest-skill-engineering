@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://sbroenne.github.io/pytest-aitest/sitemap.xml
+Sitemap: https://sbroenne.github.io/pytest-skill-engineering/sitemap.xml

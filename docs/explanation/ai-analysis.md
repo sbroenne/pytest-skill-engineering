@@ -4,7 +4,7 @@ description: "AI-powered test analysis that tells you what to fix. Get deploymen
 
 # AI Analysis
 
-Every pytest-aitest report includes AI-generated analysis. An LLM reads your test results and produces actionable feedback — not just metrics.
+Every pytest-skill-engineering report includes AI-generated analysis. An LLM reads your test results and produces actionable feedback — not just metrics.
 
 ## Why It's Mandatory
 
@@ -16,7 +16,7 @@ Tests: 47 passed, 3 failed
 
 For AI tool testing, this is useless. A test might fail because your tool description is ambiguous, your parameter name is confusing, or your system prompt contradicts itself. Metrics can't diagnose these problems.
 
-pytest-aitest **requires** an AI model to generate reports:
+pytest-skill-engineering **requires** an AI model to generate reports:
 
 ```bash
 pytest tests/ --aitest-html=report.html --aitest-summary-model=azure/gpt-5.2-chat
@@ -62,7 +62,7 @@ The summary model analyzes your test results, which are relatively small:
 
 ## Sample Reports
 
-See these example reports to understand what pytest-aitest generates:
+See these example reports to understand what pytest-skill-engineering generates:
 
 | Report | Scenario | What It Shows |
 |--------|----------|---------------|

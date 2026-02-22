@@ -1,5 +1,5 @@
 ---
-description: "Configure pytest-aitest via pyproject.toml or command-line flags. Set up models, reports, pass rate thresholds, and provider settings."
+description: "Configure pytest-skill-engineering via pyproject.toml or command-line flags. Set up models, reports, pass rate thresholds, and provider settings."
 ---
 
 # Configuration
@@ -17,7 +17,7 @@ addopts = """
 """
 ```
 
-Requires `uv add pytest-aitest[copilot]` and `gh auth login`.
+Requires `uv add pytest-skill-engineering[copilot]` and `gh auth login`.
 
 **Enterprise — Azure OpenAI:**
 
@@ -39,7 +39,7 @@ Reports are generated automatically with AI insights.
 
 ## LLM Provider Setup
 
-pytest-aitest uses [Pydantic AI](https://ai.pydantic.dev/) for LLM access. Configure via environment variables.
+pytest-skill-engineering uses [Pydantic AI](https://ai.pydantic.dev/) for LLM access. Configure via environment variables.
 
 ### Azure OpenAI (Enterprise / CI)
 
@@ -60,7 +60,7 @@ See [Pydantic AI model docs](https://ai.pydantic.dev/models/) for Anthropic, Goo
 
 ### GitHub Copilot (via SDK)
 
-If you have `pytest-aitest[copilot]` installed, you can use Copilot-accessible models for **all** LLM calls — no separate API key needed:
+If you have `pytest-skill-engineering[copilot]` installed, you can use Copilot-accessible models for **all** LLM calls — no separate API key needed:
 
 ```bash
 gh auth login  # One-time authentication
@@ -93,7 +93,7 @@ AITEST_INTEGRATION_JUDGE_MODEL=copilot/gpt-5-mini
 ## Provider Configuration
 
 ```python
-from pytest_aitest import Provider
+from pytest_skill_engineering import Provider
 
 # Basic - Pydantic AI handles auth via env vars
 provider = Provider(model="azure/gpt-5-mini")
@@ -116,7 +116,7 @@ provider = Provider(
 ## Agent Configuration
 
 ```python
-from pytest_aitest import Agent, ClarificationDetection, Provider, MCPServer
+from pytest_skill_engineering import Agent, ClarificationDetection, Provider, MCPServer
 
 agent = Agent(
     provider=Provider(model="azure/gpt-5-mini"),
@@ -135,7 +135,7 @@ agent = Agent(
 ## MCP Server Configuration
 
 ```python
-from pytest_aitest import MCPServer, Wait
+from pytest_skill_engineering import MCPServer, Wait
 
 server = MCPServer(
     command=["python", "-m", "my_server"],
@@ -151,7 +151,7 @@ See [Test MCP Servers](../how-to/test-mcp-servers.md) for complete options.
 ## CLI Server Configuration
 
 ```python
-from pytest_aitest import CLIServer
+from pytest_skill_engineering import CLIServer
 
 cli = CLIServer(
     name="git-cli",
@@ -227,7 +227,7 @@ pytest tests/ --aitest-summary-model=azure/gpt-5.2-chat --aitest-summary-compact
 You can retrieve the effective AI analysis prompt (CLI override → hook override → built-in default) in code:
 
 ```python
-from pytest_aitest import get_analysis_prompt
+from pytest_skill_engineering import get_analysis_prompt
 
 prompt_text = get_analysis_prompt(pytest_config)
 ```
@@ -235,7 +235,7 @@ prompt_text = get_analysis_prompt(pytest_config)
 To also inspect where it came from:
 
 ```python
-from pytest_aitest import get_analysis_prompt_details
+from pytest_skill_engineering import get_analysis_prompt_details
 
 prompt_text, source, path = get_analysis_prompt_details(pytest_config)
 # source: "cli-file" | "hook" | "built-in"

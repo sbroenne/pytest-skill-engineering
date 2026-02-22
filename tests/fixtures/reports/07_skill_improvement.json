@@ -1,5 +1,5 @@
 {
-  "name": "pytest-aitest",
+  "name": "pytest-skill-engineering",
   "timestamp": "2026-02-07T19:39:58.046563",
   "duration_ms": 72078.94730003318,
   "tests": [
@@ -101,7 +101,7 @@
                 "account"
               ]
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "get_all_balances",
@@ -110,7 +110,7 @@
               "type": "object",
               "properties": {}
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "transfer",
@@ -145,7 +145,7 @@
                 "amount"
               ]
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "deposit",
@@ -171,7 +171,7 @@
                 "amount"
               ]
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "withdraw",
@@ -197,7 +197,7 @@
                 "amount"
               ]
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "get_transactions",
@@ -220,7 +220,7 @@
                 }
               }
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           }
         ],
         "skill_info": null,
@@ -304,7 +304,7 @@
                 "account"
               ]
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "get_all_balances",
@@ -313,7 +313,7 @@
               "type": "object",
               "properties": {}
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "transfer",
@@ -348,7 +348,7 @@
                 "amount"
               ]
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "deposit",
@@ -374,7 +374,7 @@
                 "amount"
               ]
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "withdraw",
@@ -400,7 +400,7 @@
                 "amount"
               ]
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "get_transactions",
@@ -423,7 +423,7 @@
                 }
               }
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           }
         ],
         "skill_info": {
@@ -505,7 +505,7 @@
                 "account"
               ]
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "get_all_balances",
@@ -514,7 +514,7 @@
               "type": "object",
               "properties": {}
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "transfer",
@@ -549,7 +549,7 @@
                 "amount"
               ]
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "deposit",
@@ -575,7 +575,7 @@
                 "amount"
               ]
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "withdraw",
@@ -601,7 +601,7 @@
                 "amount"
               ]
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "get_transactions",
@@ -624,7 +624,7 @@
                 }
               }
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           }
         ],
         "skill_info": null,
@@ -708,7 +708,7 @@
                 "account"
               ]
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "get_all_balances",
@@ -717,7 +717,7 @@
               "type": "object",
               "properties": {}
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "transfer",
@@ -752,7 +752,7 @@
                 "amount"
               ]
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "deposit",
@@ -778,7 +778,7 @@
                 "amount"
               ]
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "withdraw",
@@ -804,7 +804,7 @@
                 "amount"
               ]
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "get_transactions",
@@ -827,7 +827,7 @@
                 }
               }
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           }
         ],
         "skill_info": {
@@ -862,7 +862,7 @@
   "suite_docstring": "Skill improvement \u2014 baseline vs skilled agent.",
   "schema_version": "3.0",
   "insights": {
-    "markdown_summary": "## \ud83c\udfaf Recommendation\n\n**Deploy: baseline (gpt-5-mini + default system prompt)**\n\nAchieves **100% pass rate** across tested scenarios at **~2% lower cost** than the skilled variant, while correctly invoking banking tools when required.\n\n**Reasoning:**  \n- **Pass rate:** Baseline passed all tests; the skilled agent failed a required tool-usage assertion.  \n- **Cost:** Baseline total cost is lower ($0.002759 vs $0.002804 in the comparable allocation test, ~2% savings).  \n- **Behavior:** Baseline reliably calls `get_all_balances` when asked for allocation advice, satisfying test expectations.\n\n**Alternatives:**  \n- **with-financial-skill (gpt-5-mini)** \u2014 **Disqualified** due to failing the allocation advice test (did not call any balance tool despite the test requiring it).\n\n## \u274c Failure Analysis\n\n### Ask for allocation advice \u2014 skilled agent should apply 50/30/20 rule (with-financial-skill)\n- **Problem:** The agent provided high-level guidance and asked a clarifying question instead of fetching balances, causing the test assertion to fail.\n- **Root Cause:** The **system prompt/skill lacks an explicit instruction to proactively call balance tools** when allocation advice is requested. The agent optimized for conversational clarification over tool usage.\n- **Fix:** Add an explicit directive to the system prompt or skill to always fetch balances for allocation questions.\n\n**Exact text to add to the Financial Advisor Skill (top section):**\n```\nWhen a user asks how to allocate money across accounts, always retrieve current balances first using get_all_balances (or get_balance if only one account is relevant) before giving advice. Do not ask clarifying questions before checking balances.\n```\n\n## \ud83d\udd27 MCP Tool Feedback\n\n### pytest_aitest.testing.banking_mcp\nOverall, tools are clear and functional. The issue observed is **agent hesitation**, not tool failure.\n\n| Tool | Status | Calls | Issues |\n|------|--------|-------|--------|\n| get_all_balances | \u2705 | 1 | Working well |\n| get_balance | \u2705 | 0 | Not used in failures; acceptable |\n| transfer | \u2705 | 0 | Not exercised |\n| deposit | \u2705 | 0 | Not exercised |\n| withdraw | \u2705 | 0 | Not exercised |\n| get_transactions | \u2705 | 0 | Not exercised |\n\n## \ud83d\udcdd System Prompt Feedback\n\n### default (effective)\n- **Token count:** ~14\n- **Assessment:** Clear, concise, and effective. The prompt implicitly encourages tool use and resulted in correct behavior.\n- **Suggested change:** None.\n\n### Financial Advisor Skill prompt (mixed)\n- **Token count:** ~350+ (skill content)\n- **Problem:** Strong financial guidance, but **missing operational instructions** about when to use MCP tools. This caused a direct test failure.\n- **Suggested change:** Add the explicit tool-usage instruction shown in the Failure Analysis section.\n\n## \ud83d\udcda Skill Feedback\n\n### financial-advisor (mixed)\n- **Usage rate:** High in savings-related responses; partial in allocation advice.\n- **Token cost:** High relative to baseline.\n- **Problem:** The skill emphasizes advisory principles but not **tool orchestration**, leading to non-compliant behavior in tool-dependent tests.\n- **Suggested change:** Add a short \u201cTool Usage Rules\u201d subsection at the top:\n```\n## Tool Usage Rules\n- For allocation, budgeting, or balance-based advice: always call the relevant balance tool first.\n- Prefer get_all_balances when multiple accounts exist.\n```\n\n## \ud83d\udca1 Optimizations\n\n1. **Enforce proactive balance retrieval** (recommended)\n   - Current: Skilled agent asks clarifying questions instead of calling tools.\n   - Change: Add explicit tool-usage rules to the skill/system prompt.\n   - Impact: **Eliminates test failures** and avoids re-runs, saving ~$0.0028 per failed test execution.\n\n2. **Reduce skill verbosity** (suggestion)\n   - Current: Long skill content increases token usage without affecting tool behavior.\n   - Change: Move \u201cBudget Categories\u201d and \u201cRed Flags\u201d to a secondary section loaded only when explicitly needed.\n   - Impact: **~20\u201330% cost reduction** for skilled runs due to fewer prompt tokens.\n\n## \ud83d\udce6 Tool Response Optimization\n\n### get_all_balances (from pytest_aitest.testing.banking_mcp)\n- **Current response size:** ~55\u201365 tokens\n- **Issues found:** Duplicate formatted fields (`formatted`, `total_formatted`) are not used by the agent in reasoning.\n- **Suggested optimization:** Remove formatted strings or make them optional.\n\n**Example current vs optimized:**\n```json\n// Current (~60 tokens)\n{\n  \"accounts\": {\n    \"checking\": {\"balance\": 1500.0, \"formatted\": \"$1,500.00\"},\n    \"savings\": {\"balance\": 3000.0, \"formatted\": \"$3,000.00\"}\n  },\n  \"total\": 4500.0,\n  \"total_formatted\": \"$4,500.00\"\n}\n\n// Optimized (~30 tokens)\n{\n  \"accounts\": {\n    \"checking\": 1500.0,\n    \"savings\": 3000.0\n  },\n  \"total\": 4500.0\n}\n```\n- **Estimated savings:** ~30 tokens per call (**~50% reduction**)\n\n",
+    "markdown_summary": "## \ud83c\udfaf Recommendation\n\n**Deploy: baseline (gpt-5-mini + default system prompt)**\n\nAchieves **100% pass rate** across tested scenarios at **~2% lower cost** than the skilled variant, while correctly invoking banking tools when required.\n\n**Reasoning:**  \n- **Pass rate:** Baseline passed all tests; the skilled agent failed a required tool-usage assertion.  \n- **Cost:** Baseline total cost is lower ($0.002759 vs $0.002804 in the comparable allocation test, ~2% savings).  \n- **Behavior:** Baseline reliably calls `get_all_balances` when asked for allocation advice, satisfying test expectations.\n\n**Alternatives:**  \n- **with-financial-skill (gpt-5-mini)** \u2014 **Disqualified** due to failing the allocation advice test (did not call any balance tool despite the test requiring it).\n\n## \u274c Failure Analysis\n\n### Ask for allocation advice \u2014 skilled agent should apply 50/30/20 rule (with-financial-skill)\n- **Problem:** The agent provided high-level guidance and asked a clarifying question instead of fetching balances, causing the test assertion to fail.\n- **Root Cause:** The **system prompt/skill lacks an explicit instruction to proactively call balance tools** when allocation advice is requested. The agent optimized for conversational clarification over tool usage.\n- **Fix:** Add an explicit directive to the system prompt or skill to always fetch balances for allocation questions.\n\n**Exact text to add to the Financial Advisor Skill (top section):**\n```\nWhen a user asks how to allocate money across accounts, always retrieve current balances first using get_all_balances (or get_balance if only one account is relevant) before giving advice. Do not ask clarifying questions before checking balances.\n```\n\n## \ud83d\udd27 MCP Tool Feedback\n\n### pytest_skill_engineering.testing.banking_mcp\nOverall, tools are clear and functional. The issue observed is **agent hesitation**, not tool failure.\n\n| Tool | Status | Calls | Issues |\n|------|--------|-------|--------|\n| get_all_balances | \u2705 | 1 | Working well |\n| get_balance | \u2705 | 0 | Not used in failures; acceptable |\n| transfer | \u2705 | 0 | Not exercised |\n| deposit | \u2705 | 0 | Not exercised |\n| withdraw | \u2705 | 0 | Not exercised |\n| get_transactions | \u2705 | 0 | Not exercised |\n\n## \ud83d\udcdd System Prompt Feedback\n\n### default (effective)\n- **Token count:** ~14\n- **Assessment:** Clear, concise, and effective. The prompt implicitly encourages tool use and resulted in correct behavior.\n- **Suggested change:** None.\n\n### Financial Advisor Skill prompt (mixed)\n- **Token count:** ~350+ (skill content)\n- **Problem:** Strong financial guidance, but **missing operational instructions** about when to use MCP tools. This caused a direct test failure.\n- **Suggested change:** Add the explicit tool-usage instruction shown in the Failure Analysis section.\n\n## \ud83d\udcda Skill Feedback\n\n### financial-advisor (mixed)\n- **Usage rate:** High in savings-related responses; partial in allocation advice.\n- **Token cost:** High relative to baseline.\n- **Problem:** The skill emphasizes advisory principles but not **tool orchestration**, leading to non-compliant behavior in tool-dependent tests.\n- **Suggested change:** Add a short \u201cTool Usage Rules\u201d subsection at the top:\n```\n## Tool Usage Rules\n- For allocation, budgeting, or balance-based advice: always call the relevant balance tool first.\n- Prefer get_all_balances when multiple accounts exist.\n```\n\n## \ud83d\udca1 Optimizations\n\n1. **Enforce proactive balance retrieval** (recommended)\n   - Current: Skilled agent asks clarifying questions instead of calling tools.\n   - Change: Add explicit tool-usage rules to the skill/system prompt.\n   - Impact: **Eliminates test failures** and avoids re-runs, saving ~$0.0028 per failed test execution.\n\n2. **Reduce skill verbosity** (suggestion)\n   - Current: Long skill content increases token usage without affecting tool behavior.\n   - Change: Move \u201cBudget Categories\u201d and \u201cRed Flags\u201d to a secondary section loaded only when explicitly needed.\n   - Impact: **~20\u201330% cost reduction** for skilled runs due to fewer prompt tokens.\n\n## \ud83d\udce6 Tool Response Optimization\n\n### get_all_balances (from pytest_skill_engineering.testing.banking_mcp)\n- **Current response size:** ~55\u201365 tokens\n- **Issues found:** Duplicate formatted fields (`formatted`, `total_formatted`) are not used by the agent in reasoning.\n- **Suggested optimization:** Remove formatted strings or make them optional.\n\n**Example current vs optimized:**\n```json\n// Current (~60 tokens)\n{\n  \"accounts\": {\n    \"checking\": {\"balance\": 1500.0, \"formatted\": \"$1,500.00\"},\n    \"savings\": {\"balance\": 3000.0, \"formatted\": \"$3,000.00\"}\n  },\n  \"total\": 4500.0,\n  \"total_formatted\": \"$4,500.00\"\n}\n\n// Optimized (~30 tokens)\n{\n  \"accounts\": {\n    \"checking\": 1500.0,\n    \"savings\": 3000.0\n  },\n  \"total\": 4500.0\n}\n```\n- **Estimated savings:** ~30 tokens per call (**~50% reduction**)\n\n",
     "cost_usd": 0.0204876,
     "tokens_used": 5424,
     "cached": false

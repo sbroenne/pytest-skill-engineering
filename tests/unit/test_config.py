@@ -1,11 +1,11 @@
-"""Tests for pytest-aitest config models."""
+"""Tests for pytest-skill-engineering config models."""
 
 from __future__ import annotations
 
 import os
 from unittest.mock import patch
 
-from pytest_aitest.core.agent import (
+from pytest_skill_engineering.core.agent import (
     Agent,
     CLIServer,
     MCPServer,

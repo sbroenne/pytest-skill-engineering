@@ -8,7 +8,7 @@ import subprocess
 import pytest
 from pydantic_ai import Agent
 
-from pytest_aitest.execution.pydantic_adapter import build_model_from_string
+from pytest_skill_engineering.execution.pydantic_adapter import build_model_from_string
 
 # Default model — None means Copilot picks its default
 DEFAULT_MODEL: str | None = None

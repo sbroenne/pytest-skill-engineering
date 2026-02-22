@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from pytest_aitest.copilot.result import CopilotResult, ToolCall, Turn, UsageInfo
+from pytest_skill_engineering.copilot.result import CopilotResult, ToolCall, Turn, UsageInfo
 
 
 class TestCopilotResultProperties:
@@ -202,7 +202,7 @@ class TestFileHelpers:
     """Tests for file helper methods."""
 
     def _result_with_workdir(self, path) -> CopilotResult:
-        from pytest_aitest.copilot.agent import CopilotAgent
+        from pytest_skill_engineering.copilot.agent import CopilotAgent
 
         agent = CopilotAgent(working_directory=str(path))
         result = CopilotResult()

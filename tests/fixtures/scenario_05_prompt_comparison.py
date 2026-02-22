@@ -16,7 +16,7 @@ from pathlib import Path
 
 import pytest
 
-from pytest_aitest import Agent, MCPServer, Provider, Wait, load_system_prompts
+from pytest_skill_engineering import Agent, MCPServer, Provider, Wait, load_system_prompts
 
 pytestmark = [pytest.mark.integration]
 
@@ -25,7 +25,7 @@ PROMPTS_DIR = Path(__file__).parent.parent / "integration" / "prompts"
 PROMPTS = load_system_prompts(PROMPTS_DIR)
 
 banking_server = MCPServer(
-    command=[sys.executable, "-u", "-m", "pytest_aitest.testing.banking_mcp"],
+    command=[sys.executable, "-u", "-m", "pytest_skill_engineering.testing.banking_mcp"],
     wait=Wait.for_tools(
         ["get_balance", "get_all_balances", "transfer", "deposit", "withdraw", "get_transactions"]
     ),

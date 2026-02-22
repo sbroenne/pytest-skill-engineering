@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from pytest_aitest.copilot.agent import CopilotAgent, _parse_agent_file
+from pytest_skill_engineering.copilot.agent import CopilotAgent, _parse_agent_file
 
 
 class TestCopilotAgentDefaults:

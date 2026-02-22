@@ -1,5 +1,5 @@
 {
-  "name": "pytest-aitest",
+  "name": "pytest-skill-engineering",
   "timestamp": "2026-02-07T20:33:54.663809",
   "duration_ms": 32683.918800001265,
   "tests": [
@@ -103,7 +103,7 @@
                 "account"
               ]
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "get_all_balances",
@@ -112,7 +112,7 @@
               "type": "object",
               "properties": {}
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "transfer",
@@ -147,7 +147,7 @@
                 "amount"
               ]
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "deposit",
@@ -173,7 +173,7 @@
                 "amount"
               ]
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "withdraw",
@@ -199,7 +199,7 @@
                 "amount"
               ]
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "get_transactions",
@@ -222,7 +222,7 @@
                 }
               }
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           }
         ],
         "skill_info": null,
@@ -339,7 +339,7 @@
                 "account"
               ]
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "get_all_balances",
@@ -348,7 +348,7 @@
               "type": "object",
               "properties": {}
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "transfer",
@@ -383,7 +383,7 @@
                 "amount"
               ]
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "deposit",
@@ -409,7 +409,7 @@
                 "amount"
               ]
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "withdraw",
@@ -435,7 +435,7 @@
                 "amount"
               ]
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "get_transactions",
@@ -458,7 +458,7 @@
                 }
               }
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           }
         ],
         "skill_info": null,
@@ -614,7 +614,7 @@
                 "account"
               ]
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "get_all_balances",
@@ -623,7 +623,7 @@
               "type": "object",
               "properties": {}
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "transfer",
@@ -658,7 +658,7 @@
                 "amount"
               ]
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "deposit",
@@ -684,7 +684,7 @@
                 "amount"
               ]
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "withdraw",
@@ -710,7 +710,7 @@
                 "amount"
               ]
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "get_transactions",
@@ -733,7 +733,7 @@
                 }
               }
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           }
         ],
         "skill_info": null,
@@ -896,7 +896,7 @@
                 "account"
               ]
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "get_all_balances",
@@ -905,7 +905,7 @@
               "type": "object",
               "properties": {}
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "transfer",
@@ -940,7 +940,7 @@
                 "amount"
               ]
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "deposit",
@@ -966,7 +966,7 @@
                 "amount"
               ]
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "withdraw",
@@ -992,7 +992,7 @@
                 "amount"
               ]
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           },
           {
             "name": "get_transactions",
@@ -1015,7 +1015,7 @@
                 }
               }
             },
-            "server_name": "pytest_aitest.testing.banking_mcp"
+            "server_name": "pytest_skill_engineering.testing.banking_mcp"
           }
         ],
         "skill_info": null,
@@ -1046,7 +1046,7 @@
   "suite_docstring": "A/B server comparison \u2014 verbose vs terse system prompts.",
   "schema_version": "3.0",
   "insights": {
-    "markdown_summary": "## \ud83c\udfaf Recommendation\n\n**Deploy: terse-prompt (gpt-5-mini)**\n\nAchieves **100% pass rate at ~13% lower total cost** than the verbose prompt while producing equivalent tool usage and correct multi-step behavior.\n\n**Reasoning:** Both prompts passed all tests (100% pass rate). The terse prompt is cheaper across both scenarios ($0.001061 vs $0.001242 total, ~13% cost reduction) and used fewer tokens while still calling the correct tools in the correct order. Response quality is equivalent for test purposes; the extra verbosity in the verbose prompt does not improve correctness.\n\n**Alternatives:**  \n- **verbose-prompt (gpt-5-mini):** Same pass rate, but ~13% higher cost with no measurable reliability or correctness benefit in these tests.\n\n## \ud83d\udd27 MCP Tool Feedback\n\n### pytest_aitest.testing.banking_mcp\nOverall, tools are clearly named and were invoked correctly in all tests. No confusion between similar tools was observed.\n\n| Tool | Status | Calls | Issues |\n|------|--------|-------|--------|\n| get_balance | \u2705 | 2 | Working well |\n| get_all_balances | \u2705 | 2 | Working well |\n| transfer | \u2705 | 2 | Working well |\n| deposit | \u2705 | 0 | Not exercised in tests |\n| withdraw | \u2705 | 0 | Not exercised in tests |\n| get_transactions | \u2705 | 0 | Not exercised in tests |\n\n## \ud83d\udcdd System Prompt Feedback\n\n### verbose-prompt (effective but inefficient)\n- **Token count:** High (contributed to +161 and +323 token overhead vs terse prompt in simple and multi-step tests)\n- **Problem:** Redundant instructions and explicit tool lists increase context size without improving tool selection or correctness.\n- **Suggested change (exact rewrite):**\n  ```\n  You are a banking assistant. Use the provided tools to answer account-related requests.\n  Always call the appropriate tool before answering. Never guess balances or transaction results.\n  ```\n\n### terse-prompt (effective)\n- **Token count:** Low\n- **Assessment:** Instructions were sufficient for correct tool usage in both single-step and multi-step scenarios. No changes required.\n\n## \ud83d\udca1 Optimizations\n\n1. **Standardize on terse system prompt** (recommended)\n   - Current: Two prompt variants maintained with overlapping intent.\n   - Change: Remove the verbose prompt and deploy the terse prompt as the default.\n   - Impact: ~13% cost reduction per test run with identical pass rates and behavior.\n\n## \ud83d\udce6 Tool Response Optimization\n\n### get_all_balances (from pytest_aitest.testing.banking_mcp)\n- **Current response size:** High due to duplicated formatted values and totals not always used.\n- **Issues found:**  \n  - `total` and `total_formatted` are unused in one of the two multi-step responses.  \n  - Both raw and formatted values are returned for each account, but only `formatted` is used in assistant output.\n- **Suggested optimization:**  \n  Return only formatted balances by default; make totals optional via a flag.\n- **Estimated savings:** ~20\u201325 tokens per call (~15\u201320% reduction)\n\n**Example current vs optimized:**\n```json\n// Current (~120 tokens)\n{\n  \"accounts\": {\n    \"checking\": {\"balance\": 1400.0, \"formatted\": \"$1,400.00\"},\n    \"savings\": {\"balance\": 3100.0, \"formatted\": \"$3,100.00\"}\n  },\n  \"total\": 4500.0,\n  \"total_formatted\": \"$4,500.00\"\n}\n\n// Optimized (~90 tokens)\n{\n  \"accounts\": {\n    \"checking\": \"$1,400.00\",\n    \"savings\": \"$3,100.00\"\n  }\n}\n```\n\nThis optimization would reduce response size without affecting test correctness or agent behavior in the observed scenarios.",
+    "markdown_summary": "## \ud83c\udfaf Recommendation\n\n**Deploy: terse-prompt (gpt-5-mini)**\n\nAchieves **100% pass rate at ~13% lower total cost** than the verbose prompt while producing equivalent tool usage and correct multi-step behavior.\n\n**Reasoning:** Both prompts passed all tests (100% pass rate). The terse prompt is cheaper across both scenarios ($0.001061 vs $0.001242 total, ~13% cost reduction) and used fewer tokens while still calling the correct tools in the correct order. Response quality is equivalent for test purposes; the extra verbosity in the verbose prompt does not improve correctness.\n\n**Alternatives:**  \n- **verbose-prompt (gpt-5-mini):** Same pass rate, but ~13% higher cost with no measurable reliability or correctness benefit in these tests.\n\n## \ud83d\udd27 MCP Tool Feedback\n\n### pytest_skill_engineering.testing.banking_mcp\nOverall, tools are clearly named and were invoked correctly in all tests. No confusion between similar tools was observed.\n\n| Tool | Status | Calls | Issues |\n|------|--------|-------|--------|\n| get_balance | \u2705 | 2 | Working well |\n| get_all_balances | \u2705 | 2 | Working well |\n| transfer | \u2705 | 2 | Working well |\n| deposit | \u2705 | 0 | Not exercised in tests |\n| withdraw | \u2705 | 0 | Not exercised in tests |\n| get_transactions | \u2705 | 0 | Not exercised in tests |\n\n## \ud83d\udcdd System Prompt Feedback\n\n### verbose-prompt (effective but inefficient)\n- **Token count:** High (contributed to +161 and +323 token overhead vs terse prompt in simple and multi-step tests)\n- **Problem:** Redundant instructions and explicit tool lists increase context size without improving tool selection or correctness.\n- **Suggested change (exact rewrite):**\n  ```\n  You are a banking assistant. Use the provided tools to answer account-related requests.\n  Always call the appropriate tool before answering. Never guess balances or transaction results.\n  ```\n\n### terse-prompt (effective)\n- **Token count:** Low\n- **Assessment:** Instructions were sufficient for correct tool usage in both single-step and multi-step scenarios. No changes required.\n\n## \ud83d\udca1 Optimizations\n\n1. **Standardize on terse system prompt** (recommended)\n   - Current: Two prompt variants maintained with overlapping intent.\n   - Change: Remove the verbose prompt and deploy the terse prompt as the default.\n   - Impact: ~13% cost reduction per test run with identical pass rates and behavior.\n\n## \ud83d\udce6 Tool Response Optimization\n\n### get_all_balances (from pytest_skill_engineering.testing.banking_mcp)\n- **Current response size:** High due to duplicated formatted values and totals not always used.\n- **Issues found:**  \n  - `total` and `total_formatted` are unused in one of the two multi-step responses.  \n  - Both raw and formatted values are returned for each account, but only `formatted` is used in assistant output.\n- **Suggested optimization:**  \n  Return only formatted balances by default; make totals optional via a flag.\n- **Estimated savings:** ~20\u201325 tokens per call (~15\u201320% reduction)\n\n**Example current vs optimized:**\n```json\n// Current (~120 tokens)\n{\n  \"accounts\": {\n    \"checking\": {\"balance\": 1400.0, \"formatted\": \"$1,400.00\"},\n    \"savings\": {\"balance\": 3100.0, \"formatted\": \"$3,100.00\"}\n  },\n  \"total\": 4500.0,\n  \"total_formatted\": \"$4,500.00\"\n}\n\n// Optimized (~90 tokens)\n{\n  \"accounts\": {\n    \"checking\": \"$1,400.00\",\n    \"savings\": \"$3,100.00\"\n  }\n}\n```\n\nThis optimization would reduce response size without affecting test correctness or agent behavior in the observed scenarios.",
     "cost_usd": 0.01531985,
     "tokens_used": 4711,
     "cached": false

@@ -1,6 +1,6 @@
 # Integration Tests
 
-These tests verify pytest-aitest works with real LLM providers. They demonstrate realistic multi-step workflows — the kind of thing LLMs actually do with MCP servers.
+These tests verify pytest-skill-engineering works with real LLM providers. They demonstrate realistic multi-step workflows — the kind of thing LLMs actually do with MCP servers.
 
 ## Test Files
 
@@ -105,7 +105,7 @@ prompts/
 
 ## MCP Test Servers
 
-Built-in test servers in `src/pytest_aitest/testing/`:
+Built-in test servers in `src/pytest_skill_engineering/testing/`:
 
 | Server | Tools | Purpose |
 |--------|-------|---------|
@@ -117,7 +117,7 @@ Built-in test servers in `src/pytest_aitest/testing/`:
 Create agents inline using constants from `conftest.py`:
 
 ```python
-from pytest_aitest import Agent, Provider
+from pytest_skill_engineering import Agent, Provider
 from .conftest import DEFAULT_MODEL, DEFAULT_RPM, DEFAULT_TPM, DEFAULT_MAX_TURNS
 
 async def test_my_feature(aitest_run, banking_server):

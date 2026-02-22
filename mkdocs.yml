@@ -1,9 +1,9 @@
-site_name: pytest-aitest
-site_description: "A pytest plugin for testing MCP servers, tools, system prompts, and agent skills with real LLMs. AI analyzes results and tells you what to fix."
-site_url: https://sbroenne.github.io/pytest-aitest
+site_name: pytest-skill-engineering
+site_description: "The testing framework for skill engineering. Test tool descriptions, prompt templates, agent skills, and custom agents with real LLMs. AI analyzes results and tells you what to fix."
+site_url: https://sbroenne.github.io/pytest-skill-engineering
 site_author: sbroenne
-repo_url: https://github.com/sbroenne/pytest-aitest
-repo_name: sbroenne/pytest-aitest
+repo_url: https://github.com/sbroenne/pytest-skill-engineering
+repo_name: sbroenne/pytest-skill-engineering
 
 theme:
   name: material
@@ -72,11 +72,11 @@ nav:
   - Home: index.md
   - Getting Started:
     - Overview: getting-started/index.md
-    - System Prompts: getting-started/system-prompts.md
+    - Custom Agents: getting-started/custom-agents.md
     - Agent Skills: getting-started/skills.md
     - Comparing Configurations: getting-started/comparing.md
-    - Test Iterations: getting-started/iterations.md
     - A/B Testing Servers: getting-started/ab-testing-servers.md
+    - Test Iterations: getting-started/iterations.md
     - Multi-Turn Sessions: getting-started/sessions.md
   - How-To Guides:
     - Overview: how-to/index.md
@@ -102,7 +102,8 @@ nav:
   - Explanation:
     - Overview: explanation/index.md
     - Agents: explanation/agents.md
-    - TDD for AI Interfaces: explanation/tdd-for-ai.md
+    - Choosing a Test Harness: explanation/choosing-a-harness.md
+    - Skill Engineering: explanation/skill-engineering.md
     - AI Analysis: explanation/ai-analysis.md
   - Contributing:
     - Overview: contributing/index.md
@@ -113,5 +114,5 @@ nav:
 extra:
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/sbroenne/pytest-aitest
+      link: https://github.com/sbroenne/pytest-skill-engineering
   generator: false

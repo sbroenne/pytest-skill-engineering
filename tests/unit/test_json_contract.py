@@ -17,8 +17,8 @@ from typing import Any
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from pytest_aitest.cli import load_suite_report
-from pytest_aitest.core.serialization import serialize_dataclass
+from pytest_skill_engineering.cli import load_suite_report
+from pytest_skill_engineering.core.serialization import serialize_dataclass
 
 FIXTURES_DIR = Path(__file__).parent.parent / "fixtures" / "reports"
 

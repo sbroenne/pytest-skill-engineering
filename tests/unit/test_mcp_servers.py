@@ -16,8 +16,8 @@ import time
 
 import pytest
 
-from pytest_aitest import MCPServer, Wait
-from pytest_aitest.execution.servers import MCPServerProcess
+from pytest_skill_engineering import MCPServer, Wait
+from pytest_skill_engineering.execution.servers import MCPServerProcess
 
 # ---------------------------------------------------------------------------
 # Helper functions for HTTP transports
@@ -56,7 +56,7 @@ class TestMCPServerStdio:
     async def test_todo_mcp_starts_and_lists_tools(self):
         """Todo MCP server (FastMCP) starts and discovers tools via stdio."""
         config = MCPServer(
-            command=[sys.executable, "-u", "-m", "pytest_aitest.testing.todo_mcp"],
+            command=[sys.executable, "-u", "-m", "pytest_skill_engineering.testing.todo_mcp"],
             wait=Wait.for_tools(["add_task", "list_tasks", "complete_task"]),
         )
         server = MCPServerProcess(config)
@@ -86,7 +86,7 @@ class TestMCPServerStdio:
     async def test_banking_mcp_starts_and_lists_tools(self):
         """Banking MCP server (FastMCP) starts and discovers tools via stdio."""
         config = MCPServer(
-            command=[sys.executable, "-u", "-m", "pytest_aitest.testing.banking_mcp"],
+            command=[sys.executable, "-u", "-m", "pytest_skill_engineering.testing.banking_mcp"],
             wait=Wait.for_tools(
                 ["get_balance", "get_all_balances", "transfer", "deposit", "withdraw"]
             ),
@@ -117,7 +117,7 @@ class TestMCPServerStdio:
     async def test_todo_mcp_tool_call(self):
         """Can call tools on todo MCP server via stdio."""
         config = MCPServer(
-            command=[sys.executable, "-u", "-m", "pytest_aitest.testing.todo_mcp"],
+            command=[sys.executable, "-u", "-m", "pytest_skill_engineering.testing.todo_mcp"],
             wait=Wait.for_tools(["add_task", "list_tasks"]),
         )
         server = MCPServerProcess(config)
@@ -139,7 +139,7 @@ class TestMCPServerStdio:
     async def test_banking_mcp_tool_call(self):
         """Can call tools on banking MCP server via stdio."""
         config = MCPServer(
-            command=[sys.executable, "-u", "-m", "pytest_aitest.testing.banking_mcp"],
+            command=[sys.executable, "-u", "-m", "pytest_skill_engineering.testing.banking_mcp"],
             wait=Wait.for_tools(["get_balance"]),
         )
         server = MCPServerProcess(config)
@@ -171,7 +171,7 @@ class TestMCPServerSSE:
                 sys.executable,
                 "-u",
                 "-m",
-                "pytest_aitest.testing.todo_mcp",
+                "pytest_skill_engineering.testing.todo_mcp",
                 "--transport",
                 "sse",
                 "--port",
@@ -216,7 +216,7 @@ class TestMCPServerSSE:
                 sys.executable,
                 "-u",
                 "-m",
-                "pytest_aitest.testing.banking_mcp",
+                "pytest_skill_engineering.testing.banking_mcp",
                 "--transport",
                 "sse",
                 "--port",
@@ -261,7 +261,7 @@ class TestMCPServerSSE:
                 sys.executable,
                 "-u",
                 "-m",
-                "pytest_aitest.testing.todo_mcp",
+                "pytest_skill_engineering.testing.todo_mcp",
                 "--transport",
                 "sse",
                 "--port",
@@ -304,7 +304,7 @@ class TestMCPServerSSE:
                 sys.executable,
                 "-u",
                 "-m",
-                "pytest_aitest.testing.banking_mcp",
+                "pytest_skill_engineering.testing.banking_mcp",
                 "--transport",
                 "sse",
                 "--port",
@@ -356,7 +356,7 @@ class TestMCPServerStreamableHTTP:
                 sys.executable,
                 "-u",
                 "-m",
-                "pytest_aitest.testing.todo_mcp",
+                "pytest_skill_engineering.testing.todo_mcp",
                 "--transport",
                 "streamable-http",
                 "--port",
@@ -401,7 +401,7 @@ class TestMCPServerStreamableHTTP:
                 sys.executable,
                 "-u",
                 "-m",
-                "pytest_aitest.testing.banking_mcp",
+                "pytest_skill_engineering.testing.banking_mcp",
                 "--transport",
                 "streamable-http",
                 "--port",
@@ -446,7 +446,7 @@ class TestMCPServerStreamableHTTP:
                 sys.executable,
                 "-u",
                 "-m",
-                "pytest_aitest.testing.todo_mcp",
+                "pytest_skill_engineering.testing.todo_mcp",
                 "--transport",
                 "streamable-http",
                 "--port",
@@ -489,7 +489,7 @@ class TestMCPServerStreamableHTTP:
                 sys.executable,
                 "-u",
                 "-m",
-                "pytest_aitest.testing.banking_mcp",
+                "pytest_skill_engineering.testing.banking_mcp",
                 "--transport",
                 "streamable-http",
                 "--port",

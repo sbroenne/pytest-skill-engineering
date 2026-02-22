@@ -18,12 +18,15 @@ from pathlib import Path
 
 import pytest
 
-from pytest_aitest.core.agent import Agent, CLIServer, Provider
-from pytest_aitest.core.result import AgentResult, ToolCall, Turn
-from pytest_aitest.core.serialization import deserialize_suite_report, serialize_dataclass
-from pytest_aitest.reporting.collector import SuiteReport, TestReport
-from pytest_aitest.reporting.components.types import IterationData, TestResultData
-from pytest_aitest.reporting.generator import (
+from pytest_skill_engineering.core.agent import Agent, CLIServer, Provider
+from pytest_skill_engineering.core.result import AgentResult, ToolCall, Turn
+from pytest_skill_engineering.core.serialization import (
+    deserialize_suite_report,
+    serialize_dataclass,
+)
+from pytest_skill_engineering.reporting.collector import SuiteReport, TestReport
+from pytest_skill_engineering.reporting.components.types import IterationData, TestResultData
+from pytest_skill_engineering.reporting.generator import (
     _build_result_for_agent,
     _extract_test_result_fields,
 )
@@ -539,8 +542,8 @@ class TestIterationInReports:
         self, iteration_suite: SuiteReport, tmp_path: Path
     ) -> None:
         """HTML report renders iteration pass rate info."""
-        from pytest_aitest.reporting import generate_html
-        from pytest_aitest.reporting.insights import InsightsResult
+        from pytest_skill_engineering.reporting import generate_html
+        from pytest_skill_engineering.reporting.insights import InsightsResult
 
         insights = InsightsResult(markdown_summary="Test insights.", model="test")
         output = tmp_path / "report.html"
@@ -554,8 +557,8 @@ class TestIterationInReports:
         self, iteration_suite: SuiteReport, tmp_path: Path
     ) -> None:
         """Markdown report includes iteration breakdown table."""
-        from pytest_aitest.reporting import generate_md
-        from pytest_aitest.reporting.insights import InsightsResult
+        from pytest_skill_engineering.reporting import generate_md
+        from pytest_skill_engineering.reporting.insights import InsightsResult
 
         insights = InsightsResult(markdown_summary="Test insights.", model="test")
         output = tmp_path / "report.md"
@@ -576,7 +579,7 @@ class TestInsightsIterationAwareness:
 
     def test_has_iterations_detected(self) -> None:
         """_build_analysis_input detects when tests have iteration data."""
-        from pytest_aitest.reporting.insights import _build_analysis_input
+        from pytest_skill_engineering.reporting.insights import _build_analysis_input
 
         tests = [
             _make_test_report(iteration=1, outcome="passed"),
@@ -597,7 +600,7 @@ class TestInsightsIterationAwareness:
 
     def test_no_iterations_skips_section(self) -> None:
         """Without iteration data, iteration stats section is absent."""
-        from pytest_aitest.reporting.insights import _build_analysis_input
+        from pytest_skill_engineering.reporting.insights import _build_analysis_input
 
         tests = [_make_test_report(iteration=None, outcome="passed")]
         suite = SuiteReport(

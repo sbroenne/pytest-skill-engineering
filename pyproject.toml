@@ -3,16 +3,16 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "pytest-aitest"
+name = "pytest-skill-engineering"
 version = "0.5.7"
-description = "Pytest plugin for testing AI agents with MCP and CLI servers"
+description = "The testing framework for skill engineering. Test tool descriptions, prompt templates, agent skills, and custom agents with real LLMs. AI analyzes results and tells you what to fix."
 readme = "README.md"
 license = { text = "MIT" }
 requires-python = ">=3.11"
 authors = [
     { name = "Stefan Brunner" }
 ]
-keywords = ["pytest", "ai", "llm", "mcp", "testing", "agents"]
+keywords = ["pytest", "ai", "llm", "mcp", "testing", "agents", "skill-engineering", "skills", "custom-agents"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Framework :: Pytest",
@@ -64,28 +64,28 @@ docs = [
 ]
 
 [project.scripts]
-pytest-aitest-report = "pytest_aitest.cli:main"
+pytest-skill-engineering-report = "pytest_skill_engineering.cli:main"
 
 [project.entry-points.pytest11]
-aitest = "pytest_aitest.plugin"
+aitest = "pytest_skill_engineering.plugin"
 
 [project.urls]
-Homepage = "https://github.com/sbroenne/pytest-aitest"
-Repository = "https://github.com/sbroenne/pytest-aitest"
+Homepage = "https://github.com/sbroenne/pytest-skill-engineering"
+Repository = "https://github.com/sbroenne/pytest-skill-engineering"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/pytest_aitest"]
+packages = ["src/pytest_skill_engineering"]
 
 [tool.hatch.build.targets.wheel.sources]
 "src" = ""
 
 [tool.hatch.build]
 include = [
-    "src/pytest_aitest/**/*.py",
-    "src/pytest_aitest/**/*.md",
-    "src/pytest_aitest/**/*.html",
-    "src/pytest_aitest/**/*.css",
-    "src/pytest_aitest/**/*.js",
+    "src/pytest_skill_engineering/**/*.py",
+    "src/pytest_skill_engineering/**/*.md",
+    "src/pytest_skill_engineering/**/*.html",
+    "src/pytest_skill_engineering/**/*.css",
+    "src/pytest_skill_engineering/**/*.js",
 ]
 
 [tool.ruff]
@@ -97,7 +97,7 @@ select = ["E", "F", "B", "I"]
 
 [tool.ruff.lint.per-file-ignores]
 # Test harnesses have long tool descriptions for LLM readability
-"src/pytest_aitest/testing/*.py" = ["E501"]
+"src/pytest_skill_engineering/testing/*.py" = ["E501"]
 # Test files have long descriptions and variable declarations
 "tests/**/*.py" = ["E402", "E501", "F841"]
 
@@ -120,7 +120,7 @@ asyncio_mode = "auto"
 filterwarnings = [
     "ignore:enable_cleanup_closed:DeprecationWarning:aiohttp",
 ]
-# pytest-aitest configuration for this project's own tests.
+# pytest-skill-engineering configuration for this project's own tests.
 # This demonstrates the recommended setup - configure once in pyproject.toml.
 # LLM auth is handled by Pydantic AI via env vars (AZURE_API_BASE, OPENAI_API_KEY, etc.)
 addopts = """
@@ -142,5 +142,5 @@ markers = [
 # UV/PEP 735 dependency groups (for uv sync)
 [dependency-groups]
 dev = [
-    "pytest-aitest[dev,test,docs]",
+    "pytest-skill-engineering[dev,test,docs]",
 ]

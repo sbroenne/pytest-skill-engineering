@@ -15,7 +15,7 @@ import sys
 
 import pytest
 
-from pytest_aitest import Agent, MCPServer, Provider, Wait
+from pytest_skill_engineering import Agent, MCPServer, Provider, Wait
 
 pytestmark = [pytest.mark.integration]
 
@@ -36,7 +36,7 @@ When asked about accounts, ALWAYS call the appropriate tool first."""
 TERSE_PROMPT = "You help with banking. Use tools to get data."
 
 banking_server = MCPServer(
-    command=[sys.executable, "-u", "-m", "pytest_aitest.testing.banking_mcp"],
+    command=[sys.executable, "-u", "-m", "pytest_skill_engineering.testing.banking_mcp"],
     wait=Wait.for_tools(
         ["get_balance", "get_all_balances", "transfer", "deposit", "withdraw", "get_transactions"]
     ),

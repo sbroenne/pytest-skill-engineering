@@ -4,7 +4,7 @@ description: "Assert on image content returned by MCP tools. Check if images wer
 
 # Image Assertions
 
-pytest-aitest supports asserting on images returned by MCP tools. This is useful when your tools produce visual output — screenshots, charts, diagrams, or any image content.
+pytest-skill-engineering supports asserting on images returned by MCP tools. This is useful when your tools produce visual output — screenshots, charts, diagrams, or any image content.
 
 ## Overview
 
@@ -17,7 +17,7 @@ There are two approaches to image assertions:
 
 ## Prerequisites
 
-Your MCP tool must return images as `ImageContentBlock` in the MCP response. PydanticAI converts these to `BinaryContent` objects, which pytest-aitest extracts into `ImageContent` objects.
+Your MCP tool must return images as `ImageContentBlock` in the MCP response. PydanticAI converts these to `BinaryContent` objects, which pytest-skill-engineering extracts into `ImageContent` objects.
 
 ## Checking If Images Were Returned
 
@@ -92,7 +92,7 @@ assert llm_assert_image(jpeg_bytes, "shows a table", media_type="image/jpeg")
 ### Command-Line Options
 
 ```bash
-# GitHub Copilot (no extra setup if pytest-aitest[copilot] installed)
+# GitHub Copilot (no extra setup if pytest-skill-engineering[copilot] installed)
 pytest --llm-vision-model=copilot/gpt-4o
 
 # Azure OpenAI
@@ -146,7 +146,7 @@ The vision model must support image input. Recommended models:
 """A/B test: Does a screenshot tool improve dashboard quality?"""
 
 import pytest
-from pytest_aitest import Agent, Provider
+from pytest_skill_engineering import Agent, Provider
 
 CONTROL = Agent(
     name="without-screenshot",

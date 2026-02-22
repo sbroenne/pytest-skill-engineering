@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import pytest
 
-from pytest_aitest.copilot.agent import CopilotAgent
+from pytest_skill_engineering.copilot.agent import CopilotAgent
 
 
 @pytest.mark.copilot
@@ -22,7 +22,7 @@ class TestAbRunFixture:
 
     async def test_ab_run_returns_two_results(self, ab_run):
         """ab_run returns a tuple of two successful CopilotResults."""
-        from pytest_aitest.copilot.result import CopilotResult
+        from pytest_skill_engineering.copilot.result import CopilotResult
 
         baseline = CopilotAgent(
             name="baseline",

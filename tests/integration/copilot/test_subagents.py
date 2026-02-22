@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import pytest
 
-from pytest_aitest.copilot.agent import CopilotAgent
+from pytest_skill_engineering.copilot.agent import CopilotAgent
 
 # Tools that let the orchestrator write files directly.
 # Excluding these forces the orchestrator to delegate.

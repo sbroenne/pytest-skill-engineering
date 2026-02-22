@@ -1,29 +1,29 @@
 ---
-description: "Understand Agents in pytest-aitest: an Agent combines an LLM provider, MCP servers, system prompts, and skills into a test harness."
+description: "Understand Agents in pytest-skill-engineering: an Agent combines an LLM provider, MCP servers, skills, and custom agents into a test harness."
 ---
 
 # Agents
 
-The core concept in pytest-aitest.
+The core concept in pytest-skill-engineering.
 
 ## What is an Agent?
 
 An **Agent** is a test configuration that bundles everything needed to run a test:
 
 ```
-Agent = Model + System Prompt + Skill + Server(s)
+Agent = Model + Skill + Custom Agents + Server(s)
 ```
 
 ```python
-from pytest_aitest import Agent, Provider, MCPServer, Skill
+from pytest_skill_engineering import Agent, Provider, MCPServer, Skill, load_custom_agent
 
 banking_server = MCPServer(command=["python", "banking_mcp.py"])
 
 agent = Agent(
     provider=Provider(model="azure/gpt-5-mini"),
     mcp_servers=[banking_server],
-    system_prompt="Be concise.",
-    skill=Skill.from_path("skills/financial-advisor"),  # Optional
+    skill=Skill.from_path("skills/financial-advisor"),        # Optional
+    custom_agents=[load_custom_agent("agents/advisor.agent.md")],  # Optional
 )
 ```
 
@@ -34,8 +34,8 @@ agent = Agent(
 | Target | Question |
 |--------|----------|
 | **MCP Server** | Can the LLM understand and use my tools? |
-| **System Prompt** | Do these instructions produce the behavior I want? |
 | **Agent Skill** | Does this domain knowledge improve performance? |
+| **Custom Agent** | Do these `.agent.md` instructions produce the right behavior? |
 
 The Agent is the **test harness** that bundles an LLM with the configuration you want to evaluate.
 
@@ -45,29 +45,33 @@ The Agent is the **test harness** that bundles an LLM with the configuration you
 |-----------|----------|---------|
 | Provider | ✓ | `Provider(model="azure/gpt-5-mini")` |
 | MCP Servers | Optional | `MCPServer(command=["python", "server.py"])` |
-| System Prompt | Optional | `"Be concise and direct."` |
 | Skill | Optional | `Skill.from_path("skills/financial-advisor")` |
+| Custom Agent File | Optional | `Agent.from_agent_file("agents/reviewer.agent.md", provider=...)` |
 
 ## Agent Leaderboard
 
 **When you test multiple agents, the report shows an Agent Leaderboard.**
 
-This happens automatically - no configuration needed. Just parametrize your tests:
+This happens automatically — no configuration needed. Just parametrize your tests:
 
 ```python
 from pathlib import Path
 import pytest
-from pytest_aitest import Agent, Provider, MCPServer, load_system_prompts
+from pytest_skill_engineering import Agent, Provider, MCPServer, Skill
 
 banking_server = MCPServer(command=["python", "banking_mcp.py"])
-PROMPTS = load_system_prompts(Path("prompts/"))
 
-@pytest.mark.parametrize("prompt_name,system_prompt", PROMPTS.items())
-async def test_banking(aitest_run, prompt_name, system_prompt):
+SKILLS = {
+    "v1": Skill.from_path("skills/financial-advisor-v1"),
+    "v2": Skill.from_path("skills/financial-advisor-v2"),
+}
+
+@pytest.mark.parametrize("skill_name,skill", SKILLS.items())
+async def test_banking(aitest_run, skill_name, skill):
     agent = Agent(
         provider=Provider(model="azure/gpt-5-mini"),
         mcp_servers=[banking_server],
-        system_prompt=system_prompt,
+        skill=skill,
     )
     result = await aitest_run(agent, "What's my checking balance?")
     assert result.success
@@ -77,8 +81,8 @@ The report shows:
 
 | Agent | Pass Rate | Cost |
 |-------|-----------|------|
-| gpt-5-mini (concise) | 100% | $0.002 |
-| gpt-5-mini (detailed) | 100% | $0.004 |
+| gpt-5-mini (v1) | 100% | $0.002 |
+| gpt-5-mini (v2) | 100% | $0.004 |
 
 ## Winning Criteria
 
@@ -94,8 +98,8 @@ The AI analysis detects *what varies* between agents to provide targeted feedbac
 | What Varies | AI Feedback Focuses On |
 |-------------|------------------------|
 | Model | Which model works best with your tools |
-| System Prompt | Which instructions produce better behavior |
 | Skill | Whether domain knowledge helps |
+| Custom Agent | Which agent instructions produce better behavior |
 | Server | Which implementation is more reliable |
 
 This is for **AI analysis only** - the leaderboard always appears when multiple agents are tested.
@@ -118,23 +122,27 @@ async def test_with_model(aitest_run, model):
     assert result.success
 ```
 
-### Compare System Prompts
+### Compare Custom Agent Versions
+
+A/B test two versions of a `.agent.md` file to find which instructions work better:
 
 ```python
 from pathlib import Path
-from pytest_aitest import load_system_prompts
+from pytest_skill_engineering import Agent, Provider
 
-PROMPTS = load_system_prompts(Path("prompts/"))
-banking_server = MCPServer(command=["python", "banking_mcp.py"])
+AGENT_VERSIONS = {
+    path.stem: path
+    for path in Path(".github/agents").glob("reviewer-*.agent.md")
+}
 
-@pytest.mark.parametrize("prompt_name,system_prompt", PROMPTS.items())
-async def test_with_prompt(aitest_run, prompt_name, system_prompt):
-    agent = Agent(
+@pytest.mark.parametrize("name,path", AGENT_VERSIONS.items())
+async def test_reviewer(aitest_run, name, path):
+    agent = Agent.from_agent_file(
+        path,
         provider=Provider(model="azure/gpt-5-mini"),
-        mcp_servers=[banking_server],
-        system_prompt=system_prompt,
+        mcp_servers=[code_server],
     )
-    result = await aitest_run(agent, "What's my checking balance?")
+    result = await aitest_run(agent, "Review src/auth.py for security issues")
     assert result.success
 ```
 
@@ -142,23 +150,43 @@ async def test_with_prompt(aitest_run, prompt_name, system_prompt):
 
 ```python
 MODELS = ["gpt-5-mini", "gpt-4.1"]
-PROMPTS = load_system_prompts(Path("prompts/"))
-banking_server = MCPServer(command=["python", "banking_mcp.py"])
+SKILLS = {
+    "v1": Skill.from_path("skills/advisor-v1"),
+    "v2": Skill.from_path("skills/advisor-v2"),
+}
 
 @pytest.mark.parametrize("model", MODELS)
-@pytest.mark.parametrize("prompt_name,system_prompt", PROMPTS.items())
-async def test_combinations(aitest_run, model, prompt_name, system_prompt):
+@pytest.mark.parametrize("skill_name,skill", SKILLS.items())
+async def test_combinations(aitest_run, model, skill_name, skill):
     agent = Agent(
         provider=Provider(model=f"azure/{model}"),
         mcp_servers=[banking_server],
-        system_prompt=system_prompt,
+        skill=skill,
     )
     result = await aitest_run(agent, "What's my checking balance?")
     assert result.success
 ```
 
+## Custom Agents
+
+A **custom agent** is a specialized sub-agent defined in a `.agent.md` or `.md` file with YAML frontmatter (`name`, `description`, `tools`) and a markdown prompt body.
+
+```python
+from pytest_skill_engineering import Agent, Provider
+
+# Load and test a custom agent's instructions synthetically
+agent = Agent.from_agent_file(
+    ".github/agents/reviewer.agent.md",
+    provider=Provider(model="azure/gpt-5-mini"),
+    mcp_servers=[code_server],
+)
+```
+
+The `tools` frontmatter field maps to `allowed_tools` — restricting which tools the agent can call. See [Custom Agents](../getting-started/custom-agents.md) for a full guide.
+
 ## Next Steps
 
+- [Choosing a Test Harness](choosing-a-harness.md) — `Agent` vs `CopilotAgent`: full trade-off guide
 - [Comparing Configurations](../getting-started/comparing.md) — More comparison patterns
 - [A/B Testing Servers](../getting-started/ab-testing-servers.md) — Test server versions
 - [AI Analysis](ai-analysis.md) — What the AI evaluation produces

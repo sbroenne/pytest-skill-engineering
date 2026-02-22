@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from pytest_aitest.core.prompt import Prompt, load_prompt, load_prompts
+from pytest_skill_engineering.core.prompt import Prompt, load_prompt, load_prompts
 
 
 class TestPrompt:

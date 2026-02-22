@@ -1,5 +1,5 @@
 ---
-description: "AgentResult API reference. Inspect tool calls, turns, tokens, cost, and assert on agent behavior in pytest-aitest tests."
+description: "AgentResult API reference. Inspect tool calls, turns, tokens, cost, and assert on agent behavior in pytest-skill-engineering tests."
 ---
 
 # AgentResult
@@ -28,7 +28,7 @@ The judge performs a simple YES/NO classification, so a cheap model like `gpt-5-
 ### Configuration
 
 ```python
-from pytest_aitest import Agent, Provider, ClarificationDetection, ClarificationLevel
+from pytest_skill_engineering import Agent, Provider, ClarificationDetection, ClarificationLevel
 
 agent = Agent(
     provider=Provider(model="azure/gpt-5-mini"),

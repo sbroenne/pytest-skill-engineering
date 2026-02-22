@@ -6,7 +6,7 @@ description: "Add domain knowledge to AI agents with Agent Skills following the 
 
 An **Agent Skill** is a domain knowledge module following the [agentskills.io](https://agentskills.io/specification) specification. Skills provide:
 
-- **Instructions** — Prepended to the system prompt
+- **Instructions** — Domain knowledge and behavioral guidelines for the agent
 - **References** — On-demand documents the agent can look up
 
 ## Creating a Skill
@@ -94,7 +94,7 @@ This keeps your base prompt lean while providing detailed information when neede
 ## Using a Skill
 
 ```python
-from pytest_aitest import Agent, Provider, MCPServer, Skill
+from pytest_skill_engineering import Agent, Provider, MCPServer, Skill
 
 skill = Skill.from_path("skills/financial-advisor")
 
@@ -146,5 +146,31 @@ The report shows whether the skill improves performance.
 - [Multi-Turn Sessions](sessions.md) — Conversations with context
 
 > 📁 **Real Examples:**
-> - [test_skills.py](https://github.com/sbroenne/pytest-aitest/blob/main/tests/integration/test_skills.py) — Skill loading and metadata
-> - [test_skill_improvement.py](https://github.com/sbroenne/pytest-aitest/blob/main/tests/integration/test_skill_improvement.py) — Skill before/after comparisons
+> - [test_skills.py](https://github.com/sbroenne/pytest-skill-engineering/blob/main/tests/integration/test_skills.py) — Skill loading and metadata
+> - [test_skill_improvement.py](https://github.com/sbroenne/pytest-skill-engineering/blob/main/tests/integration/test_skill_improvement.py) — Skill before/after comparisons
+
+## Copilot Skills
+
+> **Are you testing a skill for GitHub Copilot?** Use `CopilotAgent` with `skill_directories` instead — **not** `Agent` + `Skill.from_path()`.
+
+The `Agent` + `Skill` approach above tests whether a *generic LLM* can leverage skill content via injected tools. It does **not** test how GitHub Copilot itself loads and uses the skill.
+
+When your skill is built for Copilot (e.g. distributed via `npx skills add`), you want the real Copilot agent to load it — exactly as end users will experience it:
+
+```python
+from pytest_skill_engineering.copilot import CopilotAgent
+
+async def test_skill_presents_scenarios(copilot_run):
+    agent = CopilotAgent(
+        name="with-skill",
+        skill_directories=["skills/my-skill"],  # loads SKILL.md + references/
+        max_turns=10,
+    )
+    result = await copilot_run(agent, "What can you help me with?")
+    assert result.success
+    assert "baseline" in result.final_response.lower()
+```
+
+Copilot loads the skill natively — no synthetic tool injection. MCP servers configured in `~/.copilot/mcp-config.json` (or via the session's `mcp_servers`) are available automatically.
+
+See [Test Coding Agents](../how-to/test-coding-agents.md#testing-skills) for a full example.

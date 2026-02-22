@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from pytest_aitest.fixtures.llm_score import (
+from pytest_skill_engineering.fixtures.llm_score import (
     LLMScore,
     ScoreResult,
     ScoringDimension,

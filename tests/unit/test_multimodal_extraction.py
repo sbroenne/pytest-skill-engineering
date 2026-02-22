@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from pytest_aitest.execution.pydantic_adapter import (
+from pytest_skill_engineering.execution.pydantic_adapter import (
     _extract_tool_result,
     _process_tool_content,
 )

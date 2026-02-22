@@ -53,7 +53,7 @@ jobs:
         run: uv sync --all-extras
 
       - name: Run pyright
-        run: uv run pyright src/pytest_aitest/
+        run: uv run pyright src/pytest_skill_engineering/
 
   mcp-servers:
     name: MCP Server Validation
@@ -124,4 +124,4 @@ jobs:
 
       - name: Verify package imports
         run: |
-          uv run python -c "from pytest_aitest import plugin; print('Import successful')"
+          uv run python -c "from pytest_skill_engineering import plugin; print('Import successful')"

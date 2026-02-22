@@ -42,7 +42,7 @@ if _env_file.exists():
 if os.environ.get("AZURE_OPENAI_ENDPOINT") and not os.environ.get("AZURE_API_BASE"):
     os.environ["AZURE_API_BASE"] = os.environ["AZURE_OPENAI_ENDPOINT"]
 
-from pytest_aitest import MCPServer, Wait
+from pytest_skill_engineering import MCPServer, Wait
 
 # =============================================================================
 # Pytest Configuration Hooks
@@ -113,7 +113,7 @@ def todo_server():
             sys.executable,
             "-u",
             "-m",
-            "pytest_aitest.testing.todo_mcp",
+            "pytest_skill_engineering.testing.todo_mcp",
         ],
         wait=Wait.for_tools(["add_task", "list_tasks", "complete_task"]),
     )
@@ -132,7 +132,7 @@ def banking_server():
             sys.executable,
             "-u",
             "-m",
-            "pytest_aitest.testing.banking_mcp",
+            "pytest_skill_engineering.testing.banking_mcp",
         ],
         wait=Wait.for_tools(
             [
