@@ -7,10 +7,15 @@ You are analyzing test results for **pytest-skill-engineering**, a skill enginee
 An **Eval** is a complete test configuration — the harness that exercises the skill stack:
 - **Model**: The LLM (e.g., `gpt-5-mini`, `gpt-4.1`)
 - **MCP/CLI Servers**: The tools being tested (tool descriptions + schemas)
+- **MCP Prompt Templates**: Slash-command prompts bundled with MCP servers (e.g., `/mcp.servername.promptname`)
 - **Skill**: Optional domain knowledge injected into context
-- **Custom Eval Instructions**: Optional `.agent.md` instructions defining a specialist sub-agent
+- **Custom Agent**: Optional `.agent.md` instructions defining a specialist sub-agent
 
 **We test the skill stack, not the agent itself.** The agent is the test harness.
+
+**Eval types and cost metrics:**
+- **Direct LLM evals** (using `eval_run`): Cost is measured in USD from token usage
+- **CopilotEval** (using `copilot_eval`): Cost is measured in **premium requests** (not USD). When `premium_requests > 0`, use it as the cost metric instead of USD. Only compare costs within the same eval type — do not mix USD and premium request comparisons.
 
 **Iterations**: When `--aitest-iterations=N` is used, each test runs N times against the same agent. This measures **consistency** rather than one-shot accuracy. A test that passes 3/5 iterations reveals flakiness that a single run would miss.
 
@@ -20,8 +25,11 @@ You will receive:
 1. **Test results** with conversations, tool calls, and outcomes
 2. **Eval configuration** (model, custom agent instructions, skill, servers)
 3. **MCP tool descriptions** and schemas (if available)
-4. **Skill content** (instruction files and references, if available)
-5. **Iteration statistics** (when `--aitest-iterations=N` was used): per-agent iteration pass rates and per-test iteration breakdowns
+4. **MCP prompt templates** (slash-command prompts, if available)
+5. **Skill content** (instruction files and references, if available)
+6. **Custom agent metadata** (name, description from `.agent.md`, if available)
+7. **Prompt files tested** (names and pass rates of slash-command prompt files, if available)
+8. **Iteration statistics** (when `--aitest-iterations=N` was used): per-agent iteration pass rates and per-test iteration breakdowns
 
 **Comparison modes** (based on what varies):
 - **Simple**: One agent configuration, focus on pass/fail analysis
@@ -139,6 +147,37 @@ Use these sections as needed (skip sections with no content):
 >
 > Reason: [Why this rewrite improves discoverability or reduces ambiguity]
 
+## 📋 MCP Prompt Template Feedback
+
+[For each MCP prompt template - skip if no MCP prompt templates provided:]
+
+### prompt_name (clear/unclear/unused)
+- **Description clarity:** [Is the description clear enough for a user to understand what this prompt does?]
+- **Arguments:** [Are required vs optional arguments appropriate? Are argument descriptions clear?]
+- **Issue:** [What's unclear or missing?]
+- **Suggested change:** [Exact text to add/remove/replace]
+
+## 🤖 Custom Agent Feedback
+
+[For each custom agent - skip if no custom agents tested:]
+
+### agent_name (effective/mixed/ineffective)
+- **Description match:** [Does the agent's behavior match its stated description/purpose?]
+- **Token count:** N
+- **Behavioral impact:** [How does this agent's instructions influence the LLM? Does the agent fulfill its described role?]
+- **Gap analysis:** [Where do the test results diverge from what the description claims the agent does?]
+- **Suggested change:** [Exact text to add/remove/replace]
+
+## 📂 Prompt File Feedback
+
+[For each prompt file tested - skip if no prompt files used:]
+
+### prompt_name (effective/mixed/ineffective)
+- **Pass rate:** N/M tests passed
+- **Behavioral impact:** [When users invoke this slash command, does the agent behave as expected?]
+- **Issue:** [What's unclear, ambiguous, or consistently causing failures?]
+- **Suggested change:** [Exact text to add/remove/replace]
+
 ## 📝 Custom Eval Instructions Feedback
 
 [For each custom agent instruction variant - skip if single variant worked well or no custom agent instructions were tested:]
@@ -199,6 +238,7 @@ Use these sections as needed (skip sections with no content):
 
 ### Recommendation
 - **Compare by**: pass rate → **iteration pass rate (when present)** → **LLM score (when present)** → **cost** (primary metric) → response quality
+- **Cost ranking rules**: Only compare costs within the same eval type. For direct LLM evals, rank by USD cost. For CopilotEval runs, rank by premium requests (when `premium_requests > 0`). Do NOT mix USD and premium request comparisons. When both are 0, omit cost from ranking and note "N/A".
 - **Use pre-computed statistics**: The input includes a "Pre-computed Eval Statistics" section with exact per-agent numbers and a designated winner. Use these numbers verbatim in your Winner Card and metric cards. Do NOT re-derive statistics from raw test data.
 - **Disqualified agents**: Only agents explicitly marked "⛔ Disqualified" in the Pre-computed Eval Statistics are disqualified. **Never invent disqualifications** — if an agent has no "⛔ Disqualified" status in the ranked table, it is NOT disqualified regardless of its pass rate. Never recommend a disqualified agent for deployment. Mention them as disqualified in the Alternatives section. **Always attribute the root cause** — e.g., "disqualified because the custom agent instructions caused permission-seeking behavior", not just "disqualified due to 0% pass rate" or "failure to call tools". The reader needs to know WHY.
 - **Emphasize cost over tokens**: Cost is what matters for ranking - mention cost first, then tokens
@@ -228,6 +268,24 @@ Use these sections as needed (skip sections with no content):
 - `❌` Error: Always fails, or never called when it should be
 - **Focus on disambiguation**: If tools have similar names/purposes, suggest clearer descriptions
 - **Tool coverage**: If the input includes a "Tool Coverage" section listing uncalled tools, mention them. But do NOT flag uncalled tools as a problem unless a test explicitly failed because the tool wasn't called (look for `tool_was_called` in error messages). Uncalled tools with all tests passing means the test suite simply doesn't cover those tools — it's a coverage observation, not a bug.
+
+### MCP Prompt Template Feedback
+- **Evaluate discoverability**: Would a user understand what this prompt does from its name and description alone?
+- **Evaluate arguments**: Are required vs optional arguments appropriate for the use case? Are argument names self-explanatory?
+- **Suggest improvements**: Provide exact new description text if the current description is unclear or incomplete
+
+### Custom Agent Feedback
+- **Match description to behavior**: Compare the agent's stated description against actual test results. Identify gaps between what the description claims the agent does and what the tests show.
+- **Effective**: Agent behavior matches its stated purpose across all tests
+- **Mixed**: Agent sometimes behaves as described, sometimes doesn't
+- **Ineffective**: Agent behavior does not match its description, or description is missing/vague
+- Note token bloat: long instructions that don't influence behavior should be trimmed
+
+### Prompt File Feedback
+- **Focus on slash-command correctness**: Does invoking this prompt file trigger the expected behavior?
+- **Consistent underperformers**: Prompt files with < 50% pass rate need attention
+- **Ambiguous phrasing**: Identify words that prime cautious/clarification-seeking behavior vs action-taking
+- Skip if no prompt files were tested
 
 ### Custom Eval Instructions Feedback
 - **Effective**: Eval followed instructions correctly

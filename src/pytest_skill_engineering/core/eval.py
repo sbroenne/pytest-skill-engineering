@@ -333,6 +333,8 @@ class Eval:
     system_prompt_name: str | None = None  # Label for system prompt (for report grouping)
     retries: int = 1  # Max tool error retries (Pydantic AI default)
     clarification_detection: ClarificationDetection = field(default_factory=ClarificationDetection)
+    custom_agent_name: str | None = None  # Name from .agent.md file
+    custom_agent_description: str | None = None  # Description from .agent.md file
 
     def __post_init__(self) -> None:
         """Auto-construct name from dimensions if not explicitly set."""
@@ -390,6 +392,7 @@ class Eval:
 
         name: str = overrides.pop("name", parsed["name"])  # type: ignore[assignment]
         system_prompt: str = overrides.pop("system_prompt", parsed["prompt"])  # type: ignore[assignment]
+        description: str = parsed.get("description", "")
 
         # Map frontmatter 'tools' → allowed_tools (unless caller overrides it)
         tools_from_file: list[str] | None = parsed["metadata"].get("tools")
@@ -403,5 +406,51 @@ class Eval:
             skill=skill,
             system_prompt=system_prompt,
             allowed_tools=allowed_tools,
+            custom_agent_name=name,
+            custom_agent_description=description,
             **overrides,
+        )
+
+    @classmethod
+    def from_instructions(
+        cls,
+        name: str,
+        instructions: str,
+        description: str = "",
+        *,
+        provider: "Provider",
+        **kwargs: "Any",
+    ) -> "Eval":
+        """Create an eval with named instructions.
+
+        Replaces the raw ``system_prompt=`` pattern with a named, documented
+        agent. Useful when you have instructions that aren't loaded from a
+        file but still want agent identity in reports.
+
+        Args:
+            name: Human-readable agent name shown in reports.
+            instructions: System prompt / instructions for the agent.
+            description: Optional description of what the agent does.
+            provider: LLM provider configuration.
+            **kwargs: Additional keyword arguments forwarded to :class:`Eval`.
+
+        Returns:
+            A fully configured :class:`Eval` instance.
+
+        Example::
+
+            agent = Eval.from_instructions(
+                "financial-advisor",
+                "You are a financial advisor. Answer questions about accounts.",
+                description="Handles account balance queries",
+                provider=Provider(model="azure/gpt-5-mini"),
+            )
+        """
+        return cls(
+            name=name,
+            provider=provider,
+            system_prompt=instructions,
+            custom_agent_name=name,
+            custom_agent_description=description,
+            **kwargs,
         )

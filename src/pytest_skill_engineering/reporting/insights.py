@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING, Any
 from pytest_skill_engineering.execution.cost import estimate_cost, models_without_pricing
 
 if TYPE_CHECKING:
-    from pytest_skill_engineering.core.result import SkillInfo, ToolInfo
+    from pytest_skill_engineering.core.result import CustomAgentInfo, MCPPrompt, SkillInfo, ToolInfo
     from pytest_skill_engineering.reporting.collector import SuiteReport
 
 
@@ -53,6 +53,9 @@ def _build_analysis_input(
     skill_info: list[SkillInfo],
     prompts: dict[str, str],
     *,
+    mcp_prompt_info: list[MCPPrompt] | None = None,
+    custom_agent_info: list[CustomAgentInfo] | None = None,
+    prompt_names: list[str] | None = None,
     min_pass_rate: int | None = None,
     compact: bool = False,
 ) -> str:
@@ -326,6 +329,25 @@ def _build_analysis_input(
             )
             sections.append("")
 
+    # MCP prompt templates
+    if mcp_prompt_info:
+        sections.append("\n## MCP Prompt Templates\n")
+        for prompt in mcp_prompt_info:
+            sections.append(f"### {prompt.name}")
+            if prompt.description:
+                sections.append(f"Description: {prompt.description}")
+            if prompt.arguments:
+                arg_strs = []
+                for a in prompt.arguments:
+                    req = " (required)" if a.required else " (optional)"
+                    desc = f": {a.description}" if a.description else ""
+                    arg_strs.append(f"- {a.name}{req}{desc}")
+                sections.append("Arguments:")
+                sections.extend(arg_strs)
+            else:
+                sections.append("Arguments: none")
+            sections.append("")
+
     # Skill content
     if skill_info:
         sections.append("\n## Skills\n")
@@ -344,6 +366,38 @@ def _build_analysis_input(
             sections.append(f"### {name}")
             sections.append(f"```\n{content[:1000]}\n```")
             sections.append("")
+
+    # Custom agent info
+    if custom_agent_info:
+        sections.append("\n## Custom Agents\n")
+        for ca in custom_agent_info:
+            sections.append(f"### {ca.name}")
+            if ca.description:
+                sections.append(f"Description: {ca.description}")
+            if ca.file_path:
+                sections.append(f"File: {ca.file_path}")
+            sections.append("")
+
+    # Prompt files used in tests
+    if prompt_names:
+        sections.append("\n## Prompt Files Tested\n")
+        # Compute pass rates per prompt name
+        prompt_stats: dict[str, dict[str, int]] = {}
+        for test in suite_report.tests:
+            pn = getattr(test.eval_result, "prompt_name", None) if test.eval_result else None
+            if pn:
+                if pn not in prompt_stats:
+                    prompt_stats[pn] = {"passed": 0, "total": 0}
+                prompt_stats[pn]["total"] += 1
+                if test.outcome == "passed":
+                    prompt_stats[pn]["passed"] += 1
+        for name in prompt_names:
+            stats = prompt_stats.get(name, {"passed": 0, "total": 0})
+            total = stats["total"]
+            passed = stats["passed"]
+            rate = f"{passed}/{total}" if total > 0 else "N/A"
+            sections.append(f"- **{name}**: {rate} tests passed")
+        sections.append("")
 
     return "\n".join(sections)
 
@@ -375,6 +429,9 @@ async def generate_insights(
     tool_info: list[ToolInfo] | None = None,
     skill_info: list[SkillInfo] | None = None,
     prompts: dict[str, str] | None = None,
+    mcp_prompt_info: list[MCPPrompt] | None = None,
+    custom_agent_info: list[CustomAgentInfo] | None = None,
+    prompt_names: list[str] | None = None,
     model: str = "azure/gpt-5-mini",
     cache_dir: Path | None = None,
     min_pass_rate: int | None = None,
@@ -388,6 +445,9 @@ async def generate_insights(
         tool_info: MCP tool definitions (optional)
         skill_info: Skill metadata (optional)
         prompts: Prompt variants by name (optional)
+        mcp_prompt_info: MCP prompt templates (optional)
+        custom_agent_info: Custom agent metadata (optional)
+        prompt_names: Names of prompt files tested (optional)
         model: Model identifier (e.g., "azure/gpt-5-mini", "openai/gpt-5-mini")
         cache_dir: Directory for caching results (optional)
         min_pass_rate: Minimum pass rate threshold for disqualifying agents
@@ -436,6 +496,9 @@ async def generate_insights(
         tool_info=tool_info or [],
         skill_info=skill_info or [],
         prompts=prompts or {},
+        mcp_prompt_info=mcp_prompt_info,
+        custom_agent_info=custom_agent_info,
+        prompt_names=prompt_names,
         min_pass_rate=min_pass_rate,
         compact=compact,
     )

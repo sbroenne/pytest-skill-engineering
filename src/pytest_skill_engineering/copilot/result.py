@@ -70,6 +70,9 @@ class CopilotResult:
     # Model actually used (from session.start or assistant.usage)
     model_used: str | None = None
 
+    # Premium requests (from session.usage_info — CopilotEval only)
+    total_premium_requests: float = 0.0
+
     # Raw SDK events for advanced inspection
     raw_events: list[Any] = field(default_factory=list)
 

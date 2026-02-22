@@ -97,6 +97,7 @@ def eval_run(
         max_turns: int | None = None,
         timeout_ms: int = 60000,
         messages: list[Any] | None = None,
+        prompt_name: str | None = None,
     ) -> EvalResult:
         """Run an agent with the given prompt.
 
@@ -110,6 +111,9 @@ def eval_run(
                      conversation instead of starting fresh.
                      If using @pytest.mark.session and messages is not provided,
                      messages from the previous test in the session are used automatically.
+            prompt_name: Optional name identifying which prompt file was used
+                (e.g., from ``load_prompt_file()["name"]``). Stored on the
+                result and passed to AI analysis for prompt file feedback.
 
         Returns:
             EvalResult with conversation history and tool calls
@@ -127,6 +131,10 @@ def eval_run(
         result = await engine.run(
             prompt, max_turns=max_turns, timeout_ms=timeout_ms, messages=effective_messages
         )
+
+        # Store prompt name on result if provided
+        if prompt_name is not None:
+            result.prompt_name = prompt_name
 
         # Auto-save messages for next test in session
         # Note: Session storage is not thread-safe. Session tests must run

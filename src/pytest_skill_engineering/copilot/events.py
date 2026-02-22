@@ -103,6 +103,7 @@ class EventMapper:
         self._error: str | None = None
         self._raw_events: list[Any] = []
         self._start_time: float = time.monotonic()
+        self._total_premium_requests: float = 0.0
 
     def handle(self, event: SessionEvent) -> None:
         """Process a single SDK event."""
@@ -135,6 +136,7 @@ class EventMapper:
             permissions=self._permissions,
             model_used=self._model_used,
             raw_events=self._raw_events,
+            total_premium_requests=self._total_premium_requests,
         )
 
     # ── Assistant events ──
@@ -347,6 +349,12 @@ class EventMapper:
         if model:
             self._model_used = model
 
+    def _handle_session_usage_info(self, event: SessionEvent) -> None:
+        """Handle session-level usage summary including premium request count."""
+        self._total_premium_requests = float(
+            _get_data_field(event, "total_premium_requests", 0) or 0
+        )
+
     def _handle_session_error(self, event: SessionEvent) -> None:
         """Handle session error."""
         msg = _get_data_field(event, "message", "Unknown error")
@@ -419,6 +427,7 @@ _EVENT_HANDLERS: dict[str, Any] = {
     # Session
     "session.start": EventMapper._handle_session_start,
     "session.error": EventMapper._handle_session_error,
+    "session.usage_info": EventMapper._handle_session_usage_info,
     # User
     "user.message": EventMapper._handle_user_message,
     # Permissions

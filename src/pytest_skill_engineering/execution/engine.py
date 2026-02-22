@@ -12,7 +12,9 @@ from pydantic_ai.usage import UsageLimits
 
 from pytest_skill_engineering.core.result import (
     ClarificationStats,
+    CustomAgentInfo,
     EvalResult,
+    MCPPrompt,
     SkillInfo,
     ToolInfo,
 )
@@ -50,7 +52,9 @@ class EvalEngine:
         self._toolsets: list[AbstractToolset[Any]] = []
         self._exit_stack: contextlib.AsyncExitStack | None = None
         self._available_tools: list[ToolInfo] = []
+        self._mcp_prompts: list[MCPPrompt] = []
         self._skill_info: SkillInfo | None = None
+        self._custom_agent_info: CustomAgentInfo | None = None
         self._effective_system_prompt: str = ""
         self._rate_limiter = get_rate_limiter(
             agent.provider.model,
@@ -88,6 +92,8 @@ class EvalEngine:
 
             # Collect tool info for AI analysis after servers are started
             self._available_tools = await self._collect_tool_info()
+            # Collect MCP prompts for AI analysis
+            self._mcp_prompts = await self._collect_mcp_prompts()
         except Exception:
             await self._exit_stack.aclose()
             self._exit_stack = None
@@ -100,6 +106,13 @@ class EvalEngine:
                 description=self.agent.skill.metadata.description,
                 instruction_content=self.agent.skill.content,
                 reference_names=list(self.agent.skill.references.keys()),
+            )
+
+        # Build CustomAgentInfo for AI analysis
+        if self.agent.custom_agent_name:
+            self._custom_agent_info = CustomAgentInfo(
+                name=self.agent.custom_agent_name,
+                description=self.agent.custom_agent_description or "",
             )
 
         # Store effective system prompt
@@ -177,6 +190,8 @@ class EvalEngine:
                 skill_info=self._skill_info,
                 effective_system_prompt=self._effective_system_prompt,
                 session_context_count=session_context_count,
+                mcp_prompts=self._mcp_prompts,
+                custom_agent_info=self._custom_agent_info,
             )
 
             # Post-processing: clarification detection
@@ -197,6 +212,8 @@ class EvalEngine:
                 available_tools=self._available_tools,
                 skill_info=self._skill_info,
                 effective_system_prompt=self._effective_system_prompt,
+                mcp_prompts=self._mcp_prompts,
+                custom_agent_info=self._custom_agent_info,
             )
         except Exception as e:
             duration_ms = (time.perf_counter() - start_time) * 1000
@@ -208,6 +225,8 @@ class EvalEngine:
                 available_tools=self._available_tools,
                 skill_info=self._skill_info,
                 effective_system_prompt=self._effective_system_prompt,
+                mcp_prompts=self._mcp_prompts,
+                custom_agent_info=self._custom_agent_info,
             )
 
     async def _run_clarification_detection(self, result: EvalResult) -> ClarificationStats:
@@ -281,6 +300,50 @@ class EvalEngine:
             _logger.debug("Failed to collect tool info", exc_info=True)
 
         return tools_info
+
+    async def _collect_mcp_prompts(self) -> list[MCPPrompt]:
+        """Collect MCPPrompt from MCP toolsets for AI analysis."""
+        from pytest_skill_engineering.core.result import MCPPromptArgument
+
+        prompts: list[MCPPrompt] = []
+        seen: set[str] = set()
+
+        for toolset in self._toolsets:
+            # PydanticAI's MCP toolsets may expose a list_prompts() method
+            list_prompts_fn = getattr(toolset, "list_prompts", None)
+            if not callable(list_prompts_fn):
+                continue
+            try:
+                raw = await list_prompts_fn()  # type: ignore[misc]
+                for p in raw or []:
+                    name = getattr(p, "name", None) or ""
+                    if not name or name in seen:
+                        continue
+                    seen.add(name)
+                    args = []
+                    for a in getattr(p, "arguments", []) or []:
+                        args.append(
+                            MCPPromptArgument(
+                                name=getattr(a, "name", ""),
+                                description=getattr(a, "description", "") or "",
+                                required=getattr(a, "required", False) or False,
+                            )
+                        )
+                    prompts.append(
+                        MCPPrompt(
+                            name=name,
+                            description=getattr(p, "description", "") or "",
+                            arguments=args,
+                        )
+                    )
+            except Exception:
+                _logger.debug(
+                    "Failed to collect MCP prompts from %s",
+                    type(toolset).__name__,
+                    exc_info=True,
+                )
+
+        return prompts
 
     def _build_skill_toolset(self) -> AbstractToolset[Any] | None:
         """Build a FunctionToolset for skill reference tools."""

@@ -853,6 +853,9 @@ def _generate_structured_insights(
         # Collect tool info and skill info from test results
         tool_info: list[Any] = []
         skill_info: list[Any] = []
+        mcp_prompt_info: list[Any] = []
+        custom_agent_info: list[Any] = []
+        prompt_names: list[str] = []
         prompts: dict[str, str] = {}
 
         for test in report.tests:
@@ -864,10 +867,27 @@ def _generate_structured_insights(
                         tool_info.append(t)
                         seen_tools.add(t.name)
 
+                # Collect MCP prompts (deduplicate by name)
+                seen_mcp_prompts = {p.name for p in mcp_prompt_info}
+                for p in getattr(test.eval_result, "mcp_prompts", []) or []:
+                    if p.name not in seen_mcp_prompts:
+                        mcp_prompt_info.append(p)
+                        seen_mcp_prompts.add(p.name)
+
                 # Collect skills (deduplicate by name)
                 skill = getattr(test.eval_result, "skill_info", None)
                 if skill and skill.name not in {s.name for s in skill_info}:
                     skill_info.append(skill)
+
+                # Collect custom agent info (deduplicate by name)
+                ca = getattr(test.eval_result, "custom_agent_info", None)
+                if ca and ca.name not in {c.name for c in custom_agent_info}:
+                    custom_agent_info.append(ca)
+
+                # Collect prompt names used
+                pn = getattr(test.eval_result, "prompt_name", None)
+                if pn and pn not in prompt_names:
+                    prompt_names.append(pn)
 
                 # Collect effective system prompts as prompt variants
                 effective_prompt = getattr(test.eval_result, "effective_system_prompt", "")
@@ -894,6 +914,9 @@ def _generate_structured_insights(
                 suite_report=report,
                 tool_info=tool_info,
                 skill_info=skill_info,
+                mcp_prompt_info=mcp_prompt_info,
+                custom_agent_info=custom_agent_info,
+                prompt_names=prompt_names,
                 prompts=prompts,
                 model=model,
                 min_pass_rate=config.getoption("--aitest-min-pass-rate"),

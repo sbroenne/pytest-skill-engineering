@@ -245,6 +245,8 @@ def adapt_result(
     skill_info: SkillInfo | None,
     effective_system_prompt: str,
     session_context_count: int = 0,
+    mcp_prompts: list | None = None,
+    custom_agent_info: Any | None = None,
 ) -> EvalResult:
     """Convert PydanticAI AgentRunResult into our EvalResult for reporting."""
     from pytest_skill_engineering.execution.cost import estimate_cost
@@ -279,6 +281,8 @@ def adapt_result(
         available_tools=available_tools,
         skill_info=skill_info,
         effective_system_prompt=effective_system_prompt,
+        mcp_prompts=mcp_prompts or [],
+        custom_agent_info=custom_agent_info,
     )
 
 

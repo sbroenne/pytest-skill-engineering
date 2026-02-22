@@ -100,6 +100,18 @@ class MCPPrompt:
 
 
 @dataclass(slots=True)
+class CustomAgentInfo:
+    """Metadata about a custom agent (.agent.md file) under evaluation."""
+
+    name: str
+    description: str = ""
+    file_path: str = ""
+
+    def __repr__(self) -> str:
+        return f"CustomAgentInfo({self.name!r})"
+
+
+@dataclass(slots=True)
 class SkillInfo:
     """Metadata about a skill for AI analysis.
 
@@ -219,6 +231,10 @@ class EvalResult:
     available_tools: list[ToolInfo] = field(default_factory=list)
     skill_info: SkillInfo | None = None
     effective_system_prompt: str = ""
+    mcp_prompts: list[MCPPrompt] = field(default_factory=list)
+    prompt_name: str | None = None
+    custom_agent_info: CustomAgentInfo | None = None
+    premium_requests: float = 0.0
 
     # Clarification detection
     clarification_stats: ClarificationStats | None = None

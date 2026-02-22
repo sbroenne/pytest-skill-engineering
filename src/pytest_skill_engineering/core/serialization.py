@@ -114,7 +114,12 @@ def deserialize_suite_report(data: dict[str, Any]) -> SuiteReport:
                 )
 
             # Reconstruct available tools if present
-            from pytest_skill_engineering.core.result import SkillInfo, ToolInfo
+            from pytest_skill_engineering.core.result import (
+                MCPPrompt,
+                MCPPromptArgument,
+                SkillInfo,
+                ToolInfo,
+            )
 
             available_tools = []
             for t_data in ar_data.get("available_tools", []):
@@ -127,6 +132,25 @@ def deserialize_suite_report(data: dict[str, Any]) -> SuiteReport:
                     )
                 )
 
+            # Reconstruct MCP prompts if present
+            mcp_prompts = []
+            for p_data in ar_data.get("mcp_prompts", []):
+                args = [
+                    MCPPromptArgument(
+                        name=a["name"],
+                        description=a.get("description", ""),
+                        required=a.get("required", False),
+                    )
+                    for a in p_data.get("arguments", [])
+                ]
+                mcp_prompts.append(
+                    MCPPrompt(
+                        name=p_data["name"],
+                        description=p_data.get("description", ""),
+                        arguments=args,
+                    )
+                )
+
             # Reconstruct skill info if present
             skill_info = None
             si_data = ar_data.get("skill_info")
@@ -136,6 +160,18 @@ def deserialize_suite_report(data: dict[str, Any]) -> SuiteReport:
                     description=si_data["description"],
                     instruction_content=si_data.get("instruction_content", ""),
                     reference_names=si_data.get("reference_names", []),
+                )
+
+            # Reconstruct custom agent info if present
+            from pytest_skill_engineering.core.result import CustomAgentInfo
+
+            custom_agent_info = None
+            ca_data = ar_data.get("custom_agent_info")
+            if ca_data:
+                custom_agent_info = CustomAgentInfo(
+                    name=ca_data["name"],
+                    description=ca_data.get("description", ""),
+                    file_path=ca_data.get("file_path", ""),
                 )
 
             # Reconstruct agent result
@@ -152,6 +188,10 @@ def deserialize_suite_report(data: dict[str, Any]) -> SuiteReport:
                 available_tools=available_tools,
                 skill_info=skill_info,
                 effective_system_prompt=ar_data.get("effective_system_prompt", ""),
+                mcp_prompts=mcp_prompts,
+                prompt_name=ar_data.get("prompt_name"),
+                custom_agent_info=custom_agent_info,
+                premium_requests=ar_data.get("premium_requests", 0.0),
             )
 
         # Read identity from typed fields (support both new and legacy field names)
