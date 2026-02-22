@@ -39,7 +39,8 @@ plugins:
   - search
   - social:
       enabled: !ENV [CI, false]
-      cards_layout: default/variant
+      cards_layout_options:
+        background_color: "#5C6BC0"
   - meta
   - mkdocstrings:
       handlers:
@@ -81,6 +82,7 @@ nav:
     - Overview: how-to/index.md
     - Test MCP Servers: how-to/test-mcp-servers.md
     - Test CLI Tools: how-to/test-cli-tools.md
+    - Test Coding Agents: how-to/test-coding-agents.md
     - Generate Reports: how-to/generate-reports.md
     - Cost Estimation: how-to/cost-estimation.md
     - CI/CD Integration: how-to/ci-cd.md

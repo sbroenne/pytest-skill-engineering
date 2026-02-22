@@ -6,7 +6,20 @@ description: "Configure pytest-aitest via pyproject.toml or command-line flags. 
 
 ## Quick Setup (pyproject.toml)
 
-The recommended way to configure pytest-aitest is via `pyproject.toml`:
+**Simplest — GitHub Copilot (no API keys needed):**
+
+```toml
+[tool.pytest.ini_options]
+addopts = """
+--aitest-summary-model=copilot/gpt-5-mini
+--llm-model=copilot/gpt-5-mini
+--aitest-html=aitest-reports/report.html
+"""
+```
+
+Requires `uv add pytest-aitest[copilot]` and `gh auth login`.
+
+**Enterprise — Azure OpenAI:**
 
 ```toml
 [tool.pytest.ini_options]
@@ -28,7 +41,7 @@ Reports are generated automatically with AI insights.
 
 pytest-aitest uses [Pydantic AI](https://ai.pydantic.dev/) for LLM access. Configure via environment variables.
 
-### Azure OpenAI (Recommended)
+### Azure OpenAI (Enterprise / CI)
 
 ```bash
 export AZURE_API_BASE=https://your-resource.openai.azure.com/
@@ -45,12 +58,37 @@ export OPENAI_API_KEY=sk-xxx
 
 See [Pydantic AI model docs](https://ai.pydantic.dev/models/) for Anthropic, Google, etc.
 
+### GitHub Copilot (via SDK)
+
+If you have `pytest-aitest[copilot]` installed, you can use Copilot-accessible models for **all** LLM calls — no separate API key needed:
+
+```bash
+gh auth login  # One-time authentication
+```
+
+```toml
+[tool.pytest.ini_options]
+addopts = """
+--aitest-summary-model=copilot/gpt-5-mini
+--llm-model=copilot/gpt-5-mini
+"""
+```
+
+Available models depend on your Copilot subscription (e.g., `gpt-5-mini`, `gpt-5.2`, `claude-opus-4.5`).
+
+For Copilot integration tests that use auxiliary judge calls (for example optimizer integration), the suite now fails fast if no provider model is reachable. You can force the judge model with:
+
+```bash
+AITEST_INTEGRATION_JUDGE_MODEL=copilot/gpt-5-mini
+```
+
 | Provider | Variable |
 |----------|----------|
 | Azure OpenAI | `AZURE_API_BASE` + `az login` |
 | OpenAI | `OPENAI_API_KEY` |
 | Anthropic | `ANTHROPIC_API_KEY` |
 | Google | `GEMINI_API_KEY` |
+| GitHub Copilot | `gh auth login` or `GITHUB_TOKEN` |
 
 ## Provider Configuration
 

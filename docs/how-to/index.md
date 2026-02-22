@@ -16,3 +16,4 @@ Goal-oriented guides for common tasks.
 - **[Visual Testing](visual-testing.md)** — Validate HTML report rendering with Playwright
 - **[Fixture Testing](fixture-testing.md)** — Use comprehensive assertion patterns with fixture tests
 - **[Multi-Dimension Scoring](multi-dimension-scoring.md)** — Score AI output on weighted rubric dimensions with LLM-as-judge
+- **[Test Coding Agents](test-coding-agents.md)** — Test real coding agents like GitHub Copilot via the SDK

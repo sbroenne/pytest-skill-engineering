@@ -270,16 +270,16 @@ wheels = [
 
 [[package]]
 name = "backrefs"
-version = "6.2"
+version = "5.9"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/4e/a6/e325ec73b638d3ede4421b5445d4a0b8b219481826cc079d510100af356c/backrefs-6.2.tar.gz", hash = "sha256:f44ff4d48808b243b6c0cdc6231e22195c32f77046018141556c66f8bab72a49", size = 7012303, upload-time = "2026-02-16T19:10:15.828Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/eb/a7/312f673df6a79003279e1f55619abbe7daebbb87c17c976ddc0345c04c7b/backrefs-5.9.tar.gz", hash = "sha256:808548cb708d66b82ee231f962cb36faaf4f2baab032f2fbb783e9c2fdddaa59", size = 5765857, upload-time = "2025-06-22T19:34:13.97Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/1b/39/3765df263e08a4df37f4f43cb5aa3c6c17a4bdd42ecfe841e04c26037171/backrefs-6.2-py310-none-any.whl", hash = "sha256:0fdc7b012420b6b144410342caeb8adc54c6866cf12064abc9bb211302e496f8", size = 381075, upload-time = "2026-02-16T19:10:04.322Z" },
-    { url = "https://files.pythonhosted.org/packages/0f/f0/35240571e1b67ffb19dafb29ab34150b6f59f93f717b041082cdb1bfceb1/backrefs-6.2-py311-none-any.whl", hash = "sha256:08aa7fae530c6b2361d7bdcbda1a7c454e330cc9dbcd03f5c23205e430e5c3be", size = 392874, upload-time = "2026-02-16T19:10:06.314Z" },
-    { url = "https://files.pythonhosted.org/packages/e3/63/77e8c9745b4d227cce9f5e0a6f68041278c5f9b18588b35905f5f19c1beb/backrefs-6.2-py312-none-any.whl", hash = "sha256:c3f4b9cb2af8cda0d87ab4f57800b57b95428488477be164dd2b47be54db0c90", size = 398787, upload-time = "2026-02-16T19:10:08.274Z" },
-    { url = "https://files.pythonhosted.org/packages/c5/71/c754b1737ad99102e03fa3235acb6cb6d3ac9d6f596cbc3e5f236705abd8/backrefs-6.2-py313-none-any.whl", hash = "sha256:12df81596ab511f783b7d87c043ce26bc5b0288cf3bb03610fe76b8189282b2b", size = 400747, upload-time = "2026-02-16T19:10:09.791Z" },
-    { url = "https://files.pythonhosted.org/packages/af/75/be12ba31a6eb20dccef2320cd8ccb3f7d9013b68ba4c70156259fee9e409/backrefs-6.2-py314-none-any.whl", hash = "sha256:e5f805ae09819caa1aa0623b4a83790e7028604aa2b8c73ba602c4454e665de7", size = 412602, upload-time = "2026-02-16T19:10:12.317Z" },
-    { url = "https://files.pythonhosted.org/packages/21/f8/d02f650c47d05034dcd6f9c8cf94f39598b7a89c00ecda0ecb2911bc27e9/backrefs-6.2-py39-none-any.whl", hash = "sha256:664e33cd88c6840b7625b826ecf2555f32d491800900f5a541f772c485f7cda7", size = 381077, upload-time = "2026-02-16T19:10:13.74Z" },
+    { url = "https://files.pythonhosted.org/packages/19/4d/798dc1f30468134906575156c089c492cf79b5a5fd373f07fe26c4d046bf/backrefs-5.9-py310-none-any.whl", hash = "sha256:db8e8ba0e9de81fcd635f440deab5ae5f2591b54ac1ebe0550a2ca063488cd9f", size = 380267, upload-time = "2025-06-22T19:34:05.252Z" },
+    { url = "https://files.pythonhosted.org/packages/55/07/f0b3375bf0d06014e9787797e6b7cc02b38ac9ff9726ccfe834d94e9991e/backrefs-5.9-py311-none-any.whl", hash = "sha256:6907635edebbe9b2dc3de3a2befff44d74f30a4562adbb8b36f21252ea19c5cf", size = 392072, upload-time = "2025-06-22T19:34:06.743Z" },
+    { url = "https://files.pythonhosted.org/packages/9d/12/4f345407259dd60a0997107758ba3f221cf89a9b5a0f8ed5b961aef97253/backrefs-5.9-py312-none-any.whl", hash = "sha256:7fdf9771f63e6028d7fee7e0c497c81abda597ea45d6b8f89e8ad76994f5befa", size = 397947, upload-time = "2025-06-22T19:34:08.172Z" },
+    { url = "https://files.pythonhosted.org/packages/10/bf/fa31834dc27a7f05e5290eae47c82690edc3a7b37d58f7fb35a1bdbf355b/backrefs-5.9-py313-none-any.whl", hash = "sha256:cc37b19fa219e93ff825ed1fed8879e47b4d89aa7a1884860e2db64ccd7c676b", size = 399843, upload-time = "2025-06-22T19:34:09.68Z" },
+    { url = "https://files.pythonhosted.org/packages/fc/24/b29af34b2c9c41645a9f4ff117bae860291780d73880f449e0b5d948c070/backrefs-5.9-py314-none-any.whl", hash = "sha256:df5e169836cc8acb5e440ebae9aad4bf9d15e226d3bad049cf3f6a5c20cc8dc9", size = 411762, upload-time = "2025-06-22T19:34:11.037Z" },
+    { url = "https://files.pythonhosted.org/packages/41/ff/392bff89415399a979be4a65357a41d92729ae8580a66073d8ec8d810f98/backrefs-5.9-py39-none-any.whl", hash = "sha256:f48ee18f6252b8f5777a22a00a09a85de0ca931658f1dd96d4406a34f3748c60", size = 380265, upload-time = "2025-06-22T19:34:12.405Z" },
 ]
 
 [[package]]
@@ -1135,6 +1135,24 @@ wheels = [
 ]
 
 [[package]]
+name = "github-copilot-sdk"
+version = "0.1.25"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pydantic" },
+    { name = "python-dateutil" },
+    { name = "typing-extensions" },
+]
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/87/06/1dec504b54c724d69283969d4ed004225ec8bbb1c0a5e9e0c3b6b048099a/github_copilot_sdk-0.1.25-py3-none-macosx_10_9_x86_64.whl", hash = "sha256:d32c3fc2c393f70923a645a133607da2e562d078b87437f499100d5bb8c1902f", size = 58097936, upload-time = "2026-02-18T00:07:20.672Z" },
+    { url = "https://files.pythonhosted.org/packages/9f/a3/a6ad1ca47af561069d6d8d0a4b074b000b0be1dfa9e66215b264ee31650c/github_copilot_sdk-0.1.25-py3-none-macosx_11_0_arm64.whl", hash = "sha256:7af33d3afbe09a78dfc9d65a843526e47aba15631e90926c42a21a200fab12da", size = 54867128, upload-time = "2026-02-18T00:07:25.228Z" },
+    { url = "https://files.pythonhosted.org/packages/8c/08/74fd9be0ed292d524a15fa4db950f43f4afefb77514f856e36fd1203bf13/github_copilot_sdk-0.1.25-py3-none-manylinux_2_17_aarch64.whl", hash = "sha256:bc74a3d08ee45313ac02a3f7159c583ec41fc16090ec5f27f88c4b737f03139e", size = 60999905, upload-time = "2026-02-18T00:07:29.462Z" },
+    { url = "https://files.pythonhosted.org/packages/ae/01/daae53c8586c0cadae9a2a146d1da9bd6dbd7e89b7dcd72643b453267345/github_copilot_sdk-0.1.25-py3-none-manylinux_2_17_x86_64.whl", hash = "sha256:13ef99fa8c709c5f80d820672bf36ee9176bc33f0efce6a2b5cbf6d1bb2369e8", size = 59183062, upload-time = "2026-02-18T00:07:34.059Z" },
+    { url = "https://files.pythonhosted.org/packages/81/a8/2ec7d47a18b042cca2c140cabb5fe6621697c1b43b8721637061122c51ed/github_copilot_sdk-0.1.25-py3-none-win_amd64.whl", hash = "sha256:1a90ee583309ff308fea42f9edec61203645a33ca1d3dc42953628fb8c3eda07", size = 53624148, upload-time = "2026-02-18T00:07:38.558Z" },
+    { url = "https://files.pythonhosted.org/packages/6b/2e/4cffd33552ede91de7517641835a3365571abd3f436c9d76a4f50793033c/github_copilot_sdk-0.1.25-py3-none-win_arm64.whl", hash = "sha256:5249a63d1ac1e4d325c70c9902e81327b0baca53afa46010f52ac3fd3b5a111b", size = 51623455, upload-time = "2026-02-18T00:07:42.156Z" },
+]
+
+[[package]]
 name = "google-auth"
 version = "2.48.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1944,7 +1962,7 @@ wheels = [
 
 [[package]]
 name = "mkdocs-material"
-version = "9.7.2"
+version = "9.6.23"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "babel" },
@@ -1959,9 +1977,9 @@ dependencies = [
     { name = "pymdown-extensions" },
     { name = "requests" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/34/57/5d3c8c9e2ff9d66dc8f63aa052eb0bac5041fecff7761d8689fe65c39c13/mkdocs_material-9.7.2.tar.gz", hash = "sha256:6776256552290b9b7a7aa002780e25b1e04bc9c3a8516b6b153e82e16b8384bd", size = 4097818, upload-time = "2026-02-18T15:53:07.763Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/57/de/cc1d5139c2782b1a49e1ed1845b3298ed6076b9ba1c740ad7c952d8ffcf9/mkdocs_material-9.6.23.tar.gz", hash = "sha256:62ebc9cdbe90e1ae4f4e9b16a6aa5c69b93474c7b9e79ebc0b11b87f9f055e00", size = 4048130, upload-time = "2025-11-01T16:33:11.782Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/cd/19/d194e75e82282b1d688f0720e21b5ac250ed64ddea333a228aaf83105f2e/mkdocs_material-9.7.2-py3-none-any.whl", hash = "sha256:9bf6f53452d4a4d527eac3cef3f92b7b6fc4931c55d57766a7d87890d47e1b92", size = 9305052, upload-time = "2026-02-18T15:53:05.221Z" },
+    { url = "https://files.pythonhosted.org/packages/f5/df/bc583e857174b0dc6df67d555123533f09e7e1ac0f3fae7693fb6840c0a3/mkdocs_material-9.6.23-py3-none-any.whl", hash = "sha256:3bf3f1d82d269f3a14ed6897bfc3a844cc05e1dc38045386691b91d7e6945332", size = 9210689, upload-time = "2025-11-01T16:33:08.196Z" },
 ]
 
 [[package]]
@@ -3024,6 +3042,9 @@ dependencies = [
 ]
 
 [package.optional-dependencies]
+copilot = [
+    { name = "github-copilot-sdk" },
+]
 dev = [
     { name = "pre-commit" },
     { name = "pyright" },
@@ -3053,13 +3074,14 @@ dev = [
 requires-dist = [
     { name = "azure-identity", specifier = ">=1.25.2" },
     { name = "cairosvg", marker = "extra == 'docs'", specifier = ">=2.7" },
+    { name = "github-copilot-sdk", marker = "extra == 'copilot'", specifier = ">=0.1.25" },
     { name = "htpy", specifier = ">=25.12.0" },
     { name = "litellm", specifier = ">=1.81.13" },
     { name = "markdown", specifier = ">=3.10.2" },
     { name = "mcp", specifier = ">=1.26" },
     { name = "mdutils", specifier = ">=1.8.1" },
     { name = "mkdocs", marker = "extra == 'docs'", specifier = ">=1.6" },
-    { name = "mkdocs-material", marker = "extra == 'docs'", specifier = ">=9.7" },
+    { name = "mkdocs-material", marker = "extra == 'docs'", specifier = ">=9.6,<9.7" },
     { name = "mkdocstrings", extras = ["python"], marker = "extra == 'docs'", specifier = ">=0.24" },
     { name = "pillow", marker = "extra == 'docs'", specifier = ">=11.0" },
     { name = "pre-commit", marker = "extra == 'dev'", specifier = ">=4.5" },
@@ -3076,7 +3098,7 @@ requires-dist = [
     { name = "syrupy", marker = "extra == 'test'", specifier = ">=5.1" },
     { name = "typeguard", marker = "extra == 'dev'", specifier = ">=4.5" },
 ]
-provides-extras = ["dev", "test", "docs"]
+provides-extras = ["copilot", "dev", "test", "docs"]
 
 [package.metadata.requires-dev]
 dev = [{ name = "pytest-aitest", extras = ["dev", "test", "docs"] }]

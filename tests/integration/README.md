@@ -40,6 +40,21 @@ pytest tests/integration/test_basic_usage.py::TestBankingWorkflows::test_balance
    export AZURE_API_BASE=https://your-resource.cognitiveservices.azure.com
    ```
 
+### Copilot integration note
+
+Some Copilot integration tests (for example optimizer integration) require an auxiliary judge model. Those tests now fail fast when no provider model is reachable.
+
+Any supported provider is acceptable for that judge path:
+- Azure (`AZURE_API_BASE` or `AZURE_OPENAI_ENDPOINT`)
+- OpenAI (`OPENAI_API_KEY`)
+- Copilot (`gh auth login` or `GITHUB_TOKEN`)
+
+Optional override for test runs:
+
+```bash
+AITEST_INTEGRATION_JUDGE_MODEL=copilot/gpt-5-mini pytest tests/integration/copilot/test_optimizer_integration.py -v
+```
+
 ## Test Descriptions
 
 ### test_basic_usage.py

@@ -55,7 +55,22 @@ Install:
 uv add pytest-aitest
 ```
 
-Configure in `pyproject.toml`:
+**Option A — GitHub Copilot (zero setup if you already have Copilot):**
+
+```bash
+uv add pytest-aitest[copilot]
+gh auth login  # one-time
+```
+
+```toml
+[tool.pytest.ini_options]
+addopts = """
+--aitest-summary-model=copilot/gpt-5-mini
+--llm-model=copilot/gpt-5-mini
+"""
+```
+
+**Option B — Azure OpenAI:**
 
 ```toml
 [tool.pytest.ini_options]
@@ -63,8 +78,6 @@ addopts = """
 --aitest-summary-model=azure/gpt-5.2-chat
 """
 ```
-
-Set credentials and run:
 
 ```bash
 export AZURE_API_BASE=https://your-resource.openai.azure.com/
@@ -81,6 +94,7 @@ pytest tests/
 - **Multi-Turn Sessions** — Test conversations that build on context
 - **AI Analysis** — Actionable feedback on tool descriptions, prompts, and costs
 - **Multi-Provider** — Any model via [Pydantic AI](https://ai.pydantic.dev/) (OpenAI, Anthropic, Gemini, Azure, Bedrock, Mistral, and more)
+- **Copilot SDK Provider** — Use `copilot/gpt-5-mini` for all LLM calls (judge, insights, scoring) — zero additional setup with `pytest-aitest[copilot]`
 - **Clarification Detection** — Catch agents that ask questions instead of acting
 - **Semantic Assertions** — Built-in `llm_assert` fixture powered by [pydantic-evals](https://ai.pydantic.dev/evals/) LLM judge
 - **Multi-Dimension Scoring** — `llm_score` fixture for granular quality measurement across named dimensions

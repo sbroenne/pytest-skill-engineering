@@ -115,6 +115,36 @@ __all__ = [  # noqa: RUF022
     "assert_score",
 ]
 
+# Copilot coding agent support (available when pytest-aitest[copilot] is installed)
+try:
+    from pytest_aitest.copilot import (  # noqa: E402
+        ClaudeCodePersona,
+        CopilotAgent,
+        CopilotCLIPersona,
+        CopilotResult,
+        HeadlessPersona,
+        Persona,
+        VSCodePersona,
+        load_custom_agent,
+        load_custom_agents,
+        run_copilot,
+    )
+
+    __all__ += [
+        "CopilotAgent",
+        "CopilotResult",
+        "ClaudeCodePersona",
+        "CopilotCLIPersona",
+        "HeadlessPersona",
+        "Persona",
+        "VSCodePersona",
+        "load_custom_agent",
+        "load_custom_agents",
+        "run_copilot",
+    ]
+except ImportError:
+    pass  # github-copilot-sdk not installed — copilot types not available
+
 from importlib.metadata import version as _get_version  # noqa: E402
 
 __version__ = _get_version("pytest-aitest")

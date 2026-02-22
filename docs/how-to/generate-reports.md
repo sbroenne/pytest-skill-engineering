@@ -62,7 +62,7 @@ pytest tests/
 | `--aitest-html=PATH` | Generate HTML report (requires `--aitest-summary-model`) |
 | `--aitest-md=PATH` | Generate Markdown report (requires `--aitest-summary-model`) |
 | `--aitest-json=PATH` | Custom JSON path (default: `aitest-reports/results.json`) |
-| `--aitest-summary-model=MODEL` | Model for AI insights (required for HTML/MD) |
+| `--aitest-summary-model=MODEL` | Model for AI insights (required for HTML/MD). Accepts `azure/`, `openai/`, `copilot/`, etc. |
 | `--aitest-min-pass-rate=N` | Fail if pass rate below N% (e.g., `80`) |
 
 ## Report Regeneration

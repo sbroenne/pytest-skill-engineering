@@ -52,10 +52,13 @@ def build_pydantic_model(agent: Agent) -> Model:
 def build_model_from_string(model_str: str) -> Any:
     """Convert a model string (e.g. "azure/gpt-5-mini") to a PydanticAI Model.
 
-    Handles Azure Entra ID auth and standard provider string conversion.
+    Handles Azure Entra ID auth, Copilot SDK, and standard provider string conversion.
     """
     if model_str.startswith("azure/"):
         return _build_azure_model(model_str)
+
+    if model_str.startswith("copilot/"):
+        return _build_copilot_model(model_str)
 
     # For non-Azure models, use PydanticAI's string-based model resolution
     # Convert our format "provider/model" to pydantic-ai format "provider:model"
@@ -111,6 +114,18 @@ def _build_azure_model(model_str: str) -> Any:
         )
 
     return OpenAIChatModel(deployment, provider=OpenAIProvider(openai_client=client))
+
+
+def _build_copilot_model(model_str: str) -> Any:
+    """Build a CopilotModel backed by the GitHub Copilot SDK.
+
+    Requires ``pytest-aitest[copilot]`` to be installed.
+    Auth is implicit via GITHUB_TOKEN or ``gh`` CLI login.
+    """
+    from pytest_aitest.copilot.model import CopilotModel
+
+    model_name = model_str.removeprefix("copilot/")
+    return CopilotModel(model_name)
 
 
 def build_mcp_toolsets(

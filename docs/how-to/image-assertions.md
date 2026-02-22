@@ -92,14 +92,17 @@ assert llm_assert_image(jpeg_bytes, "shows a table", media_type="image/jpeg")
 ### Command-Line Options
 
 ```bash
-# Dedicated vision model (recommended for cost control)
+# GitHub Copilot (no extra setup if pytest-aitest[copilot] installed)
+pytest --llm-vision-model=copilot/gpt-4o
+
+# Azure OpenAI
 pytest --llm-vision-model=azure/gpt-4o
 
 # Falls back to --llm-model if --llm-vision-model not set
-pytest --llm-model=azure/gpt-4o
+pytest --llm-model=copilot/gpt-4o
 
 # Falls back to --aitest-summary-model if neither set
-pytest --aitest-summary-model=azure/gpt-4o
+pytest --aitest-summary-model=copilot/gpt-4o
 ```
 
 ### Model Requirements
@@ -108,6 +111,7 @@ The vision model must support image input. Recommended models:
 
 | Provider | Models |
 |----------|--------|
+| GitHub Copilot | `copilot/gpt-4o`, `copilot/gpt-4o-mini` |
 | OpenAI | `gpt-4o`, `gpt-4o-mini` |
 | Anthropic | `claude-sonnet-4`, `claude-haiku-4` |
 | Azure | `azure/gpt-4o` |

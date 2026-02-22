@@ -343,6 +343,10 @@ def pytest_configure(config: Config) -> None:
         "session(name): Mark tests as part of a named session for multi-turn conversations. "
         "Tests with the same session name share conversation history automatically.",
     )
+    config.addinivalue_line(
+        "markers",
+        "copilot: mark test as requiring GitHub Copilot SDK credentials",
+    )
 
     # Always initialize report collection - JSON is always generated
     config.stash[COLLECTOR_KEY] = []
@@ -379,16 +383,36 @@ def pytest_collection_modifyitems(
     for item in items:
         # Check if test uses any aitest fixtures
         fixturenames = getattr(item, "fixturenames", [])
-        aitest_fixtures = {"aitest_run"}
+        aitest_fixtures = {"aitest_run", "copilot_run"}
         if (aitest_fixtures & set(fixturenames)) and not any(
             m.name == "aitest" for m in item.iter_markers()
         ):
             item.add_marker(pytest.mark.aitest)
 
 
-@pytest.hookimpl(hookwrapper=True)
+@pytest.hookimpl(hookwrapper=True, tryfirst=True)
 def pytest_runtest_makereport(item: Item, call: Any) -> Any:
-    """Capture test results for reporting."""
+    """Capture test results for reporting.
+
+    Also auto-stashes CopilotResult for tests that call ``run_copilot()``
+    directly instead of using the ``copilot_run`` fixture — critical for
+    module-scoped agent fixtures that cannot use the function-scoped fixture.
+    """
+    # Auto-stash CopilotResult before processing (tryfirst ensures this runs early)
+    if call.when == "call" and not hasattr(item, "_aitest_result"):
+        try:
+            from pytest_aitest.copilot.result import CopilotResult
+
+            funcargs = getattr(item, "funcargs", {})
+            for val in funcargs.values():
+                if isinstance(val, CopilotResult) and val.agent is not None:
+                    from pytest_aitest.copilot.fixtures import stash_on_item
+
+                    stash_on_item(item, val.agent, val)
+                    break
+        except ImportError:
+            pass  # Copilot SDK not installed — skip auto-stashing
+
     outcome = yield
     report: PytestTestReport = outcome.get_result()
 
@@ -492,6 +516,10 @@ def pytest_runtest_makereport(item: Item, call: Any) -> Any:
         skill_name=skill_name,
         iteration=iteration,
     )
+
+    # Flag copilot tests for analysis prompt selection
+    if any(m.name == "copilot" for m in item.iter_markers()):
+        test_report._copilot_test = True  # type: ignore[attr-defined]
 
     tests.append(test_report)
 
@@ -695,6 +723,34 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
                 f"\naitest: pass rate {actual_rate:.1f}% meets minimum threshold {min_pass_rate}%",
             )
 
+    # Clean up shared CopilotClient if it was started for copilot/ model provider
+    _shutdown_copilot_model_client()
+
+
+def _shutdown_copilot_model_client() -> None:
+    """Shut down the shared CopilotClient if it was started."""
+    try:
+        from pytest_aitest.copilot.model import _client, shutdown_copilot_model_client
+
+        if _client is not None:
+            import asyncio
+
+            try:
+                loop = asyncio.get_event_loop()
+                if not loop.is_closed() and not loop.is_running():
+                    loop.run_until_complete(shutdown_copilot_model_client())
+                    return
+            except RuntimeError:
+                pass
+            # Fallback: create a new event loop if the existing one is unusable
+            loop = asyncio.new_event_loop()
+            try:
+                loop.run_until_complete(shutdown_copilot_model_client())
+            finally:
+                loop.close()
+    except ImportError:
+        pass
+
 
 def _log_report_path(config: Config, format_name: str, path: Path) -> None:
     """Log report path to terminal."""
@@ -882,3 +938,86 @@ def _generate_structured_insights(
 
 # Register fixtures from fixtures module
 pytest_plugins = ["pytest_aitest.fixtures"]
+
+
+# ── Coding agent analysis prompt ──
+
+_CODING_AGENT_ANALYSIS_PROMPT_PATH = Path(__file__).parent / "prompts" / "coding_agent_analysis.md"
+
+
+@pytest.hookimpl(optionalhook=True)
+def pytest_aitest_analysis_prompt(config: object) -> str | None:
+    """Provide coding-agent-specific analysis prompt when copilot tests are detected.
+
+    Checks if any collected tests use the ``copilot_run`` fixture. If so,
+    returns the coding agent analysis prompt instead of the default MCP/tool
+    prompt.
+
+    The ``{{PRICING_TABLE}}`` placeholder is replaced with a live
+    pricing table built from litellm's ``model_cost`` data.
+    """
+    from _pytest.config import Config
+
+    assert isinstance(config, Config)
+
+    # Only activate if copilot tests were collected
+    tests = config.stash.get(COLLECTOR_KEY, [])
+    has_copilot_tests = any(getattr(t, "_copilot_test", False) for t in tests)
+    if not has_copilot_tests:
+        return None
+
+    if _CODING_AGENT_ANALYSIS_PROMPT_PATH.exists():
+        prompt = _CODING_AGENT_ANALYSIS_PROMPT_PATH.read_text(encoding="utf-8")
+        if "{{PRICING_TABLE}}" in prompt:
+            prompt = prompt.replace("{{PRICING_TABLE}}", _build_pricing_table())
+        return prompt
+    return None
+
+
+def _build_pricing_table() -> str:
+    """Build a markdown pricing table from litellm's model_cost map.
+
+    Returns a table of common coding-agent models with their per-token
+    pricing, pulled live from litellm so it stays current.
+    """
+    try:
+        from litellm import model_cost  # type: ignore[reportMissingImports]
+    except ImportError:
+        return "*Pricing data unavailable (litellm not installed).*"
+
+    # Models we care about — bare names (no provider prefix).
+    models_of_interest = [
+        "gpt-4.1-nano",
+        "gpt-5-nano",
+        "gpt-4.1-mini",
+        "gpt-5-mini",
+        "gpt-4.1",
+        "gpt-5",
+        "gpt-5.1",
+        "gpt-5.2",
+        "claude-sonnet-4",
+        "claude-sonnet-4-5",
+        "claude-opus-4-5",
+        "claude-opus-4-6",
+        "gpt-5-pro",
+        "gpt-5.2-pro",
+    ]
+
+    rows: list[str] = []
+    for name in models_of_interest:
+        info = model_cost.get(name) or model_cost.get(f"azure/{name}", {})
+        ic = info.get("input_cost_per_token", 0) or 0
+        oc = info.get("output_cost_per_token", 0) or 0
+        if ic == 0 and oc == 0:
+            continue
+        rows.append(f"| {name} | ${ic * 1_000_000:.2f} | ${oc * 1_000_000:.2f} |")
+
+    if not rows:
+        return "*No model pricing data available from litellm.*"
+
+    header = (
+        "**Model pricing reference** ($/M tokens, from litellm):\n\n"
+        "| Model | Input $/M | Output $/M |\n"
+        "|-------|-----------|------------|\n"
+    )
+    return header + "\n".join(rows)

@@ -104,6 +104,8 @@ async def test_balance_check(aitest_run):
 - **Compare System Prompts** — Find the system prompt that works best
 - **Multi-Turn Sessions** — Test conversations that build on context
 - **Agent Skills** — Add domain knowledge following [agentskills.io](https://agentskills.io)
+- **Coding Agent Testing** — Test real coding agents like GitHub Copilot via the SDK
+- **Copilot Model Provider** — Use `copilot/gpt-5-mini` for all LLM calls — zero Azure/OpenAI setup
 - **AI Analysis** — Tells you what to fix, not just what failed
 - **Semantic Assertions** — `llm_assert` for binary pass/fail checks on response content
 - **Multi-Dimension Scoring** — `llm_score` for granular quality measurement across named dimensions

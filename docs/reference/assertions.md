@@ -152,6 +152,16 @@ async def test_response_quality(aitest_run, agent, llm_assert):
     )
 ```
 
+Configure the judge model via `--llm-model`:
+
+```bash
+# GitHub Copilot
+pytest --llm-model=copilot/gpt-5-mini
+
+# Azure OpenAI
+pytest --llm-model=azure/gpt-5.2-chat
+```
+
 ## Multi-Dimension Scoring
 
 Use the `llm_score` fixture for rubric-based evaluation across multiple dimensions:
@@ -220,6 +230,16 @@ async def test_chart_quality(aitest_run, agent, llm_assert_image):
         screenshots[-1],
         "shows a bar chart with labeled axes"
     )
+```
+
+Configure the vision judge model via `--llm-vision-model` or `--llm-model`:
+
+```bash
+# GitHub Copilot (vision-capable)
+pytest --llm-vision-model=copilot/gpt-4o
+
+# Azure OpenAI
+pytest --llm-vision-model=azure/gpt-4o
 ```
 
 ### Image properties

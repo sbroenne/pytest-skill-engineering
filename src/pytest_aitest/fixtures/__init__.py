@@ -20,3 +20,11 @@ __all__ = [
     "llm_score",
     "skill_factory",
 ]
+
+# Conditionally register copilot fixtures when the SDK is available
+try:
+    from pytest_aitest.copilot.fixtures import ab_run, copilot_run  # noqa: F401
+
+    __all__ += ["copilot_run", "ab_run"]
+except ImportError:
+    pass  # github-copilot-sdk not installed — copilot fixtures not available

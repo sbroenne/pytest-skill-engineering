@@ -342,14 +342,16 @@ This is a testing framework that uses LLMs to test tools, prompts, and skills. T
 - Do NOT write unit tests with mocked LLM responses
 - Do NOT claim "tests pass" when tests only mock the core functionality
 - Do NOT use `unittest.mock.patch` on PydanticAI or agent execution
+- Do NOT declare a feature "done" or "working" based only on unit tests passing
 - Fast test execution (< 1 second) is a RED FLAG - real LLM calls take time
 
 ### What TO do:
-- Write integration tests that call real Azure OpenAI / OpenAI models
+- Write integration tests that call real Azure OpenAI / OpenAI / Copilot models
 - Use the cheapest available model (check Azure subscription first)
 - Test with the Banking or Todo MCP server (built-in test harnesses)
 - Verify actual tool calls happen and produce expected results
 - Accept that integration tests take 5-30+ seconds per test
+- Run integration tests BEFORE declaring a feature complete
 
 ## CRITICAL: Efficient Test Execution
 
@@ -402,6 +404,22 @@ az cognitiveservices account deployment list \
   -o table
 ```
 
+## Copilot Model Provider
+
+Use the `copilot/` prefix to route LLM calls through the Copilot SDK instead of Azure/OpenAI.
+Requires `pytest-aitest[copilot]` and Copilot auth (`gh auth login` or `GITHUB_TOKEN`).
+
+```bash
+# Use Copilot for AI insights
+pytest tests/ --aitest-summary-model=copilot/gpt-5-mini
+
+# Use Copilot for llm_assert / llm_score
+pytest tests/ --llm-model=copilot/gpt-5-mini
+```
+
+Handled in `build_model_from_string()` in `pydantic_adapter.py` — creates a `CopilotModel` from `copilot/model.py`.
+Available models are dynamic (whatever Copilot exposes).
+
 ## Project Structure
 
 ```
@@ -415,7 +433,7 @@ src/pytest_aitest/
 │   └── errors.py          # AITestError, ServerStartError, etc.
 ├── execution/             # Runtime
 │   ├── engine.py          # AgentEngine (PydanticAI-powered agent execution)
-│   ├── pydantic_adapter.py # Adapter: our config types ↔ PydanticAI types
+│   ├── pydantic_adapter.py # Adapter: our config types ↔ PydanticAI types (handles azure/, copilot/ prefixes)
 │   ├── cli_toolset.py     # Custom PydanticAI Toolset for CLI servers
 │   ├── clarification.py   # Clarification detection via pydantic-evals LLMJudge
 │   ├── servers.py         # Server process management
