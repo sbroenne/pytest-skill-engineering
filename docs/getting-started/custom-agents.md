@@ -51,7 +51,7 @@ Any additional frontmatter fields (e.g. `maturity`, `handoffs`) are preserved in
 
 ## Using with `Eval.from_agent_file()` (synthetic testing)
 
-`Eval.from_agent_file()` loads a custom agent file and uses the prompt body as the agent's `system_prompt`. This lets you test whether the agent's instructions produce the expected behaviour using any LLM provider — no Copilot subscription required.
+`Eval.from_agent_file()` loads a custom agent file and uses the prompt body as the agent's custom instructions. This lets you test whether the agent's instructions produce the expected behaviour using any LLM provider — no Copilot subscription required.
 
 ```python
 import pytest
@@ -74,7 +74,7 @@ async def test_reviewer_reads_files(eval_run):
 
 ### What `from_agent_file()` does
 
-- Sets `system_prompt` from the agent file's markdown body
+- Sets the agent's custom instructions from the agent file's markdown body
 - Sets `name` from the filename (e.g. `reviewer.agent.md` → `reviewer`)
 - Maps `tools` frontmatter field to `allowed_tools` (restricts which tools the agent can call)
 - Any kwarg you pass (e.g. `name=`, `max_turns=`) overrides the file values

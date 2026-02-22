@@ -124,17 +124,53 @@ Auto-generated API documentation from source code.
       show_source: false
       heading_level: 3
 
-::: pytest_skill_engineering.core.prompt.load_system_prompts
-    options:
-      show_source: false
-      heading_level: 3
-
 ::: pytest_skill_engineering.core.prompt.load_prompts
     options:
       show_source: false
       heading_level: 3
 
 ::: pytest_skill_engineering.core.prompt.load_prompt
+    options:
+      show_source: false
+      heading_level: 3
+
+## Custom Agent Loaders
+
+::: pytest_skill_engineering.core.evals.load_custom_agent
+    options:
+      show_source: false
+      heading_level: 3
+
+::: pytest_skill_engineering.core.evals.load_custom_agents
+    options:
+      show_source: false
+      heading_level: 3
+
+## Prompt File Loaders
+
+::: pytest_skill_engineering.core.evals.load_prompt_file
+    options:
+      show_source: false
+      heading_level: 3
+
+::: pytest_skill_engineering.core.evals.load_prompt_files
+    options:
+      show_source: false
+      heading_level: 3
+
+## MCP Prompt Types
+
+::: pytest_skill_engineering.core.result.MCPPrompt
+    options:
+      show_source: false
+      heading_level: 3
+
+::: pytest_skill_engineering.core.result.MCPPromptArgument
+    options:
+      show_source: false
+      heading_level: 3
+
+::: pytest_skill_engineering.core.result.CustomAgentInfo
     options:
       show_source: false
       heading_level: 3

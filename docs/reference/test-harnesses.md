@@ -50,11 +50,11 @@ def todo_server():
 
 @pytest.fixture
 def todo_agent(todo_server):
-    return Eval(
-        name="todo",
+    return Eval.from_instructions(
+        "todo",
+        "You are a task management assistant.",
         provider=Provider(model="azure/gpt-5-mini"),
         mcp_servers=[todo_server],
-        system_prompt="You are a task management assistant.",
     )
 
 async def test_add_and_complete(eval_run, todo_agent):
@@ -135,22 +135,22 @@ class TestBankingWorkflow:
     """Tests share conversation context via session decorator."""
 
     async def test_check_balance(self, eval_run, banking_server):
-        agent = Eval(
-            name="banking",
+        agent = Eval.from_instructions(
+            "banking",
+            "You are a banking assistant.",
             provider=Provider(model="azure/gpt-5-mini"),
             mcp_servers=[banking_server],
-            system_prompt="You are a banking assistant.",
         )
         
         result = await eval_run(agent, "What's my checking balance?")
         assert result.tool_was_called("get_balance")
 
     async def test_transfer_funds(self, eval_run, banking_server):
-        agent = Eval(
-            name="banking",
+        agent = Eval.from_instructions(
+            "banking",
+            "You are a banking assistant.",
             provider=Provider(model="azure/gpt-5-mini"),
             mcp_servers=[banking_server],
-            system_prompt="You are a banking assistant.",
         )
         
         result = await eval_run(

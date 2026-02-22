@@ -238,15 +238,10 @@ def load_prompt_file(path: Path | str) -> dict[str, Any]:
         path: Path to the ``.prompt.md`` or ``.md`` file.
 
     Returns:
-        Dict with keys:
-
-        - ``name`` (str): Derived from filename
-          (``review.prompt.md`` → ``review``).
-        - ``body`` (str): The prompt text — use this as the input to
-          :func:`eval_run`.
-        - ``description`` (str): From frontmatter ``description`` field,
-          empty if absent.
-        - ``metadata`` (dict): Full parsed frontmatter dict.
+        Dict with keys ``name`` (str, derived from filename),
+        ``body`` (str, the prompt text to pass to :func:`eval_run`),
+        ``description`` (str, from frontmatter or empty), and
+        ``metadata`` (dict, full frontmatter).
 
     Raises:
         FileNotFoundError: If the file does not exist.

@@ -82,7 +82,8 @@ class MCPPrompt:
     Use :meth:`MCPServerProcess.list_prompts` to discover them and
     :meth:`MCPServerProcess.get_prompt` to render one with arguments.
 
-    Example:
+    Example::
+
         server = MCPServerProcess(mcp_config)
         await server.start()
         prompts = await server.list_prompts()

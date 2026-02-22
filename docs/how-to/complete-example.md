@@ -24,10 +24,10 @@ This realistic scenario lets us test how well an LLM can understand and coordina
 tests/showcase/
 ├── test_hero.py           # The comprehensive test suite
 ├── conftest.py            # Shared fixtures
-├── prompts/               # System prompts for comparison
-│   ├── concise.md
-│   ├── detailed.md
-│   └── friendly.md
+├── agents/                # Agent instruction files for comparison
+│   ├── concise.agent.md
+│   ├── detailed.agent.md
+│   └── friendly.agent.md
 └── skills/
     └── financial-advisor/ # Domain knowledge skill
         ├── SKILL.md
@@ -55,10 +55,11 @@ class TestBasicOperations:
 
     async def test_check_single_balance(self, eval_run, banking_server):
         """Check balance of one account - simplest possible test."""
-        agent = Eval(
+        agent = Eval.from_instructions(
+            "banking-v1",
+            BANKING_PROMPT_BASE,
             provider=Provider(model=f"azure/{DEFAULT_MODEL}"),
             mcp_servers=[banking_server],
-            system_prompt=BANKING_PROMPT_BASE,
             max_turns=8,
         )
 
@@ -84,10 +85,11 @@ class TestMultiToolWorkflows:
 
     async def test_transfer_and_verify(self, eval_run, llm_assert, banking_server):
         """Transfer money and verify the result with balance check."""
-        agent = Eval(
+        agent = Eval.from_instructions(
+            "banking-v1",
+            BANKING_PROMPT_BASE,
             provider=Provider(model=f"azure/{DEFAULT_MODEL}"),
             mcp_servers=[banking_server],
-            system_prompt=BANKING_PROMPT_BASE,
             max_turns=8,
         )
 
@@ -129,11 +131,11 @@ class TestSavingsPlanningSession:
 
     async def test_01_establish_context(self, eval_run, llm_assert, banking_server):
         """First turn: check balances and discuss savings goals."""
-        agent = Eval(
-            name="savings-01",
+        agent = Eval.from_instructions(
+            "savings-01",
+            BANKING_PROMPT_BASE,
             provider=Provider(model=f"azure/{DEFAULT_MODEL}"),
             mcp_servers=[banking_server],
-            system_prompt=BANKING_PROMPT_BASE,
             max_turns=8,
         )
 
@@ -148,11 +150,11 @@ class TestSavingsPlanningSession:
 
     async def test_02_reference_without_naming(self, eval_run, llm_assert, banking_server):
         """Second turn: reference previous context."""
-        agent = Eval(
-            name="savings-02",
+        agent = Eval.from_instructions(
+            "savings-02",
+            BANKING_PROMPT_BASE,
             provider=Provider(model=f"azure/{DEFAULT_MODEL}"),
             mcp_servers=[banking_server],
-            system_prompt=BANKING_PROMPT_BASE,
             max_turns=8,
         )
 
@@ -185,10 +187,11 @@ class TestModelComparison:
     @pytest.mark.parametrize("model", BENCHMARK_MODELS)
     async def test_financial_advice_quality(self, eval_run, llm_assert, banking_server, model: str):
         """Compare models on providing comprehensive financial advice."""
-        agent = Eval(
+        agent = Eval.from_instructions(
+            "banking-v1",
+            BANKING_PROMPT_BASE,
             provider=Provider(model=f"azure/{model}"),
             mcp_servers=[banking_server],
-            system_prompt=BANKING_PROMPT_BASE,
             max_turns=8,
         )
 
@@ -218,47 +221,58 @@ The report automatically generates a **model comparison table** showing:
 - Token usage and costs
 - AI-generated recommendations
 
-## 5. System Prompt Comparison
+## 5. Agent Instruction Comparison
 
-Compare how different system prompts affect behavior.
+Compare how different agent instruction styles affect behavior.
 
-First, define prompts in YAML files:
+Store each style as an `.agent.md` file:
 
-```yaml title="prompts/concise.yaml"
-name: PROMPT_CONCISE
-version: "1.0"
+```
+tests/showcase/
+└── agents/
+    ├── concise.agent.md
+    ├── detailed.agent.md
+    └── friendly.agent.md
+```
+
+```markdown title="agents/concise.agent.md"
+---
+name: AGENT_CONCISE
 description: Brief, to-the-point financial advice
-system_prompt: |
-  You are a personal finance assistant. Be concise and direct.
-  Give specific numbers and actionable advice in 2-3 sentences.
+---
+
+You are a personal finance assistant. Be concise and direct.
+Give specific numbers and actionable advice in 2-3 sentences.
 ```
 
-```yaml title="prompts/detailed.yaml"
-name: PROMPT_DETAILED
-version: "1.0"
+```markdown title="agents/detailed.agent.md"
+---
+name: AGENT_DETAILED
 description: Thorough financial analysis with explanations
-system_prompt: |
-  You are a personal finance assistant. Provide comprehensive analysis.
-  Explain your reasoning, show calculations, and consider multiple scenarios.
+---
+
+You are a personal finance assistant. Provide comprehensive analysis.
+Explain your reasoning, show calculations, and consider multiple scenarios.
 ```
 
-Then parametrize tests with them:
+Then parametrize tests over them:
 
 ```python
-from pytest_skill_engineering import load_prompts
+from pathlib import Path
+from pytest_skill_engineering import Eval, Provider
 
-ADVISOR_PROMPTS = load_prompts(Path(__file__).parent / "prompts")
+AGENT_PATHS = list((Path(__file__).parent / "agents").glob("*.agent.md"))
 
 class TestPromptComparison:
-    """Compare how different prompt styles affect financial advice."""
+    """Compare how different agent instruction styles affect financial advice."""
 
-    @pytest.mark.parametrize("prompt", ADVISOR_PROMPTS, ids=lambda p: p.name)
-    async def test_advice_style_comparison(self, eval_run, llm_assert, banking_server, prompt):
+    @pytest.mark.parametrize("agent_path", AGENT_PATHS, ids=lambda p: p.stem.replace(".agent", ""))
+    async def test_advice_style_comparison(self, eval_run, llm_assert, banking_server, agent_path):
         """Compare concise vs detailed vs friendly advisory styles."""
-        agent = Eval(
+        agent = Eval.from_agent_file(
+            agent_path,
             provider=Provider(model=f"azure/{DEFAULT_MODEL}"),
             mcp_servers=[banking_server],
-            system_prompt=prompt.system_prompt,
             max_turns=8,
         )
 
@@ -316,10 +330,11 @@ class TestSkillEnhancement:
         self, eval_run, llm_assert, banking_server, financial_advisor_skill
     ):
         """Eval with financial advisor skill should give better advice."""
-        agent = Eval(
+        agent = Eval.from_instructions(
+            "banking-v1",
+            BANKING_PROMPT_BASE,
             provider=Provider(model=f"azure/{DEFAULT_MODEL}"),
             mcp_servers=[banking_server],
-            system_prompt=BANKING_PROMPT_BASE,
             skill=financial_advisor_skill,  # <-- Inject domain knowledge
             max_turns=8,
         )
@@ -353,10 +368,12 @@ class TestErrorHandling:
 
     async def test_insufficient_funds_recovery(self, eval_run, llm_assert, banking_server):
         """Eval should handle insufficient funds gracefully."""
-        agent = Eval(
+        instructions = BANKING_PROMPT_BASE + " If an operation fails, explain why and suggest alternatives."
+        agent = Eval.from_instructions(
+            "banking-v1",
+            instructions,
             provider=Provider(model=f"azure/{DEFAULT_MODEL}"),
             mcp_servers=[banking_server],
-            system_prompt=BANKING_PROMPT_BASE + " If an operation fails, explain why and suggest alternatives.",
             max_turns=8,
         )
 

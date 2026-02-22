@@ -118,15 +118,15 @@ provider = Provider(
 ```python
 from pytest_skill_engineering import Eval, ClarificationDetection, Provider, MCPServer
 
-agent = Eval(
+agent = Eval.from_instructions(
+    "my-agent",                         # Identifier for reports (optional)
+    "You are...",                       # Agent instructions
     provider=Provider(model="azure/gpt-5-mini"),
     mcp_servers=[server],               # MCP servers
     cli_servers=[cli],                  # CLI servers (optional)
-    system_prompt="You are...",         # System prompt (optional)
     skill=my_skill,                     # Eval Skill (optional)
     max_turns=10,                       # Max tool-call rounds
     retries=3,                          # Max retries on tool errors (default: 1)
-    name="my-agent",                    # Identifier for reports (optional)
     allowed_tools=["tool1", "tool2"],   # Filter tools (optional, reduces tokens)
     clarification_detection=ClarificationDetection(enabled=True),  # Detect clarification questions
 )

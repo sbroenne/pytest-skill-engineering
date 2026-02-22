@@ -178,11 +178,11 @@ def banking_server():
 
 @pytest.fixture
 def banking_agent(banking_server):
-    return Eval(
-        name="banking",
+    return Eval.from_instructions(
+        "banking",
+        "You are a banking assistant.",
         provider=Provider(model="azure/gpt-5-mini"),
         mcp_servers=[banking_server],
-        system_prompt="You are a banking assistant.",
         max_turns=5,
     )
 
@@ -214,11 +214,11 @@ def calendar_server():
 
 @pytest.fixture
 def assistant_agent(banking_server, calendar_server):
-    return Eval(
-        name="assistant",
+    return Eval.from_instructions(
+        "assistant",
+        "You can check balances and manage calendar.",
         provider=Provider(model="azure/gpt-5-mini"),
         mcp_servers=[banking_server, calendar_server],
-        system_prompt="You can check balances and manage calendar.",
         max_turns=10,
     )
 ```
@@ -231,12 +231,12 @@ Use `allowed_tools` on the Eval to limit which tools are exposed to the LLM. Thi
 @pytest.fixture
 def balance_agent(banking_server):
     # banking_server has 16 tools, but this test only needs 2
-    return Eval(
-        name="balance-checker",
+    return Eval.from_instructions(
+        "balance-checker",
+        "You check account balances.",
         provider=Provider(model="azure/gpt-5-mini"),
         mcp_servers=[banking_server],
         allowed_tools=["get_balance", "get_all_balances"],
-        system_prompt="You check account balances.",
     )
 ```
 

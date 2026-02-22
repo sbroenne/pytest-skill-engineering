@@ -73,6 +73,8 @@ nav:
   - Getting Started:
     - Overview: getting-started/index.md
     - Custom Agents: getting-started/custom-agents.md
+    - MCP Server Prompts: getting-started/mcp-prompts.md
+    - Prompt Files: getting-started/prompt-files.md
     - Eval Skills: getting-started/skills.md
     - Comparing Configurations: getting-started/comparing.md
     - A/B Testing Servers: getting-started/ab-testing-servers.md

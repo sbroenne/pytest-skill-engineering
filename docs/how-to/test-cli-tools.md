@@ -166,11 +166,11 @@ def git_server():
 
 @pytest.fixture
 def git_agent(git_server):
-    return Eval(
-        name="git-assistant",
+    return Eval.from_instructions(
+        "git-assistant",
+        "You are a git assistant.",
         provider=Provider(model="azure/gpt-5-mini"),
         cli_servers=[git_server],
-        system_prompt="You are a git assistant.",
         max_turns=5,
     )
 
@@ -207,12 +207,12 @@ def grep_server():
 
 @pytest.fixture
 def hybrid_agent(filesystem_server, grep_server):
-    return Eval(
-        name="hybrid",
+    return Eval.from_instructions(
+        "hybrid",
+        "You can read/write files and search content.",
         provider=Provider(model="azure/gpt-5-mini"),
         mcp_servers=[filesystem_server],
         cli_servers=[grep_server],
-        system_prompt="You can read/write files and search content.",
         max_turns=10,
     )
 ```

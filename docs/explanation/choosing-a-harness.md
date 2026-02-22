@@ -18,7 +18,7 @@ Both harnesses can test MCP servers, tools, and skills. The difference is **what
 | **MCP connections** | Made directly by the test process | Managed by Copilot CLI |
 | **MCP auth** | You supply tokens (env vars / headers) | Copilot CLI handles OAuth automatically |
 | **Skill loading** | Injected as virtual reference tools | Native Copilot skill loading (`SKILL.md`) |
-| **Custom agent loading** | `Eval.from_agent_file()` (prompt as system_prompt) | `load_custom_agent()` + `custom_agents=[]` (native subagent dispatch) |
+| **Custom agent loading** | `Eval.from_agent_file()` (loads agent instructions) | `load_custom_agent()` + `custom_agents=[]` (native subagent dispatch) |
 | **Model control** | Swap any model per test | Always Copilot's active model |
 | **Per-call introspection** | Full (tool name, args, timing) | Summary (tool names, final response) |
 | **Speed** | Fast (in-process) | Slower (~5–10s CLI startup per test) |

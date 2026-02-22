@@ -136,14 +136,15 @@ The LLM calls it like: `git_execute(args="status --porcelain")`
 When an agent has a skill, it's injected into the system prompt:
 
 ```python
-agent = Eval(
+agent = Eval.from_instructions(
+    "assistant",
+    "You are a helpful assistant.",
     provider=Provider(model="azure/gpt-5-mini"),
     skill=Skill.from_path("skills/financial-advisor"),
-    system_prompt="You are a helpful assistant.",
 )
 ```
 
-The skill content is prepended to the system prompt, giving the LLM domain knowledge before it sees the user's request.
+The skill content is prepended to the agent's instructions, giving the LLM domain knowledge before it sees the user's request.
 
 ## Rate Limiting & Retries
 
