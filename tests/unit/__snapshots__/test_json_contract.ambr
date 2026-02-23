@@ -434,6 +434,9 @@
           'duration_ms': 'float',
           'effective_system_prompt': 'str',
           'error': 'NoneType',
+          'instruction_files': list([
+            '<empty>',
+          ]),
           'mcp_prompts': list([
             '<empty>',
           ]),
@@ -526,6 +529,9 @@
           'duration_ms': 'float',
           'effective_system_prompt': 'str',
           'error': 'NoneType',
+          'instruction_files': list([
+            '<empty>',
+          ]),
           'mcp_prompts': list([
             '<empty>',
           ]),
@@ -618,6 +624,9 @@
           'duration_ms': 'float',
           'effective_system_prompt': 'str',
           'error': 'NoneType',
+          'instruction_files': list([
+            '<empty>',
+          ]),
           'mcp_prompts': list([
             '<empty>',
           ]),
@@ -710,6 +719,9 @@
           'duration_ms': 'float',
           'effective_system_prompt': 'str',
           'error': 'NoneType',
+          'instruction_files': list([
+            '<empty>',
+          ]),
           'mcp_prompts': list([
             '<empty>',
           ]),

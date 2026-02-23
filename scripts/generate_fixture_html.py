@@ -22,8 +22,8 @@ ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
 from pytest_skill_engineering.cli import load_suite_report  # noqa: E402
-from pytest_skill_engineering.reporting.generator import (
-    generate_html as _generate_html,  # noqa: E402
+from pytest_skill_engineering.reporting.generator import (  # noqa: E402
+    generate_html as _generate_html,
 )
 from pytest_skill_engineering.reporting.generator import generate_md as _generate_md  # noqa: E402
 

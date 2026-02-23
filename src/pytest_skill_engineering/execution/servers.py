@@ -275,12 +275,12 @@ class MCPServerProcess:
                 # Resource content — extract text if available
                 resource = msg.content.resource
                 if hasattr(resource, "text"):
-                    content = resource.text
+                    content = resource.text  # type: ignore[union-attr]
                 else:
                     content = str(resource)
             else:
                 content = str(msg.content)
-            messages.append({"role": str(msg.role.value), "content": content})
+            messages.append({"role": str(msg.role.value), "content": content})  # type: ignore[union-attr]
 
         return messages
 
