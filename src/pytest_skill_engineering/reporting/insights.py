@@ -108,6 +108,7 @@ def _build_analysis_input(
                 "failed": 0,
                 "total": 0,
                 "cost": 0.0,
+                "premium_requests": 0.0,
                 "tokens": 0,
                 "turn_counts": [],
                 "iter_groups": {},  # test_base_name -> {"passed": int, "total": int}
@@ -120,6 +121,7 @@ def _build_analysis_input(
             agg["failed"] += 1
         if test.eval_result is not None:
             agg["cost"] += test.eval_result.cost_usd or 0
+            agg["premium_requests"] += test.eval_result.premium_requests or 0
             usage = test.eval_result.token_usage or {}
             agg["tokens"] += usage.get("prompt", 0) + usage.get("completion", 0)
             agg["turn_counts"].append(len(test.eval_result.turns))
@@ -167,6 +169,13 @@ def _build_analysis_input(
         sections.append(f"- Avg Turns per Test: {avg_turns:.1f}")
         sections.append("")
 
+        def _format_eval_cost(st: dict[str, Any]) -> str:
+            """Format cost: premium requests for CopilotEval, USD for Eval."""
+            pr = st.get("premium_requests", 0.0)
+            if pr > 0:
+                return f"{pr:.0f} premium requests"
+            return f"${st['cost']:.6f}"
+
         # Winner determination
         winner_name = None
         for _aid, st in ranked:
@@ -177,7 +186,7 @@ def _build_analysis_input(
                 sections.append(f"**Winner:** {st['name']}")
                 sections.append(f"- Pass Rate: {rate:.0f}%")
                 sections.append(f"- Tests: {st['passed']}/{st['total']}")
-                sections.append(f"- Cost: ${st['cost']:.6f}")
+                sections.append(f"- Cost: {_format_eval_cost(st)}")
                 sections.append(f"- Tokens: {st['tokens']:,}")
                 sections.append("")
                 break
@@ -197,7 +206,7 @@ def _build_analysis_input(
                 status = ""
             sections.append(
                 f"| {rank} | {st['name']} | {rate:.0f}% | "
-                f"{st['passed']}/{st['total']} | ${st['cost']:.6f} | "
+                f"{st['passed']}/{st['total']} | {_format_eval_cost(st)} | "
                 f"{st['tokens']:,} | {status} |"
             )
         sections.append("")

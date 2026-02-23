@@ -30,8 +30,10 @@ _H3 = AtxHeaderLevel.SUBHEADING
 _H4 = AtxHeaderLevel.SUBSUBHEADING
 
 
-def format_cost(cost: float) -> str:
-    """Format cost in USD — shared with HTML components."""
+def format_cost(cost: float, premium_requests: float = 0.0) -> str:
+    """Format cost: premium requests for CopilotEval, USD for Eval."""
+    if premium_requests > 0:
+        return f"{premium_requests:.0f} PR"
     if cost == 0:
         return "N/A"
     if cost < 0.01:
@@ -59,7 +61,7 @@ def _report_header(report: ReportMetadata) -> str:
         test_run_cost -= report.analysis_cost_usd
     test_run_cost = max(test_run_cost, 0.0)
 
-    cost_parts = [f"🧪 {format_cost(test_run_cost)}"]
+    cost_parts = [f"🧪 {format_cost(test_run_cost, report.total_premium_requests)}"]
     if report.analysis_cost_usd:
         cost_parts.append(f"🤖 {format_cost(report.analysis_cost_usd)}")
     cost_parts.append(f"💰 {format_cost(report.total_cost_usd)}")
@@ -118,7 +120,7 @@ def _eval_leaderboard_multi(agents: list[AgentData]) -> str:
                 f"{agent.passed}/{agent.total}",
                 f"{agent.pass_rate:.0f}%",
                 f"{agent.tokens:,}",
-                format_cost(agent.cost),
+                format_cost(agent.cost, agent.premium_requests),
                 f"{agent.duration_s:.1f}s",
             ]
         )
@@ -142,7 +144,7 @@ def _agent_summary_card(agent: AgentData) -> str:
     return (
         f"> **{agent.name}** — {status}  \n"
         f"> {agent.passed}/{agent.total} tests | "
-        f"{format_cost(agent.cost)} | "
+        f"{format_cost(agent.cost, agent.premium_requests)} | "
         f"{agent.tokens:,} tokens | "
         f"{agent.duration_s:.1f}s\n"
     )
@@ -228,7 +230,7 @@ def _test_result_detail(
     status_icon = "✅" if result.passed else "❌"
     metrics = (
         f"{result.duration_s:.1f}s · {result.tokens:,} tokens · "
-        f"{result.turns} turns · {format_cost(result.cost)}"
+        f"{result.turns} turns · {format_cost(result.cost, result.premium_requests)}"
     )
 
     if multi_agent:

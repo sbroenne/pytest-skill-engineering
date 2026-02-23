@@ -114,7 +114,7 @@ Built-in test servers in `src/pytest_skill_engineering/testing/`:
 
 ## Adding New Tests
 
-Create agents inline using constants from `conftest.py`:
+Create evals inline using constants from `conftest.py`:
 
 ```python
 from pytest_skill_engineering import Eval, Provider

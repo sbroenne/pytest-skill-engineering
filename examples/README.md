@@ -58,5 +58,5 @@ def todo_server():
 See [conftest.py](../tests/integration/conftest.py) for fixture patterns:
 
 - `banking_server` / `todo_server` — Test MCP servers  
-- `DEFAULT_MODEL`, `DEFAULT_RPM`, `DEFAULT_TPM`, `DEFAULT_MAX_TURNS` — Constants for agent creation
+- `DEFAULT_MODEL`, `DEFAULT_RPM`, `DEFAULT_TPM`, `DEFAULT_MAX_TURNS` — Constants for eval creation
 - Azure token handling

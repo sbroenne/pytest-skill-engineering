@@ -1,7 +1,11 @@
-"""Model comparison tests.
+"""Level 02 — Model comparison: same task across different Copilot models.
 
-Use parametrize to run the same prompt against different models
-and compare results in the report.
+Parametrizes models to compare code quality and error handling.
+Report shows model leaderboard.
+
+Mirrors pydantic/test_02_models.py — same level, different harness.
+
+Run with: pytest tests/integration/copilot/test_02_models.py -v
 """
 
 from __future__ import annotations
@@ -12,14 +16,15 @@ from pytest_skill_engineering.copilot.eval import CopilotEval
 
 from .conftest import MODELS
 
+pytestmark = [pytest.mark.copilot]
 
-@pytest.mark.copilot
+
 class TestModelComparison:
-    """Compare models on the same task."""
+    """Compare models on the same coding task."""
 
     @pytest.mark.parametrize("model", MODELS)
     async def test_simple_function(self, copilot_eval, tmp_path, model):
-        """Each model should create a working function."""
+        """Each model should create a working Fibonacci function."""
         agent = CopilotEval(
             name=f"model-{model}",
             model=model,
@@ -28,7 +33,8 @@ class TestModelComparison:
         )
         result = await copilot_eval(
             agent,
-            "Create fibonacci.py with a function fibonacci(n) that returns the nth Fibonacci number.",
+            "Create fibonacci.py with a function fibonacci(n) that returns "
+            "the nth Fibonacci number.",
         )
         assert result.success, f"Model {model} failed: {result.error}"
         assert (tmp_path / "fibonacci.py").exists()

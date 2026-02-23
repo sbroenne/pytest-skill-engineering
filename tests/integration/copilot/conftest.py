@@ -6,7 +6,7 @@ import os
 import subprocess
 
 import pytest
-from pydantic_ai import Eval
+from pydantic_ai import Agent as Eval
 
 from pytest_skill_engineering.execution.pydantic_adapter import build_model_from_string
 

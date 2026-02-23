@@ -1,10 +1,15 @@
-"""Integration tests for Eval Skills support.
+"""Level 05 — Skills: load domain knowledge and inject into eval context.
 
-These tests verify:
-1. Skill loading from SKILL.md files
-2. Skill content being prepended to system prompts
-3. Virtual reference tools (list_skill_references, read_skill_reference)
+Tests skill loading, metadata validation, reference tools, and skill-enhanced
+agent behavior. Skills add structured domain knowledge that the eval can
+use via virtual tools (list_skill_references, read_skill_reference).
+
+Permutation: Skill added to eval.
+
+Run with: pytest tests/integration/pydantic/test_05_skills.py -v
 """
+
+from __future__ import annotations
 
 import sys
 from pathlib import Path
@@ -13,14 +18,21 @@ import pytest
 
 from pytest_skill_engineering import Eval, MCPServer, Provider, SkillError, Wait, load_skill
 
-from .conftest import DEFAULT_MODEL, DEFAULT_RPM, DEFAULT_TPM
+from ..conftest import DEFAULT_MODEL, DEFAULT_RPM, DEFAULT_TPM
 
-# Path to test skills
-SKILLS_DIR = Path(__file__).parent / "skills"
+pytestmark = [pytest.mark.integration, pytest.mark.skill]
+
+# Skills live in the parent integration/skills/ directory
+SKILLS_DIR = Path(__file__).parent.parent / "skills"
+
+
+# =============================================================================
+# Skill Loading & Validation (no LLM calls)
+# =============================================================================
 
 
 class TestSkillLoading:
-    """Tests for Skill.from_path() and skill validation."""
+    """Tests for load_skill() and skill validation."""
 
     def test_load_skill_with_references(self):
         """Load a skill that has a references/ directory."""
@@ -61,16 +73,6 @@ class TestSkillLoading:
         with pytest.raises(SkillError, match="Invalid skill path"):
             load_skill(SKILLS_DIR / "nonexistent-skill")
 
-
-class TestSkillMetadataValidation:
-    """Tests for skill metadata validation per agentskills.io spec."""
-
-    def test_name_validation_lowercase_required(self):
-        """Name must be lowercase letters, numbers, and hyphens."""
-        # Valid names are tested via actual skill loading
-        skill = load_skill(SKILLS_DIR / "simple-assistant")
-        assert skill.name == "simple-assistant"
-
     def test_metadata_tags_as_tuple(self):
         """Tags should be accessible as a tuple."""
         skill = load_skill(SKILLS_DIR / "math-helper")
@@ -78,16 +80,18 @@ class TestSkillMetadataValidation:
         assert "math" in skill.metadata.tags
 
 
-@pytest.mark.integration
+# =============================================================================
+# Skill + Agent Integration (real LLM calls)
+# =============================================================================
+
+
 class TestSkillWithAgent:
     """Integration tests for skills with actual LLM calls."""
 
-    @pytest.mark.asyncio
     async def test_skill_prepends_to_system_prompt(self, eval_run):
-        """Skill content should be prepended to agent's system prompt."""
+        """Skill content should be prepended to eval's system prompt."""
         skill = load_skill(SKILLS_DIR / "simple-assistant")
 
-        # The skill instructs to always include "Hello" in greetings
         agent = Eval.from_instructions(
             "skill-prepend-test",
             "Be extremely brief.",
@@ -99,10 +103,8 @@ class TestSkillWithAgent:
         result = await eval_run(agent, "Greet me")
 
         assert result.success
-        # Skill says to include "Hello" in greetings
         assert "hello" in result.final_response.lower()
 
-    @pytest.mark.asyncio
     async def test_skill_with_references_provides_tools(self, eval_run):
         """Skills with references/ should inject virtual tools."""
         skill = load_skill(SKILLS_DIR / "math-helper")
@@ -127,14 +129,11 @@ class TestSkillWithAgent:
         result = await eval_run(agent, "What is the formula for the area of a circle?")
 
         assert result.success
-        # Should have called the skill reference tools
         assert result.tool_was_called("list_skill_references") or result.tool_was_called(
             "read_skill_reference"
         )
-        # The answer should include the formula from references
         assert "π" in result.final_response or "pi" in result.final_response.lower()
 
-    @pytest.mark.asyncio
     async def test_skill_references_list_tool_returns_files(self, eval_run):
         """The list_skill_references tool should return available filenames."""
         skill = load_skill(SKILLS_DIR / "math-helper")
@@ -154,10 +153,8 @@ class TestSkillWithAgent:
 
         assert result.success
         assert result.tool_was_called("list_skill_references")
-        # The response should mention formulas.md
         assert "formulas" in result.final_response.lower()
 
-    @pytest.mark.asyncio
     async def test_skill_read_reference_returns_content(self, eval_run):
         """The read_skill_reference tool should return file content."""
         skill = load_skill(SKILLS_DIR / "math-helper")
@@ -179,5 +176,4 @@ class TestSkillWithAgent:
 
         assert result.success
         assert result.tool_was_called("read_skill_reference")
-        # Should contain the formula from the reference (a² + b² = c²)
         assert "a²" in result.final_response or "a^2" in result.final_response

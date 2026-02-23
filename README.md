@@ -7,13 +7,13 @@
 
 **Skill Engineering. Test-driven. AI-analyzed.**
 
-A pytest plugin for skill engineering — test your MCP server tools, prompt templates, agent skills, and custom agents with real LLMs. Red/Green/Refactor for the skill stack. Let AI analysis tell you what to fix.
+A pytest plugin for skill engineering — test your MCP server tools, prompt templates, agent skills, and `.agent.md` instruction files with real LLMs. Red/Green/Refactor for the skill stack. Let AI analysis tell you what to fix.
 
 ## Why?
 
-Modern AI systems are built on **skill engineering** — the discipline of designing modular, reliable, callable capabilities that an LLM can discover, invoke, and orchestrate to perform real tasks. Skills are what separate "text generator" from "agent that actually does things."
+Modern AI systems are built on **skill engineering** — the discipline of designing modular, reliable, callable capabilities that an LLM can discover, invoke, and orchestrate to perform real tasks. Skills are what separate "text generator" from "coding agent that actually does things."
 
-An MCP server is the runtime for those skills. It doesn't ship alone — it comes bundled with the **full skill engineering stack**: **tools** (callable functions), **prompt templates** (server-side reasoning starters), **agent skills** (domain knowledge and behavioral guidelines), and **custom agents** (specialist sub-agents). Users layer on their own **prompt files** (slash commands like `/review`) on top.
+An MCP server is the runtime for those skills. It doesn't ship alone — it comes bundled with the **full skill engineering stack**: **tools** (callable functions), **prompt templates** (server-side reasoning starters), **agent skills** (domain knowledge and behavioral guidelines), and **`.agent.md` instruction files** (specialist sub-agent definitions in VS Code / Claude Code format). Users layer on their own **prompt files** (slash commands like `/review`) on top.
 
 Your unit tests cover the server code. Nothing covers the skill stack. And the skill stack is what the LLM actually sees.
 
@@ -23,28 +23,37 @@ Your unit tests cover the server code. Nothing covers the skill stack. And the s
 - The prompt template renders correctly but the assembled message confuses the LLM
 - A prompt file's slash command produces garbage output because the instructions are ambiguous
 - The skill has the right facts but is structured so poorly the LLM skips it
-- The custom agent has the right tools listed but the description is too vague to trigger dispatch
+- The `.agent.md` file has the right tools listed but the description is too vague to trigger subagent dispatch
 
 **And when you're improving it — how do you know version A is better than version B?**
 
-Skill engineering is iterative — prompt tuning, tool description refinement, custom agent instructions, skill structure. You need A/B testing built in. Run both versions, same prompts, and let the leaderboard tell you which one wins on pass rate and cost.
+Skill engineering is iterative — prompt tuning, tool description refinement, `.agent.md` instructions, skill structure. You need A/B testing built in. Run both versions, same prompts, and let the leaderboard tell you which one wins on pass rate and cost.
 
 That's what pytest-skill-engineering does: test the full skill engineering stack, compare variants, and get AI analysis that tells you exactly what to fix.
 
 ## How It Works
 
-Write tests as natural language prompts — you assert on what the agent did. If a test fails, your tool descriptions or skill need work, not your code:
+Write tests as natural language prompts — you assert on what happened. If a test fails, your tool descriptions or skill need work, not your code:
 
 1. **Write a test** — a prompt that describes what a user would say
-2. **Run it** — the LLM tries to use your tools and fails
-3. **Fix the interface** — improve tool descriptions, schemas, or prompts until it passes
+2. **Run it** — an LLM tries to use your tools and fails
+3. **Fix the skill stack** — improve tool descriptions, schemas, prompts, or `.agent.md` instructions until it passes
 4. **AI analysis tells you what else to optimize** — cost, redundant calls, unused tools
 
-pytest-skill-engineering has two harnesses — pick the one that fits your setup:
+pytest-skill-engineering ships two test harnesses:
+
+| | `Eval` + `eval_run` | `CopilotEval` + `copilot_eval` |
+|---|---|---|
+| **Runs the LLM** | [Pydantic AI](https://ai.pydantic.dev/) synthetic loop | Real GitHub Copilot (CLI SDK) |
+| **Model** | Any provider (Azure, OpenAI, Copilot) | Copilot's active model only |
+| **MCP auth** | You supply tokens / env vars | Copilot handles OAuth automatically |
+| **Introspection** | Full per-call (tool name, args, timing) | Summary (tool names, final response) |
+| **Cost tracking** | USD per test (via litellm pricing) | Premium requests (Copilot billing) |
+| **Setup** | API keys + model config | `gh auth login` (Copilot subscription) |
 
 ### Eval + `eval_run` — bring your own model
 
-Bundle any LLM with your MCP server and assert on what happened:
+You configure the model, wire up MCP servers directly, and get full per-call introspection. Best for iterating on tool descriptions, A/B testing model variants, and cheap CI runs:
 
 ```python
 from pytest_skill_engineering import Eval, Provider, MCPServer
@@ -59,24 +68,20 @@ async def test_balance_query(eval_run):
     assert result.tool_was_called("get_balance")
 ```
 
-Best for: full control over the test loop — pick any model, compare variants, introspect every tool call. No Copilot subscription required.
+### CopilotEval + `copilot_eval` — use the real coding agent
 
-### CopilotEval + `copilot_eval` — use the real Copilot CLI
-
-No model setup. No API keys. Copilot handles MCP OAuth automatically.
+Runs the actual **GitHub Copilot coding agent** — the same one your users have. No model setup, no API keys. Best for end-to-end testing: OAuth handled automatically, skills and custom agents loaded natively:
 
 ```python
 from pytest_skill_engineering.copilot import CopilotEval
 
-async def test_agent(copilot_eval):
+async def test_skill(copilot_eval):
     agent = CopilotEval(skill_directories=["skills/my-skill"])
     result = await copilot_eval(agent, "What can you help me with?")
     assert result.success
 ```
 
-Best for: testing exactly what your users experience — Copilot manages all MCP connections (including OAuth), loads skills natively, and runs the same model your users have.
-
-→ [Choosing a Test Harness](https://sbroenne.github.io/pytest-skill-engineering/explanation/choosing-a-harness/)
+→ [Choosing a Test Harness](https://sbroenne.github.io/pytest-skill-engineering/explanation/choosing-a-harness/) — full trade-off guide
 
 ## AI Analysis
 
@@ -126,15 +131,15 @@ addopts = "--aitest-summary-model=azure/gpt-5.2-chat"
 - **MCP Server Testing** — Real models against real tool interfaces and bundled prompt templates
 - **Prompt File Testing** — Test VS Code `.prompt.md` and Claude Code command files (slash commands) with `load_prompt_file()` / `load_prompt_files()`
 - **CLI Server Testing** — Wrap CLIs as testable tool servers
-- **Copilot Skill Testing** — `CopilotEval + copilot_eval` for end-to-end tests using the real Copilot CLI (native OAuth, skill loading, exact user experience)
-- **Custom Eval Testing** — Load `.agent.md` files with `Eval.from_agent_file()` to test agent instructions, or A/B test agent versions; use `load_custom_agent()` + `CopilotEval` to test real subagent dispatch
-- **Eval Comparison** — Compare models, skills, custom agent versions, and server configurations
+- **Real Coding Agent Testing** — `CopilotEval + copilot_eval` runs the actual Copilot coding agent (native OAuth, skill loading, custom agent dispatch, exact user experience)
+- **`.agent.md` Testing** — Load `.agent.md` files with `Eval.from_agent_file()` to test instructions with any model, or use `load_custom_agent()` + `CopilotEval` to test real custom agent dispatch
+- **Eval Comparison** — Compare models, skills, `.agent.md` versions, and server configurations
 - **Eval Leaderboard** — Auto-ranked by pass rate and cost
 - **Multi-Turn Sessions** — Test conversations that build on context
 - **AI Analysis** — Actionable feedback on tool descriptions, prompts, and costs
 - **Multi-Provider** — Any model via [Pydantic AI](https://ai.pydantic.dev/) (OpenAI, Anthropic, Gemini, Azure, Bedrock, Mistral, and more)
 - **Copilot SDK Provider** — Use `copilot/gpt-5-mini` for all LLM calls (judge, insights, scoring) — zero additional setup with `pytest-skill-engineering[copilot]`
-- **Clarification Detection** — Catch agents that ask questions instead of acting
+- **Clarification Detection** — Catch evals that ask questions instead of acting
 - **Semantic Assertions** — Built-in `llm_assert` fixture powered by [pydantic-evals](https://ai.pydantic.dev/evals/) LLM judge
 - **Multi-Dimension Scoring** — `llm_score` fixture for granular quality measurement across named dimensions
 - **Image Assertions** — `llm_assert_image` for AI-graded visual evaluation of screenshots and charts
@@ -143,7 +148,7 @@ addopts = "--aitest-summary-model=azure/gpt-5.2-chat"
 ## Who This Is For
 
 - **MCP server authors** — Validate that LLMs can actually use your tools
-- **Copilot skill and agent authors** — Test exactly what your users experience, before you ship
+- **Copilot skill authors** — Test skills and `.agent.md` instructions exactly as users experience them
 - **Eval builders** — Compare models, prompts, and skills to find the best configuration
 - **Teams shipping AI systems** — Catch LLM-facing regressions in CI/CD
 

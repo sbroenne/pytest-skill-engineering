@@ -379,7 +379,10 @@ def pytest_collection_modifyitems(
     config: Config,
     items: list[pytest.Item],
 ) -> None:
-    """Auto-mark tests that use aitest fixtures."""
+    """Auto-mark tests that use aitest fixtures and enforce single-harness sessions."""
+    has_eval_run = False
+    has_copilot_eval = False
+
     for item in items:
         # Check if test uses any aitest fixtures
         fixturenames = getattr(item, "fixturenames", [])
@@ -388,6 +391,23 @@ def pytest_collection_modifyitems(
             m.name == "aitest" for m in item.iter_markers()
         ):
             item.add_marker(pytest.mark.aitest)
+
+        # Track which harnesses are used
+        if "eval_run" in fixturenames:
+            has_eval_run = True
+        if "copilot_eval" in fixturenames:
+            has_copilot_eval = True
+
+    # Hard block: do not allow mixing Eval and CopilotEval in a single session
+    if has_eval_run and has_copilot_eval:
+        raise pytest.UsageError(
+            "Cannot mix Eval (eval_run) and CopilotEval (copilot_eval) harnesses "
+            "in a single pytest session. Their cost models are incompatible "
+            "(USD vs premium requests) and reports cannot compare them meaningfully.\n\n"
+            "Run them separately:\n"
+            "  pytest tests/integration/pydantic/   # Eval harness\n"
+            "  pytest tests/integration/copilot/     # CopilotEval harness"
+        )
 
 
 @pytest.hookimpl(hookwrapper=True, tryfirst=True)

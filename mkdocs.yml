@@ -104,7 +104,7 @@ nav:
     - Test Harnesses: reference/test-harnesses.md
   - Explanation:
     - Overview: explanation/index.md
-    - Agents: explanation/agents.md
+    - Evals: explanation/evals.md
     - Choosing a Test Harness: explanation/choosing-a-harness.md
     - Skill Engineering: explanation/skill-engineering.md
     - AI Analysis: explanation/ai-analysis.md

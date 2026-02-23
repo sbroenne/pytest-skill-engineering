@@ -115,14 +115,11 @@ class TestUsageTracking:
         )
         assert result.total_tokens == 450
 
-    def test_total_cost(self):
+    def test_premium_requests(self):
         result = CopilotResult(
-            usage=[
-                UsageInfo(model="gpt-4.1", input_tokens=0, output_tokens=0, cost_usd=0.01),
-                UsageInfo(model="gpt-4.1", input_tokens=0, output_tokens=0, cost_usd=0.02),
-            ],
+            total_premium_requests=3.0,
         )
-        assert result.total_cost_usd == pytest.approx(0.03)
+        assert result.total_premium_requests == 3.0
 
     def test_token_usage_dict(self):
         result = CopilotResult(
@@ -134,14 +131,6 @@ class TestUsageTracking:
         assert d["prompt"] == 100
         assert d["completion"] == 50
         assert d["total"] == 150
-
-    def test_cost_usd_alias(self):
-        result = CopilotResult(
-            usage=[
-                UsageInfo(model="m", input_tokens=0, output_tokens=0, cost_usd=0.05),
-            ],
-        )
-        assert result.cost_usd == pytest.approx(0.05)
 
 
 class TestSuccessError:

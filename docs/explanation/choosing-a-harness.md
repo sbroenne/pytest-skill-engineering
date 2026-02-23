@@ -18,11 +18,12 @@ Both harnesses can test MCP servers, tools, and skills. The difference is **what
 | **MCP connections** | Made directly by the test process | Managed by Copilot CLI |
 | **MCP auth** | You supply tokens (env vars / headers) | Copilot CLI handles OAuth automatically |
 | **Skill loading** | Injected as virtual reference tools | Native Copilot skill loading (`SKILL.md`) |
-| **Custom agent loading** | `Eval.from_agent_file()` (loads agent instructions) | `load_custom_agent()` + `custom_agents=[]` (native subagent dispatch) |
+| **Custom agent loading** | `Eval.from_agent_file()` (loads instructions as system prompt) | `load_custom_agent()` + `custom_agents=[]` (native Copilot dispatch) |
+| **Cost tracking** | USD per test (via litellm pricing + `pricing.toml` overrides) | Premium requests (Copilot billing units) |
 | **Model control** | Swap any model per test | Always Copilot's active model |
 | **Per-call introspection** | Full (tool name, args, timing) | Summary (tool names, final response) |
 | **Speed** | Fast (in-process) | Slower (~5–10s CLI startup per test) |
-| **Install** | `pip install pytest-skill-engineering` | `pip install pytest-skill-engineering[copilot]` |
+| **Install** | `uv add pytest-skill-engineering` | `uv add pytest-skill-engineering[copilot]` |
 | **Copilot subscription** | Not required | Required (`gh auth login`) |
 
 ---

@@ -1,5 +1,5 @@
 ---
-description: "Test multi-turn conversations where agents maintain context across tests. Validate session continuity, context retention, and sequential workflows."
+description: "Test multi-turn conversations where evals maintain context across tests. Validate session continuity, context retention, and sequential workflows."
 ---
 
 # Multi-Turn Sessions
@@ -8,7 +8,7 @@ So far, each test is independent—the agent has no memory between tests. **Sess
 
 ## Why Sessions?
 
-Real agents don't answer single questions. Users have conversations:
+Real coding agents don't answer single questions. Users have conversations:
 
 1. "What's my checking account balance?"
 2. "Transfer $200 to savings" ← Requires remembering the accounts

@@ -112,7 +112,9 @@ def _report_header(report: ReportMetadata) -> Node:
     # Build cost breakdown
     cost_parts = []
     cost_parts.append(
-        span(".tabular-nums", title="Test execution cost")[f"🧪 {format_cost(test_run_cost)}"]
+        span(".tabular-nums", title="Test execution cost")[
+            f"🧪 {format_cost(test_run_cost, report.total_premium_requests)}"
+        ]
     )
     if report.analysis_cost_usd:
         cost_parts.append(

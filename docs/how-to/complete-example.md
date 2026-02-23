@@ -1,5 +1,5 @@
 ---
-description: "Complete end-to-end example demonstrating all pytest-skill-engineering capabilities in a banking scenario: multi-agent testing, sessions, skills, and AI analysis."
+description: "Complete end-to-end example demonstrating all pytest-skill-engineering capabilities in a banking scenario: multi-eval testing, sessions, skills, and AI analysis."
 ---
 
 # Complete Example: Tying It All Together

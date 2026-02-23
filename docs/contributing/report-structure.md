@@ -1,5 +1,5 @@
 ---
-description: "HTML report component structure: agent leaderboard, test grid, comparison view, sequence diagrams, and AI insights layout."
+description: "HTML report component structure: eval leaderboard, test grid, comparison view, sequence diagrams, and AI insights layout."
 ---
 
 # Report Structure
@@ -14,7 +14,7 @@ Every visual element supports this goal through:
 
 1. **Progressive disclosure** — Summary first, details on demand
 2. **Comparison-first** — Winner highlighting, sorted rankings
-3. **Scalability** — Works for 2 agents or 20 agents
+3. **Scalability** — Works for 2 evals or 20 evals
 4. **Actionable insights** — Not just metrics, but what to fix
 
 ## Implementation
@@ -31,11 +31,11 @@ Reports are generated using [htpy](https://htpy.dev/) - a type-safe HTML generat
 │ 2. AI ANALYSIS                                                  │
 │    LLM-generated markdown (insights.markdown_summary)           │
 ├─────────────────────────────────────────────────────────────────┤
-│ 3. AGENT LEADERBOARD (if > 1 agent)                             │
+│ 3. EVAL LEADERBOARD (if > 1 eval)                              │
 │    Ranked table of configurations                               │
 ├─────────────────────────────────────────────────────────────────┤
-│ 4. AGENT SELECTOR (if > 2 agents)                               │
-│    Pick 2 agents for side-by-side comparison                    │
+│ 4. EVAL SELECTOR (if > 2 evals)                                 │
+│    Pick 2 evals for side-by-side comparison                     │
 ├─────────────────────────────────────────────────────────────────┤
 │ 5. TEST RESULTS                                                 │
 │    Filter buttons + test cards with comparison columns          │
@@ -85,7 +85,7 @@ For details on what the AI analyzes and how insights are generated, see [AI Anal
 
 ## 3. Eval Leaderboard
 
-**Only shown when multiple agents are tested.**
+**Only shown when multiple evals are tested.**
 
 **Component:** `agent_leaderboard.py` → `agent_leaderboard()`
 
@@ -113,21 +113,21 @@ Answers: "Which configuration should I deploy?"
 - **Pass rate bar** (visual progress)
 - **Star (★)** on best-in-column values
 - **Winner row highlighting** (green background)
-- **Full agent identity**: Model + Prompt name + Skill name
+- **Full eval identity**: Model + Prompt name + Skill name
 
 ## 4. Eval Selector
 
-**Only shown when more than 2 agents are tested.**
+**Only shown when more than 2 evals are tested.**
 
 **Component:** `agent_selector.py` → `agent_selector()`
 
-Allows picking exactly 2 agents for side-by-side comparison in test details.
+Allows picking exactly 2 evals for side-by-side comparison in test details.
 
 ### Layout
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│ Compare agents:                                                 │
+│ Compare evals:                                                 │
 │ ┌────────────────┐ ┌────────────────┐ ┌────────────────┐        │
 │ │ ☑ gpt-4.1-mini │ │ ☑ gpt-5-mini   │ │ ☐ gpt-5-mini   │        │
 │ │   100% ✓       │ │   100% ✓       │ │   + skill      │        │
@@ -137,14 +137,14 @@ Allows picking exactly 2 agents for side-by-side comparison in test details.
 
 ### Behavior
 
-- **Exactly 2 selected** — Always maintains 2 agents selected
-- **Click to swap** — Clicking a third agent replaces the oldest selection
-- **Cannot deselect below 2** — Clicking selected agent does nothing
+- **Exactly 2 selected** — Always maintains 2 evals selected
+- **Click to swap** — Clicking a third eval replaces the oldest selection
+- **Cannot deselect below 2** — Clicking selected eval does nothing
 - **Visual feedback** — Selected chips have highlighted border
 
 ## 5. Test Results
 
-All test results with comparison columns for selected agents.
+All test results with comparison columns for selected evals.
 
 **Components:** 
 - `test_grid.py` → `test_grid()` (main container)
@@ -168,7 +168,7 @@ All test results with comparison columns for selected agents.
 
 ### Test Card (Expanded)
 
-Shows side-by-side comparison of selected agents:
+Shows side-by-side comparison of selected evals:
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -226,10 +226,10 @@ The report layout adapts based on what was tested:
 
 | Scenario | Leaderboard | Eval Selector | Comparison Columns |
 |----------|-------------|----------------|-------------------|
-| 1 agent | ❌ | ❌ | ❌ (single column) |
-| 2 agents | ✅ | ❌ | ✅ (both shown) |
-| 3+ agents | ✅ | ✅ | ✅ (pick 2) |
-| Sessions | Based on agent count | Based on agent count | ✅ |
+| 1 eval | ❌ | ❌ | ❌ (single column) |
+| 2 evals | ✅ | ❌ | ✅ (both shown) |
+| 3+ evals | ✅ | ✅ | ✅ (pick 2) |
+| Sessions | Based on eval count | Based on eval count | ✅ |
 
 ### Detection Logic
 
@@ -239,11 +239,11 @@ if len(agents) == 1:
     show_leaderboard = False
     show_selector = False
 elif len(agents) == 2:
-    # Two-agent mode: comparison but no selector needed
+    # Two-eval mode: comparison but no selector needed
     show_leaderboard = True
     show_selector = False
 else:
-    # Multi-agent mode: full comparison UI
+    # Multi-eval mode: full comparison UI
     show_leaderboard = True
     show_selector = True
 ```
@@ -254,19 +254,19 @@ The design MUST work at these scales:
 
 | Scale | Behavior |
 |-------|----------|
-| 2 agents | Leaderboard with 2 rows, no selector |
-| 3-6 agents | Selector chips in single row |
-| 8+ agents | Selector chips wrap to multiple rows |
-| 20+ agents | Leaderboard with pagination |
+| 2 evals | Leaderboard with 2 rows, no selector |
+| 3-6 evals | Selector chips in single row |
+| 8+ evals | Selector chips wrap to multiple rows |
+| 20+ evals | Leaderboard with pagination |
 | 50+ tests | All tests rendered, browser scroll |
 
 ### Anti-Patterns (What NOT to Do)
 
 ❌ **Don't** show side-by-side cards that shrink with more items  
-❌ **Don't** truncate agent names — wrap or tooltip instead  
+❌ **Don't** truncate eval names — wrap or tooltip instead  
 ❌ **Don't** show tiny unreadable diagrams  
 ❌ **Don't** require horizontal scrolling for core content  
-❌ **Don't** select more than 2 agents for comparison
+❌ **Don't** select more than 2 evals for comparison
 
 ## Visual Design Tokens
 
@@ -290,10 +290,10 @@ Components are Python functions generating HTML via htpy:
 | File | Purpose |
 |------|---------|
 | `components/report.py` | Main report, header, AI analysis |
-| `components/agent_leaderboard.py` | Ranked agent table |
+| `components/agent_leaderboard.py` | Ranked eval table |
 | `components/agent_selector.py` | Eval comparison picker |
 | `components/test_grid.py` | Test list with filter buttons |
-| `components/test_comparison.py` | Side-by-side agent results |
+| `components/test_comparison.py` | Side-by-side eval results |
 | `components/overlay.py` | Fullscreen diagram viewer |
 | `components/types.py` | Data types for components |
 | `templates/partials/tailwind.css` | All CSS styles |
@@ -301,7 +301,7 @@ Components are Python functions generating HTML via htpy:
 
 ## Key Principles
 
-1. **Exactly 2 for comparison** — Always compare exactly 2 agents, no more
+1. **Exactly 2 for comparison** — Always compare exactly 2 evals, no more
 2. **AI explains, components display** — AI writes insights in markdown
 3. **Sessions are grouping, not special** — Same test cards, visual connectors
 4. **Progressive disclosure** — Click to expand details
@@ -311,7 +311,7 @@ Components are Python functions generating HTML via htpy:
 
 Visual tests use stable JSON fixtures in `tests/fixtures/reports/`:
 
-| Fixture | Agents | Sessions | What to Test |
+| Fixture | Evals | Sessions | What to Test |
 |---------|--------|----------|--------------|
 | `01_single_agent.json` | 1 | No | Header, AI Analysis, Test grid (no comparison) |
 | `02_multi_agent.json` | 2 | No | Leaderboard, Comparison columns (no selector) |
@@ -329,15 +329,15 @@ Visual tests use stable JSON fixtures in `tests/fixtures/reports/`:
 - [ ] Mermaid diagrams render
 - [ ] Filter buttons work (all/failed)
 - [ ] NO leaderboard shown
-- [ ] NO agent selector shown
+- [ ] NO eval selector shown
 - [ ] NO comparison columns (single column only)
 
 **02_multi_agent.json:**
 
-- [ ] Leaderboard shows 2 agents
+- [ ] Leaderboard shows 2 evals
 - [ ] Winner row highlighted
 - [ ] Both comparison columns visible
-- [ ] NO agent selector (only 2 agents)
+- [ ] NO eval selector (only 2 evals)
 - [ ] Mermaid overlay opens on click
 - [ ] Overlay closes on backdrop click
 
@@ -345,17 +345,17 @@ Visual tests use stable JSON fixtures in `tests/fixtures/reports/`:
 
 - [ ] Session grouping with visual connectors
 - [ ] Session header shows test count and status
-- [ ] Leaderboard shows 2 agents
-- [ ] NO agent selector (only 2 agents)
+- [ ] Leaderboard shows 2 evals
+- [ ] NO eval selector (only 2 evals)
 - [ ] Both comparison columns visible
 
 **04_agent_selector.json:**
 
-- [ ] Leaderboard shows 3 agents with medals (🥇🥈🥉)
+- [ ] Leaderboard shows 3 evals with medals (🥇🥈🥉)
 - [ ] Winner row highlighted
 - [ ] Eval selector shows 3 chips
-- [ ] Exactly 2 agents selected by default
-- [ ] Clicking 3rd agent swaps selection
+- [ ] Exactly 2 evals selected by default
+- [ ] Clicking 3rd eval swaps selection
 - [ ] Cannot deselect to less than 2
 - [ ] Comparison columns show side-by-side
 - [ ] Hidden columns update when selection changes

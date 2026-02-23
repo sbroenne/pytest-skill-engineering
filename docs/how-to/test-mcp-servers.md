@@ -4,7 +4,7 @@ description: "Test MCP servers with real LLMs. Verify tool discovery, parameter 
 
 # How to Test MCP Servers
 
-Test your Model Context Protocol (MCP) servers by running LLM agents against them.
+Test your Model Context Protocol (MCP) servers by running evals against them.
 
 ## How It Works
 
@@ -195,7 +195,7 @@ async def test_balance_query(eval_run, banking_agent):
 
 ## Multiple Servers
 
-Combine multiple MCP servers in a single agent:
+Combine multiple MCP servers in a single eval:
 
 ```python
 @pytest.fixture(scope="module")
@@ -225,7 +225,7 @@ def assistant_agent(banking_server, calendar_server):
 
 ## Filtering Tools
 
-Use `allowed_tools` on the Eval to limit which tools are exposed to the LLM. This reduces token usage and focuses the agent.
+Use `allowed_tools` on the Eval to limit which tools are exposed to the LLM. This reduces token usage and focuses the eval.
 
 ```python
 @pytest.fixture

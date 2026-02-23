@@ -70,7 +70,7 @@ def _test_metrics(
             span(".text-text-muted")["·"],
             span(".tabular-nums")[f"{result.tokens:,} tok"],
             span(".text-text-muted")["·"],
-            span(".tabular-nums")[format_cost(result.cost)],
+            span(".tabular-nums")[format_cost(result.cost, result.premium_requests)],
         ]
         # Iteration pass rate badge
         if result.iterations and result.iteration_pass_rate is not None:

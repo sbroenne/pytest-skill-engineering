@@ -1,25 +1,30 @@
-"""Integration tests for llm_score fixture with report rendering.
+"""Level 08 — Scoring: LLM-judged rubric scoring for response quality.
 
-Validates that LLM scoring runs end-to-end with real LLM calls and
-that score data flows correctly into reports.  Uses a prompt-quality
-rubric — scoring adds value when evaluating system prompt effectiveness,
-not MCP server mechanics (which binary assertions already cover).
+Uses llm_score and ScoringDimension to evaluate prompt effectiveness
+on dimensions like instruction adherence, conciseness, and actionability.
+Scores flow into the report for comparison.
+
+Permutation: LLM scoring rubric.
+
+Run with: pytest tests/integration/pydantic/test_08_scoring.py -v
 """
 
 from __future__ import annotations
 
+import pytest
+
 from pytest_skill_engineering import Eval, Provider
 from pytest_skill_engineering.fixtures.llm_score import ScoringDimension, assert_score
 
-from .conftest import (
+from ..conftest import (
     DEFAULT_MAX_TURNS,
     DEFAULT_MODEL,
     DEFAULT_RPM,
     DEFAULT_TPM,
 )
 
-# Rubric for evaluating whether a system prompt produces well-behaved responses.
-# This is a user-defined rubric — the framework ships no built-in rubric.
+pytestmark = [pytest.mark.integration, pytest.mark.scoring]
+
 PROMPT_QUALITY_RUBRIC: list[ScoringDimension] = [
     ScoringDimension(
         name="instruction_adherence",

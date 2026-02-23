@@ -1,22 +1,21 @@
 ---
-description: "Use pre-built fixture test suites with semantic, tool, and performance assertions to validate AI agent behavior systematically."
+description: "Use pre-built fixture test suites with semantic, tool, and performance assertions to validate eval behavior systematically."
 ---
 
 # Fixture Testing with Comprehensive Assertions
 
-Test your AI agents using pre-built fixture test suites with semantic, tool, and performance assertions.
+Test your evals using pre-built fixture test suites with semantic, tool, and performance assertions.
 
 ## Overview
 
-Fixture tests demonstrate best practices for comprehensive AI agent validation. Each scenario is a separate file in `tests/fixtures/`:
+Fixture tests demonstrate best practices for comprehensive eval validation. Each scenario is a separate file in `tests/fixtures/`:
 
-| File | Agents | Purpose |
+| File | Evals | Purpose |
 |------|--------|---------|
 | `scenario_01_single_agent.py` | 1 | Basic report, no comparison UI |
 | `scenario_02_multi_agent.py` | 2 | Leaderboard, comparison |
 | `scenario_03_sessions.py` | 2 | Session grouping + comparison |
 | `scenario_04_agent_selector.py` | 3 | Eval selector UI |
-
 They demonstrate:
 
 - **Semantic Assertions** — AI validates response quality
@@ -67,7 +66,7 @@ async def test_balance_check(eval_run, llm_assert):
 
 **Tests:** `test_balance_check`, `test_transfer_funds`, `test_transaction_history`, `test_expected_failure`
 
-### 2. Two Agents (6 tests)
+### 2. Two Evals (6 tests)
 
 `scenario_02_multi_agent.py` — define agents once, parametrize tests:
 
@@ -104,7 +103,7 @@ class TestBankingWorkflow:
         assert result.is_session_continuation
 ```
 
-The `@pytest.mark.session` marker ensures tests share agent state.
+The `@pytest.mark.session` marker ensures tests share eval state.
 
 ### 4. Eval Selector (6 tests)
 
@@ -123,7 +122,7 @@ async def test_balance_query(eval_run, agent, llm_assert):
     assert result.success
 ```
 
-With 3+ agents, the report includes an interactive agent selector.
+With 3+ evals, the report includes an interactive eval selector.
 
 ## Assertion Patterns
 
@@ -201,7 +200,7 @@ Reports include:
 - **Test Results** — All assertions with pass/fail details
 - **Tool Feedback** — Suggestions for improving tool descriptions
 - **Tool Call Flows** — Mermaid diagrams showing sequence
-- **Leaderboard** — Compare agents if multiple models tested
+- **Leaderboard** — Compare evals if multiple models tested
 
 ## Running Comprehensive Test Suite
 
@@ -231,7 +230,7 @@ This updates HTML reports in `docs/reports/` without re-running tests (faster).
 
 When writing fixture tests, follow this pattern:
 
-1. **Create agent** — Configure provider, servers, system prompt, skill
+1. **Create eval** — Configure provider, servers, system prompt, skill
 2. **Run prompt** — Use `eval_run(agent, "user message")`
 3. **Validate success** — `assert result.success`
 4. **Assert tool usage** — `assert result.tool_was_called(...)`
@@ -273,7 +272,7 @@ If a fixture test fails:
 1. **Check the error message** — AI assertion detail explains why
 2. **Run the test locally** — `pytest tests/fixtures/... -vv`
 3. **Check JSON report** — `tests/fixtures/reports/01_*.json` has full details
-4. **Verify agent config** — Is the right server/model/prompt used?
+4. **Verify eval config** — Is the right server/model/prompt used?
 5. **Check tool availability** — Does `result.available_tools` include what you need?
 
 ### Common Issues

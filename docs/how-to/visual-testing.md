@@ -12,7 +12,7 @@ pytest-skill-engineering includes a comprehensive visual test suite that verifie
 
 - **Report Rendering** — Headers, metrics, sections display correctly
 - **UI Interactions** — Expand/collapse, filters, agent selector toggling
-- **Eval Comparison** — Multi-column layouts for comparing agents
+- **Eval Comparison** — Multi-column layouts for comparing evals
 - **Mermaid Diagrams** — Tool usage flow diagrams render and open
 - **Session Grouping** — Multi-turn sessions display with proper styling
 
@@ -93,7 +93,7 @@ assert visible_details.count() > 0
 ```python
 # Count all elements matching selector
 rows = page.locator(".leaderboard-table tbody tr")
-assert rows.count() == 2  # Exactly 2 agent rows
+assert rows.count() == 2  # Exactly 2 eval rows
 
 # Count visible (not hidden) elements
 visible = page.locator(".comparison-column:not(.hidden)")
@@ -185,7 +185,7 @@ This prevents conflicts with pytest-asyncio since Playwright tests are synchrono
 - Don't test without waiting for page load
 - Don't use hardcoded sleep without context comment
 - Don't check `display: none` style directly (Tailwind uses classes)
-- Don't test all agents — scope to first for performance
+- Don't test all evals — scope to first for performance
 
 ## Expected Results
 

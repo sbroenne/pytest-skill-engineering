@@ -1,5 +1,5 @@
 ---
-description: "Write your first AI test in under 5 minutes. Set up pytest-skill-engineering to test MCP servers, tools, agent skills, and custom agents with real LLMs."
+description: "Write your first AI test in under 5 minutes. Set up pytest-skill-engineering to test MCP servers, tools, skills, and custom agents with real LLMs."
 ---
 
 # Getting Started
@@ -15,7 +15,7 @@ pytest-skill-engineering tests whether an LLM can understand and use your tools:
 - **MCP Server Tools** — Can the LLM discover and call your tools correctly?
 - **MCP Server Prompts** — Do your bundled prompt templates render and produce the right behavior?
 - **Prompt Files** — Does invoking a slash command (`.prompt.md` / `.claude/commands/`) produce the right agent behavior?
-- **Eval Skills** — Does domain knowledge help the agent perform?
+- **Skill** — Does domain knowledge help the LLM perform?
 - **Custom Agents** — Do your `.agent.md` instructions produce the right behavior?
 
 ## The Eval

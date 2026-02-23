@@ -83,8 +83,8 @@ class TestUsageTracking:
         )
         assert usage["total"] == usage["prompt"] + usage["completion"]
 
-    async def test_total_cost_is_non_negative(self, copilot_eval, tmp_path):
-        """Cost tracking produces a non-negative value."""
+    async def test_premium_requests_non_negative(self, copilot_eval, tmp_path):
+        """Premium requests from the SDK is non-negative."""
         agent = CopilotEval(
             name="cost-check",
             instructions="Create files as requested.",
@@ -92,7 +92,7 @@ class TestUsageTracking:
         )
         result = await copilot_eval(agent, "Create hello.py with print('hello')")
         assert result.success
-        assert result.total_cost_usd >= 0.0
+        assert result.total_premium_requests >= 0.0
 
     async def test_model_used_captured(self, copilot_eval, tmp_path):
         """model_used is populated from the SDK session or usage events."""

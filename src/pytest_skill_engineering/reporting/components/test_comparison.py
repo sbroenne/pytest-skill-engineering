@@ -20,7 +20,9 @@ def _metric_cell(value: str, label: str) -> Node:
 
 def _metrics_row(result: TestResultData) -> Node:
     """Render the metrics row for a test result (2 rows of metrics)."""
-    cost_cells: list[Node] = [_metric_cell(format_cost(result.cost), "cost")]
+    cost_cells: list[Node] = [
+        _metric_cell(format_cost(result.cost, result.premium_requests), "cost")
+    ]
 
     # Iteration stats when aggregated across multiple runs
     if result.iterations and result.iteration_pass_rate is not None:

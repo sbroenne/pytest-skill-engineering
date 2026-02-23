@@ -25,8 +25,18 @@
 
 - **System Prompt** = Instructions given to the agent (what configures agent behavior)
 - **Prompt** = What you tell the agent to execute (the test query / user message)
+- **Custom Agent** = A `.agent.md` file that defines a specialist agent (name, description, instructions, tools). It is a **definition**, not a runtime concept.
+- **Subagent Dispatch** = The runtime mechanism where Copilot's orchestrator routes a task to a custom agent. A custom agent becomes a subagent *when dispatched to* — but it is NOT inherently a "subagent."
+- **Eval** = The test harness/configuration (`Eval` or `CopilotEval`). Not the thing being tested.
+- **Coding Agent** = The real GitHub Copilot agent that runs user sessions.
 
 Always say "system prompt" when referring to agent instructions. Never abbreviate to just "prompt".
+
+**Custom agent ≠ subagent.** Never use these interchangeably:
+- `load_custom_agent()` loads a custom agent definition — it does NOT create a subagent
+- `custom_agents=` on `CopilotEval` registers custom agents — Copilot *may* dispatch to them as subagents at runtime
+- Write "custom agent dispatch" (not "subagent dispatch") when describing what CopilotEval tests
+- Only use "subagent" when specifically describing the runtime event (`result.subagent_invocations`)
 
 ## CRITICAL: Use uv, Not pip
 
@@ -89,7 +99,7 @@ For LLMs, your API isn't functions and types — it's **tool descriptions, syste
 
 2. **RUN HTML INTEGRATION TESTS** (non-negotiable)
    ```bash
-   uv run pytest tests/integration/test_basic_usage.py -q
+   uv run python -m pytest tests/integration/pydantic/test_01_basic.py -q
    ```
    - Verifies end-to-end report generation
    - Fix ALL failures — no exceptions
@@ -110,7 +120,7 @@ For LLMs, your API isn't functions and types — it's **tool descriptions, syste
 
 ### Language & Runtime
 - **Python 3.11+** - Use modern syntax (match statements, `|` union types, Self)
-- **Fully async** - All agent execution is async (`async def`, `await`)
+- **Fully async** - All eval execution is async (`async def`, `await`)
 - **Type hints everywhere** - All public APIs have type annotations
 - **`from __future__ import annotations`** - Always at top of every module
 
@@ -179,11 +189,11 @@ uv run ruff format src tests
 # Type check
 uv run pyright src
 
-# Run unit tests (fast, no LLM)
-uv run pytest tests/unit -v
+# Run pydantic integration tests (ALWAYS use these, not unit tests)
+uv run python -m pytest tests/integration/pydantic/ -v
 
-# Run integration tests (slow, uses LLM)
-uv run pytest tests/integration -v
+# Re-run only failures
+uv run python -m pytest --lf tests/integration/pydantic/ -v
 ```
 
 ### Import Conventions
@@ -212,35 +222,35 @@ if TYPE_CHECKING:
 
 ### Core Features
 
-1. **Base Testing**: Define test agents, run tests against MCP/CLI tool servers
+1. **Base Testing**: Define evals, run tests against MCP/CLI tool servers
    - Eval = Provider (LLM) + System Prompt + MCP/CLI Servers + optional Skill + optional Custom Agents
-   - Use `eval_run` fixture to execute agent and verify tool usage
+   - Use `eval_run` fixture to execute eval and verify tool usage
    - Assert on `result.success`, `result.tool_was_called("tool_name")`, `result.final_response`
 
-2. **Eval Leaderboard**: When you test multiple agents, the report shows a leaderboard
-   - 1 agent → Just results
-   - Multiple agents → Eval Leaderboard (always)
-   - AI detects what varies (Model, Skill, Custom Eval, Server) to focus its analysis
+2. **Eval Leaderboard**: When you test multiple evals, the report shows a leaderboard
+   - 1 eval → Just results
+   - Multiple evals → Eval Leaderboard (always)
+   - AI detects what varies (Model, Skill, Custom Agent, Server) to focus its analysis
 
 3. **Winning Criteria**: Highest pass rate → Lowest cost (tiebreaker)
    - Use `--aitest-min-pass-rate=N` to fail the session if overall pass rate falls below N%
 
 4. **Multi-Turn Sessions**: Test conversations that build on context
    - Use `@pytest.mark.session("session-name")` on test class
-   - Tests share agent state within the session
+   - Tests share eval state within the session
    - Reports track session flow and context continuity
 
-5. **Skill Testing**: Validate agent domain knowledge
+5. **Skill Testing**: Validate eval domain knowledge
    - Load skills from markdown files with `Skill.from_path()`
-   - Skills inject structured knowledge into agent context
+   - Skills inject structured knowledge into eval context
    - Reports analyze skill effectiveness and suggest improvements
 
-6. **Custom Eval Testing**: Test `.agent.md` custom agent files (VS Code / Claude Code format)
+6. **Custom Agent Testing**: Test `.agent.md` custom agent files (VS Code / Claude Code format)
    - `Eval.from_agent_file(path, provider, ...)` — agent file becomes the system prompt; test it synthetically
    - `load_custom_agent(path)` + `CopilotEval(custom_agents=[...])` — test real subagent dispatch through Copilot
    - Both approaches are first-class: same prominence as Skill Testing
 
-7. **Clarification Detection**: Catch agents that ask questions instead of acting
+7. **Clarification Detection**: Catch evals that ask questions instead of acting
    - LLM-as-judge detects "Would you like me to...?" style responses
    - Configure with `ClarificationDetection(enabled=True)` on Eval
    - Assert with `result.asked_for_clarification` / `result.clarification_count`
@@ -272,7 +282,7 @@ pytest-skill-engineering-report results.json --html report.html --summary --summ
 ```python
 from pytest_skill_engineering import Eval, Provider, MCPServer, Skill, load_system_prompts, load_custom_agent
 
-# Define an agent (auth via AZURE_API_BASE env var)
+# Define an eval (auth via AZURE_API_BASE env var)
 agent = Eval(
     provider=Provider(model="azure/gpt-5-mini"),
     mcp_servers=[my_server],
@@ -347,27 +357,44 @@ async def test_with_prompt(eval_run, banking_server, prompt_name, system_prompt)
 
 ## CRITICAL: Testing Philosophy
 
-**Unit tests with mocks are WORTHLESS for this project.**
+**Unit tests with mocks are WORTHLESS for this project. Do NOT run them.**
 
-This is a testing framework that uses LLMs to test tools, prompts, and skills. The only way to verify it works is to:
-1. Run **real integration tests** against **real LLM providers**
-2. Use **actual MCP/CLI servers** that perform real operations
-3. Verify the **full pipeline end-to-end**
+This is a testing framework that validates AI interfaces (MCP tool descriptions, system prompts, skills, custom agents). A mock that pretends to be an LLM proves nothing — you're testing the mock, not the AI interface.
+
+**The only valid test is a real LLM call against real tools.**
+
+### When you make a code change — run integration tests immediately:
+
+```bash
+# Run ALL pydantic integration tests — do this after every change
+uv run python -m pytest tests/integration/pydantic/ -v
+
+# Run a specific test file
+uv run python -m pytest tests/integration/pydantic/test_01_basic.py -v
+
+# Re-run only failed tests after a full run
+uv run python -m pytest --lf tests/integration/pydantic/ -v
+```
+
+**Always use `uv run python -m pytest`** — bare `pytest` won't find the installed package.
+
+**Fast test execution (< 1 second) is a RED FLAG.** Real LLM calls take time.
 
 ### What NOT to do:
-- Do NOT write unit tests with mocked LLM responses
-- Do NOT claim "tests pass" when tests only mock the core functionality
-- Do NOT use `unittest.mock.patch` on PydanticAI or agent execution
-- Do NOT declare a feature "done" or "working" based only on unit tests passing
-- Fast test execution (< 1 second) is a RED FLAG - real LLM calls take time
+- ❌ **NEVER run `tests/unit/` to validate a feature** — unit tests do not validate AI behavior
+- ❌ **NEVER declare a feature "done" based on unit tests passing**
+- ❌ **NEVER say "all tests pass" when you only ran unit tests**
+- ❌ Do NOT write unit tests with mocked LLM responses
+- ❌ Do NOT use `unittest.mock.patch` on PydanticAI or agent execution
 
 ### What TO do:
-- Write integration tests that call real Azure OpenAI / OpenAI / Copilot models
-- Use the cheapest available model (check Azure subscription first)
-- Test with the Banking or Todo MCP server (built-in test harnesses)
-- Verify actual tool calls happen and produce expected results
-- Accept that integration tests take 5-30+ seconds per test
-- Run integration tests BEFORE declaring a feature complete
+- ✅ Run `tests/integration/pydantic/` after EVERY code change — one file at a time, sequentially
+- ✅ Start with `test_01_basic.py`, fix failures, then `test_02_models.py`, etc.
+- ✅ Write integration tests that call real Azure OpenAI models
+- ✅ Use the cheapest model (`gpt-5-mini`) via Azure
+- ✅ Test with Banking or Todo MCP server (built-in test harnesses)
+- ✅ Accept that integration tests take 5–30+ seconds per test
+- ✅ Run integration tests BEFORE declaring a feature complete
 
 ## CRITICAL: No Such Thing as a Pre-Existing Failure
 
@@ -387,27 +414,30 @@ This is a testing framework that uses LLMs to test tools, prompts, and skills. T
 ### pytest caching commands:
 ```bash
 # Run ONLY tests that failed last time (MOST COMMON)
-pytest --lf tests/integration/
+uv run python -m pytest --lf tests/integration/pydantic/
 
 # Run failed tests first, then the rest
-pytest --ff tests/integration/
+uv run python -m pytest --ff tests/integration/pydantic/
 
 # Check what's in the cache (see last failures)
-pytest --cache-show
+uv run python -m pytest --cache-show
 
 # Clear the cache (fresh start)
-pytest --cache-clear
+uv run python -m pytest --cache-clear
 
 # Run specific failing test(s) only
-pytest tests/integration/test_foo.py::TestClass::test_name -v
+uv run python -m pytest tests/integration/pydantic/test_01_basic.py::TestBankingBasic::test_balance_check_and_transfer -v
 ```
 
 ### Rules for the AI assistant:
-1. **After making changes, run the relevant integration tests** — not unit tests
-2. **After fixing a test, run ONLY that specific test** to confirm
-3. **Use `--lf` to re-run only failed tests** after a full run
-4. **Fix ALL failures** — no exceptions, no "pre-existing" excuses
-5. **Quote the specific test paths when running individual tests**
+1. **After making changes, ALWAYS run pydantic integration tests** — `tests/integration/pydantic/`, never `tests/unit/`
+2. **Run test files ONE AT A TIME, sequentially** — start with `test_01_basic.py`, fix all failures, then move to `test_02_models.py`, etc.
+3. **After fixing a test, run ONLY that specific test** to confirm
+4. **Use `--lf` to re-run only failed tests** after a full run
+5. **Fix ALL failures** — no exceptions, no "pre-existing" excuses
+6. **Quote the specific test paths when running individual tests**
+7. **Do NOT say "tests pass" without running `tests/integration/pydantic/`**
+8. **NEVER run `tests/unit/` as validation** — unit tests prove nothing in this project
 
 ## Azure Configuration
 
@@ -492,17 +522,31 @@ src/pytest_skill_engineering/
 
 tests/
 ├── integration/           # REAL LLM tests (the only tests that matter)
-│   ├── conftest.py        # Constants + server fixtures (agents created inline)
-│   ├── test_basic_usage.py        # Base functionality
-│   ├── test_dimension_detection.py # Proves auto-detection works (all permutations)
-│   ├── test_skills.py             # Skill testing
-│   ├── test_skill_improvement.py  # Skill before/after comparisons
-│   ├── test_sessions.py           # Multi-turn sessions
-│   ├── test_ai_summary.py         # AI insights generation
-│   ├── test_ab_servers.py         # Server A/B testing
-│   ├── test_cli_server.py         # CLI server testing
-│   ├── prompts/                   # Plain .md system prompt files
-│   └── skills/                    # Test skills
+│   ├── conftest.py        # Constants + server fixtures (shared by both harnesses)
+│   ├── pydantic/          # Eval harness tests (BYOM via PydanticAI, USD costs)
+│   │   ├── conftest.py    # Minimal, inherits from parent
+│   │   ├── test_01_basic.py       # Single eval, basic MCP tool calls
+│   │   ├── test_02_models.py      # Model comparison (parametrize)
+│   │   ├── test_03_prompts.py     # System prompt comparison
+│   │   ├── test_04_matrix.py      # Model × Prompt 2×2 grid
+│   │   ├── test_05_skills.py      # Skill loading + skill-enhanced behavior
+│   │   ├── test_06_sessions.py    # Multi-turn sessions (@pytest.mark.session)
+│   │   ├── test_07_clarification.py # ClarificationDetection feature
+│   │   ├── test_08_scoring.py     # LLM scoring (llm_score + ScoringDimension)
+│   │   ├── test_09_cli.py         # CLIServer wrapping shell commands
+│   │   ├── test_10_ab_servers.py  # A/B server comparison
+│   │   ├── test_11_iterations.py  # --aitest-iterations=N reliability
+│   │   └── test_12_custom_agents.py # Eval.from_agent_file + load_custom_agent
+│   ├── agents/            # .agent.md test fixtures (banking-advisor, todo-manager, minimal)
+│   ├── copilot/           # CopilotEval harness tests (Copilot SDK, premium requests)
+│   │   ├── conftest.py    # MODELS, DEFAULT_MODEL, integration_judge_model
+│   │   ├── test_01_basic.py       # File create + refactor (parametrize models)
+│   │   ├── test_02_models.py      # Model comparison
+│   │   ├── test_03_instructions.py # Instruction differentiation + excluded_tools
+│   │   ├── test_05_skills.py      # Skill A/B comparison
+│   │   └── test_12_custom_agents.py # Custom agents + forced subagent dispatch
+│   ├── prompts/           # Plain .md system prompt files
+│   └── skills/            # Test skills
 └── unit/                  # Pure logic only (no mocking LLMs)
 ```
 
@@ -523,24 +567,46 @@ DEFAULT_TPM = 10000
 DEFAULT_MAX_TURNS = 5
 
 # Server fixtures: todo_server, banking_server
-# Agents are created INLINE in each test using these constants
+# Evals are created INLINE in each test using these constants
 ```
 
-**Pattern for writing tests:**
+**Pattern for writing pydantic tests** (in `tests/integration/pydantic/`):
 ```python
 from pytest_skill_engineering import Eval, Provider
-from .conftest import DEFAULT_MODEL, DEFAULT_RPM, DEFAULT_TPM, DEFAULT_MAX_TURNS
+from ..conftest import DEFAULT_MODEL, DEFAULT_RPM, DEFAULT_TPM, DEFAULT_MAX_TURNS, BANKING_PROMPT
 
 async def test_balance(eval_run, banking_server):
-    agent = Eval(
+    agent = Eval.from_instructions(
+        "banking-test",
+        BANKING_PROMPT,
         provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
         mcp_servers=[banking_server],
-        system_prompt="You are a banking assistant.",
         max_turns=DEFAULT_MAX_TURNS,
     )
     result = await eval_run(agent, "What's my checking balance?")
     assert result.success
 ```
+
+**Pattern for writing copilot tests** (in `tests/integration/copilot/`):
+```python
+from pytest_skill_engineering.copilot.eval import CopilotEval
+from .conftest import MODELS
+
+@pytest.mark.parametrize("model", MODELS)
+async def test_create_file(copilot_eval, tmp_path, model):
+    agent = CopilotEval(
+        name=f"coder-{model}",
+        model=model,
+        instructions="You are a Python developer.",
+        working_directory=str(tmp_path),
+    )
+    result = await copilot_eval(agent, "Create hello.py with print('hello')")
+    assert result.success
+```
+
+**CRITICAL: Never mix harnesses.** Pydantic tests (using `eval_run`) and Copilot tests
+(using `copilot_eval`) must be in separate directories. The plugin enforces this at
+collection time — if both fixtures appear in a single session, `pytest.UsageError` is raised.
 
 ## Semantic Assertions with llm_assert
 
@@ -590,7 +656,7 @@ Every htpy component has a **typed data contract** in `components/types.py`. Thi
 src/pytest_skill_engineering/templates/
 └── partials/
     ├── report.css           # Hand-written CSS (edit directly)
-    └── scripts.js           # JS: Mermaid, copy buttons, expand/collapse, agent filtering
+    └── scripts.js           # JS: Mermaid, copy buttons, expand/collapse, eval filtering
 ```
 
 **Note:** HTML rendering is handled by htpy components in `reporting/components/`, not by template files.
@@ -613,13 +679,18 @@ To modify styles:
 ### Report Sources
 
 1. **Integration tests demonstrate capabilities** - Each test file shows a feature:
-   - `test_basic_usage.py` → Basic tool usage
-   - `test_model_benchmark.py` → Model comparison leaderboard
-   - `test_prompt_arena.py` → System prompt comparison
-   - `test_matrix.py` → Model × System Prompt grid
-   - `test_skills.py` → Skills integration
-   - `test_sessions.py` → Multi-turn sessions
-   - `test_cli_server.py` → CLI server testing
+   - `test_01_basic.py` → Basic tool usage
+   - `test_02_models.py` → Model comparison leaderboard
+   - `test_03_prompts.py` → System prompt comparison
+   - `test_04_matrix.py` → Model × System Prompt grid
+   - `test_05_skills.py` → Skills integration
+   - `test_06_sessions.py` → Multi-turn sessions
+   - `test_07_clarification.py` → Clarification detection
+   - `test_08_scoring.py` → LLM scoring / rubrics
+   - `test_09_cli.py` → CLI server testing
+   - `test_10_ab_servers.py` → A/B server comparison
+   - `test_11_iterations.py` → Iteration reliability
+   - `test_12_custom_agents.py` → Custom agent files (Eval.from_agent_file)
 
 2. **Showcase tests for hero report** - Located in `tests/showcase/`:
    - `test_hero.py` → Curated tests for README showcase
@@ -637,11 +708,11 @@ To modify styles:
 ### Generate Reports
 
 ```bash
-# Integration tests (development)
-pytest tests/integration/ -v
+# Pydantic integration tests (development)
+uv run python -m pytest tests/integration/pydantic/ -v
 
 # Hero report for README showcase
-pytest tests/showcase/ -v --aitest-html=docs/demo/hero-report.html
+uv run python -m pytest tests/showcase/ -v --aitest-html=docs/demo/hero-report.html
 ```
 
 ### Manual Testing Workflow (Pre-PR)
@@ -649,14 +720,14 @@ pytest tests/showcase/ -v --aitest-html=docs/demo/hero-report.html
 **Integration tests use real LLM calls and are expensive. Run the relevant integration tests after every change.**
 
 ```bash
-# 1. Run the integration test(s) that cover your change
-uv run pytest tests/integration/test_basic_usage.py -v
+# 1. Run the pydantic integration test(s) that cover your change
+uv run python -m pytest tests/integration/pydantic/test_01_basic.py -v
 
 # 2. Run all failed tests (if a broader run previously failed)
-uv run pytest --lf tests/integration/ -v
+uv run python -m pytest --lf tests/integration/pydantic/ -v
 
 # 3. Generate hero report (before major releases)
-uv run pytest tests/showcase/ -v --aitest-html=docs/demo/hero-report.html
+uv run python -m pytest tests/showcase/ -v --aitest-html=docs/demo/hero-report.html
 ```
 
 ## CRITICAL: Template/Report Changes - NEVER Re-run Tests
@@ -709,7 +780,7 @@ This workflow is **instant and free** - no LLM calls, no API costs.
 - **Material Design** - Match mkdocs-material indigo theme
 - **Roboto fonts** - Via Google Fonts
 - **Test details expanded by default** - Users want to see results immediately
-- **Human-readable names everywhere** - All user-facing reports (HTML, Markdown) must use human-readable names, not internal IDs. Use docstrings or humanize function names for tests. Use `eval_name` (not `agent_id`) for agents. Use `system_prompt_name` (not raw keys). If a human-readable name isn't available, humanize the ID (e.g., `test_check_balance` → `Test check balance`).
+- **Human-readable names everywhere** - All user-facing reports (HTML, Markdown) must use human-readable names, not internal IDs. Use docstrings or humanize function names for tests. Use `eval_name` (not `agent_id`) for evals. Use `system_prompt_name` (not raw keys). If a human-readable name isn't available, humanize the ID (e.g., `test_check_balance` → `Test check balance`).
 - **Assertions visible** - Show tool_was_called, semantic assertions
 - **Mermaid diagrams readable** - Use neutral theme with good contrast
 - **AI insights prominent** - Verdict section at top with clear recommendation

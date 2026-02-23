@@ -83,7 +83,7 @@ def _convert_to_aitest(
         error=result.error,
         duration_ms=result.duration_ms,
         token_usage=result.token_usage,
-        cost_usd=result.cost_usd,
+        cost_usd=0.0,
         effective_system_prompt=agent.instructions or "",
         premium_requests=result.total_premium_requests,
     )

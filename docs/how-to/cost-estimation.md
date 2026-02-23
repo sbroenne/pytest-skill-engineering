@@ -4,7 +4,7 @@ description: "Configure cost estimation for accurate spending analysis. Use lite
 
 # Cost Estimation
 
-pytest-skill-engineering estimates the USD cost of each LLM call based on token counts and model pricing data. Costs appear in reports, agent leaderboards, and AI insights analysis.
+pytest-skill-engineering estimates the USD cost of each LLM call based on token counts and model pricing data. Costs appear in reports, eval leaderboards, and AI insights analysis.
 
 ## How It Works
 
