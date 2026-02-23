@@ -14,7 +14,7 @@ from pytest_skill_engineering.execution.pydantic_adapter import build_model_from
 DEFAULT_MODEL: str | None = None
 
 # Models for parametrized tests
-MODELS: list[str] = ["gpt-5.2", "claude-opus-4.5"]
+MODELS: list[str] = ["gpt-5.2", "claude-sonnet-4.6"]
 
 # Timeouts
 DEFAULT_TIMEOUT_S: float = 300.0

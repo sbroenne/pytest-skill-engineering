@@ -90,7 +90,7 @@ def _convert_to_aitest(
 
     aitest_agent = Eval(
         name=agent.name,
-        provider=Provider(model=result.model_used or agent.model or "copilot-default"),
+        provider=Provider(model=result.model_used or agent.model or "claude-haiku-4-5"),
         system_prompt=agent.instructions,
         max_turns=agent.max_turns,
     )
