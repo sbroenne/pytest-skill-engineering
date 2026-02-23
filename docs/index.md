@@ -31,7 +31,6 @@ async def test_balance_and_transfer(eval_run, banking_server):
         provider=Provider(model="azure/gpt-5-mini"),   # LLM provider
         mcp_servers=[banking_server],                  # MCP servers with tools
         skill=financial_skill,                         # Eval Skill (optional)
-        custom_agents=[load_custom_agent("agents/advisor.agent.md")],  # Custom agents (optional)
     )
 
     result = await eval_run(

@@ -15,15 +15,14 @@ Eval = Model + Skill + Custom Agents + Server(s)
 ```
 
 ```python
-from pytest_skill_engineering import Eval, Provider, MCPServer, Skill, load_custom_agent
+from pytest_skill_engineering import Eval, Provider, MCPServer, Skill
 
 banking_server = MCPServer(command=["python", "banking_mcp.py"])
 
 agent = Eval(
     provider=Provider(model="azure/gpt-5-mini"),
     mcp_servers=[banking_server],
-    skill=Skill.from_path("skills/financial-advisor"),        # Optional
-    custom_agents=[load_custom_agent("agents/advisor.agent.md")],  # Optional
+    skill=Skill.from_path("skills/financial-advisor"),  # Optional
 )
 ```
 
