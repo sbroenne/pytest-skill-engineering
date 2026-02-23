@@ -1,6 +1,6 @@
 ---
 title: "Test your AI interfaces. AI analyzes your results."
-description: "A pytest plugin for testing MCP servers, tools, agent skills, and custom agents with real LLMs. AI analyzes results and tells you what to fix."
+description: "A pytest plugin for testing MCP servers, tools, skills, and custom agents with real LLMs. AI analyzes results and tells you what to fix."
 icon: material/flask-outline
 ---
 
@@ -19,7 +19,7 @@ Your MCP server passes all unit tests. Then an LLM tries to use it and:
 
 **Why?** Because you tested the code, not the AI interface.
 
-For LLMs, your API isn't functions and types — it's **tool descriptions, agent skills, custom agent instructions, and schemas**. These are what the LLM actually sees. Traditional tests can't validate them.
+For LLMs, your API isn't functions and types — it's **tool descriptions, skills, custom agent instructions, and schemas**. These are what the LLM actually sees. Traditional tests can't validate them.
 
 ## The Solution
 
@@ -31,7 +31,6 @@ async def test_balance_and_transfer(eval_run, banking_server):
         provider=Provider(model="azure/gpt-5-mini"),   # LLM provider
         mcp_servers=[banking_server],                  # MCP servers with tools
         skill=financial_skill,                         # Eval Skill (optional)
-        custom_agents=[load_custom_agent("agents/advisor.agent.md")],  # Custom agents (optional)
     )
 
     result = await eval_run(
@@ -43,7 +42,7 @@ async def test_balance_and_transfer(eval_run, banking_server):
     assert result.tool_was_called("transfer")
 ```
 
-The agent runs your prompt, calls tools, and returns results. You assert on what happened. If the test fails, your tool descriptions or skill need work — not your code.
+The LLM runs your prompt, calls tools, and returns results. You assert on what happened. If the test fails, your tool descriptions or skill need work — not your code.
 
 This is **skill engineering**: design a test for what a user would say, watch the LLM fail, refine your tool descriptions until it passes, then let AI analysis tell you what else to optimize. See [Skill Engineering](explanation/skill-engineering.md) for the full concept.
 
@@ -54,12 +53,12 @@ This is **skill engineering**: design a test for what a user would say, watch th
 | MCP Server Tools | Can an LLM understand and use my tools? |
 | MCP Server Prompts | Do my bundled prompt templates render correctly and produce the right LLM behavior? |
 | Prompt Files (Slash Commands) | Does invoking `/my-command` produce the right agent behavior? |
-| Eval Skill | Does this domain knowledge help the agent perform? |
-| Custom Eval | Do my `.agent.md` instructions produce the right behavior and subagent dispatch? |
+| Skill | Does this domain knowledge help the LLM perform? |
+| Custom Agent | Do my `.agent.md` instructions produce the right behavior and subagent dispatch? |
 
 ## What Makes This Different?
 
-AI analyzes your test results and tells you **what to fix**, not just what failed. It generates [interactive HTML reports](explanation/ai-analysis.md#sample-reports) with agent leaderboards, comparison tables, and sequence diagrams.
+AI analyzes your test results and tells you **what to fix**, not just what failed. It generates [interactive HTML reports](explanation/ai-analysis.md#sample-reports) with eval leaderboards, comparison tables, and sequence diagrams.
 
 ![AI Analysis — winner recommendation, metrics, and comparative analysis](assets/images/ai_analysis.png)
 
@@ -95,7 +94,7 @@ async def test_balance_check(eval_run):
     assert result.tool_was_called("get_balance")
 ```
 
-> 📁 See [test_basic_usage.py](https://github.com/sbroenne/pytest-skill-engineering/blob/main/tests/integration/test_basic_usage.py) for complete examples.
+> 📁 See [pydantic/test_01_basic.py](https://github.com/sbroenne/pytest-skill-engineering/blob/main/tests/integration/pydantic/test_01_basic.py) for complete examples.
 
 ## Features
 
@@ -106,12 +105,12 @@ async def test_balance_check(eval_run):
 - **Test CLI Tools** — Wrap command-line interfaces as testable servers
 - **Compare Models** — Benchmark different LLMs against your tools
 - **Eval Skills** — Add domain knowledge following [agentskills.io](https://agentskills.io)
-- **Custom Agents** — Test `.agent.md` custom agent files with `Eval.from_agent_file()` or load them as subagents in `CopilotEval`; A/B test agent instruction versions
-- **Coding Eval Testing** — Test real coding agents like GitHub Copilot via the SDK (native OAuth, skill loading, exact user experience)
+- **Custom Agents** — Test `.agent.md` custom agent files with `Eval.from_agent_file()` or load them as subagents in `CopilotEval`; A/B test custom agent versions
+- **Real Coding Agent Testing** — Test real coding agents like GitHub Copilot via the SDK (native OAuth, skill loading, exact user experience)
 - **Eval Leaderboard** — Auto-ranked by pass rate and cost; AI analysis tells you what to fix
 - **Multi-Turn Sessions** — Test conversations that build on context
 - **Copilot Model Provider** — Use `copilot/gpt-5-mini` for all LLM calls — zero Azure/OpenAI setup
-- **Clarification Detection** — Catch agents that ask questions instead of acting
+- **Clarification Detection** — Catch evals that ask questions instead of acting
 - **Semantic Assertions** — `llm_assert` for binary pass/fail checks on response content
 - **Multi-Dimension Scoring** — `llm_score` for granular quality measurement across named dimensions
 - **Image Assertions** — AI-graded visual evaluation of screenshots and visual tool output
@@ -127,7 +126,7 @@ uv add pytest-skill-engineering
 
 - **MCP server authors** — Validate tool descriptions work
 - **Eval builders** — Compare models and prompts
-- **Copilot skill and agent authors** — Test exactly what your users experience, before you ship
+- **Copilot skill and custom agent authors** — Test exactly what your users experience, before you ship
 - **Teams shipping AI systems** — Catch LLM-facing regressions
 
 ## Why pytest?

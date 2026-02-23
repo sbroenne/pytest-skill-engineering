@@ -1,5 +1,5 @@
 ---
-description: "Compare LLM models, agent skills, custom agent versions, and server configurations side-by-side. Find the most cost-effective setup with automated leaderboards."
+description: "Compare LLM models, skills, custom agent versions, and server configurations side-by-side. Find the most cost-effective setup with automated leaderboards."
 ---
 
 # Comparing Configurations
@@ -111,7 +111,7 @@ The report shows an **Eval Leaderboard** (auto-detected when multiple agents are
 | gpt-5-mini-v1 | 90% | 1,203 | $0.004 |
 | gpt-4.1-v1 | 90% | 892 | $0.012 |
 
-**Winning agent:** Highest pass rate → lowest cost (tiebreaker).
+**Winning eval:** Highest pass rate → lowest cost (tiebreaker).
 
 This helps you answer:
 
@@ -126,5 +126,5 @@ This helps you answer:
 - [Multi-Turn Sessions](sessions.md) — Test conversations with context
 
 > 📁 **Real Examples:**
-> - [test_basic_usage.py](https://github.com/sbroenne/pytest-skill-engineering/blob/main/tests/integration/test_basic_usage.py) — Single agent workflows
-> - [test_dimension_detection.py](https://github.com/sbroenne/pytest-skill-engineering/blob/main/tests/integration/test_dimension_detection.py) — Multi-dimension comparison
+> - [pydantic/test_01_basic.py](https://github.com/sbroenne/pytest-skill-engineering/blob/main/tests/integration/pydantic/test_01_basic.py) — Single agent workflows
+> - [pydantic/test_04_matrix.py](https://github.com/sbroenne/pytest-skill-engineering/blob/main/tests/integration/pydantic/test_04_matrix.py) — Multi-dimension comparison

@@ -1,5 +1,5 @@
 ---
-description: "Generate HTML reports with AI-powered analysis, agent leaderboards, sequence diagrams, and actionable fix recommendations."
+description: "Generate HTML reports with AI-powered analysis, eval leaderboards, sequence diagrams, and actionable fix recommendations."
 ---
 
 # How to Generate Reports
@@ -97,7 +97,7 @@ This is useful for:
 
 ## Eval Leaderboard
 
-When you test multiple agents, the report shows an **Eval Leaderboard** ranking all configurations:
+When you test multiple evals, the report shows an **Eval Leaderboard** ranking all configurations:
 
 | Eval | Pass Rate | Cost |
 |-------|-----------|------|
@@ -109,12 +109,12 @@ When you test multiple agents, the report shows an **Eval Leaderboard** ranking 
 
 ### Dimension Detection
 
-The AI detects *what varies* between agents to focus its analysis:
+The AI detects *what varies* between evals to focus its analysis:
 
 | What Varies | AI Analysis Focuses On |
 |-------------|------------------------|
 | Model | Which model works best |
-| Custom Eval | Which agent instructions work best |
+| Custom Agent | Which custom agent instructions work best |
 | Skill | Whether domain knowledge helps |
 | Server | Which implementation is more reliable |
 
@@ -122,7 +122,7 @@ The AI detects *what varies* between agents to focus its analysis:
 
 ### Leaderboard Ranking
 
-When comparing Agents, rankings are based on:
+When comparing evals, rankings are based on:
 
 1. **Pass rate** (primary) — higher is better
 2. **Total cost** (tiebreaker) — lower is better

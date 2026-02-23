@@ -19,10 +19,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   2. Prompt templates (`.prompt.md`)
   3. Agent definitions (`.agent.md` / `.claude/agents/`)
   4. Skills (`SKILL.md` + references)
-  5. Multi-agent orchestration
+  5. Multi-eval orchestration
   6. Copilot Extension evaluation (`CopilotEval`)
 
-- **`Eval.from_instructions(name, instructions, *, provider, **kwargs)`** factory method — replaces the raw `Eval(system_prompt=..., system_prompt_name=...)` pattern with a named, documented agent. Agent identity (name) flows through the entire pipeline including HTML reports, JUnit XML, and AI summaries.
+- **`Eval.from_instructions(name, instructions, *, provider, **kwargs)`** factory method — replaces the raw `Eval(system_prompt=..., system_prompt_name=...)` pattern with a named, documented eval. Eval identity (name) flows through the entire pipeline including HTML reports, JUnit XML, and AI summaries.
 
 - **`load_custom_agents(directory)`** — loads `.agent.md` files from a directory and returns a list of dicts with `name`, `prompt`, and `description` keys. Replaces `load_system_prompts()`.
 

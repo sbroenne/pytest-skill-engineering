@@ -25,13 +25,12 @@ __all__ = [
 
 @dataclass(slots=True)
 class UsageInfo:
-    """Token usage and cost from a single model turn."""
+    """Token usage from a single model turn."""
 
     model: str
     input_tokens: int = 0
     output_tokens: int = 0
     cache_read_tokens: int = 0
-    cost_usd: float = 0.0
     duration_ms: float = 0.0
 
 
@@ -136,11 +135,6 @@ class CopilotResult:
         return self.total_input_tokens + self.total_output_tokens
 
     @property
-    def total_cost_usd(self) -> float:
-        """Total cost in USD across all model turns."""
-        return sum(u.cost_usd for u in self.usage)
-
-    @property
     def token_usage(self) -> dict[str, int]:
         """Token usage dict compatible with pytest-skill-engineering's EvalResult.
 
@@ -153,15 +147,11 @@ class CopilotResult:
             "total": self.total_tokens,
         }
 
-    @property
-    def cost_usd(self) -> float:
-        """Cost in USD, compatible with pytest-skill-engineering's EvalResult."""
-        return self.total_cost_usd
-
     def __repr__(self) -> str:
         status = "SUCCESS" if self.success else f"FAILED: {self.error}"
         tools = ", ".join(sorted(self.tool_names_called)) or "none"
-        cost_str = f"${self.total_cost_usd:.6f}" if self.total_cost_usd > 0 else "N/A"
+        pr = self.total_premium_requests
+        cost_str = f"{pr:.0f} premium requests" if pr > 0 else "N/A"
         final = self.final_response or ""
         return (
             f"CopilotResult({status})\n"

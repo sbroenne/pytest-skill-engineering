@@ -335,7 +335,7 @@ class Eval:
     clarification_detection: ClarificationDetection = field(default_factory=ClarificationDetection)
     custom_agent_name: str | None = None  # Name from .agent.md file
     custom_agent_description: str | None = None  # Description from .agent.md file
-    instruction_files: list[dict[str, Any]] = field(default_factory=list)  # loaded instruction file dicts
+    instruction_files: list[dict[str, Any]] = field(default_factory=list)
 
     def __post_init__(self) -> None:
         """Auto-construct name from dimensions if not explicitly set."""

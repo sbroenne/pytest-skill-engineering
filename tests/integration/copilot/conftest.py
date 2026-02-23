@@ -6,7 +6,7 @@ import os
 import subprocess
 
 import pytest
-from pydantic_ai import Eval
+from pydantic_ai import Agent as Eval
 
 from pytest_skill_engineering.execution.pydantic_adapter import build_model_from_string
 
@@ -14,7 +14,7 @@ from pytest_skill_engineering.execution.pydantic_adapter import build_model_from
 DEFAULT_MODEL: str | None = None
 
 # Models for parametrized tests
-MODELS: list[str] = ["gpt-5.2", "claude-opus-4.5"]
+MODELS: list[str] = ["gpt-5.2", "claude-sonnet-4.6"]
 
 # Timeouts
 DEFAULT_TIMEOUT_S: float = 300.0

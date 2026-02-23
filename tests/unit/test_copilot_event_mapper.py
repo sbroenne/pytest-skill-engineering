@@ -183,9 +183,8 @@ class TestEventMapperUsage:
         assert u.model == "gpt-4.1"
         assert u.input_tokens == 100
         assert u.output_tokens == 50
-        # cost_usd computed from litellm pricing, not from SDK's cost field
-        # (SDK's cost field uses an unknown unit, not USD)
-        assert u.cost_usd >= 0.0  # litellm may or may not have pricing
+        # SDK does not provide USD cost — only premium requests
+        assert not hasattr(u, "cost_usd")
 
 
 class TestEventMapperReasoning:

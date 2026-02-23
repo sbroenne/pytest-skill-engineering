@@ -25,6 +25,7 @@ class AgentData:
     duration_s: float
     is_winner: bool = False
     disqualified: bool = False
+    premium_requests: float = 0.0
 
 
 @dataclass(slots=True)
@@ -108,6 +109,7 @@ class TestResultData:
     scores: list[ScoreData] = field(default_factory=list)
     iterations: list[IterationData] = field(default_factory=list)
     iteration_pass_rate: float | None = None
+    premium_requests: float = 0.0
 
 
 @dataclass(slots=True)
@@ -155,6 +157,7 @@ class ReportMetadata:
     test_files: list[str] = field(default_factory=list)
     token_min: int = 0
     token_max: int = 0
+    total_premium_requests: float = 0.0
     models_without_pricing: list[str] = field(default_factory=list)
 
 

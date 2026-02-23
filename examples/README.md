@@ -6,10 +6,18 @@ Working examples are in `tests/integration/` — they are the best reference for
 
 | File | What it demonstrates |
 |------|---------------------|
-| [test_basic_usage.py](../tests/integration/test_basic_usage.py) | Natural language → tool usage with Banking and Todo servers |
-| [test_dimension_detection.py](../tests/integration/test_dimension_detection.py) | Multi-dimension comparison (model × prompt) |
-| [test_skills.py](../tests/integration/test_skills.py) | Skills with references and metadata |
-| [test_skill_improvement.py](../tests/integration/test_skill_improvement.py) | Skill before/after comparisons |
+| [pydantic/test_01_basic.py](../tests/integration/pydantic/test_01_basic.py) | Natural language → tool usage with Banking and Todo servers |
+| [pydantic/test_02_models.py](../tests/integration/pydantic/test_02_models.py) | Model comparison (parametrize) |
+| [pydantic/test_03_prompts.py](../tests/integration/pydantic/test_03_prompts.py) | System prompt comparison |
+| [pydantic/test_04_matrix.py](../tests/integration/pydantic/test_04_matrix.py) | Model × prompt 2×2 grid |
+| [pydantic/test_05_skills.py](../tests/integration/pydantic/test_05_skills.py) | Skills with references and metadata |
+| [pydantic/test_06_sessions.py](../tests/integration/pydantic/test_06_sessions.py) | Multi-turn session continuity |
+| [pydantic/test_07_clarification.py](../tests/integration/pydantic/test_07_clarification.py) | ClarificationDetection feature |
+| [pydantic/test_08_scoring.py](../tests/integration/pydantic/test_08_scoring.py) | llm_score + ScoringDimension |
+| [pydantic/test_09_cli.py](../tests/integration/pydantic/test_09_cli.py) | CLIServer wrapping shell commands |
+| [pydantic/test_10_ab_servers.py](../tests/integration/pydantic/test_10_ab_servers.py) | A/B server comparison |
+| [pydantic/test_11_iterations.py](../tests/integration/pydantic/test_11_iterations.py) | --aitest-iterations=N reliability |
+| [pydantic/test_12_custom_agents.py](../tests/integration/pydantic/test_12_custom_agents.py) | Eval.from_agent_file + load_custom_agent |
 
 ## Run Examples
 
@@ -19,10 +27,13 @@ uv add pytest-skill-engineering
 az login               # For Azure OpenAI
 
 # Run basic usage tests
-pytest tests/integration/test_basic_usage.py -v
+uv run python -m pytest tests/integration/pydantic/test_01_basic.py -v
+
+# Run all pydantic tests
+uv run python -m pytest tests/integration/pydantic/ -v
 
 # Run with report
-pytest tests/integration/ -v --aitest-html=report.html
+uv run python -m pytest tests/integration/pydantic/ -v --aitest-html=report.html
 ```
 
 ## Test Servers
@@ -57,6 +68,6 @@ def todo_server():
 
 See [conftest.py](../tests/integration/conftest.py) for fixture patterns:
 
-- `banking_server` / `todo_server` — Test MCP servers  
-- `DEFAULT_MODEL`, `DEFAULT_RPM`, `DEFAULT_TPM`, `DEFAULT_MAX_TURNS` — Constants for agent creation
+- `banking_server` / `todo_server` — Test MCP servers
+- `DEFAULT_MODEL`, `DEFAULT_RPM`, `DEFAULT_TPM`, `DEFAULT_MAX_TURNS` — Constants for eval creation
 - Azure token handling

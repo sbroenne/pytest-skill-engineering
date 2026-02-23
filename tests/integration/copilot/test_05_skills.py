@@ -1,12 +1,11 @@
-"""Skill A/B testing.
+"""Level 05 — Skills A/B: prove skill files change Copilot behavior.
 
-Proves that skill files change agent behavior by running the SAME task
-with two configs and asserting the outputs differ in a predictable way:
+Same task, two configs — baseline (no skill) vs treatment (with skill).
+Assertions verify the skill caused the observable difference.
 
-    Baseline  — no skill, minimal instructions
-    Treatment — same instructions + skill directory with a specific mandate
+Mirrors pydantic/test_05_skills.py — same level, different harness.
 
-The assertion proves the SKILL caused the difference, not the instructions.
+Run with: pytest tests/integration/copilot/test_05_skills.py -v
 """
 
 from __future__ import annotations
@@ -15,19 +14,14 @@ import pytest
 
 from pytest_skill_engineering.copilot.eval import CopilotEval
 
+pytestmark = [pytest.mark.copilot]
 
-@pytest.mark.copilot
+
 class TestSkillABComparison:
-    """Same task, two configs — skill produces measurably different output than no-skill baseline."""
+    """Same task, two configs — skill produces measurably different output."""
 
     async def test_version_declaration_skill_adds_dunder_version(self, copilot_eval, tmp_path):
-        """Skill mandating __version__ produces a module version declaration.
-
-        Baseline (no skill): agent creates a plain module — LLMs never add __version__
-        to simple utility modules without being told.
-        Treatment (__version__ skill): same module declares its version at the top.
-        The declaration is the observable signal that the skill was applied.
-        """
+        """Skill mandating __version__ produces a module version declaration."""
         skill_dir = tmp_path / "skills"
         skill_dir.mkdir()
         (skill_dir / "versioning.md").write_text(
@@ -35,7 +29,8 @@ class TestSkillABComparison:
             "Every Python module MUST declare its version at the top of the file:\n\n"
             '    __version__ = "1.0.0"\n\n'
             "Place this immediately after imports. "
-            "Modules without __version__ are considered unversioned and will fail release checks.\n"
+            "Modules without __version__ are considered unversioned and will "
+            "fail release checks.\n"
         )
 
         task = "Create math_ops.py with functions: add(a, b), subtract(a, b)."
@@ -66,21 +61,15 @@ class TestSkillABComparison:
         content_b = (treatment_dir / "math_ops.py").read_text()
 
         assert "__version__" in content_b, (
-            "Versioning skill should have added __version__ declaration — not found in treatment.\n"
+            "Versioning skill should have added __version__ — not found in treatment.\n"
             f"Treatment output:\n{content_b}"
         )
         assert "__version__" not in content_a, (
-            "Baseline (no skill) unexpectedly contains __version__ — this differentiator is unreliable.\n"
-            f"Baseline output:\n{content_a}"
+            f"Baseline (no skill) unexpectedly contains __version__.\nBaseline output:\n{content_a}"
         )
 
     async def test_module_exports_skill_adds_all_declaration(self, copilot_eval, tmp_path):
-        """Skill mandating __all__ exports produces explicit public API declarations.
-
-        Baseline (no skill): agent creates a plain module — LLMs almost never add __all__
-        without being told to.
-        Treatment (__all__ skill): same module explicitly declares its public API.
-        """
+        """Skill mandating __all__ exports produces explicit public API declarations."""
         skill_dir = tmp_path / "skills"
         skill_dir.mkdir()
         (skill_dir / "module-exports.md").write_text(
@@ -119,21 +108,15 @@ class TestSkillABComparison:
         content_b = (treatment_dir / "math_utils.py").read_text()
 
         assert "__all__" in content_b, (
-            "Module exports skill should have added __all__ declaration — not found in treatment.\n"
+            "Module exports skill should have added __all__ — not found in treatment.\n"
             f"Treatment output:\n{content_b}"
         )
         assert "__all__" not in content_a, (
-            "Baseline (no skill) unexpectedly contains __all__ — choose a stronger differentiator.\n"
-            f"Baseline output:\n{content_a}"
+            f"Baseline (no skill) unexpectedly contains __all__.\nBaseline output:\n{content_a}"
         )
 
     async def test_docstring_format_skill_produces_google_style(self, copilot_eval, tmp_path):
-        """Skill mandating Google-style docstrings produces Args:/Returns: sections.
-
-        Baseline (no skill): agent writes plain one-line docstrings or none at all.
-        Treatment (Google docstring skill): every function has structured Args: and Returns: sections.
-        The structured format is the observable signal that the skill was applied.
-        """
+        """Skill mandating Google-style docstrings produces Args:/Returns: sections."""
         skill_dir = tmp_path / "skills"
         skill_dir.mkdir()
         (skill_dir / "docstring-format.md").write_text(
@@ -177,7 +160,7 @@ class TestSkillABComparison:
         content_b = (treatment_dir / "converter.py").read_text()
 
         assert "Args:" in content_b and "Returns:" in content_b, (
-            "Google docstring skill should have added Args:/Returns: sections — not found in treatment.\n"
+            "Google docstring skill should have added Args:/Returns: — not found.\n"
             f"Treatment output:\n{content_b}"
         )
         assert content_a != content_b, (

@@ -1,6 +1,11 @@
-"""Basic Copilot tool usage tests.
+"""Level 01 — Basic Copilot file operations: create and refactor code.
 
-Parametrized across models to compare behavior.
+Tests that the Copilot coding agent can create production-quality Python
+modules and refactor existing code. Parametrized across models.
+
+Mirrors pydantic/test_01_basic.py — same level, different harness.
+
+Run with: pytest tests/integration/copilot/test_01_basic.py -v
 """
 
 from __future__ import annotations
@@ -11,14 +16,15 @@ from pytest_skill_engineering.copilot.eval import CopilotEval
 
 from .conftest import MODELS
 
+pytestmark = [pytest.mark.copilot]
 
-@pytest.mark.copilot
+
 class TestFileOperations:
     """Test file creation and code quality across models."""
 
     @pytest.mark.parametrize("model", MODELS)
     async def test_create_module_with_tests(self, copilot_eval, tmp_path, model):
-        """Eval creates a module and its test file with working code."""
+        """Eval creates a module with working code and all required functions."""
         agent = CopilotEval(
             name=f"coder-{model}",
             model=model,
@@ -33,26 +39,20 @@ class TestFileOperations:
         )
         assert result.success, f"{model} failed: {result.error}"
 
-        # File exists
         assert (tmp_path / "calculator.py").exists(), f"{model}: calculator.py missing"
 
-        # Module has all four functions
         calc = (tmp_path / "calculator.py").read_text()
         for fn in ("def add", "def subtract", "def multiply", "def divide"):
             assert fn in calc, f"{model}: {fn} not found in calculator.py"
 
-        # Error handling present
         assert "ValueError" in calc or "ZeroDivisionError" in calc, (
             f"{model}: no error handling in divide"
         )
-
-        # Eval used tools
         assert len(result.all_tool_calls) > 0, f"{model}: no tool calls"
 
     @pytest.mark.parametrize("model", MODELS)
     async def test_refactor_existing_code(self, copilot_eval, tmp_path, model):
-        """Eval reads existing code and refactors it."""
-        # Seed a file with intentionally messy code
+        """Eval reads existing code and refactors it for clarity."""
         messy = tmp_path / "messy.py"
         messy.write_text(
             "def f(x,y,z):\n"
@@ -80,8 +80,6 @@ class TestFileOperations:
         assert result.success, f"{model} failed: {result.error}"
 
         refactored = messy.read_text()
-        # The agent should have added documentation — type hints and/or a docstring.
-        # Renaming is optional (a backward-compat alias is a valid refactoring choice).
         has_documentation = (
             '"""' in refactored
             or "->" in refactored

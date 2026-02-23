@@ -1,10 +1,12 @@
-"""Instruction testing.
+"""Level 03 — Instructions: prove different instructions produce different outputs.
 
-Proves that different CopilotEval instructions produce measurably different
-behaviors. Each test asserts a concrete, observable difference — not just
-that the agent succeeded, but that the instruction actually changed the output.
+Tests that CopilotEval instructions measurably change behavior:
+verbose vs concise documentation, framework steering, defensive coding.
+Also tests excluded_tools for tool restriction.
 
-Also contains the canonical test for excluded_tools (tool restriction behavior).
+Mirrors pydantic/test_03_prompts.py — same level, different harness.
+
+Run with: pytest tests/integration/copilot/test_03_instructions.py -v
 """
 
 from __future__ import annotations
@@ -13,17 +15,14 @@ import pytest
 
 from pytest_skill_engineering.copilot.eval import CopilotEval
 
+pytestmark = [pytest.mark.copilot]
 
-@pytest.mark.copilot
+
 class TestInstructionsDifferentiate:
     """Different instructions produce measurably different outputs."""
 
     async def test_verbose_instructions_produce_documented_code(self, copilot_eval, tmp_path):
-        """Instructions explicitly requiring docstrings produce documented code.
-
-        The instruction mandates docstrings AND type hints. Both must appear
-        in the generated file — this is what proves the instruction was followed.
-        """
+        """Instructions requiring docstrings produce documented code."""
         agent = CopilotEval(
             name="documented-coder",
             instructions=(
@@ -41,18 +40,12 @@ class TestInstructionsDifferentiate:
         assert result.success
         content = (tmp_path / "calculator.py").read_text()
         assert '"""' in content or "'''" in content, (
-            "Verbose instructions required docstrings — none found in generated code."
+            "Verbose instructions required docstrings — none found."
         )
-        assert "->" in content, (
-            "Verbose instructions required return type hints — none found in generated code."
-        )
+        assert "->" in content, "Verbose instructions required return type hints — none found."
 
     async def test_concise_instructions_suppress_documentation(self, copilot_eval, tmp_path):
-        """Instructions forbidding documentation produce minimal code.
-
-        The instruction explicitly forbids docstrings, type hints, and comments.
-        If the instruction is followed, none of those appear in the output.
-        """
+        """Instructions forbidding documentation produce minimal code."""
         agent = CopilotEval(
             name="minimal-coder",
             instructions=(
@@ -69,15 +62,11 @@ class TestInstructionsDifferentiate:
         assert result.success
         content = (tmp_path / "calculator.py").read_text()
         assert '"""' not in content and "'''" not in content, (
-            "Concise instructions forbade docstrings — but they appeared in generated code."
+            "Concise instructions forbade docstrings — but they appeared."
         )
 
     async def test_framework_instruction_steers_library_choice(self, copilot_eval, tmp_path):
-        """Instructions specifying a framework result in that framework being used.
-
-        The instruction mandates FastAPI. The generated code must import or
-        reference FastAPI — not Flask, Django, or the stdlib http module.
-        """
+        """Instructions specifying FastAPI result in FastAPI being used."""
         agent = CopilotEval(
             name="fastapi-dev",
             instructions=(
@@ -96,16 +85,11 @@ class TestInstructionsDifferentiate:
         all_code = "\n".join(f.read_text() for f in py_files)
         assert "fastapi" in all_code.lower(), (
             "Framework-specific instructions should have used FastAPI.\n"
-            f"Files created: {[f.name for f in py_files]}\n"
-            f"Code preview: {all_code[:500]}"
+            f"Files created: {[f.name for f in py_files]}"
         )
 
     async def test_error_handling_instruction_produces_defensive_code(self, copilot_eval, tmp_path):
-        """Instructions requiring defensive coding produce try/except blocks.
-
-        The instruction mandates try/except on all I/O. The generated code
-        must have exception handling — this verifies the instruction changed the output.
-        """
+        """Instructions requiring defensive coding produce try/except blocks."""
         agent = CopilotEval(
             name="defensive-coder",
             instructions=(
@@ -117,23 +101,18 @@ class TestInstructionsDifferentiate:
         )
         result = await copilot_eval(
             agent,
-            "Create file_reader.py with a read_json(path) function that reads and returns parsed JSON.",
+            "Create file_reader.py with a read_json(path) function that "
+            "reads and returns parsed JSON.",
         )
         assert result.success
         content = (tmp_path / "file_reader.py").read_text()
         assert "try" in content and "except" in content, (
-            "Error handling instructions required try/except — not found in generated code.\n"
-            f"File content:\n{content}"
+            "Error handling instructions required try/except — not found."
         )
 
 
-@pytest.mark.copilot
 class TestToolRestrictions:
-    """excluded_tools configuration prevents the agent from calling blocked tools.
-
-    This is the canonical test for tool restriction behavior. The same
-    configuration is not tested in test_events.py or test_cli_tools.py.
-    """
+    """excluded_tools prevents the eval from calling blocked tools."""
 
     async def test_excluded_tool_is_never_called(self, copilot_eval, tmp_path):
         """Eval with run_in_terminal excluded never calls that tool."""

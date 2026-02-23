@@ -182,7 +182,7 @@ async def test_dashboard(eval_run, agent, llm_assert_image):
 
 ## HTML Reports
 
-When tools return images, the HTML report shows inline thumbnails next to the tool call. This makes it easy to visually compare results across agents.
+When tools return images, the HTML report shows inline thumbnails next to the tool call. This makes it easy to visually compare results across evals.
 
 ## Cost Awareness
 

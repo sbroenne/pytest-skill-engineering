@@ -7,8 +7,10 @@ from htpy import Node, div, span, table, tbody, td, th, thead, tr
 from .types import AgentData
 
 
-def format_cost(cost: float) -> str:
-    """Format cost in USD."""
+def format_cost(cost: float, premium_requests: float = 0.0) -> str:
+    """Format cost: premium requests for CopilotEval, USD for Eval."""
+    if premium_requests > 0:
+        return f"{premium_requests:.0f} PR"
     if cost == 0:
         return "N/A"
     if cost < 0.01:
@@ -71,7 +73,9 @@ def _leaderboard_row(agent: AgentData, rank: int) -> Node:
         # Tokens
         td(".text-right.tabular-nums.text-text-muted")[f"{agent.tokens:,}"],
         # Cost
-        td(".text-right.tabular-nums.text-text-muted")[format_cost(agent.cost)],
+        td(".text-right.tabular-nums.text-text-muted")[
+            format_cost(agent.cost, agent.premium_requests)
+        ],
         # Duration
         td(".text-right.tabular-nums.text-text-muted")[f"{agent.duration_s:.1f}s"],
     ]
@@ -109,7 +113,7 @@ def _single_agent_card(agent: AgentData) -> Node:
                     f"{agent.passed}/{agent.total}"
                 ],
                 div(".text-sm.text-text-muted")[
-                    f"{format_cost(agent.cost)} · {agent.tokens:,} tok"
+                    f"{format_cost(agent.cost, agent.premium_requests)} · {agent.tokens:,} tok"
                 ],
             ],
         ],

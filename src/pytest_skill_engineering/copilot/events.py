@@ -67,7 +67,6 @@ from pytest_skill_engineering.copilot.result import (
     UsageInfo,
 )
 from pytest_skill_engineering.core.result import SubagentInvocation
-from pytest_skill_engineering.execution.cost import estimate_cost
 
 if TYPE_CHECKING:
     from copilot import SessionEvent
@@ -220,7 +219,6 @@ class EventMapper:
                 input_tokens=input_tokens,
                 output_tokens=output_tokens,
                 cache_read_tokens=int(_get_data_field(event, "cache_read_tokens", 0) or 0),
-                cost_usd=estimate_cost(model, input_tokens, output_tokens),
                 duration_ms=_get_data_field(event, "duration", 0.0) or 0.0,
             )
         )

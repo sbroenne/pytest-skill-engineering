@@ -309,7 +309,7 @@ assert "insufficient" in result.final_response.lower()
 
 ## Clarification Detection
 
-Requires `ClarificationDetection(enabled=True)` on the agent. See [Agents](../explanation/agents.md) for setup.
+Requires `ClarificationDetection(enabled=True)` on the agent. See [Choosing a Harness](../explanation/choosing-a-harness.md) for setup.
 
 ### Eval didn't ask questions
 

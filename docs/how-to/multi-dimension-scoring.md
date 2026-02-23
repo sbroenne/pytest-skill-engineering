@@ -1,10 +1,10 @@
 ---
-description: "Score AI agent output on multiple named dimensions using LLM-as-judge evaluation with configurable rubrics, weighted composites, and threshold assertions."
+description: "Score eval output on multiple named dimensions using LLM-as-judge evaluation with configurable rubrics, weighted composites, and threshold assertions."
 ---
 
 # Multi-Dimension Scoring
 
-Evaluate AI agent output on multiple named dimensions using the `llm_score` fixture. Each dimension receives an integer score on a configurable scale, enabling quality regression testing and A/B comparisons.
+Evaluate eval output on multiple named dimensions using the `llm_score` fixture. Each dimension receives an integer score on a configurable scale, enabling quality regression testing and A/B comparisons.
 
 ## Overview
 
@@ -191,7 +191,7 @@ assert_score(result, min_pct=0.8)
 
 ## A/B Testing with Scores
 
-Compare agent variants by scoring both on the same rubric:
+Compare eval variants by scoring both on the same rubric:
 
 ```python
 import pytest
@@ -221,7 +221,7 @@ async def test_plan_quality(eval_run, agent, llm_score):
     assert_score(scores, min_total=10)
 ```
 
-The pytest-skill-engineering HTML report shows scores per agent for comparison.
+The pytest-skill-engineering HTML report shows scores per eval for comparison.
 
 ## Judge Model Configuration
 
@@ -298,7 +298,7 @@ def test_plan_quality(llm_score, plan_text, seed_context):
 
 ## Instruction Adherence Pattern
 
-Evaluate whether agent output follows a set of instruction rules:
+Evaluate whether eval output follows a set of instruction rules:
 
 ```python
 ADHERENCE_RUBRIC = [

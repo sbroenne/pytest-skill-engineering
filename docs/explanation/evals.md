@@ -1,8 +1,8 @@
 ---
-description: "Understand Agents in pytest-skill-engineering: an Eval combines an LLM provider, MCP servers, skills, and custom agents into a test harness."
+description: "Understand Evals in pytest-skill-engineering: an Eval combines an LLM provider, MCP servers, skills, and custom agents into a test harness."
 ---
 
-# Agents
+# Evals
 
 The core concept in pytest-skill-engineering.
 
@@ -15,27 +15,26 @@ Eval = Model + Skill + Custom Agents + Server(s)
 ```
 
 ```python
-from pytest_skill_engineering import Eval, Provider, MCPServer, Skill, load_custom_agent
+from pytest_skill_engineering import Eval, Provider, MCPServer, Skill
 
 banking_server = MCPServer(command=["python", "banking_mcp.py"])
 
 agent = Eval(
     provider=Provider(model="azure/gpt-5-mini"),
     mcp_servers=[banking_server],
-    skill=Skill.from_path("skills/financial-advisor"),        # Optional
-    custom_agents=[load_custom_agent("agents/advisor.agent.md")],  # Optional
+    skill=Skill.from_path("skills/financial-advisor"),  # Optional
 )
 ```
 
 ## The Eval is NOT What You Test
 
-**You don't test agents. You USE agents to test:**
+**You don't test evals. You USE evals to test:**
 
 | Target | Question |
 |--------|----------|
 | **MCP Server** | Can the LLM understand and use my tools? |
-| **Eval Skill** | Does this domain knowledge improve performance? |
-| **Custom Eval** | Do these `.agent.md` instructions produce the right behavior? |
+| **Skill** | Does this domain knowledge improve performance? |
+| **Custom Agent** | Do these `.agent.md` instructions produce the right behavior? |
 
 The Eval is the **test harness** that bundles an LLM with the configuration you want to evaluate.
 
@@ -46,11 +45,11 @@ The Eval is the **test harness** that bundles an LLM with the configuration you 
 | Provider | ✓ | `Provider(model="azure/gpt-5-mini")` |
 | MCP Servers | Optional | `MCPServer(command=["python", "server.py"])` |
 | Skill | Optional | `Skill.from_path("skills/financial-advisor")` |
-| Custom Eval File | Optional | `Eval.from_agent_file("agents/reviewer.agent.md", provider=...)` |
+| Custom Agent | Optional | `Eval.from_agent_file("agents/reviewer.agent.md", provider=...)` |
 
 ## Eval Leaderboard
 
-**When you test multiple agents, the report shows an Eval Leaderboard.**
+**When you test multiple evals, the report shows an Eval Leaderboard.**
 
 This happens automatically — no configuration needed. Just parametrize your tests:
 
@@ -93,16 +92,16 @@ The report shows:
 
 ## Dimension Detection
 
-The AI analysis detects *what varies* between agents to provide targeted feedback:
+The AI analysis detects *what varies* between evals to provide targeted feedback:
 
 | What Varies | AI Feedback Focuses On |
 |-------------|------------------------|
 | Model | Which model works best with your tools |
 | Skill | Whether domain knowledge helps |
-| Custom Eval | Which agent instructions produce better behavior |
+| Custom Agent | Which `.agent.md` instructions produce better behavior |
 | Server | Which implementation is more reliable |
 
-This is for **AI analysis only** - the leaderboard always appears when multiple agents are tested.
+This is for **AI analysis only** — the leaderboard always appears when multiple evals are tested.
 
 ## Examples
 
@@ -122,7 +121,7 @@ async def test_with_model(eval_run, model):
     assert result.success
 ```
 
-### Compare Custom Eval Versions
+### Compare Custom Agent Versions
 
 A/B test two versions of a `.agent.md` file to find which instructions work better:
 

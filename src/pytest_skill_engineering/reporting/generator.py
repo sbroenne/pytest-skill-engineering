@@ -208,6 +208,9 @@ def _build_report_context(
 
     from pytest_skill_engineering.execution.cost import models_without_pricing
 
+    # Sum premium requests across all tests
+    total_pr = sum((t.eval_result.premium_requests or 0) for t in report.tests if t.eval_result)
+
     report_meta = ReportMetadata(
         name=report.name,
         timestamp=timestamp_str,
@@ -221,6 +224,7 @@ def _build_report_context(
         test_files=report.test_files,
         token_min=token_min,
         token_max=token_max,
+        total_premium_requests=total_pr,
         models_without_pricing=sorted(models_without_pricing),
     )
 
@@ -258,6 +262,7 @@ def _build_agents(
             "failed": 0,
             "total": 0,
             "cost": 0.0,
+            "premium_requests": 0.0,
             "tokens": 0,
             "duration_ms": 0,
             "eval_name": None,
@@ -285,6 +290,8 @@ def _build_agents(
         if test.eval_result:
             if test.eval_result.cost_usd:
                 stats["cost"] += test.eval_result.cost_usd
+            if test.eval_result.premium_requests:
+                stats["premium_requests"] += test.eval_result.premium_requests
             if test.eval_result.token_usage:
                 usage = test.eval_result.token_usage
                 stats["tokens"] += usage.get("prompt", 0) + usage.get("completion", 0)
@@ -309,6 +316,7 @@ def _build_agents(
                 tokens=stats["tokens"],
                 duration_s=stats["duration_ms"] / 1000,
                 disqualified=disqualified,
+                premium_requests=stats["premium_requests"],
             )
         )
 
@@ -329,6 +337,7 @@ def _build_agents(
                 tokens=agent.tokens,
                 duration_s=agent.duration_s,
                 is_winner=True,
+                premium_requests=agent.premium_requests,
             )
             break
 
@@ -552,6 +561,7 @@ def _build_result_for_agent(agent_tests: list[TestReport]) -> TestResultData:
             error=test.error,
             assertions=assertions,
             scores=scores,
+            premium_requests=test.eval_result.premium_requests if test.eval_result else 0.0,
         )
 
     # Multiple iterations — aggregate.
@@ -559,6 +569,7 @@ def _build_result_for_agent(agent_tests: list[TestReport]) -> TestResultData:
     total_duration = 0.0
     total_tokens = 0
     total_cost = 0.0
+    total_premium_requests = 0.0
     pass_count = 0
 
     for idx, test in enumerate(agent_tests, start=1):
@@ -569,6 +580,7 @@ def _build_result_for_agent(agent_tests: list[TestReport]) -> TestResultData:
             usage = test.eval_result.token_usage
             tokens = usage.get("prompt", 0) + usage.get("completion", 0)
         cost = test.eval_result.cost_usd if test.eval_result else 0.0
+        pr = test.eval_result.premium_requests if test.eval_result else 0.0
 
         passed = outcome == "passed"
         if passed:
@@ -577,6 +589,7 @@ def _build_result_for_agent(agent_tests: list[TestReport]) -> TestResultData:
         total_duration += duration_ms
         total_tokens += tokens
         total_cost += cost
+        total_premium_requests += pr
 
         iter_num = test.iteration if test.iteration is not None else idx
         iterations.append(
@@ -620,4 +633,5 @@ def _build_result_for_agent(agent_tests: list[TestReport]) -> TestResultData:
         scores=scores,
         iterations=iterations,
         iteration_pass_rate=pass_rate,
+        premium_requests=total_premium_requests,
     )

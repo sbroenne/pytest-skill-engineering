@@ -1,10 +1,10 @@
 ---
-description: "Built-in Todo and Banking MCP test servers for validating agent behavior without external dependencies."
+description: "Built-in Todo and Banking MCP test servers for validating LLM behavior without external dependencies."
 ---
 
 # Test Harnesses
 
-Built-in MCP servers for testing agent behavior without external dependencies.
+Built-in MCP servers for testing LLM behavior without external dependencies.
 
 ## Available Servers
 

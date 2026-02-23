@@ -1,17 +1,17 @@
 ---
-description: "EvalResult API reference. Inspect tool calls, turns, tokens, cost, and assert on agent behavior in pytest-skill-engineering tests."
+description: "EvalResult API reference. Inspect tool calls, turns, tokens, cost, and assert on eval behavior in pytest-skill-engineering tests."
 ---
 
 # EvalResult
 
-Validate agent behavior using `EvalResult` properties and methods.
+Validate eval behavior using `EvalResult` properties and methods.
 
 ## Properties
 
 | Property | Type | Description |
 |----------|------|-------------|
-| `success` | `bool` | Did the agent complete without errors? |
-| `final_response` | `str` | The agent's final text response |
+| `success` | `bool` | Did the eval complete without errors? |
+| `final_response` | `str` | The LLM's final text response |
 | `turns` | `list[Turn]` | All execution turns |
 | `duration_ms` | `float` | Total execution time |
 | `token_usage` | `dict[str, int]` | Prompt and completion token counts |

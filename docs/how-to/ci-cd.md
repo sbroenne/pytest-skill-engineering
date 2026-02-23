@@ -26,7 +26,7 @@ pytest tests/ \
 
 ## JUnit XML Properties
 
-pytest-skill-engineering automatically enriches JUnit XML with agent metadata as `<property>` elements:
+pytest-skill-engineering automatically enriches JUnit XML with eval metadata as `<property>` elements:
 
 ```xml
 <testcase name="test_balance" time="2.34">
@@ -60,9 +60,9 @@ pytest-skill-engineering automatically enriches JUnit XML with agent metadata as
 | `aitest.cost_usd` | Estimated cost in USD |
 | `aitest.turns` | Number of conversation turns |
 | `aitest.tools.called` | Comma-separated list of tools called |
-| `aitest.success` | Whether the agent completed successfully |
+| `aitest.success` | Whether the eval completed successfully |
 
-These properties enable CI dashboards to display agent metrics alongside test results.
+These properties enable CI dashboards to display eval metrics alongside test results.
 
 ## GitHub Actions
 
@@ -160,7 +160,7 @@ For your own tests, adapt the pattern:
 
 ```yaml
 # .github/workflows/test.yml
-- name: Run agent tests
+- name: Run eval tests
   run: |
     pytest tests/ \
       --junitxml=reports/results.xml \

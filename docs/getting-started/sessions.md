@@ -1,5 +1,5 @@
 ---
-description: "Test multi-turn conversations where agents maintain context across tests. Validate session continuity, context retention, and sequential workflows."
+description: "Test multi-turn conversations where evals maintain context across tests. Validate session continuity, context retention, and sequential workflows."
 ---
 
 # Multi-Turn Sessions
@@ -8,7 +8,7 @@ So far, each test is independent—the agent has no memory between tests. **Sess
 
 ## Why Sessions?
 
-Real agents don't answer single questions. Users have conversations:
+Real coding agents don't answer single questions. Users have conversations:
 
 1. "What's my checking account balance?"
 2. "Transfer $200 to savings" ← Requires remembering the accounts
@@ -136,4 +136,4 @@ The report shows each session as a complete flow with all turns visualized.
 - [Comparing Configurations](comparing.md) — Pattern for parametrized tests
 - [Generate Reports](../how-to/generate-reports.md) — Understand report output
 
-> 📁 **Real Example:** [test_sessions.py](https://github.com/sbroenne/pytest-skill-engineering/blob/main/tests/integration/test_sessions.py) — Banking workflow with session continuity
+> 📁 **Real Example:** [pydantic/test_06_sessions.py](https://github.com/sbroenne/pytest-skill-engineering/blob/main/tests/integration/pydantic/test_06_sessions.py) — Banking workflow with session continuity

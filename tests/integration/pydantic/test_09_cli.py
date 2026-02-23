@@ -1,9 +1,11 @@
-"""CLI Server integration tests - test CLI tools with LLM agents.
+"""Level 09 — CLI servers: wrap command-line tools as eval-usable tools.
 
-These tests verify that agents can discover and use CLI-based tools
-wrapped as MCP-like tools.
+CLIServer wraps shell commands (ls, cat, echo) and exposes them as tools
+the eval can call. Tests basic usage, multi-step workflows, and error handling.
 
-Run with: pytest tests/integration/test_cli_server.py -v
+Permutation: CLIServer instead of MCPServer.
+
+Run with: pytest tests/integration/pydantic/test_09_cli.py -v
 """
 
 from __future__ import annotations
@@ -12,7 +14,7 @@ import pytest
 
 from pytest_skill_engineering import CLIServer, Eval, Provider
 
-from .conftest import (
+from ..conftest import (
     DEFAULT_MAX_TURNS,
     DEFAULT_MODEL,
     DEFAULT_RPM,
@@ -21,17 +23,11 @@ from .conftest import (
 
 pytestmark = [pytest.mark.integration, pytest.mark.cli]
 
-# System prompt for file CLI tools
 FILE_CLI_PROMPT = (
     "You are a helpful file system assistant. "
     "Use ls_execute to list files and cat_execute to read files."
 )
 ECHO_CLI_PROMPT = "You are a helpful assistant. Use echo_execute to echo messages."
-
-
-# =============================================================================
-# CLI Server Fixtures
-# =============================================================================
 
 
 @pytest.fixture(scope="module")
@@ -64,19 +60,18 @@ def echo_cli_server():
         command="echo",
         tool_prefix="echo",
         shell="bash",
-        discover_help=False,  # echo --help varies by platform
+        discover_help=False,
     )
 
 
 # =============================================================================
-# CLI Server Tests
+# Basic CLI Usage
 # =============================================================================
 
 
 class TestCLIServerBasicUsage:
     """Basic CLI server functionality tests."""
 
-    @pytest.mark.asyncio
     async def test_list_directory(self, eval_run, ls_cli_server, cat_cli_server):
         """Eval can list files using ls_execute tool."""
         agent = Eval.from_instructions(
@@ -87,15 +82,11 @@ class TestCLIServerBasicUsage:
             max_turns=DEFAULT_MAX_TURNS,
         )
 
-        result = await eval_run(
-            agent,
-            "List the files in the current directory",
-        )
+        result = await eval_run(agent, "List the files in the current directory")
 
         assert result.success
         assert result.tool_was_called("ls_execute")
 
-    @pytest.mark.asyncio
     async def test_read_file_contents(self, eval_run, ls_cli_server, cat_cli_server):
         """Eval can read file contents using cat_execute tool."""
         agent = Eval.from_instructions(
@@ -113,11 +104,9 @@ class TestCLIServerBasicUsage:
 
         assert result.success
         assert result.tool_was_called("cat_execute")
-        # Should mention the package name from pyproject.toml
         response_lower = result.final_response.lower()
         assert "pytest-skill-engineering" in response_lower or "aitest" in response_lower
 
-    @pytest.mark.asyncio
     async def test_echo_command(self, eval_run, echo_cli_server):
         """Eval can use echo command."""
         agent = Eval.from_instructions(
@@ -128,19 +117,20 @@ class TestCLIServerBasicUsage:
             max_turns=DEFAULT_MAX_TURNS,
         )
 
-        result = await eval_run(
-            agent,
-            "Echo the message: Hello from pytest-skill-engineering!",
-        )
+        result = await eval_run(agent, "Echo the message: Hello from pytest-skill-engineering!")
 
         assert result.success
         assert result.tool_was_called("echo_execute")
 
 
+# =============================================================================
+# Multi-Step Workflows
+# =============================================================================
+
+
 class TestCLIServerMultiStep:
     """Multi-step workflows with CLI servers."""
 
-    @pytest.mark.asyncio
     async def test_explore_and_read(self, eval_run, ls_cli_server, cat_cli_server):
         """Eval lists directory, then reads a specific file."""
         agent = Eval.from_instructions(
@@ -161,7 +151,6 @@ class TestCLIServerMultiStep:
         assert result.tool_was_called("ls_execute")
         assert result.tool_was_called("cat_execute")
 
-    @pytest.mark.asyncio
     async def test_file_analysis(self, eval_run, ls_cli_server, cat_cli_server, llm_assert):
         """Eval analyzes a file using multiple CLI tools."""
         agent = Eval.from_instructions(
@@ -179,16 +168,18 @@ class TestCLIServerMultiStep:
         )
 
         assert result.success
-        # Should use both tools
         assert result.tool_was_called("ls_execute") or result.tool_was_called("cat_execute")
-        # AI judge validates the response
         assert llm_assert(result.final_response, "mentions Python version requirement")
+
+
+# =============================================================================
+# Error Handling
+# =============================================================================
 
 
 class TestCLIServerErrorHandling:
     """Error handling tests for CLI servers."""
 
-    @pytest.mark.asyncio
     async def test_nonexistent_file(self, eval_run, ls_cli_server, cat_cli_server):
         """Eval handles errors when file doesn't exist."""
         agent = Eval.from_instructions(
@@ -199,15 +190,10 @@ class TestCLIServerErrorHandling:
             max_turns=DEFAULT_MAX_TURNS,
         )
 
-        result = await eval_run(
-            agent,
-            "Read the contents of /nonexistent/path/file.txt using cat",
-        )
+        result = await eval_run(agent, "Read the contents of /nonexistent/path/file.txt using cat")
 
         assert result.success
-        # Eval should attempt to read the file (may also try ls first)
         assert result.tool_was_called("cat_execute") or result.tool_was_called("ls_execute")
-        # Should gracefully report the error
         response_lower = result.final_response.lower()
         assert any(
             word in response_lower

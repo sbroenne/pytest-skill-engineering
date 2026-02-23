@@ -107,6 +107,7 @@ indent-style = "space"
 
 [tool.pyright]
 include = ["src"]
+exclude = ["src/pytest_skill_engineering/copilot"]
 pythonVersion = "3.11"
 typeCheckingMode = "basic"
 
@@ -133,7 +134,12 @@ markers = [
     "basic: basic usage tests (banking and todo)",
     "model: tests with multiple models",
     "sysprompt: tests with multiple system prompts",
+    "matrix: model × prompt cross-product tests",
     "skill: tests with skills",
+    "session_test: multi-turn session tests",
+    "clarification: clarification detection tests",
+    "scoring: LLM scoring / rubric tests",
+    "iterations: iteration reliability tests",
     "abtest: A/B server comparison tests",
     "cli: CLI server tests",
     "copilot: marks tests as requiring GitHub Copilot SDK credentials",

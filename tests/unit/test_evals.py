@@ -99,18 +99,14 @@ class TestLoadCustomAgents:
 
     def test_basic(self, tmp_path) -> None:
         agent_file = tmp_path / "reviewer.agent.md"
-        agent_file.write_text(
-            "---\nname: reviewer\ndescription: Code reviewer\n---\nReview code."
-        )
+        agent_file.write_text("---\nname: reviewer\ndescription: Code reviewer\n---\nReview code.")
         agents = load_custom_agents(tmp_path)
         assert len(agents) == 1
         assert agents[0]["name"] == "reviewer"
 
     def test_description_loaded(self, tmp_path) -> None:
         agent_file = tmp_path / "coder.agent.md"
-        agent_file.write_text(
-            "---\nname: coder\ndescription: Writes code\n---\nWrite clean code."
-        )
+        agent_file.write_text("---\nname: coder\ndescription: Writes code\n---\nWrite clean code.")
         agents = load_custom_agents(tmp_path)
         assert agents[0]["description"] == "Writes code"
 
