@@ -95,7 +95,7 @@ async def test_balance_check(eval_run):
     assert result.tool_was_called("get_balance")
 ```
 
-> 📁 See [test_basic_usage.py](https://github.com/sbroenne/pytest-skill-engineering/blob/main/tests/integration/test_basic_usage.py) for complete examples.
+> 📁 See [pydantic/test_01_basic.py](https://github.com/sbroenne/pytest-skill-engineering/blob/main/tests/integration/pydantic/test_01_basic.py) for complete examples.
 
 ## Features
 

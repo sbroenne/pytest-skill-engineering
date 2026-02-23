@@ -74,7 +74,7 @@ addopts = """
 """
 ```
 
-Available models depend on your Copilot subscription (e.g., `gpt-5-mini`, `gpt-5.2`, `claude-opus-4.5`).
+Available models depend on your Copilot subscription (e.g., `gpt-5-mini`, `gpt-5.2`, `claude-sonnet-4.6`).
 
 For Copilot integration tests that use auxiliary judge calls (for example optimizer integration), the suite now fails fast if no provider model is reachable. You can force the judge model with:
 

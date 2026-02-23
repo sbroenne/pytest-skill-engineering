@@ -136,4 +136,4 @@ The report shows each session as a complete flow with all turns visualized.
 - [Comparing Configurations](comparing.md) — Pattern for parametrized tests
 - [Generate Reports](../how-to/generate-reports.md) — Understand report output
 
-> 📁 **Real Example:** [test_sessions.py](https://github.com/sbroenne/pytest-skill-engineering/blob/main/tests/integration/test_sessions.py) — Banking workflow with session continuity
+> 📁 **Real Example:** [pydantic/test_06_sessions.py](https://github.com/sbroenne/pytest-skill-engineering/blob/main/tests/integration/pydantic/test_06_sessions.py) — Banking workflow with session continuity

@@ -143,4 +143,4 @@ pytest tests/ --aitest-iterations=3 --aitest-min-pass-rate=80
 - [Generate Reports](../how-to/generate-reports.md) — Report generation details
 
 > **Real Examples:**
-> - [test_iterations.py](https://github.com/sbroenne/pytest-skill-engineering/blob/main/tests/integration/test_iterations.py) — Iteration baseline tests
+> - [pydantic/test_11_iterations.py](https://github.com/sbroenne/pytest-skill-engineering/blob/main/tests/integration/pydantic/test_11_iterations.py) — Iteration baseline tests

@@ -126,5 +126,5 @@ This helps you answer:
 - [Multi-Turn Sessions](sessions.md) — Test conversations with context
 
 > 📁 **Real Examples:**
-> - [test_basic_usage.py](https://github.com/sbroenne/pytest-skill-engineering/blob/main/tests/integration/test_basic_usage.py) — Single agent workflows
-> - [test_dimension_detection.py](https://github.com/sbroenne/pytest-skill-engineering/blob/main/tests/integration/test_dimension_detection.py) — Multi-dimension comparison
+> - [pydantic/test_01_basic.py](https://github.com/sbroenne/pytest-skill-engineering/blob/main/tests/integration/pydantic/test_01_basic.py) — Single agent workflows
+> - [pydantic/test_04_matrix.py](https://github.com/sbroenne/pytest-skill-engineering/blob/main/tests/integration/pydantic/test_04_matrix.py) — Multi-dimension comparison

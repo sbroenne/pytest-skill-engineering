@@ -1,107 +1,92 @@
 # Integration Tests
 
-These tests verify pytest-skill-engineering works with real LLM providers. They demonstrate realistic multi-step workflows — the kind of thing LLMs actually do with MCP servers.
+These tests verify pytest-skill-engineering works with real LLM providers. Tests are split into two harnesses — **pydantic** (Eval + eval_run, BYOM) and **copilot** (CopilotEval + copilot_eval, GitHub Copilot SDK).
 
-## Test Files
+## Structure
 
-| File | Purpose | Tests | ~Runtime |
-|------|---------|-------|----------|
-| `test_basic_usage.py` | Multi-step banking & todo workflows | 12 | ~3-5 min |
-| `test_dimension_detection.py` | Model × prompt comparison | 4+ | ~2 min |
-| `test_skills.py` | Skill loading and metadata | 3 | ~1 min |
-| `test_skill_improvement.py` | Skill before/after comparisons | 5+ | ~2 min |
-| `test_sessions.py` | Multi-turn session continuity | 6 | ~2 min |
-| `test_ai_summary.py` | AI insights generation | 3 | ~1 min |
-| `test_ab_servers.py` | Server A/B testing | 4+ | ~2 min |
-| `test_cli_server.py` | CLI server testing | 2 | ~1 min |
+```
+tests/integration/
+├── conftest.py           # Shared constants and server fixtures
+├── agents/               # .agent.md test fixtures
+│   ├── banking-advisor.agent.md
+│   ├── todo-manager.agent.md
+│   └── minimal.agent.md
+├── pydantic/             # Eval + eval_run tests (Azure/OpenAI, BYOM)
+│   ├── conftest.py
+│   ├── test_01_basic.py          # Single eval, basic MCP tool calls
+│   ├── test_02_models.py         # Model comparison (parametrize)
+│   ├── test_03_prompts.py        # System prompt comparison
+│   ├── test_04_matrix.py         # Model × prompt 2×2 grid
+│   ├── test_05_skills.py         # Skill loading + skill-enhanced behavior
+│   ├── test_06_sessions.py       # Multi-turn sessions
+│   ├── test_07_clarification.py  # ClarificationDetection feature
+│   ├── test_08_scoring.py        # llm_score + ScoringDimension
+│   ├── test_09_cli.py            # CLIServer wrapping shell commands
+│   ├── test_10_ab_servers.py     # A/B server comparison
+│   ├── test_11_iterations.py     # --aitest-iterations=N reliability
+│   └── test_12_custom_agents.py  # Eval.from_agent_file + load_custom_agent
+├── copilot/              # CopilotEval + copilot_eval tests (GitHub Copilot SDK)
+│   ├── conftest.py
+│   ├── test_events.py            # SDK event capture
+│   ├── test_01_basic.py          # File create + refactor
+│   ├── test_02_models.py         # Model comparison
+│   ├── test_03_instructions.py   # Instruction differentiation + excluded_tools
+│   ├── test_05_skills.py         # Skill A/B comparison
+│   └── test_12_custom_agents.py  # Custom agents + forced subagent dispatch
+└── prompts/              # Plain .md system prompt files
+└── skills/               # Test skill directories
+```
 
 ## Quick Start
 
+### Pydantic harness (Azure OpenAI)
+
 ```bash
-# Run basic tests (recommended for first-time setup)
-pytest tests/integration/test_basic_usage.py -v
+# Prerequisites
+az login
+export AZURE_API_BASE=https://your-resource.cognitiveservices.azure.com
 
-# Run all integration tests
-pytest tests/integration/ -v
+# Run all pydantic tests
+uv run python -m pytest tests/integration/pydantic/ -v
 
-# Run specific test
-pytest tests/integration/test_basic_usage.py::TestBankingWorkflows::test_balance_check_and_transfer -v
+# Run a specific file
+uv run python -m pytest tests/integration/pydantic/test_01_basic.py -v
+
+# Run a specific test
+uv run python -m pytest tests/integration/pydantic/test_01_basic.py::TestBankingBasic::test_balance_check_and_transfer -v
 ```
+
+### Copilot harness (GitHub Copilot SDK)
+
+```bash
+# Prerequisites
+uv sync --extra copilot
+gh auth login
+
+# Run all copilot tests
+uv run python -m pytest tests/integration/copilot/ -v
+```
+
+> **CRITICAL:** Never mix harnesses in one session. The plugin raises `pytest.UsageError` if both `eval_run` and `copilot_eval` are collected together.
 
 ## Prerequisites
 
-1. **Azure login** (Entra ID auth - no API keys needed):
+1. **Azure login** (Entra ID auth — no API keys needed):
    ```bash
    az login
-   ```
-
-2. **Set endpoint** (Pydantic AI standard var):
-   ```bash
    export AZURE_API_BASE=https://your-resource.cognitiveservices.azure.com
    ```
 
-### Copilot integration note
+2. **Models available** (checked 2026-02-23):
+   - `gpt-5-mini` — cheapest, use for most tests
+   - `gpt-5.2-chat` — for AI summary generation
+   - `gpt-4.1` — most capable
 
-Some Copilot integration tests (for example optimizer integration) require an auxiliary judge model. Those tests now fail fast when no provider model is reachable.
-
-Any supported provider is acceptable for that judge path:
-- Azure (`AZURE_API_BASE` or `AZURE_OPENAI_ENDPOINT`)
-- OpenAI (`OPENAI_API_KEY`)
-- Copilot (`gh auth login` or `GITHUB_TOKEN`)
-
-Optional override for test runs:
-
-```bash
-AITEST_INTEGRATION_JUDGE_MODEL=copilot/gpt-5-mini pytest tests/integration/copilot/test_optimizer_integration.py -v
-```
-
-## Test Descriptions
-
-### test_basic_usage.py
-
-**Multi-step workflows** — the tests that actually matter. Each test requires:
-- Multiple tool calls
-- Reasoning between calls
-- State management or data synthesis
-
-**TestBankingWorkflows:**
-- `test_balance_check_and_transfer` — Check balance, transfer between accounts
-- `test_deposit_and_withdrawal` — Deposit and withdraw money
-- `test_discovery_then_action` — Get all balances, then act on them
-- `test_transaction_history_analysis` — Query and analyze transaction history
-- `test_error_recovery` — Handle insufficient funds gracefully
-
-**TestTodoWorkflows:**
-- `test_project_setup_workflow` — Add 3 items to groceries list, verify all added
-- `test_task_lifecycle_workflow` — Create → complete → verify done
-- `test_priority_management_workflow` — Create tasks with priorities, recommend first action
-- `test_batch_completion_workflow` — Add 3, complete 2, show remaining
-- `test_multi_list_organization` — Tasks across personal + work lists
-
-**TestAdvancedPatterns:**
-- `test_ambiguous_request_clarification` — Handle "How much money do I have?" intelligently
-- `test_conditional_logic_workflow` — Check-then-act based on current state
-
-### test_dimension_detection.py
-
-**Model × prompt comparison.** Tests with all dimension permutations.
-
-### test_skill_improvement.py
-
-**Skill before/after comparisons.** Financial advisor skill impact on banking tasks.
-
-### test_sessions.py
-
-**Multi-turn sessions.** Banking workflow with session continuity.
-
-## Prompts Directory
-
-```
-prompts/
-├── concise.md       # Brief, direct responses
-├── detailed.md      # Thorough explanations
-└── structured.md    # Emoji-formatted output
-```
+3. **For Copilot tests only:**
+   ```bash
+   uv sync --extra copilot
+   gh auth login  # or set GITHUB_TOKEN
+   ```
 
 ## MCP Test Servers
 
@@ -110,7 +95,7 @@ Built-in test servers in `src/pytest_skill_engineering/testing/`:
 | Server | Tools | Purpose |
 |--------|-------|---------|
 | `banking_mcp.py` | get_balance, get_all_balances, transfer, deposit, withdraw, get_transactions | Financial workflows |
-| `todo_mcp.py` | add_task, complete_task, list_tasks, delete_task, get_lists | CRUD operations |
+| `todo_mcp.py` | add_task, complete_task, list_tasks, delete_task, get_task, update_task | CRUD operations |
 
 ## Adding New Tests
 
@@ -118,18 +103,19 @@ Create evals inline using constants from `conftest.py`:
 
 ```python
 from pytest_skill_engineering import Eval, Provider
-from .conftest import DEFAULT_MODEL, DEFAULT_RPM, DEFAULT_TPM, DEFAULT_MAX_TURNS
+from ..conftest import DEFAULT_MODEL, DEFAULT_RPM, DEFAULT_TPM, DEFAULT_MAX_TURNS
 
 async def test_my_feature(eval_run, banking_server):
-    agent = Eval(
+    agent = Eval.from_instructions(
+        "my-agent",
+        "You are a banking assistant.",
         provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
         mcp_servers=[banking_server],
-        system_prompt="You are a banking assistant.",
         max_turns=DEFAULT_MAX_TURNS,
     )
-    
+
     result = await eval_run(agent, "What's my checking balance?")
-    
+
     assert result.success
     assert result.tool_was_called("get_balance")
 ```
