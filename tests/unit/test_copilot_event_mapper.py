@@ -132,10 +132,10 @@ class TestEventMapperToolCalls:
         """Same tool_call_id in assistant.message tool_requests AND tool.execution_start is counted once."""
         mapper = EventMapper()
         # assistant.message with tool_requests (SDK sends this first)
-        tool_req = SimpleNamespace(tool_call_id="tc_1", name="size_vm", arguments='{"region": "westeurope"}')
-        mapper.handle(
-            _make_event("assistant.message", content="", tool_requests=[tool_req])
+        tool_req = SimpleNamespace(
+            tool_call_id="tc_1", name="size_vm", arguments='{"region": "westeurope"}'
         )
+        mapper.handle(_make_event("assistant.message", content="", tool_requests=[tool_req]))
         # Then tool.execution_start fires for the same call_id
         mapper.handle(
             _make_event(
