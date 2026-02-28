@@ -128,6 +128,27 @@ class TestEventMapperToolCalls:
         result = mapper.build()
         assert len(result.all_tool_calls) == 1
 
+    def test_tool_request_in_message_and_execution_start_not_duplicated(self):
+        """Same tool_call_id in assistant.message tool_requests AND tool.execution_start is counted once."""
+        mapper = EventMapper()
+        # assistant.message with tool_requests (SDK sends this first)
+        tool_req = SimpleNamespace(tool_call_id="tc_1", name="size_vm", arguments='{"region": "westeurope"}')
+        mapper.handle(
+            _make_event("assistant.message", content="", tool_requests=[tool_req])
+        )
+        # Then tool.execution_start fires for the same call_id
+        mapper.handle(
+            _make_event(
+                "tool.execution_start",
+                tool_name="size_vm",
+                tool_call_id="tc_1",
+                arguments='{"region": "westeurope"}',
+            )
+        )
+        result = mapper.build()
+        assert len(result.all_tool_calls) == 1
+        assert result.all_tool_calls[0].name == "size_vm"
+
     def test_tool_arguments_json_string_parsed(self):
         """String arguments from the SDK are parsed as JSON."""
         mapper = EventMapper()
@@ -231,6 +252,34 @@ class TestEventMapperMessageDelta:
         # Both end up in the same assistant turn content
         assert result.final_response is not None
         assert "Prefix" in result.final_response or "suffix" in result.final_response
+
+    def test_turn_end_then_message_not_duplicated(self):
+        """assistant.turn_end flushes deltas; subsequent assistant.message with same content is not duplicated."""
+        mapper = EventMapper()
+        # Simulate: deltas accumulated, turn_end flushes, then complete message arrives
+        mapper.handle(_make_event("assistant.turn_start"))
+        mapper.handle(_make_event("assistant.message_delta", delta_content="Hello world"))
+        mapper.handle(_make_event("assistant.turn_end"))
+        # Now the complete message fires with same content
+        mapper.handle(_make_event("assistant.message", content="Hello world"))
+        result = mapper.build()
+        # Should have exactly ONE assistant turn with content "Hello world", not two
+        assistant_turns = [t for t in result.turns if t.role == "assistant" and t.content]
+        assert len(assistant_turns) == 1
+        assert assistant_turns[0].content == "Hello world"
+
+    def test_different_messages_not_deduped(self):
+        """Two genuinely different assistant turns (with turn boundaries) are kept separate."""
+        mapper = EventMapper()
+        mapper.handle(_make_event("assistant.turn_start"))
+        mapper.handle(_make_event("assistant.message", content="First response"))
+        mapper.handle(_make_event("assistant.turn_end"))
+        mapper.handle(_make_event("assistant.turn_start"))
+        mapper.handle(_make_event("assistant.message", content="Second response"))
+        mapper.handle(_make_event("assistant.turn_end"))
+        result = mapper.build()
+        assistant_turns = [t for t in result.turns if t.role == "assistant" and t.content]
+        assert len(assistant_turns) == 2
 
 
 class TestEventMapperSubagents:

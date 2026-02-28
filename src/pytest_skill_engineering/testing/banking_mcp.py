@@ -114,6 +114,24 @@ def get_transactions(account: str | None = None, limit: int = 10) -> str:
 
 
 # ---------------------------------------------------------------------------
+# Prompts – reusable prompt templates
+# ---------------------------------------------------------------------------
+
+
+@mcp.prompt()
+def account_summary(account: str = "checking") -> str:
+    """Get a summary of account activity.
+
+    Args:
+        account: Account name to summarize (default: "checking").
+    """
+    return (
+        f"Please provide a summary of the {account} account. "
+        f"Include the current balance and recent transactions."
+    )
+
+
+# ---------------------------------------------------------------------------
 # Entry point
 # ---------------------------------------------------------------------------
 
