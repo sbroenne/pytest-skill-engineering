@@ -143,18 +143,26 @@ class EventMapper:
     def _handle_assistant_message(self, event: SessionEvent) -> None:
         """Handle complete assistant message.
 
-        Each assistant.message is a complete message — flush any pending
-        delta content and replace with the complete content.
+        The SDK fires both streaming deltas (accumulated via turn_end)
+        AND a complete assistant.message with the same content. We must
+        avoid creating duplicate turns.
         """
         content = _get_data_field(event, "content", "")
 
-        # If we have accumulated delta content, the complete message
-        # supersedes it — clear the deltas and use the complete content.
+        # If we have accumulated delta content that hasn't been flushed
+        # yet, the complete message supersedes it — clear and replace.
         if self._current_assistant_content:
             self._current_assistant_content.clear()
-
-        if content:
-            self._current_assistant_content.append(content)
+            if content:
+                self._current_assistant_content.append(content)
+        elif content:
+            # Deltas were already flushed by turn_end — check if the
+            # last turn already has this exact content to avoid duplication.
+            if self._turns and self._turns[-1].role == "assistant" and self._turns[-1].content == content:
+                # Already flushed by turn_end — skip
+                pass
+            else:
+                self._current_assistant_content.append(content)
 
         # Check for tool_requests in the message
         # SDK returns ToolRequest dataclass objects, not dicts
