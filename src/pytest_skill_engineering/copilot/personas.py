@@ -133,6 +133,7 @@ class CopilotCLIPersona(Persona):
             )
             if custom:
                 _prepend_system_message(session_config, custom)
+        _inject_skill_reference_tools(agent, session_config)
 
 
 # ---------------------------------------------------------------------------
@@ -172,6 +173,7 @@ class VSCodePersona(Persona):
             _inject_tool(session_config, tool)
             agents_block = _build_agents_block(agent.custom_agents, tool_name="runSubagent")
             _prepend_system_message(session_config, agents_block)
+        _inject_skill_reference_tools(agent, session_config)
 
 
 # ---------------------------------------------------------------------------
@@ -210,6 +212,7 @@ class ClaudeCodePersona(Persona):
             _inject_tool(session_config, tool)
             agents_block = _build_agents_block(agent.custom_agents, tool_name="task")
             _prepend_system_message(session_config, agents_block)
+        _inject_skill_reference_tools(agent, session_config)
 
 
 # ---------------------------------------------------------------------------
@@ -411,4 +414,129 @@ def _make_subagent_dispatch_tool(
             },
             "required": ["eval_name", "prompt"],
         },
+    )
+
+
+# ---------------------------------------------------------------------------
+# Skill reference polyfills
+# ---------------------------------------------------------------------------
+
+
+def _inject_skill_reference_tools(
+    agent: "CopilotEval",
+    session_config: dict[str, Any],
+) -> None:
+    """Inject ``list_skill_references`` and ``read_skill_reference`` polyfill tools.
+
+    The Copilot CLI SDK does not natively expose skill reference documents
+    as tools (unlike VS Code, which does).  This polyfill scans the agent's
+    ``skill_directories`` for ``references/`` subdirectories and creates
+    Python-side tools so the model can discover and read reference docs.
+
+    Only injected when at least one skill directory has reference documents.
+    """
+    if not agent.skill_directories:
+        return
+
+    # Collect all reference files across all skill directories
+    reference_files: dict[str, Path] = {}  # filename → full path
+
+    for skill_dir_str in agent.skill_directories:
+        skill_dir = Path(skill_dir_str)
+
+        # Check if this is a skill directory (contains SKILL.md)
+        if (skill_dir / "SKILL.md").exists():
+            refs_dir = skill_dir / "references"
+            if refs_dir.is_dir():
+                for ref_file in refs_dir.iterdir():
+                    if ref_file.is_file() and ref_file.suffix in (".md", ".txt", ".json", ".yaml", ".yml"):
+                        reference_files[ref_file.name] = ref_file
+        else:
+            # Maybe it's a parent directory containing skill subdirectories
+            for sub in skill_dir.iterdir():
+                if sub.is_dir() and (sub / "SKILL.md").exists():
+                    refs_dir = sub / "references"
+                    if refs_dir.is_dir():
+                        for ref_file in refs_dir.iterdir():
+                            if ref_file.is_file() and ref_file.suffix in (".md", ".txt", ".json", ".yaml", ".yml"):
+                                reference_files[ref_file.name] = ref_file
+
+    if not reference_files:
+        return
+
+    from copilot.types import Tool, ToolResult
+
+    # list_skill_references tool
+    async def _list_handler(invocation: "ToolInvocation") -> "ToolResult":
+        file_list = "\n".join(f"- {name}" for name in sorted(reference_files))
+        return ToolResult(
+            textResultForLlm=f"Available skill reference documents:\n{file_list}",
+            resultType="success",
+        )
+
+    list_tool = Tool(
+        name="list_skill_references",
+        description=(
+            "List available skill reference documents. "
+            "These contain detailed domain knowledge (e.g., lookup tables, "
+            "specs, configuration guides) that supplements the skill instructions."
+        ),
+        handler=_list_handler,
+        parameters={"type": "object", "properties": {}},
+    )
+
+    # read_skill_reference tool
+    async def _read_handler(invocation: "ToolInvocation") -> "ToolResult":
+        args: dict[str, Any] = invocation.get("arguments") or {}  # type: ignore[assignment]
+        filename = args.get("filename", "")
+
+        if not filename:
+            available = sorted(reference_files)
+            return ToolResult(
+                textResultForLlm=f"Error: filename is required. Available: {available}",
+                resultType="failure",
+            )
+
+        ref_path = reference_files.get(filename)
+        if ref_path is None:
+            available = sorted(reference_files)
+            return ToolResult(
+                textResultForLlm=f"Error: '{filename}' not found. Available: {available}",
+                resultType="failure",
+            )
+
+        content = ref_path.read_text(encoding="utf-8")
+        return ToolResult(textResultForLlm=content, resultType="success")
+
+    read_tool = Tool(
+        name="read_skill_reference",
+        description=(
+            "Read a specific skill reference document by filename. "
+            "Use list_skill_references first to see what's available."
+        ),
+        handler=_read_handler,
+        parameters={
+            "type": "object",
+            "properties": {
+                "filename": {
+                    "type": "string",
+                    "description": "Name of the reference file to read.",
+                    "enum": sorted(reference_files),
+                },
+            },
+            "required": ["filename"],
+        },
+    )
+
+    _inject_tool(session_config, list_tool)
+    _inject_tool(session_config, read_tool)
+
+    # Add system message about reference documents
+    refs_list = ", ".join(sorted(reference_files))
+    _prepend_system_message(
+        session_config,
+        f"You have skill reference documents available via the "
+        f"list_skill_references and read_skill_reference tools. "
+        f"Available references: {refs_list}. "
+        f"Use these for detailed lookup information.",
     )
