@@ -158,7 +158,11 @@ class EventMapper:
         elif content:
             # Deltas were already flushed by turn_end — check if the
             # last turn already has this exact content to avoid duplication.
-            if self._turns and self._turns[-1].role == "assistant" and self._turns[-1].content == content:
+            if (
+                self._turns
+                and self._turns[-1].role == "assistant"
+                and self._turns[-1].content == content
+            ):
                 # Already flushed by turn_end — skip
                 pass
             else:

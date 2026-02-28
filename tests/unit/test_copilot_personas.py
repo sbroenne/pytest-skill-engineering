@@ -6,8 +6,6 @@ and injects list_skill_references/read_skill_reference tools.
 
 from __future__ import annotations
 
-import os
-import tempfile
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import MagicMock
@@ -15,9 +13,9 @@ from unittest.mock import MagicMock
 import pytest
 
 from pytest_skill_engineering.copilot.personas import (
-    VSCodePersona,
-    CopilotCLIPersona,
     ClaudeCodePersona,
+    CopilotCLIPersona,
+    VSCodePersona,
     _inject_skill_reference_tools,
 )
 

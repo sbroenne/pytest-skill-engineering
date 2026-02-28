@@ -445,11 +445,12 @@ def _inject_skill_reference_tools(
         skill_dir = Path(skill_dir_str)
 
         # Check if this is a skill directory (contains SKILL.md)
+        _EXTS = (".md", ".txt", ".json", ".yaml", ".yml")
         if (skill_dir / "SKILL.md").exists():
             refs_dir = skill_dir / "references"
             if refs_dir.is_dir():
                 for ref_file in refs_dir.iterdir():
-                    if ref_file.is_file() and ref_file.suffix in (".md", ".txt", ".json", ".yaml", ".yml"):
+                    if ref_file.is_file() and ref_file.suffix in _EXTS:
                         reference_files[ref_file.name] = ref_file
         else:
             # Maybe it's a parent directory containing skill subdirectories
@@ -458,7 +459,7 @@ def _inject_skill_reference_tools(
                     refs_dir = sub / "references"
                     if refs_dir.is_dir():
                         for ref_file in refs_dir.iterdir():
-                            if ref_file.is_file() and ref_file.suffix in (".md", ".txt", ".json", ".yaml", ".yml"):
+                            if ref_file.is_file() and ref_file.suffix in _EXTS:
                                 reference_files[ref_file.name] = ref_file
 
     if not reference_files:
