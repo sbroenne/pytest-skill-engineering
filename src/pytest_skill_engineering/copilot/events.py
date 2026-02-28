@@ -143,18 +143,35 @@ class EventMapper:
     def _handle_assistant_message(self, event: SessionEvent) -> None:
         """Handle complete assistant message.
 
-        Each assistant.message is a complete message — flush any pending
-        content and start a new turn.
+        The SDK fires both streaming deltas (accumulated via turn_end)
+        AND a complete assistant.message with the same content. We must
+        avoid creating duplicate turns.
         """
-        # Flush any pending partial content first
-        self._flush_assistant_turn()
-
         content = _get_data_field(event, "content", "")
-        if content:
-            self._current_assistant_content.append(content)
+
+        # If we have accumulated delta content that hasn't been flushed
+        # yet, the complete message supersedes it — clear and replace.
+        if self._current_assistant_content:
+            self._current_assistant_content.clear()
+            if content:
+                self._current_assistant_content.append(content)
+        elif content:
+            # Deltas were already flushed by turn_end — check if the
+            # last turn already has this exact content to avoid duplication.
+            if (
+                self._turns
+                and self._turns[-1].role == "assistant"
+                and self._turns[-1].content == content
+            ):
+                # Already flushed by turn_end — skip
+                pass
+            else:
+                self._current_assistant_content.append(content)
 
         # Check for tool_requests in the message
         # SDK returns ToolRequest dataclass objects, not dicts
+        # NOTE: tool.execution_start events also create ToolCalls, so
+        # we use _current_tool_call_ids to deduplicate.
         tool_requests = _get_data_field(event, "tool_requests", None)
         if tool_requests:
             for req in tool_requests:
@@ -168,9 +185,11 @@ class EventMapper:
                         arguments = json.loads(arguments)
                     except json.JSONDecodeError:
                         arguments = {"raw": arguments}
-                tc = ToolCall(name=name, arguments=arguments or {})
-                self._pending_tool_calls[call_id] = tc
-                self._current_tool_calls.append(tc)
+                if call_id and call_id not in self._current_tool_call_ids:
+                    tc = ToolCall(name=name, arguments=arguments or {})
+                    self._pending_tool_calls[call_id] = tc
+                    self._current_tool_calls.append(tc)
+                    self._current_tool_call_ids.add(call_id)
 
     def _handle_assistant_message_delta(self, event: SessionEvent) -> None:
         """Handle streaming delta — accumulate content."""

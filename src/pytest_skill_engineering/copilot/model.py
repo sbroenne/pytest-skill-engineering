@@ -209,6 +209,9 @@ class CopilotModel(Model):
         def event_handler(event: Any) -> None:
             _handle_event(event, text_parts, usage_data)
 
+        # Auto-approve permissions for non-interactive model calls (judge, analysis)
+        session_config["on_permission_request"] = _auto_approve_permissions
+
         # Create session and execute
         session = await asyncio.wait_for(
             client.create_session(session_config),
@@ -380,3 +383,18 @@ def _handle_event(
             out_tokens = int(getattr(data, "output_tokens", 0) or 0)
             usage_data["input"] += in_tokens
             usage_data["output"] += out_tokens
+
+
+# ---------------------------------------------------------------------------
+# Permission handling
+# ---------------------------------------------------------------------------
+
+
+def _auto_approve_permissions(request: dict[str, Any], context: dict[str, str]) -> dict[str, str]:
+    """Auto-approve all permission requests for non-interactive model calls.
+
+    The CopilotModel is used for judge, analysis, and scoring — never for
+    interactive sessions. Auto-approving is safe and required because
+    the Copilot SDK mandates a permission handler.
+    """
+    return {"kind": "approved"}

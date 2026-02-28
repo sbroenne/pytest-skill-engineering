@@ -153,6 +153,41 @@ class TestMCPServerStdio:
         finally:
             await server.stop()
 
+    @pytest.mark.asyncio
+    async def test_banking_mcp_list_prompts(self):
+        """Banking MCP server exposes prompt templates."""
+        config = MCPServer(
+            command=[sys.executable, "-u", "-m", "pytest_skill_engineering.testing.banking_mcp"],
+            wait=Wait.for_tools(["get_balance"]),
+        )
+        server = MCPServerProcess(config)
+
+        try:
+            await server.start()
+            prompts = await server.list_prompts()
+            names = [p.name for p in prompts]
+            assert "account_summary" in names
+        finally:
+            await server.stop()
+
+    @pytest.mark.asyncio
+    async def test_banking_mcp_get_prompt(self):
+        """get_prompt renders correctly with string role (not enum)."""
+        config = MCPServer(
+            command=[sys.executable, "-u", "-m", "pytest_skill_engineering.testing.banking_mcp"],
+            wait=Wait.for_tools(["get_balance"]),
+        )
+        server = MCPServerProcess(config)
+
+        try:
+            await server.start()
+            messages = await server.get_prompt("account_summary", {"account": "savings"})
+            assert len(messages) > 0
+            assert messages[0]["role"] == "user"
+            assert "savings" in messages[0]["content"]
+        finally:
+            await server.stop()
+
 
 # ---------------------------------------------------------------------------
 # SSE transport tests
