@@ -135,7 +135,9 @@ class TestEvalResult:
 
     def test_tool_was_called_with_matching(self) -> None:
         """tool_was_called_with returns True when args match."""
-        tc = ToolCall(name="size_vm", arguments={"region": "westeurope", "cores": 8, "memoryGB": 32})
+        tc = ToolCall(
+            name="size_vm", arguments={"region": "westeurope", "cores": 8, "memoryGB": 32}
+        )
         turns = [Turn(role="assistant", content="", tool_calls=[tc])]
         result = EvalResult(turns=turns, success=True)
 
