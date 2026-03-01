@@ -52,6 +52,34 @@ class TestToolTracking:
         assert result.tool_was_called("create_file")
         assert not result.tool_was_called("delete_file")
 
+    def test_tool_was_called_with_matching(self):
+        """tool_was_called_with returns True when args match."""
+        tc = ToolCall(name="size_vm", arguments={"region": "westeurope", "cores": 8})
+        result = CopilotResult(
+            turns=[Turn(role="assistant", content="", tool_calls=[tc])],
+        )
+        assert result.tool_was_called_with("size_vm", region="westeurope")
+        assert result.tool_was_called_with("size_vm", region="westeurope", cores=8)
+
+    def test_tool_was_called_with_no_match(self):
+        """tool_was_called_with returns False when args don't match."""
+        tc = ToolCall(name="size_vm", arguments={"region": "westeurope"})
+        result = CopilotResult(
+            turns=[Turn(role="assistant", content="", tool_calls=[tc])],
+        )
+        assert not result.tool_was_called_with("size_vm", region="eastus")
+        assert not result.tool_was_called_with("other_tool", region="westeurope")
+
+    def test_tool_was_called_with_multiple_calls(self):
+        """tool_was_called_with finds match across calls."""
+        tc1 = ToolCall(name="size_vm", arguments={"region": "westeurope"})
+        tc2 = ToolCall(name="size_vm", arguments={"region": "eastus"})
+        result = CopilotResult(
+            turns=[Turn(role="assistant", content="", tool_calls=[tc1, tc2])],
+        )
+        assert result.tool_was_called_with("size_vm", region="eastus")
+        assert not result.tool_was_called_with("size_vm", region="uksouth")
+
     def test_tool_names_called(self):
         tc1 = ToolCall(name="create_file", arguments={})
         tc2 = ToolCall(name="create_file", arguments={})

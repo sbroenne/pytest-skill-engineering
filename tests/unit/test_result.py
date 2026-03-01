@@ -133,6 +133,37 @@ class TestEvalResult:
         assert len(read_calls) == 2
         assert all(c.name == "read_file" for c in read_calls)
 
+    def test_tool_was_called_with_matching(self) -> None:
+        """tool_was_called_with returns True when args match."""
+        tc = ToolCall(name="size_vm", arguments={"region": "westeurope", "cores": 8, "memoryGB": 32})
+        turns = [Turn(role="assistant", content="", tool_calls=[tc])]
+        result = EvalResult(turns=turns, success=True)
+
+        assert result.tool_was_called_with("size_vm", region="westeurope")
+        assert result.tool_was_called_with("size_vm", region="westeurope", cores=8)
+        assert result.tool_was_called_with("size_vm", region="westeurope", cores=8, memoryGB=32)
+
+    def test_tool_was_called_with_no_match(self) -> None:
+        """tool_was_called_with returns False when args don't match."""
+        tc = ToolCall(name="size_vm", arguments={"region": "westeurope", "cores": 4})
+        turns = [Turn(role="assistant", content="", tool_calls=[tc])]
+        result = EvalResult(turns=turns, success=True)
+
+        assert not result.tool_was_called_with("size_vm", region="eastus")
+        assert not result.tool_was_called_with("size_vm", cores=8)
+        assert not result.tool_was_called_with("other_tool", region="westeurope")
+
+    def test_tool_was_called_with_multiple_calls(self) -> None:
+        """tool_was_called_with finds a match across multiple calls."""
+        tc1 = ToolCall(name="size_vm", arguments={"region": "westeurope", "cores": 4})
+        tc2 = ToolCall(name="size_vm", arguments={"region": "eastus", "cores": 8})
+        turns = [Turn(role="assistant", content="", tool_calls=[tc1, tc2])]
+        result = EvalResult(turns=turns, success=True)
+
+        assert result.tool_was_called_with("size_vm", region="eastus")
+        assert result.tool_was_called_with("size_vm", cores=8)
+        assert not result.tool_was_called_with("size_vm", region="eastus", cores=4)
+
     def test_repr(self) -> None:
         turns = [
             Turn(role="user", content="Hello"),
