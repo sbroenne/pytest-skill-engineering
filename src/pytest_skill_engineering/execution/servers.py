@@ -280,7 +280,8 @@ class MCPServerProcess:
                     content = str(resource)
             else:
                 content = str(msg.content)
-            messages.append({"role": str(msg.role.value), "content": content})  # type: ignore[union-attr]
+            role = msg.role.value if hasattr(msg.role, "value") else str(msg.role)  # type: ignore[union-attr]
+            messages.append({"role": role, "content": content})
 
         return messages
 

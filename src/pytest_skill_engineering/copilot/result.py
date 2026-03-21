@@ -119,6 +119,26 @@ class CopilotResult:
         """Get all calls to a specific tool."""
         return [c for c in self.all_tool_calls if c.name == name]
 
+    def tool_was_called_with(self, name: str, **expected_args: Any) -> bool:
+        """Check if a tool was called with specific argument values.
+
+        Returns True if at least one call to the named tool has all the
+        specified argument key-value pairs.
+
+        Args:
+            name: Tool name to check.
+            **expected_args: Expected argument key-value pairs.
+
+        Example::
+
+            assert result.tool_was_called_with("size_vm", region="westeurope", cores=8)
+            assert result.tool_was_called_with("get_balance", account="checking")
+        """
+        for call in self.tool_calls_for(name):
+            if all(call.arguments.get(k) == v for k, v in expected_args.items()):
+                return True
+        return False
+
     @property
     def total_input_tokens(self) -> int:
         """Total input tokens across all model turns."""

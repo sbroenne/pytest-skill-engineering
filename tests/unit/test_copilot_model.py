@@ -441,6 +441,34 @@ class TestRequest:
 
         assert created_config["available_tools"] == []
 
+    async def test_permission_handler_set(
+        self, model: CopilotModel, mock_request_params: ModelRequestParameters
+    ) -> None:
+        """Session config includes an on_permission_request handler."""
+        created_config: dict = {}
+
+        mock_session = MagicMock()
+        mock_session.on = MagicMock()
+        mock_session.send_and_wait = AsyncMock(return_value=None)
+
+        async def mock_create_session(config: dict) -> MagicMock:
+            created_config.update(config)
+            return mock_session
+
+        mock_client = AsyncMock()
+        mock_client.create_session = mock_create_session
+
+        with patch(
+            "pytest_skill_engineering.copilot.model._get_or_create_client", return_value=mock_client
+        ):
+            messages = [ModelRequest(parts=[UserPromptPart(content="Hi")])]
+            await model.request(messages, None, mock_request_params)
+
+        assert "on_permission_request" in created_config
+        # Handler should approve
+        result = created_config["on_permission_request"]({}, {})
+        assert result == {"kind": "approved"}
+
     async def test_model_name_in_response(
         self, model: CopilotModel, mock_request_params: ModelRequestParameters
     ) -> None:
