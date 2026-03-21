@@ -9,7 +9,7 @@ from typing import Any
 import yaml
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, frozen=True)
 class Prompt:
     """A loadable prompt configuration.
 

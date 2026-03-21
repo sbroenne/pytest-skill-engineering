@@ -79,3 +79,27 @@ New transitive deps added: `typer`, `shellingham`, `annotated-doc`, `uncalled-fo
 **Verbal's parallel work (same session):** Upgraded Copilot SDK 0.1.25 → 0.2.0 with breaking API changes. See Verbal's history for detailed migration notes on SubprocessConfig, create_session(**kwargs), send_and_wait(str), and snake_case ToolResult fields. The new `typer` and `shellingham` transitive deps added by this project are now in uv.lock.
 
 **Hockney's parallel work (same session):** Integration test verification found 4 compatibility issues during test run; all fixed. 105/105 tests now passing. See Hockney's history for detailed fix patterns.
+
+### Full Repo Review (2026-03-21)
+
+Completed deep code review of core/, execution/, fixtures/, and plugin.py as part of 5-agent session. Filed 5 findings across 3 severity levels in formal decision document. **Critical:** 2 bugs (serialize_dataclass deepcopy fragility, rate limiter session leak). **Important:** 3 convention violations (dataclasses missing slots=True, Provider/Prompt not frozen). Core logic quality is high; the issues are maintenance patterns and resource efficiency edge cases.
+
+### 2026-03-21 — Core engine fixes (review findings → implementation)
+
+Fixed all findings from the repo review session:
+
+**🔴 Critical fixes:**
+1. `serialize_dataclass()` — Replaced `dataclasses.asdict()` (which does `copy.deepcopy` on ALL fields) with manual field iteration via `dataclasses.fields()`. Private `_`-prefixed fields are skipped BEFORE any traversal, so `_messages` (large PydanticAI message lists) are never touched.
+2. Rate limiter session leak — Added `reset_rate_limiters()` call in `pytest_sessionfinish` so rate limiter state doesn't persist across sessions in long-lived processes.
+3. Azure model cache — Replaced `@lru_cache` (keyed only on `model_str`) with a manual dict cache keyed on `(model_str, azure_endpoint, tenant_id, api_key)`. Env var changes now produce distinct cache entries.
+
+**🟡 Convention fixes:**
+4. Dataclass `slots=True` added to: `_ToolResult`, `InstructionSuggestion`, `TestReport`, `SuiteReport`, `ToolResult`, `Task`, `TodoStore`, `Transaction`, `BankingService`. `frozen=True` added to: `Provider`, `Prompt`. Added `_copilot_test: bool = False` field to `TestReport` (was a dynamic attribute that would break with `slots=True`).
+5. Plugin decomposition — Extracted ~480 lines from plugin.py (1073→590 lines) into 3 submodules:
+   - `plugin_recording.py` — Recording wrapper classes for llm_assert/score
+   - `plugin_options.py` — CLI option definitions
+   - `plugin_report.py` — AI insights generation, analysis prompt resolution, copilot cleanup, coding agent prompt, pricing table
+   All pytest hooks remain in plugin.py as thin delegators. Public API unchanged.
+6. Minor: `_extract_frontmatter` now logs a warning on YAML parse errors. `_shutdown_copilot_model_client` uses `asyncio.new_event_loop()` instead of deprecated `asyncio.get_event_loop()`.
+
+**Verification:** 0 pyright errors, 0 ruff errors, 73 pydantic tests + 29 copilot tests + 650 unit tests all collect successfully.

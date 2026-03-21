@@ -6,7 +6,6 @@ and converts PydanticAI AgentRunResult back into our EvalResult for reporting.
 
 from __future__ import annotations
 
-import functools
 import json
 import logging
 import os
@@ -69,16 +68,17 @@ def build_model_from_string(model_str: str) -> Any:
     return model_str
 
 
-@functools.lru_cache(maxsize=8)
+# Manual cache for Azure models, keyed on (model_str, endpoint, tenant_id, api_key)
+# so env var changes between calls produce distinct cache entries.
+_azure_model_cache: dict[tuple[str, str, str | None, str | None], Any] = {}
+
+
 def _build_azure_model(model_str: str) -> Any:
     """Build an Azure OpenAI model with Entra ID or API key auth.
 
     Cached to reuse the same AsyncAzureOpenAI client across calls.
+    Cache key includes env var values so credential changes are respected.
     """
-    from pydantic_ai.models.openai import OpenAIChatModel
-    from pydantic_ai.providers.openai import OpenAIProvider
-
-    deployment = model_str.removeprefix("azure/")
     azure_endpoint = os.environ.get("AZURE_API_BASE") or os.environ.get("AZURE_OPENAI_ENDPOINT")
     if not azure_endpoint:
         msg = (
@@ -87,8 +87,17 @@ def _build_azure_model(model_str: str) -> Any:
         )
         raise ValueError(msg)
 
-    # Check if API key is available
     api_key = os.environ.get("AZURE_API_KEY") or os.environ.get("AZURE_OPENAI_API_KEY")
+    tenant_id = os.environ.get("AZURE_TENANT_ID")
+
+    cache_key = (model_str, azure_endpoint, tenant_id, api_key)
+    if cache_key in _azure_model_cache:
+        return _azure_model_cache[cache_key]
+
+    from pydantic_ai.models.openai import OpenAIChatModel
+    from pydantic_ai.providers.openai import OpenAIProvider
+
+    deployment = model_str.removeprefix("azure/")
 
     if api_key:
         from openai import AsyncAzureOpenAI
@@ -103,7 +112,6 @@ def _build_azure_model(model_str: str) -> Any:
         from azure.identity import DefaultAzureCredential, get_bearer_token_provider
         from openai import AsyncAzureOpenAI
 
-        tenant_id = os.environ.get("AZURE_TENANT_ID")
         credential = DefaultAzureCredential(
             additionally_allowed_tenants=["*"] if tenant_id else None,
         )
@@ -126,7 +134,9 @@ def _build_azure_model(model_str: str) -> Any:
             api_version="2024-07-01-preview",
         )
 
-    return OpenAIChatModel(deployment, provider=OpenAIProvider(openai_client=client))
+    model = OpenAIChatModel(deployment, provider=OpenAIProvider(openai_client=client))
+    _azure_model_cache[cache_key] = model
+    return model
 
 
 def _build_copilot_model(model_str: str) -> Any:
@@ -354,7 +364,7 @@ def _extract_turns(messages: list[ModelMessage]) -> list[Turn]:
     return turns
 
 
-@dataclass
+@dataclass(slots=True)
 class _ToolResult:
     """Extracted tool result with optional image content."""
 

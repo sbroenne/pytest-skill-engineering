@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import base64
-from dataclasses import asdict, is_dataclass
+from dataclasses import fields, is_dataclass
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
@@ -15,17 +15,21 @@ def serialize_dataclass(obj: Any) -> Any:
 
     Excludes private fields (prefixed with _) from serialization.
     Encodes bytes fields as base64 strings.
+
+    Uses manual field iteration instead of ``dataclasses.asdict()`` to avoid
+    ``copy.deepcopy`` on large private fields (e.g. ``_messages`` containing
+    PydanticAI model objects).
     """
     if is_dataclass(obj) and not isinstance(obj, type):
-        data = asdict(obj)  # type: ignore[arg-type]
         result = {}
-        for k, v in data.items():
-            if k.startswith("_"):
+        for f in fields(obj):
+            if f.name.startswith("_"):
                 continue
+            v = getattr(obj, f.name)
             if isinstance(v, bytes):
-                result[k] = base64.b64encode(v).decode("ascii")
+                result[f.name] = base64.b64encode(v).decode("ascii")
             else:
-                result[k] = serialize_dataclass(v)
+                result[f.name] = serialize_dataclass(v)
         return result
     elif isinstance(obj, (list, tuple)):
         return [serialize_dataclass(item) for item in obj]

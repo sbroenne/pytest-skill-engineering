@@ -12,7 +12,7 @@ from uuid import uuid4
 from pytest_skill_engineering.testing.types import ToolResult
 
 
-@dataclass
+@dataclass(slots=True)
 class Task:
     """A todo task."""
 
@@ -23,7 +23,7 @@ class Task:
     priority: str = "normal"  # low, normal, high
 
 
-@dataclass
+@dataclass(slots=True)
 class TodoStore:
     """In-memory todo list store for testing."""
 
