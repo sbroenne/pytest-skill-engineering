@@ -9,25 +9,28 @@ import logging
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 # Core types  # noqa: E402 - logging must be configured before submodule imports
+# Copilot coding agent support (now required)
+from pytest_skill_engineering.copilot import (  # noqa: E402
+    ClaudeCodePersona,
+    CopilotCLIPersona,
+    CopilotEval,
+    CopilotResult,
+    HeadlessPersona,
+    Persona,
+    VSCodePersona,
+    run_copilot,
+)
 from pytest_skill_engineering.core import (  # noqa: E402
     AITestError,
-    ClarificationDetection,
-    ClarificationLevel,
-    ClarificationStats,
-    CLIExecution,
-    CLIServer,
     EngineTimeoutError,
-    Eval,
     EvalResult,
     HookDefinition,
     ImageContent,
     MCPPrompt,
     MCPPromptArgument,
-    MCPServer,
     Plugin,
     PluginMetadata,
     Prompt,
-    Provider,
     ServerStartError,
     Skill,
     SkillError,
@@ -38,7 +41,6 @@ from pytest_skill_engineering.core import (  # noqa: E402
     ToolCall,
     ToolInfo,
     Turn,
-    Wait,
     export_grading,
     has_skill_evals,
     load_custom_agent,
@@ -53,13 +55,6 @@ from pytest_skill_engineering.core import (  # noqa: E402
     load_skill,
     load_skill_evals,
     load_system_prompts,
-)
-
-# Execution
-from pytest_skill_engineering.execution import EvalEngine  # noqa: E402
-from pytest_skill_engineering.execution.optimizer import (  # noqa: E402
-    InstructionSuggestion,
-    optimize_instruction,
 )
 
 # Scoring
@@ -87,24 +82,16 @@ from pytest_skill_engineering.reporting import (  # noqa: E402
 
 __all__ = [  # noqa: RUF022
     # Core
-    "Eval",
     "EvalResult",
     "AITestError",
-    "CLIExecution",
-    "CLIServer",
-    "ClarificationDetection",
-    "ClarificationLevel",
-    "ClarificationStats",
     "EngineTimeoutError",
     "HookDefinition",
     "ImageContent",
     "MCPPrompt",
     "MCPPromptArgument",
-    "MCPServer",
     "Plugin",
     "PluginMetadata",
     "Prompt",
-    "Provider",
     "ServerStartError",
     "Skill",
     "SkillError",
@@ -115,7 +102,6 @@ __all__ = [  # noqa: RUF022
     "ToolCall",
     "ToolInfo",
     "Turn",
-    "Wait",
     "load_custom_agent",
     "load_custom_agents",
     "load_instruction_file",
@@ -130,10 +116,15 @@ __all__ = [  # noqa: RUF022
     "load_skill_evals",
     "has_skill_evals",
     "export_grading",
-    # Execution
-    "EvalEngine",
-    "InstructionSuggestion",
-    "optimize_instruction",
+    # Copilot (primary eval harness)
+    "CopilotEval",
+    "CopilotResult",
+    "ClaudeCodePersona",
+    "CopilotCLIPersona",
+    "HeadlessPersona",
+    "Persona",
+    "VSCodePersona",
+    "run_copilot",
     # Reporting
     "SuiteReport",
     "TestReport",
@@ -149,32 +140,6 @@ __all__ = [  # noqa: RUF022
     "ScoringDimension",
     "assert_score",
 ]
-
-# Copilot coding agent support (available when pytest-skill-engineering[copilot] is installed)
-try:
-    from pytest_skill_engineering.copilot import (  # noqa: E402
-        ClaudeCodePersona,
-        CopilotCLIPersona,
-        CopilotEval,
-        CopilotResult,
-        HeadlessPersona,
-        Persona,
-        VSCodePersona,
-        run_copilot,
-    )
-
-    __all__ += [
-        "CopilotEval",
-        "CopilotResult",
-        "ClaudeCodePersona",
-        "CopilotCLIPersona",
-        "HeadlessPersona",
-        "Persona",
-        "VSCodePersona",
-        "run_copilot",
-    ]
-except ImportError:
-    pass  # github-copilot-sdk not installed — copilot types not available
 
 from importlib.metadata import version as _get_version  # noqa: E402
 

@@ -1,16 +1,6 @@
-"""Core module - agent configuration and result types."""
+"""Core module - result types and skill management."""
 
 from pytest_skill_engineering.core.errors import AITestError, EngineTimeoutError, ServerStartError
-from pytest_skill_engineering.core.eval import (
-    ClarificationDetection,
-    ClarificationLevel,
-    CLIExecution,
-    CLIServer,
-    Eval,
-    MCPServer,
-    Provider,
-    Wait,
-)
 from pytest_skill_engineering.core.evals import (
     load_custom_agent,
     load_custom_agents,
@@ -27,7 +17,6 @@ from pytest_skill_engineering.core.prompt import (
     load_system_prompts,
 )
 from pytest_skill_engineering.core.result import (
-    ClarificationStats,
     EvalResult,
     ImageContent,
     MCPPrompt,
@@ -48,23 +37,15 @@ from pytest_skill_engineering.core.skill_grading import export_grading
 
 __all__ = [
     "AITestError",
-    "Eval",
     "EvalResult",
-    "CLIExecution",
-    "CLIServer",
-    "ClarificationDetection",
-    "ClarificationLevel",
-    "ClarificationStats",
     "EngineTimeoutError",
     "HookDefinition",
     "ImageContent",
     "MCPPrompt",
     "MCPPromptArgument",
-    "MCPServer",
     "Plugin",
     "PluginMetadata",
     "Prompt",
-    "Provider",
     "ServerStartError",
     "Skill",
     "SkillError",
@@ -74,7 +55,6 @@ __all__ = [
     "ToolCall",
     "ToolInfo",
     "Turn",
-    "Wait",
     "load_custom_agent",
     "load_custom_agents",
     "load_instruction_file",

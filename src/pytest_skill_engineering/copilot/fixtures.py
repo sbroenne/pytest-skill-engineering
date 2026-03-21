@@ -73,6 +73,8 @@ def _convert_to_aitest(
     Since CopilotResult already uses pytest-skill-engineering's Turn and ToolCall types,
     the turns can be passed through directly without rebuilding.
     """
+    # TODO(Verbal): Eval and Provider types removed with core.eval - this function needs
+    # to be rewritten to use CopilotEval-only types or removed if no longer needed
     from pytest_skill_engineering.core.eval import Eval, Provider
     from pytest_skill_engineering.core.result import EvalResult
 

@@ -1,5 +1,11 @@
 """Token-based cost estimation for LLM calls.
 
+TODO(Verbal): This module depends on litellm.model_cost which was removed.
+Either:
+1. Re-add litellm as a dependency (it's just for pricing lookup, not adapters)
+2. Vendor the pricing data from litellm into our pricing.toml
+3. Remove cost.py and make pricing.toml the only source
+
 Pricing lookup order:
 
 1. **User overrides** from ``pricing.toml`` — checked first so users can add
@@ -31,7 +37,11 @@ import re
 from pathlib import Path
 from typing import Any
 
-from litellm import model_cost
+# TODO(Verbal): litellm was removed - either restore it or vendor pricing data
+try:
+    from litellm import model_cost
+except ImportError:
+    model_cost = {}  # type: ignore[assignment]
 
 _logger = logging.getLogger(__name__)
 

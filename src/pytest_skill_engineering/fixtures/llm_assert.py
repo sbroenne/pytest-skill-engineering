@@ -1,20 +1,18 @@
 """LLM-powered semantic assertion fixture.
 
 Provides the ``llm_assert`` fixture for evaluating text content against
-plain-English criteria using pydantic-evals' LLM judge.
+plain-English criteria using the Copilot SDK as an LLM judge.
 """
 
 from __future__ import annotations
 
+import asyncio
+import concurrent.futures
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
 
 import pytest
 
-if TYPE_CHECKING:
-    from pydantic_ai.models import Model
-
-_LLM_MODEL_DEFAULT = "openai/gpt-5-mini"
+_LLM_MODEL_DEFAULT = "copilot/gpt-5-mini"
 
 
 @dataclass(slots=True)
@@ -41,8 +39,8 @@ class AssertionResult:
 class LLMAssert:
     """Callable that evaluates content against criteria using an LLM judge.
 
-    Uses ``pydantic_evals.evaluators.llm_as_a_judge.judge_output()`` for
-    structured rubric-based evaluation.
+    Uses the Copilot SDK to send a judge prompt and parse the response for
+    PASS/FAIL determination.
 
     Example::
 
@@ -51,7 +49,7 @@ class LLMAssert:
             assert llm_assert(response, "Is this a friendly greeting?")
     """
 
-    def __init__(self, model: Model | str) -> None:
+    def __init__(self, model: str) -> None:
         self._model = model
 
     def __call__(self, content: str, criterion: str) -> AssertionResult:
@@ -64,39 +62,46 @@ class LLMAssert:
         Returns:
             AssertionResult that is truthy if criterion is met.
         """
-        import asyncio
-        import concurrent.futures
+        from pytest_skill_engineering.copilot.judge import copilot_judge  # noqa: PLC0415
 
-        from pydantic_evals.evaluators.llm_as_a_judge import judge_output
+        prompt = (
+            f"You are a judge. Evaluate if the following content meets the criterion.\n\n"
+            f"Criterion: {criterion}\n\n"
+            f"Content:\n---\n{content}\n---\n\n"
+            f"Respond with ONLY 'PASS' or 'FAIL' on the first line, "
+            f"followed by a brief reasoning on the second line."
+        )
 
-        async def _judge() -> Any:
-            return await judge_output(
-                output=content,
-                rubric=criterion,
-                model=self._model,
-            )
+        async def _judge() -> tuple[bool, str]:
+            # Strip model prefix if present (copilot/, azure/, openai/)
+            model = self._model
+            if "/" in model:
+                model = model.split("/", 1)[1]
 
-        # judge_output is async, but llm_assert is called synchronously
-        # (often from inside an already-running event loop in async tests).
-        # Run in a new thread with its own event loop.
+            response = await copilot_judge(prompt, model=model, timeout_seconds=30.0)
+
+            # Parse response: first line should be PASS or FAIL
+            lines = response.strip().split("\n", 1)
+            verdict = lines[0].strip().upper()
+            reasoning = lines[1].strip() if len(lines) > 1 else "No reasoning provided"
+
+            # Extract PASS/FAIL from verdict
+            passed = "PASS" in verdict and "FAIL" not in verdict
+
+            return passed, reasoning
+
+        # Run in a new thread with its own event loop
         with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
-            grading = pool.submit(asyncio.run, _judge()).result()
+            passed, reasoning = pool.submit(asyncio.run, _judge()).result()
 
         preview = content[:200] + "..." if len(content) > 200 else content
 
         return AssertionResult(
-            passed=grading.pass_,
+            passed=passed,
             criterion=criterion,
-            reasoning=grading.reason,
+            reasoning=reasoning,
             content_preview=preview,
         )
-
-
-def _build_judge_model(model_str: str) -> Any:
-    """Build a PydanticAI model from a model string for the judge."""
-    from pytest_skill_engineering.execution.pydantic_adapter import build_model_from_string
-
-    return build_model_from_string(model_str)
 
 
 @pytest.fixture
@@ -106,7 +111,7 @@ def llm_assert(request: pytest.FixtureRequest) -> LLMAssert:
     The judge model is resolved in this order:
     1. ``--llm-model`` if explicitly set
     2. ``--aitest-summary-model`` (same model for analysis and assertions)
-    3. ``openai/gpt-5-mini`` as final fallback
+    3. ``copilot/gpt-5-mini`` as final fallback
 
     Example::
 
@@ -114,10 +119,11 @@ def llm_assert(request: pytest.FixtureRequest) -> LLMAssert:
             assert llm_assert("Your balance is $1,500", "mentions a dollar amount")
     """
     model_str: str = request.config.getoption("--llm-model")
+    if model_str == "openai/gpt-5-mini":  # Old default
+        model_str = _LLM_MODEL_DEFAULT
     if model_str == _LLM_MODEL_DEFAULT:
         # Not explicitly set — fall back to summary model if available
         summary_model = request.config.getoption("--aitest-summary-model", default=None)
         if summary_model:
             model_str = summary_model
-    model = _build_judge_model(model_str)
-    return LLMAssert(model=model)
+    return LLMAssert(model=model_str)
