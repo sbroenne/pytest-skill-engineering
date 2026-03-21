@@ -39,6 +39,12 @@ from pytest_skill_engineering.core.result import (
     Turn,
 )
 from pytest_skill_engineering.core.skill import Skill, SkillError, SkillMetadata, load_skill
+from pytest_skill_engineering.core.skill_evals import (
+    SkillEvalCase,
+    has_skill_evals,
+    load_skill_evals,
+)
+from pytest_skill_engineering.core.skill_grading import export_grading
 
 __all__ = [
     "AITestError",
@@ -80,4 +86,8 @@ __all__ = [
     "load_prompts",
     "load_skill",
     "load_system_prompts",
+    "SkillEvalCase",
+    "has_skill_evals",
+    "load_skill_evals",
+    "export_grading",
 ]

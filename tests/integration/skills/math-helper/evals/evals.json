@@ -1,0 +1,25 @@
+{
+  "skill_name": "math-helper",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Calculate the compound interest on $1000 at 5% for 3 years",
+      "expected_output": "The compound interest calculation showing the final amount",
+      "expectations": [
+        "The response includes a numerical result",
+        "The calculation uses the compound interest formula",
+        "The final amount is approximately $1157.63"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "What is the derivative of x^3 + 2x^2 - 5x + 1?",
+      "expected_output": "The derivative expression",
+      "expectations": [
+        "The response includes 3x^2",
+        "The response includes 4x",
+        "The response includes -5"
+      ]
+    }
+  ]
+}

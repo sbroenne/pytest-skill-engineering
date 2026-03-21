@@ -31,6 +31,7 @@ from pytest_skill_engineering.core import (  # noqa: E402
     ServerStartError,
     Skill,
     SkillError,
+    SkillEvalCase,
     SkillInfo,
     SkillMetadata,
     SubagentInvocation,
@@ -38,6 +39,8 @@ from pytest_skill_engineering.core import (  # noqa: E402
     ToolInfo,
     Turn,
     Wait,
+    export_grading,
+    has_skill_evals,
     load_custom_agent,
     load_custom_agents,
     load_instruction_file,
@@ -48,6 +51,7 @@ from pytest_skill_engineering.core import (  # noqa: E402
     load_prompt_files,
     load_prompts,
     load_skill,
+    load_skill_evals,
     load_system_prompts,
 )
 
@@ -104,6 +108,7 @@ __all__ = [  # noqa: RUF022
     "ServerStartError",
     "Skill",
     "SkillError",
+    "SkillEvalCase",
     "SkillInfo",
     "SkillMetadata",
     "SubagentInvocation",
@@ -122,6 +127,9 @@ __all__ = [  # noqa: RUF022
     "load_prompts",
     "load_system_prompts",
     "load_skill",
+    "load_skill_evals",
+    "has_skill_evals",
+    "export_grading",
     # Execution
     "EvalEngine",
     "InstructionSuggestion",
