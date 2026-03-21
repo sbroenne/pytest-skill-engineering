@@ -40,16 +40,16 @@ Write tests as natural language prompts — you assert on what happened. If a te
 3. **Fix the skill stack** — improve tool descriptions, schemas, prompts, or `.agent.md` instructions until it passes
 4. **AI analysis tells you what else to optimize** — cost, redundant calls, unused tools
 
-pytest-skill-engineering ships two test harnesses:
+pytest-skill-engineering ships two test harnesses. **Start with `CopilotEval`** — it tests what your users actually experience. Use `Eval` when you need model flexibility or fast CI without a Copilot subscription.
 
-| | `Eval` + `eval_run` | `CopilotEval` + `copilot_eval` |
+| | `CopilotEval` + `copilot_eval` **(primary)** | `Eval` + `eval_run` |
 |---|---|---|
-| **Runs the LLM** | [Pydantic AI](https://ai.pydantic.dev/) synthetic loop | Real GitHub Copilot (CLI SDK) |
-| **Model** | Any provider (Azure, OpenAI, Copilot) | Copilot's active model only |
-| **MCP auth** | You supply tokens / env vars | Copilot handles OAuth automatically |
-| **Introspection** | Full per-call (tool name, args, timing) | Summary (tool names, final response) |
-| **Cost tracking** | USD per test (via litellm pricing) | Premium requests (Copilot billing) |
-| **Setup** | API keys + model config | `gh auth login` (Copilot subscription) |
+| **Runs the LLM** | Real GitHub Copilot (CLI SDK) | [Pydantic AI](https://ai.pydantic.dev/) synthetic loop |
+| **Model** | Copilot's active model | Any provider (Azure, OpenAI, Copilot) |
+| **MCP auth** | Copilot handles OAuth automatically | You supply tokens / env vars |
+| **Introspection** | Summary (tool names, final response) | Full per-call (tool name, args, timing) |
+| **Cost tracking** | Premium requests (Copilot billing) | USD per test (via litellm pricing) |
+| **Setup** | `gh auth login` (Copilot subscription) | API keys + model config |
 
 ### Eval + `eval_run` — bring your own model
 
@@ -91,7 +91,7 @@ AI analyzes your results and tells you **what to fix**: which model to deploy, h
 
 ## Quick Start
 
-**Using GitHub Copilot? Zero setup:**
+**GitHub Copilot (recommended):**
 
 ```bash
 uv add pytest-skill-engineering[copilot]
