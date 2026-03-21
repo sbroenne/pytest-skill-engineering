@@ -186,3 +186,27 @@ Auto-generated API documentation from source code.
     options:
       show_source: false
       heading_level: 3
+
+## Plugin Types
+
+::: pytest_skill_engineering.core.plugin.Plugin
+    options:
+      show_source: false
+      heading_level: 3
+
+::: pytest_skill_engineering.core.plugin.PluginMetadata
+    options:
+      show_source: false
+      heading_level: 3
+
+::: pytest_skill_engineering.core.plugin.HookDefinition
+    options:
+      show_source: false
+      heading_level: 3
+
+## Plugin Loading
+
+::: pytest_skill_engineering.core.plugin.load_plugin
+    options:
+      show_source: false
+      heading_level: 3
