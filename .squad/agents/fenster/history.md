@@ -27,3 +27,7 @@ Key version bumps:
 No code changes needed — ruff check, ruff format, and pyright all passed clean.
 The `griffe`/`griffecli`/`invoke`/`rsa` packages were removed (no longer needed by updated deps).
 New transitive deps added: `typer`, `shellingham`, `annotated-doc`, `uncalled-for`, `python-discovery`.
+
+## Cross-Agent Context
+
+**Verbal's parallel work (same session):** Upgraded Copilot SDK 0.1.25 → 0.2.0 with breaking API changes. See Verbal's history for detailed migration notes on SubprocessConfig, create_session(**kwargs), send_and_wait(str), and snake_case ToolResult fields. The new `typer` and `shellingham` transitive deps added by this project are now in uv.lock.
