@@ -235,25 +235,12 @@ def generate_structured_insights(
 
 
 def shutdown_copilot_model_client() -> None:
-    """Shut down the shared CopilotClient if it was started."""
-    try:
-        from pytest_skill_engineering.copilot.model import (
-            _client,
-        )
-        from pytest_skill_engineering.copilot.model import (
-            shutdown_copilot_model_client as _shutdown,
-        )
+    """Shut down the shared CopilotClient if it was started.
 
-        if _client is not None:
-            import asyncio
-
-            loop = asyncio.new_event_loop()
-            try:
-                loop.run_until_complete(_shutdown())
-            finally:
-                loop.close()
-    except ImportError:
-        pass
+    This function is kept for backwards compatibility but no longer does anything
+    since CopilotModel was removed with the PydanticAI dependency.
+    """
+    pass
 
 
 # ── Coding agent analysis prompt ──
@@ -266,8 +253,7 @@ def build_coding_agent_prompt(tests: list[Any]) -> str | None:
 
     Checks if any collected tests have the ``_copilot_test`` flag. If so,
     returns the coding agent analysis prompt instead of the default MCP/tool
-    prompt. The ``{{PRICING_TABLE}}`` placeholder is replaced with a live
-    pricing table built from litellm.
+    prompt.
     """
     has_copilot_tests = any(getattr(t, "_copilot_test", False) for t in tests)
     if not has_copilot_tests:
@@ -275,56 +261,11 @@ def build_coding_agent_prompt(tests: list[Any]) -> str | None:
 
     if _CODING_AGENT_ANALYSIS_PROMPT_PATH.exists():
         prompt = _CODING_AGENT_ANALYSIS_PROMPT_PATH.read_text(encoding="utf-8")
+        # Remove pricing table placeholder - litellm dependency removed
         if "{{PRICING_TABLE}}" in prompt:
-            prompt = prompt.replace("{{PRICING_TABLE}}", _build_pricing_table())
+            prompt = prompt.replace(
+                "{{PRICING_TABLE}}",
+                "*Pricing data: Refer to pricing.toml in the repository.*",
+            )
         return prompt
     return None
-
-
-def _build_pricing_table() -> str:
-    """Build a markdown pricing table from litellm's model_cost map.
-
-    Returns a table of common coding-agent models with their per-token
-    pricing, pulled live from litellm so it stays current.
-    """
-    try:
-        from litellm import model_cost  # type: ignore[reportMissingImports]
-    except ImportError:
-        return "*Pricing data unavailable (litellm not installed).*"
-
-    # Models we care about — bare names (no provider prefix).
-    models_of_interest = [
-        "gpt-4.1-nano",
-        "gpt-5-nano",
-        "gpt-4.1-mini",
-        "gpt-5-mini",
-        "gpt-4.1",
-        "gpt-5",
-        "gpt-5.1",
-        "gpt-5.2",
-        "claude-sonnet-4",
-        "claude-sonnet-4-5",
-        "claude-opus-4-5",
-        "claude-opus-4-6",
-        "gpt-5-pro",
-        "gpt-5.2-pro",
-    ]
-
-    rows: list[str] = []
-    for name in models_of_interest:
-        info = model_cost.get(name) or model_cost.get(f"azure/{name}", {})
-        ic = info.get("input_cost_per_token", 0) or 0
-        oc = info.get("output_cost_per_token", 0) or 0
-        if ic == 0 and oc == 0:
-            continue
-        rows.append(f"| {name} | ${ic * 1_000_000:.2f} | ${oc * 1_000_000:.2f} |")
-
-    if not rows:
-        return "*No model pricing data available from litellm.*"
-
-    header = (
-        "**Model pricing reference** ($/M tokens, from litellm):\n\n"
-        "| Model | Input $/M | Output $/M |\n"
-        "|-------|-----------|------------|\n"
-    )
-    return header + "\n".join(rows)

@@ -6,18 +6,45 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.3.0] — 2026-03-21
+
+### ⚠️ Breaking Changes
+
+This release completes the **Copilot pivot** — PydanticAI has been fully removed. CopilotEval is now the only eval harness. All tests must use the real GitHub Copilot coding agent via the `github-copilot-sdk`.
+
+- **Removed PydanticAI dependency** — `Eval`, `Provider`, `MCPServer`, `CLIServer`, `Wait` types removed
+- **Removed `eval_run` fixture** — use `copilot_eval` instead
+- **Removed all PydanticAI dependencies** — `pydantic-ai`, `pydantic-evals`, `litellm` removed
+- **`github-copilot-sdk` is now required** (was optional `[copilot]` extra)
+- **Removed `CopilotModel`** — PydanticAI model adapter no longer needed
+- **Removed multi-turn session support** — `@pytest.mark.session` pattern removed (CopilotEval uses context-in-prompt)
+- **Removed all PydanticAI integration tests** — `tests/integration/pydantic/` deleted
+
 ### Added
 
-- **Plugin testing support** — First-class testing for GitHub Copilot CLI plugins and Claude Code projects
-- **`load_plugin()`** — Unified loader for plugin.json manifests, .github/ project directories, and .claude/ project roots
-- **`Eval.from_plugin()`** — Create a PydanticAI eval from any plugin directory with auto-discovery of instructions, skills, agents, and MCP configs
-- **`CopilotEval.from_plugin()`** — Create a Copilot SDK eval from a plugin with automatic persona detection
-- **`CopilotEval.from_claude_config()`** — Auto-discover and test Claude Code projects (CLAUDE.md + .claude/ tree)
-- **`load_mcp_config()`** — Parse .mcp.json files for MCP server configurations
-- **`EvalResult.tool_was_called_from_server()`** — Assert a tool was called from a specific MCP server (plugin testing helper)
-- **`Plugin`, `PluginMetadata`, `HookDefinition`** — New dataclasses for plugin structure representation
-- **`active_agent`** field on `CopilotEval` — SDK passthrough for routing to a specific agent
-- **`hooks`** field on `CopilotEval` — SDK passthrough for session lifecycle hooks
+- **Agent Skills spec compliance** ([agentskills.io](https://agentskills.io)) — Full support for compatibility, metadata, allowed-tools fields
+- **skill-creator eval automation** — `skill_eval_runner` fixture auto-discovers `evals/evals.json`, runs cases via CopilotEval, validates with `llm_assert`, exports skill-creator compatible `grading.json`
+- **skill-creator eval bridge** — Import evals from `evals/evals.json`, export grading results to skill-creator format
+- **Scripts and assets directory support** per Agent Skills spec — package Python scripts, prompts, and resources with skills
+- **Shared Copilot SDK judge utility** (`copilot/judge.py`) — unified LLM judge for assertions, scoring, and clarification detection
+- **LLM assertions rewritten for Copilot SDK** — `llm_assert`, `llm_score`, clarification detection all use github-copilot-sdk
+
+### Changed
+
+- **CopilotEval is THE eval harness** — no alternative harnesses
+- **Install command** — `uv add pytest-skill-engineering` (no `[copilot]` extra needed)
+- **AI insights generation** — rewritten to use Copilot SDK instead of PydanticAI
+- **Cost estimation** — now uses `pricing.toml` only (litellm pricing removed)
+- **Documentation** — fully rewritten for Copilot-only workflow
+
+### Removed
+
+- **PydanticAI execution engine** — `execution/engine.py`, `execution/pydantic_adapter.py`, `execution/cli_toolset.py`, `execution/optimizer.py`
+- **PydanticAI fixtures** — `eval_run`, `skill_factory` removed
+- **Multi-turn sessions** — `@pytest.mark.session` no longer supported
+- **Showcase/hero report tests** — to be rewritten for Copilot harness
+- **Fixture scenario files** — all PydanticAI-based fixture generation removed
+- **Dual harness infrastructure** — plugin detection of mixed harness usage removed
 
 ## v0.2.0
 

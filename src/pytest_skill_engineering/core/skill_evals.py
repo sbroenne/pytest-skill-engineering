@@ -7,9 +7,9 @@ Example:
     cases = load_skill_evals("skills/my-skill/")
 
     @pytest.mark.parametrize("case", cases, ids=lambda c: c.name)
-    async def test_skill(eval_run, llm_assert, mcp_server, case):
-        agent = Eval.from_plugin("skills/my-skill/", ...)
-        result = await eval_run(agent, case.prompt)
+    async def test_skill(copilot_eval, llm_assert, case):
+        agent = CopilotEval(skill_directories=["skills/my-skill/"], ...)
+        result = await copilot_eval(agent, case.prompt)
         for expectation in case.expectations:
             assert llm_assert(result.final_response, expectation)
 """

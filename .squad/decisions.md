@@ -2,6 +2,48 @@
 
 ## Active Decisions
 
+### Copilot Pivot: PydanticAI Removed — Copilot SDK is the ONLY Harness (2026-03-21T18:33Z)
+**Author:** Stefan (User) | **Status:** Implemented
+
+PydanticAI eval infrastructure fully removed per user directive. Copilot SDK is now the **only** eval harness.
+
+**What was removed (commit 622a508):**
+- Files: `core/eval.py`, `execution/engine.py`, `execution/pydantic_adapter.py`, `execution/cli_toolset.py`, `execution/optimizer.py`, `fixtures/run.py`
+- Dependencies: pydantic-ai, pydantic-evals, litellm, azure-identity
+- Tests: 12 files, ~72 integration tests (`tests/integration/pydantic/`)
+
+**Dependency changes:**
+- Removed: `pydantic-ai>=1.61.0`, `pydantic-evals>=1.61.0`, `litellm>=1.81.13`, `azure-identity>=1.25.2`
+- Added to required: `github-copilot-sdk>=0.2.0` (was optional)
+
+**Modules rewritten for Copilot SDK (Verbal):**
+1. `copilot/judge.py` (NEW) — Shared judge utility via Copilot SDK
+2. `fixtures/llm_assert.py` — Uses copilot_judge()
+3. `fixtures/llm_score.py` — Prompt engineering for structured output
+4. `execution/clarification.py` — Uses copilot_judge()
+5. `reporting/insights.py` — Copilot SDK for AI analysis
+
+**Limitations accepted:**
+- Image assertions not supported (SDK limitation) — NotImplementedError with clear message
+- Token/cost tracking set to 0 in insights (would require SDK event parsing)
+- Structured output via prompt engineering (not native Pydantic models)
+
+**Commits:**
+- `622a508` — refactor: remove PydanticAI engine, adapter, and eval types
+- `b2098ef` — test: remove pydantic tests, update conftest for Copilot-only
+- `09ff5e1` — fix: resolve leftover PydanticAI import errors
+- `ce68c7c` — test: remove PydanticAI-dependent tests and fixtures
+
+**Blocking issue:** `copilot/model.py` still has PydanticAI imports (discovered post-commit). Needs rewrite or deletion. Blocks test collection.
+
+**Next steps:**
+1. Fix `copilot/model.py` import issue (IMMEDIATE)
+2. Verify test collection works
+3. Run integration tests
+4. Complete McManus docs rewrite for Copilot-only direction
+
+---
+
 ### Copilot SDK Feature Parity — Sessions, Clarification, CLI, Scoring, A/B, Iterations (2026-03-21T10:50Z)
 **Author:** Verbal + Hockney | **Status:** Implemented
 
@@ -345,3 +387,173 @@ Schema declares `"list"` as the parameter name, but service code uses `list_name
 - All meaningful changes require team consensus
 - Document architectural decisions here
 - Keep history focused on work, decisions focused on direction
+
+---
+
+## Plugin System Decisions — Copilot Pivot Era (2026-03-21)
+
+### Plugin Ecosystem Analysis & Roadmap (2026-03-21)
+**Author:** Keaton (Lead) | **Status:** Strategic Proposal
+
+Comprehensive analysis of GitHub Copilot CLI and Claude Code plugin ecosystems identified the gap areas and recommended a phased roadmap.
+
+**Gap Analysis:**
+
+🔴 **Critical Gaps:**
+1. **Plugin Manifest Loading** (`plugin.json`) — No loader for plugin manifest. Developers must manually decompose plugins for testing.
+2. **Hook Testing** — Zero support for event-driven hooks (e.g., `tool.execution_complete`, `session.start`).
+3. **Multi-Plugin Composition** — Cannot test how multiple plugins interact.
+4. **Plugin Config Variants** — No parameterization support for plugin settings.
+
+🟡 **Important Gaps:**
+5. **Extension Testing** (Node.js JSON-RPC) — Not supported, requires new protocol support.
+6. **Claude Code Native Runner** — Currently use Copilot SDK polyfill; native runner would test real Claude Code runtime.
+7. **Plugin Regression Testing** — No snapshot-based regression framework.
+
+**Current Strengths (Already Working):**
+- ✅ MCP server testing is first-class
+- ✅ Custom agent loading via `.agent.md` files
+- ✅ Persona system (VSCodePersona, ClaudeCodePersona, CopilotCLIPersona)
+- ✅ Instruction file support (copilot-instructions.md, CLAUDE.md, etc.)
+- ✅ Skill loading and composition
+
+**Recommended Roadmap:**
+
+| Priority | Item | Effort | Impact |
+|----------|------|--------|--------|
+| Q1 | `load_plugin()` manifest loader | 1–2 days | Unblocks Q2, M1, M2 |
+| Q2 | `Eval.from_plugin()` / `CopilotEval.from_plugin()` | 1–2 days | Primary user-facing entry point |
+| Q3 | Plugin assertion helpers | 1 day | Polish |
+| M1 | Hook testing framework | 1–2 weeks | Fills biggest gap |
+| M2 | Multi-plugin composition | 1–2 weeks | Unique differentiator |
+| M3 | Plugin config variants | 1 week | Natural parametrize extension |
+| L1 | Extension testing harness (Node.js) | 2–4 weeks | Fills Node.js gap |
+| L2 | Plugin regression testing | 2–3 weeks | Developer workflow |
+| L3 | Claude Code native runner | 3–4 weeks | True cross-ecosystem parity |
+
+**Key Insights:**
+- Copilot CLI and Claude Code use nearly identical plugin primitives (agents, skills, MCP servers, hooks)
+- pytest-skill-engineering is the only tool testing plugins holistically (not just MCP protocol or code correctness)
+- Plugin-first entry points would differentiate us from existing tools (MCPBench, MCPEval, Testomat.io, MCP Inspector)
+
+**Decision Points for Team:**
+1. Should `load_plugin()` parse both Copilot CLI and Claude Code `plugin.json` formats, or start with one? **Recommendation:** Both.
+2. Should hook testing be synchronous or integrated into agent runs? **Recommendation:** Start synchronous.
+3. Priority of L3 (Claude Code native runner)? **Current status:** Polyfill works well, native runner only if needed.
+
+**Status:** Strategic proposal. Ready for team decision on Phase 1 (Q1/Q2/Q3) prioritization.
+
+---
+
+### Plugin Support for CopilotEval (2026-03-21)
+**Author:** Verbal | **Status:** Implemented
+
+CopilotEval enhancements for unified plugin loading.
+
+**Decisions:**
+1. **`from_claude_config()`** mirrors `from_copilot_config()` — same factory pattern, different file conventions
+2. **`from_plugin()`** delegates to `core.plugin.load_plugin()` — single source of truth
+3. **`active_agent` and `hooks` are first-class fields** — not `extra_config` entries, for IDE autocomplete
+4. **`load_mcp_config()` lives in `copilot/config.py`** — Copilot-SDK-adjacent utility
+5. **Persona auto-detection in `from_plugin()`** — `.claude` directory → ClaudeCodePersona, else VSCodePersona
+
+**Files Changed:**
+- `src/pytest_skill_engineering/copilot/eval.py` — 2 new fields, 2 new classmethods
+- `src/pytest_skill_engineering/copilot/config.py` — new module with `load_mcp_config()`
+- `src/pytest_skill_engineering/copilot/__init__.py` — export `load_mcp_config`
+
+**Status:** ✅ Ready (pending `core.plugin` implementation by Fenster)
+
+---
+
+### Plugin Test API Surface (2026-03-21)
+**Author:** Hockney | **Status:** Proposed
+
+Integration test fixtures and test files that define the expected API surface for plugin loading.
+
+**Decisions:**
+1. **`load_plugin()` returns Plugin object** with `.metadata`, `.agents`, `.skills`, `.instructions` properties
+2. **`PluginMetadata` dataclass** with `name`, `version`, `description`, `author`
+3. **`load_plugin()` handles both `plugin.json` and Claude Code (CLAUDE.md) layouts**
+4. **`Eval.from_plugin()` creates Eval using plugin components as defaults** with explicit overrides
+5. **`CopilotEval.from_claude_config()` is NEW** — distinct from `from_copilot_config()`
+6. **`CopilotEval.active_agent` field** — for direct agent activation
+
+**Test Expectations:**
+- Fixture directories: `banking-plugin/` (plugin.json-based), `claude-project/` (Claude Code layout)
+- Both demonstrate agent loading, skill discovery, MCP server config parsing
+- Tests verify `.metadata`, `.agents`, `.skills`, `.instructions` properties
+
+**Status:** Test API defined, implementation pending from Fenster/Verbal
+
+---
+
+### Plugin Ecosystem: Formats & Coverage (2026-03-21)
+**Author:** Verbal | **Status:** Analysis (informational)
+
+Detailed breakdown of plugin ecosystem structure and current test coverage.
+
+**GitHub Copilot CLI Plugins — 7 layers:**
+| Layer | Format | Our Support |
+|-------|--------|------------|
+| Custom Instructions | `copilot-instructions.md` | ✅ `load_instruction_file()` |
+| Custom Agents | `*.agent.md` | ✅ `load_custom_agent()` |
+| Skills | `SKILL.md` + `references/` | ✅ `Skill.from_path()` |
+| Prompt Files | `*.prompt.md` | ✅ `load_prompt_file()` |
+| MCP Servers | config dict | ✅ SDK passthrough |
+| Extensions | `extension.mjs` (Node.js) | ❌ Not supported |
+| Agent Plugins | `plugin.json` manifest | ❌ Not supported |
+
+**Claude Code Plugins — Similar structure:**
+| Layer | Format | Our Support |
+|-------|--------|------------|
+| CLAUDE.md | Markdown | ✅ `load_instruction_file()` |
+| Custom Agents | `*.md` in `.claude/agents/` | ⚠️ Works but no `.claude/` auto-discovery |
+| Slash Commands | `*.md` in `.claude/commands/` | ✅ `load_prompt_file()` |
+| Skills | `SKILL.md` in `.claude/skills/` | ✅ `Skill.from_path()` |
+| Hooks | `hooks.json` | ❌ Not supported |
+| MCP Servers | `.mcp.json` | ❌ Not parsed |
+| Plugins | `plugin.json` manifest | ❌ Not supported |
+
+**Key Observations:**
+- Both ecosystems converge on nearly identical primitives
+- Main differences are naming conventions, dispatch mechanisms, file locations
+- Persona system already handles tool-name and system-message differences correctly
+- Gap is **plugin manifest loading**, not individual component support
+
+**Status:** Informational analysis. Supports plugin ecosystem roadmap decisions.
+
+---
+
+### Plugin Core Design (2026-03-21)
+**Author:** Fenster | **Status:** Implemented
+
+Created `core/plugin.py` as the central plugin loading module.
+
+**Key Choices:**
+
+1. **Three directory layouts supported:**
+   - Standalone plugin — `plugin.json` at root
+   - `.github/` project config — auto-detected or explicit
+   - `.claude/` project config — auto-detected or explicit
+   - Rationale: Users shouldn't need `plugin.json` for standard layouts
+
+2. **Frozen dataclasses for all config types** — `Plugin`, `PluginMetadata`, `HookDefinition` use `@dataclass(slots=True, frozen=True)`
+
+3. **Graceful degradation on component discovery** — Single broken agent file doesn't prevent testing the rest of plugin
+
+4. **`Eval.from_plugin()` follows existing classmethod pattern** — Mirrors `from_agent_file()`, same parameter style
+
+5. **MCP server config is raw dicts, converted in `from_plugin()`** — Validation happens at eval construction time
+
+**Files Changed:**
+- `core/plugin.py` (NEW) — Plugin, PluginMetadata, HookDefinition, load_plugin()
+- `core/eval.py` — Eval.from_plugin()
+- `core/result.py` — EvalResult.tool_was_called_from_server()
+- `core/__init__.py` + `__init__.py` — exports
+
+**Open Questions for Team:**
+- Should `load_plugin()` validate that referenced MCP server commands exist on disk?
+- Should hooks be executable during test runs, or metadata-only for now?
+
+**Status:** ✅ Implementation complete, awaiting team decision on hook execution model

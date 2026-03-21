@@ -3,29 +3,22 @@
 Provides the ``llm_score`` fixture for evaluating text against a structured
 rubric with multiple named dimensions, each scored on a configurable scale.
 
-Built on pydantic-ai for structured output extraction — the judge LLM returns
-typed per-dimension scores rather than free-text JSON that requires manual
-parsing.
-
-Complements ``llm_assert`` (single-criterion pass/fail) with granular,
-multi-dimension numeric evaluation suitable for quality regression testing
-and A/B comparisons.
+Uses the Copilot SDK for judge calls with structured prompt engineering to
+extract per-dimension scores. Complements ``llm_assert`` (single-criterion
+pass/fail) with granular, multi-dimension numeric evaluation suitable for
+quality regression testing and A/B comparisons.
 """
 
 from __future__ import annotations
 
 import asyncio
 import concurrent.futures
+import re
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
 
 import pytest
-from pydantic import BaseModel, Field
 
-if TYPE_CHECKING:
-    pass
-
-_LLM_MODEL_DEFAULT = "openai/gpt-5-mini"
+_LLM_MODEL_DEFAULT = "copilot/gpt-5-mini"
 
 
 # ---------------------------------------------------------------------------
@@ -79,28 +72,6 @@ class ScoreResult:
 
 
 # ---------------------------------------------------------------------------
-# Pydantic model for structured judge output
-# ---------------------------------------------------------------------------
-
-
-class _DimensionScore(BaseModel):
-    """A single dimension's score returned by the judge."""
-
-    name: str = Field(description="Dimension name exactly as given in the rubric")
-    score: int = Field(description="Integer score for this dimension")
-    justification: str = Field(description="Brief justification for this score")
-
-
-class _JudgeOutput(BaseModel):
-    """Structured output from the multi-dimension judge."""
-
-    dimensions: list[_DimensionScore] = Field(
-        description="One entry per rubric dimension, in the same order"
-    )
-    reasoning: str = Field(description="Overall reasoning about the content quality")
-
-
-# ---------------------------------------------------------------------------
 # Prompt builder
 # ---------------------------------------------------------------------------
 
@@ -129,7 +100,11 @@ def _build_scoring_prompt(
         f"## {content_label.capitalize()} to evaluate\n"
         f"---\n{content}\n---\n\n"
         f"Score each dimension independently. Be strict and calibrated — "
-        f"reserve top scores for genuinely excellent work."
+        f"reserve top scores for genuinely excellent work.\n\n"
+        f"Format your response as:\n"
+        f"DIMENSION_NAME: SCORE - Justification\n"
+        f"(repeat for each dimension)\n\n"
+        f"OVERALL_REASONING: Your overall assessment\n"
     )
 
 
@@ -142,38 +117,58 @@ async def _run_judge(
     content: str,
     rubric: list[ScoringDimension],
     *,
-    model: Any,
+    model: str,
     content_label: str = "content",
     context: str | None = None,
 ) -> ScoreResult:
     """Call the judge LLM and return structured scores."""
-    from pydantic_ai import Agent
+    from pytest_skill_engineering.copilot.judge import copilot_judge  # noqa: PLC0415
 
     prompt = _build_scoring_prompt(content, rubric, content_label=content_label, context=context)
 
-    agent: Agent[None, _JudgeOutput] = Agent(
-        model,
-        output_type=_JudgeOutput,
-        instructions=(
-            "You are an expert content evaluator. Evaluate the content "
-            "against each rubric dimension and return structured scores."
-        ),
-    )
+    # Strip model prefix if present (copilot/, azure/, openai/)
+    judge_model = model
+    if "/" in judge_model:
+        judge_model = judge_model.split("/", 1)[1]
 
-    result = await agent.run(prompt)
-    output = result.output
+    response = await copilot_judge(prompt, model=judge_model, timeout_seconds=60.0)
 
-    # Map dimension scores by name
-    score_map: dict[str, int] = {}
-    for dim_score in output.dimensions:
-        score_map[dim_score.name] = dim_score.score
-
-    # Ensure all rubric dimensions are present, default to 0 if missing
+    # Parse response to extract scores
     scores: dict[str, int] = {}
+    reasoning_parts: list[str] = []
+
+    # Pattern: DIMENSION_NAME: SCORE - Justification
+    for line in response.split("\n"):
+        line = line.strip()
+        if not line:
+            continue
+
+        if line.startswith("OVERALL_REASONING:"):
+            reasoning_parts.append(line.split(":", 1)[1].strip())
+            continue
+
+        # Try to parse dimension score
+        if ":" in line:
+            parts = line.split(":", 1)
+            dim_name = parts[0].strip()
+            rest = parts[1].strip()
+
+            # Extract score (should be first number)
+            score_match = re.search(r"\b(\d+)\b", rest)
+            if score_match:
+                score = int(score_match.group(1))
+
+                # Match against rubric dimensions
+                for dim in rubric:
+                    if dim.name.lower() == dim_name.lower():
+                        # Clamp to valid range
+                        scores[dim.name] = max(1, min(score, dim.max_score))
+                        break
+
+    # Ensure all rubric dimensions are present, default to 1 if missing
     for dim in rubric:
-        raw = score_map.get(dim.name, 0)
-        # Clamp to valid range
-        scores[dim.name] = max(1, min(raw, dim.max_score))
+        if dim.name not in scores:
+            scores[dim.name] = 1
 
     total = sum(scores.values())
     max_total = sum(d.max_score for d in rubric)
@@ -183,12 +178,14 @@ async def _run_judge(
     weight_total = sum(d.weight for d in rubric)
     weighted_score = weighted_sum / weight_total if weight_total > 0 else 0.0
 
+    reasoning = " ".join(reasoning_parts) if reasoning_parts else "No overall reasoning provided"
+
     return ScoreResult(
         scores=scores,
         total=total,
         max_total=max_total,
         weighted_score=weighted_score,
-        reasoning=output.reasoning,
+        reasoning=reasoning,
     )
 
 
@@ -200,8 +197,8 @@ async def _run_judge(
 class LLMScore:
     """Callable that evaluates content against a multi-dimension rubric.
 
-    Uses pydantic-ai with structured output to extract per-dimension scores
-    from a judge LLM.
+    Uses the Copilot SDK with structured prompting to extract per-dimension
+    scores from a judge LLM.
 
     Example::
 
@@ -214,7 +211,7 @@ class LLMScore:
             assert result.total >= 7
     """
 
-    def __init__(self, model: Any) -> None:
+    def __init__(self, model: str) -> None:
         self._model = model
 
     def __call__(
@@ -335,7 +332,7 @@ def llm_score(request: pytest.FixtureRequest) -> LLMScore:
 
     1. ``--llm-model`` if explicitly set
     2. ``--aitest-summary-model`` (shared analysis model)
-    3. ``openai/gpt-5-mini`` as final fallback
+    3. ``copilot/gpt-5-mini`` as final fallback
 
     Example::
 
@@ -349,12 +346,11 @@ def llm_score(request: pytest.FixtureRequest) -> LLMScore:
             result = llm_score(my_text, rubric)
             assert_score(result, min_total=7)
     """
-    from pytest_skill_engineering.fixtures.llm_assert import _build_judge_model
-
     model_str: str = request.config.getoption("--llm-model")
+    if model_str == "openai/gpt-5-mini":  # Old default
+        model_str = _LLM_MODEL_DEFAULT
     if model_str == _LLM_MODEL_DEFAULT:
         summary_model = request.config.getoption("--aitest-summary-model", default=None)
         if summary_model:
             model_str = summary_model
-    model = _build_judge_model(model_str)
-    return LLMScore(model=model)
+    return LLMScore(model=model_str)

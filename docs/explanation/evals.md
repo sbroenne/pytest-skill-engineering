@@ -1,5 +1,5 @@
 ---
-description: "Understand Evals in pytest-skill-engineering: an Eval combines an LLM provider, MCP servers, skills, and custom agents into a test harness."
+description: "Understand Evals in pytest-skill-engineering: CopilotEval combines the GitHub Copilot coding agent with skills, custom agents, and working directory configuration."
 ---
 
 # Evals
@@ -8,21 +8,20 @@ The core concept in pytest-skill-engineering.
 
 ## What is an Eval?
 
-An **Eval** is a test configuration that bundles everything needed to run a test. Two harnesses are available: **`CopilotEval`** (primary — tests the real Copilot coding agent) and **`Eval`** (synthetic — any LLM provider with full introspection). See [Choosing a Test Harness](choosing-a-harness.md) for which to use.
+An **Eval** (specifically `CopilotEval`) is a test configuration that bundles everything needed to run a test using the **real GitHub Copilot coding agent**.
 
 ```
-Eval = Model + Skill + Custom Agents + Server(s)
+CopilotEval = Copilot Agent + Skills + Custom Agents + Instructions
 ```
 
 ```python
-from pytest_skill_engineering import Eval, Provider, MCPServer, Skill
+from pytest_skill_engineering.copilot import CopilotEval
 
-banking_server = MCPServer(command=["python", "banking_mcp.py"])
-
-agent = Eval(
-    provider=Provider(model="azure/gpt-5-mini"),
-    mcp_servers=[banking_server],
-    skill=Skill.from_path("skills/financial-advisor"),  # Optional
+agent = CopilotEval(
+    name="banking-test",
+    instructions="You are a banking assistant.",
+    skill_directories=["skills/banking-advisor"],  # Optional
+    max_turns=10,
 )
 ```
 
@@ -32,20 +31,23 @@ agent = Eval(
 
 | Target | Question |
 |--------|----------|
-| **MCP Server** | Can the LLM understand and use my tools? |
-| **Skill** | Does this domain knowledge improve performance? |
-| **Custom Agent** | Do these `.agent.md` instructions produce the right behavior? |
+| **MCP Server** | Can Copilot understand and use my tools? |
+| **Agent Skill** | Does this domain knowledge improve performance? |
+| **Custom Agent** | Do these `.agent.md` instructions trigger proper subagent dispatch? |
+| **Tool Descriptions** | Can Copilot discover and use tools correctly? |
 
-The Eval is the **test harness** that bundles an LLM with the configuration you want to evaluate.
+The Eval is the **test harness** that bundles the GitHub Copilot coding agent with the configuration you want to evaluate.
 
-## Eval Components
+## CopilotEval Components
 
 | Component | Required | Example |
 |-----------|----------|---------|
-| Provider | ✓ | `Provider(model="azure/gpt-5-mini")` |
-| MCP Servers | Optional | `MCPServer(command=["python", "server.py"])` |
-| Skill | Optional | `Skill.from_path("skills/financial-advisor")` |
-| Custom Agent | Optional | `Eval.from_agent_file("agents/reviewer.agent.md", provider=...)` |
+| Name | ✓ | `"banking-test"` |
+| Instructions | Optional | `"You are a helpful assistant."` |
+| Skills | Optional | `skill_directories=["skills/banking"]` |
+| Custom Agents | Optional | `custom_agents=[load_custom_agent("agents/reviewer.agent.md")]` |
+| Model | Optional | `model="gpt-5.2"` (defaults to Copilot's active model) |
+| Working Directory | Optional | `working_directory=str(tmp_path)` |
 
 ## Eval Leaderboard
 

@@ -67,13 +67,21 @@ def _convert_to_aitest(
 ) -> tuple[Any, Any] | None:
     """Convert CopilotResult to pytest-skill-engineering types.
 
-    Returns ``(EvalResult, Eval)`` tuple, or ``None`` if conversion
+    Returns ``(EvalResult, agent_wrapper)`` tuple, or ``None`` if conversion
     fails.
 
     Since CopilotResult already uses pytest-skill-engineering's Turn and ToolCall types,
     the turns can be passed through directly without rebuilding.
+
+    The agent_wrapper is a simple object with the fields expected by plugin.py:
+    - name
+    - provider.model
+    - system_prompt_name (optional)
+    - mcp_servers (optional)
+    - allowed_tools (optional)
     """
-    from pytest_skill_engineering.core.eval import Eval, Provider
+    from dataclasses import dataclass
+
     from pytest_skill_engineering.core.result import EvalResult
 
     # Turns already use aitest's Turn/ToolCall types — pass through directly
@@ -88,11 +96,29 @@ def _convert_to_aitest(
         premium_requests=result.total_premium_requests,
     )
 
-    aitest_agent = Eval(
+    # Create a minimal wrapper with just the fields needed by plugin.py
+    @dataclass
+    class Provider:
+        model: str
+
+    @dataclass
+    class AgentWrapper:
+        name: str
+        provider: Provider
+        system_prompt_name: str | None = None
+        mcp_servers: list[Any] = None  # type: ignore[assignment]
+        allowed_tools: list[str] | None = None
+
+        def __post_init__(self) -> None:
+            if self.mcp_servers is None:
+                self.mcp_servers = []
+
+    aitest_agent = AgentWrapper(
         name=agent.name,
         provider=Provider(model=result.model_used or agent.model or "claude-haiku-4-5"),
-        system_prompt=agent.instructions,
-        max_turns=agent.max_turns,
+        system_prompt_name=None,  # CopilotEval doesn't have named prompts
+        mcp_servers=[],  # Could convert agent.mcp_servers if needed
+        allowed_tools=agent.allowed_tools,
     )
 
     return aitest_result, aitest_agent
