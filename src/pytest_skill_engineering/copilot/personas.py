@@ -469,14 +469,14 @@ def _inject_skill_reference_tools(
     if not reference_files:
         return
 
-    from copilot.types import Tool, ToolResult
+    from copilot import Tool, ToolResult
 
     # list_skill_references tool
     async def _list_handler(invocation: "ToolInvocation") -> "ToolResult":
         file_list = "\n".join(f"- {name}" for name in sorted(reference_files))
         return ToolResult(
-            textResultForLlm=f"Available skill reference documents:\n{file_list}",
-            resultType="success",
+            text_result_for_llm=f"Available skill reference documents:\n{file_list}",
+            result_type="success",
         )
 
     list_tool = Tool(
@@ -492,26 +492,26 @@ def _inject_skill_reference_tools(
 
     # read_skill_reference tool
     async def _read_handler(invocation: "ToolInvocation") -> "ToolResult":
-        args: dict[str, Any] = invocation.get("arguments") or {}  # type: ignore[assignment]
+        args: dict[str, Any] = invocation.arguments or {}
         filename = args.get("filename", "")
 
         if not filename:
             available = sorted(reference_files)
             return ToolResult(
-                textResultForLlm=f"Error: filename is required. Available: {available}",
-                resultType="failure",
+                text_result_for_llm=f"Error: filename is required. Available: {available}",
+                result_type="failure",
             )
 
         ref_path = reference_files.get(filename)
         if ref_path is None:
             available = sorted(reference_files)
             return ToolResult(
-                textResultForLlm=f"Error: '{filename}' not found. Available: {available}",
-                resultType="failure",
+                text_result_for_llm=f"Error: '{filename}' not found. Available: {available}",
+                result_type="failure",
             )
 
         content = ref_path.read_text(encoding="utf-8")
-        return ToolResult(textResultForLlm=content, resultType="success")
+        return ToolResult(text_result_for_llm=content, result_type="success")
 
     read_tool = Tool(
         name="read_skill_reference",
