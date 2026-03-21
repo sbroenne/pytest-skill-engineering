@@ -133,11 +133,9 @@ class TestSinglePromptMultiStep:
 
         content = (tmp_path / "math_ops.py").read_text()
         assert "->" in content or ": int" in content, (
-            "Step 2 (add type hints) was not completed.\n"
-            f"Generated content:\n{content}"
+            f"Step 2 (add type hints) was not completed.\nGenerated content:\n{content}"
         )
         has_docstring = '"""' in content or "'''" in content
         assert has_docstring, (
-            "Step 2 (add docstrings) was not completed.\n"
-            f"Generated content:\n{content}"
+            f"Step 2 (add docstrings) was not completed.\nGenerated content:\n{content}"
         )

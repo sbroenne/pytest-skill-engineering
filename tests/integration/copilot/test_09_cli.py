@@ -42,9 +42,7 @@ class TestShellCommandBasic:
         assert (tmp_path / "hello.txt").exists(), "hello.txt was not created"
 
         content = (tmp_path / "hello.txt").read_text().strip()
-        assert "Hello World" in content, (
-            f"Expected 'Hello World' in hello.txt, got: {content!r}"
-        )
+        assert "Hello World" in content, f"Expected 'Hello World' in hello.txt, got: {content!r}"
 
     async def test_list_directory_contents(self, copilot_eval, tmp_path):
         """Agent lists directory contents and reports filenames."""
@@ -65,8 +63,7 @@ class TestShellCommandBasic:
 
         response = (result.final_response or "").lower()
         assert "alpha" in response and "beta" in response, (
-            "Agent did not report the expected filenames.\n"
-            f"Response: {result.final_response}"
+            f"Agent did not report the expected filenames.\nResponse: {result.final_response}"
         )
 
 
@@ -77,9 +74,7 @@ class TestShellMultiStep:
         """Agent creates a file with shell, then reads it back to confirm."""
         agent = CopilotEval(
             name="shell-multi",
-            instructions=(
-                "You can run shell commands. Complete all steps in order."
-            ),
+            instructions=("You can run shell commands. Complete all steps in order."),
             working_directory=str(tmp_path),
         )
         result = await copilot_eval(
@@ -107,15 +102,12 @@ class TestShellMultiStep:
         )
         result = await copilot_eval(
             agent,
-            "Count the number of lines in names.txt using shell commands "
-            "and tell me the result.",
+            "Count the number of lines in names.txt using shell commands and tell me the result.",
         )
         assert result.success, f"Agent failed: {result.error}"
 
         response = result.final_response or ""
-        assert "5" in response, (
-            f"Expected the agent to report 5 lines. Response: {response}"
-        )
+        assert "5" in response, f"Expected the agent to report 5 lines. Response: {response}"
 
 
 class TestShellErrorHandling:

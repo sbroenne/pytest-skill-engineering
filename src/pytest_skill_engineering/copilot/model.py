@@ -382,4 +382,3 @@ def _handle_event(
             out_tokens = int(getattr(data, "output_tokens", 0) or 0)
             usage_data["input"] += in_tokens
             usage_data["output"] += out_tokens
-

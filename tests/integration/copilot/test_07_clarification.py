@@ -43,8 +43,7 @@ class TestClarificationDetection:
         agent = CopilotEval(
             name="no-clarify",
             instructions=(
-                "Create files as requested. Never ask for permission or "
-                "clarification — just do it."
+                "Create files as requested. Never ask for permission or clarification — just do it."
             ),
             working_directory=str(tmp_path),
         )
@@ -66,8 +65,7 @@ class TestClarificationDetection:
         agent = CopilotEval(
             name="no-clarify-multi",
             instructions=(
-                "Complete all requested steps without asking for confirmation. "
-                "Act immediately."
+                "Complete all requested steps without asking for confirmation. Act immediately."
             ),
             working_directory=str(tmp_path),
         )
@@ -145,6 +143,5 @@ class TestClarificationDetection:
         )
         created_files = list(tmp_path.rglob("*.py"))
         assert len(created_files) > 0, (
-            "Agent with 'never ask' instructions produced no files.\n"
-            f"Response: {response}"
+            f"Agent with 'never ask' instructions produced no files.\nResponse: {response}"
         )
