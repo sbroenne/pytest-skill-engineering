@@ -24,10 +24,19 @@ Key version bumps:
 - **huggingface-hub** 0.36.2 → 1.7.2 (major bump, transitive via litellm)
 - **virtualenv** 20.36.1 → 21.2.0 (major bump, transitive via pre-commit)
 
-No code changes needed — ruff check, ruff format, and pyright all passed clean.
+**Required 3 code compatibility fixes** (see Hockney's parallel work):
+1. **Azure cross-tenant auth** — Custom token provider to pass `AZURE_TENANT_ID` to `DefaultAzureCredential.get_token()`
+2. **Copilot SDK 0.2.0 subagent events** — Subagent field renamed from `eval_name` to `agent_name`
+3. **PydanticAI 1.70 deprecation** — `FunctionToolset.tool()` → `tool_plain()` for plain functions
+4. **Subagent detection fallback** — Detect from `tool.execution_start` events when native `runSubagent` doesn't emit subagent events
+
+**Integration test results:** 105/105 tests passed after fixes.
+
 The `griffe`/`griffecli`/`invoke`/`rsa` packages were removed (no longer needed by updated deps).
 New transitive deps added: `typer`, `shellingham`, `annotated-doc`, `uncalled-for`, `python-discovery`.
 
 ## Cross-Agent Context
 
 **Verbal's parallel work (same session):** Upgraded Copilot SDK 0.1.25 → 0.2.0 with breaking API changes. See Verbal's history for detailed migration notes on SubprocessConfig, create_session(**kwargs), send_and_wait(str), and snake_case ToolResult fields. The new `typer` and `shellingham` transitive deps added by this project are now in uv.lock.
+
+**Hockney's parallel work (same session):** Integration test verification found 4 compatibility issues during test run; all fixed. 105/105 tests now passing. See Hockney's history for detailed fix patterns.

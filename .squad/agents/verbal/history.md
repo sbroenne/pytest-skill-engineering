@@ -9,7 +9,7 @@
 
 <!-- Append new learnings below. Each entry is something lasting about the project. -->
 
-### 2026-07-23 — Copilot SDK 0.1.25 → 0.2.0 Upgrade
+### 2026-03-21 — Copilot SDK 0.1.25 → 0.2.0 Upgrade
 
 **Breaking changes migrated:**
 1. **`CopilotClient` constructor**: `options=CopilotClientOptions(...)` → `CopilotClient(SubprocessConfig(...), auto_start=True)`. `CopilotClientOptions` is gone; replaced by `SubprocessConfig` (from `copilot` top-level).
@@ -28,6 +28,10 @@
 - `ToolInvocation` is a TypedDict — `.get("arguments")` pattern still works
 - `CustomAgentConfig` is a TypedDict — passing plain dicts still works
 
+**Test verification:** 33 copilot integration tests all passed after migration. No test code changes needed.
+
 ## Cross-Agent Context
 
 **Fenster's parallel work (same session):** Ran `uv lock --upgrade` and brought all ~40 dependencies to latest compatible versions. Key: pydantic-ai 1.61→1.70, openai 2.21→2.29, ruff 0.15.1→0.15.7. The `github-copilot-sdk 0.1→0.2` bump that necessitated this file's migration was part of Fenster's broader upgrade. All static analysis passed clean. See Fenster's history for full transitive dep list.
+
+**Hockney's parallel work (same session):** Integration test verification of combined upgrades. Found that this migration required additional compatibility fixes: subagent event field rename (`agent_name` in SDK 0.2), and event detection fallback from `tool.execution_start` when native subagent events missing. See Hockney's history for detailed fixes. 105/105 integration tests now passing.
