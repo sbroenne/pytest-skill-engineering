@@ -47,8 +47,7 @@ def export_grading(
         )
     if evidence is not None and len(evidence) != len(expectations):
         raise ValueError(
-            f"evidence ({len(evidence)}) must match "
-            f"expectations ({len(expectations)}) length"
+            f"evidence ({len(evidence)}) must match expectations ({len(expectations)}) length"
         )
 
     expectation_entries: list[dict[str, Any]] = []

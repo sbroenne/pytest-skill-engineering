@@ -51,7 +51,10 @@ class TestSkillLoading:
         skill = load_skill(SKILLS_DIR / "math-helper")
 
         assert skill.name == "math-helper"
-        assert skill.description == "Math calculation and formula helper for financial and algebraic computations"
+        assert (
+            skill.description
+            == "Math calculation and formula helper for financial and algebraic computations"
+        )
         assert skill.metadata.version == "1.0.0"
         assert skill.metadata.license == "Apache-2.0"
         assert "math" in skill.metadata.tags
