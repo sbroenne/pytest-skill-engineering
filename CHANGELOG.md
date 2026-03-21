@@ -23,6 +23,7 @@ This release completes the **Copilot pivot** — PydanticAI has been fully remov
 ### Added
 
 - **Agent Skills spec compliance** ([agentskills.io](https://agentskills.io)) — Full support for compatibility, metadata, allowed-tools fields
+- **skill-creator eval automation** — `skill_eval_runner` fixture auto-discovers `evals/evals.json`, runs cases via CopilotEval, validates with `llm_assert`, exports skill-creator compatible `grading.json`
 - **skill-creator eval bridge** — Import evals from `evals/evals.json`, export grading results to skill-creator format
 - **Scripts and assets directory support** per Agent Skills spec — package Python scripts, prompts, and resources with skills
 - **Shared Copilot SDK judge utility** (`copilot/judge.py`) — unified LLM judge for assertions, scoring, and clarification detection
