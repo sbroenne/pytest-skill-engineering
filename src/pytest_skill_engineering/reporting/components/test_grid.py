@@ -274,29 +274,6 @@ def _test_group(
     ]
 
 
-def _grid_styles() -> Node:
-    """CSS for test grid behavior."""
-    from htpy import style
-    from markupsafe import Markup
-
-    return style[
-        Markup("""
-.test-group.collapsed .group-content {
-    display: none;
-}
-.test-group.collapsed .expand-icon {
-    transform: rotate(-90deg);
-}
-.test-row.hidden {
-    display: none;
-}
-.test-detail.hidden {
-    display: none;
-}
-""")
-    ]
-
-
 def test_grid(
     test_groups: list[TestGroupData],
     all_agent_ids: list[str],
@@ -328,5 +305,4 @@ def test_grid(
                 for group in test_groups
             ]
         ],
-        _grid_styles(),
     ]

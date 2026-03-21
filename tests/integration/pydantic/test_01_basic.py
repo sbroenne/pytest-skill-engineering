@@ -2,6 +2,7 @@
 
 One eval config, no leaderboard. Proves the framework can run a prompt
 against MCP tools and assert on tool usage and response content.
+Includes negative test cases that verify graceful failure handling.
 
 Permutation: Nothing varies — baseline.
 
@@ -105,4 +106,98 @@ class TestTodoBasic:
         assert llm_assert(
             result.final_response,
             "Confirms all three grocery items were added to the list.",
+        )
+
+
+class TestBankingNegative:
+    """Negative tests — verify graceful failure, correct tool assertions, and edge cases."""
+
+    async def test_tool_not_called_assertions(self, eval_run, banking_server):
+        """Verify tool_was_called() correctly returns False for uncalled tools."""
+        agent = Eval.from_instructions(
+            "tool-assertion-check",
+            BANKING_PROMPT,
+            provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
+            mcp_servers=[banking_server],
+            max_turns=5,
+        )
+
+        result = await eval_run(agent, "What is my checking account balance?")
+
+        assert result.success
+        assert result.tool_was_called("get_balance") or result.tool_was_called("get_all_balances")
+        # These tools should NOT have been called for a simple balance inquiry
+        assert not result.tool_was_called("transfer"), "Balance check should not trigger transfer"
+        assert not result.tool_was_called("withdraw"), "Balance check should not trigger withdrawal"
+        assert not result.tool_was_called("deposit"), "Balance check should not trigger deposit"
+        assert not result.tool_was_called("nonexistent_tool"), "Nonexistent tool must return False"
+        assert result.tool_call_count("nonexistent_tool") == 0
+
+    async def test_out_of_scope_request(self, eval_run, banking_server, llm_assert):
+        """Agent recognizes it cannot fulfill a request outside its tool capabilities."""
+        agent = Eval.from_instructions(
+            "out-of-scope",
+            BANKING_PROMPT,
+            provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
+            mcp_servers=[banking_server],
+            max_turns=3,
+        )
+
+        result = await eval_run(agent, "Book me a flight to Paris for next Tuesday.")
+
+        # Agent should complete without error, but should NOT have banking tools for flights
+        assert result.success
+        assert not result.tool_was_called("book_flight"), "No flight-booking tool exists"
+        assert not result.tool_was_called("transfer"), "Flight request should not trigger transfer"
+        assert llm_assert(
+            result.final_response,
+            "Explains it cannot book flights or that this is outside its capabilities. "
+            "Does NOT claim to have booked a flight.",
+        )
+
+    async def test_max_turns_exhausted(self, eval_run, banking_server):
+        """Agent fails when max_turns is too low to complete a complex multi-step task."""
+        agent = Eval.from_instructions(
+            "turns-exhausted",
+            BANKING_PROMPT,
+            provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
+            mcp_servers=[banking_server],
+            max_turns=1,
+        )
+
+        result = await eval_run(
+            agent,
+            "Check all account balances, then transfer $100 from checking to savings, "
+            "then verify the new balances and show me the transaction history.",
+        )
+
+        # With max_turns=1, the agent gets exactly one LLM request.
+        # A multi-step task requiring tool calls needs multiple requests
+        # (call tool → receive result → call next tool → ...).
+        # The engine should hit UsageLimitExceeded → success=False.
+        assert not result.success, "Complex multi-step task should not succeed with max_turns=1"
+        assert result.error is not None
+
+    async def test_nonexistent_account_graceful(self, eval_run, banking_server, llm_assert):
+        """Agent handles a request for a non-existent account type gracefully."""
+        agent = Eval.from_instructions(
+            "bad-account",
+            BANKING_PROMPT,
+            provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
+            mcp_servers=[banking_server],
+            max_turns=5,
+        )
+
+        result = await eval_run(
+            agent,
+            "What is the balance of my investment account?",
+        )
+
+        # The tool schema constrains account to enum ["checking", "savings"].
+        # A good LLM respects the schema and tells the user no investment account exists.
+        assert result.success
+        assert llm_assert(
+            result.final_response,
+            "Indicates that an 'investment' account does not exist or is not available. "
+            "May mention the available accounts (checking, savings).",
         )

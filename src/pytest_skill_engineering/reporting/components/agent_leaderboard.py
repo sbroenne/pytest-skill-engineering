@@ -140,7 +140,3 @@ def eval_leaderboard(agents: list[AgentData]) -> Node | None:
         return _single_agent_card(agents[0])
 
     return _multi_agent_table(agents)
-
-
-# Keep backward-compatible alias
-agent_leaderboard = eval_leaderboard

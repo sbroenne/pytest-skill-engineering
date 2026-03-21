@@ -4,7 +4,7 @@
 mermaid.initialize({ 
     startOnLoad: true,
     theme: 'dark',
-    securityLevel: 'loose',
+    securityLevel: 'strict',
     themeVariables: {
         primaryColor: '#4051b5',
         primaryTextColor: '#c9d1d9',
@@ -79,7 +79,7 @@ function showDiagramHover(element, mermaidCode) {
     clearTimeout(hoverTimeout);
     const popup = document.getElementById('diagram-hover-popup');
     const content = document.getElementById('hover-mermaid');
-    content.innerHTML = mermaidCode;
+    content.textContent = mermaidCode;
     popup.classList.add('active');
     mermaid.run({ nodes: [content] });
 }
