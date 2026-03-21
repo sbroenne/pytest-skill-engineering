@@ -41,7 +41,6 @@ else:
 
 if TYPE_CHECKING:
     from copilot import CopilotSession, SessionEvent
-    from copilot.types import CopilotClientOptions
 
     from pytest_skill_engineering.copilot.eval import CopilotEval
     from pytest_skill_engineering.copilot.result import CopilotResult
@@ -120,19 +119,20 @@ def _is_transient_error(error: str | None) -> bool:
 
 async def _run_copilot_once(agent: "CopilotEval", prompt: str) -> "CopilotResult":
     """Execute a single attempt of a prompt against GitHub Copilot."""
-    client_options: dict[str, Any] = {
-        "cwd": agent.working_directory or ".",
-        "auto_start": True,
-        "log_level": "warning",
-    }
+    from copilot import PermissionHandler, SubprocessConfig
+
+    subprocess_config = SubprocessConfig(
+        cwd=agent.working_directory or ".",
+        log_level="warning",
+    )
 
     # Pass GITHUB_TOKEN from environment for CI authentication
     github_token = os.environ.get("GITHUB_TOKEN")
     if github_token:
-        client_options["github_token"] = github_token
+        subprocess_config.github_token = github_token
         logger.info("Using GITHUB_TOKEN from environment for authentication")
 
-    client = CopilotClient(options=cast("CopilotClientOptions", client_options))
+    client = CopilotClient(subprocess_config, auto_start=True)
 
     mapper = EventMapper()
     loop = asyncio.get_running_loop()
@@ -152,11 +152,11 @@ async def _run_copilot_once(agent: "CopilotEval", prompt: str) -> "CopilotResult
 
         # Install permission handler if auto_confirm is enabled
         if agent.auto_confirm:
-            session_config["on_permission_request"] = _auto_approve_handler
+            session_config["on_permission_request"] = PermissionHandler.approve_all
 
         # Hard timeout on session creation — 30s is generous.
         session: CopilotSession = await asyncio.wait_for(
-            client.create_session(session_config),  # type: ignore[arg-type]
+            client.create_session(**session_config),
             timeout=30,
         )
         logger.info("Session created: %s", session.session_id)
@@ -168,7 +168,7 @@ async def _run_copilot_once(agent: "CopilotEval", prompt: str) -> "CopilotResult
         # Pass timeout to both send_and_wait (SDK-internal idle wait)
         # and asyncio.wait_for (hard outer limit).
         result_event: SessionEvent | None = await asyncio.wait_for(
-            session.send_and_wait({"prompt": prompt}, timeout=agent.timeout_s),
+            session.send_and_wait(prompt, timeout=agent.timeout_s),
             timeout=agent.timeout_s,
         )
 
@@ -208,16 +208,3 @@ async def _run_copilot_once(agent: "CopilotEval", prompt: str) -> "CopilotResult
             await client.force_stop()
 
     return mapper.build()
-
-
-def _auto_approve_handler(request: dict, context: dict[str, str]) -> dict:
-    """Auto-approve all permission requests for deterministic testing.
-
-    Args:
-        request: PermissionRequest TypedDict with kind, toolCallId, etc.
-        context: Additional context from the SDK.
-
-    Returns:
-        PermissionRequestResult with kind="approved".
-    """
-    return {"kind": "approved"}

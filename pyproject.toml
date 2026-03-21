@@ -41,7 +41,7 @@ dependencies = [
 
 [project.optional-dependencies]
 copilot = [
-    "github-copilot-sdk>=0.1.25",
+    "github-copilot-sdk>=0.2.0",
 ]
 dev = [
     "pytest-cov>=7.0",

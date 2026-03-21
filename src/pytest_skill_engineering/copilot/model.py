@@ -88,18 +88,17 @@ async def _get_or_create_client() -> Any:
             )
             raise ImportError(msg) from exc
 
-        options: dict[str, Any] = {
-            "cwd": ".",
-            "auto_start": True,
-            "log_level": "warning",
-        }
+        from copilot import SubprocessConfig
+
+        subprocess_config = SubprocessConfig(
+            cwd=".",
+            log_level="warning",
+        )
         token = os.environ.get("GITHUB_TOKEN")
         if token:
-            options["github_token"] = token
+            subprocess_config.github_token = token
 
-        from copilot.types import CopilotClientOptions
-
-        _client = CopilotClient(options=CopilotClientOptions(**options))
+        _client = CopilotClient(subprocess_config, auto_start=True)
         await asyncio.wait_for(_client.start(), timeout=60)
         _client_loop = current_loop
         _logger.info("Shared CopilotClient started for model provider")
@@ -172,10 +171,13 @@ class CopilotModel(Model):
 
         client = await _get_or_create_client()
 
-        # Build session config
-        session_config: dict[str, Any] = {
+        from copilot import PermissionHandler
+
+        # Build session config as kwargs for create_session
+        session_kwargs: dict[str, Any] = {
             "model": self._model,
             "available_tools": [],  # Disable all built-in Copilot tools
+            "on_permission_request": PermissionHandler.approve_all,
         }
 
         # Extract system prompt and conversation from PydanticAI messages
@@ -187,7 +189,7 @@ class CopilotModel(Model):
             system_prompt = f"{system_prompt}\n\n{extra}" if system_prompt else extra
 
         if system_prompt:
-            session_config["system_message"] = {
+            session_kwargs["system_message"] = {
                 "mode": "replace",
                 "content": system_prompt,
             }
@@ -200,7 +202,7 @@ class CopilotModel(Model):
         captured_tool_calls: list[dict[str, Any]] = []
 
         if tool_defs:
-            session_config["tools"] = _build_copilot_tools(tool_defs, captured_tool_calls)
+            session_kwargs["tools"] = _build_copilot_tools(tool_defs, captured_tool_calls)
 
         # Collect response data from events
         text_parts: list[str] = []
@@ -211,13 +213,13 @@ class CopilotModel(Model):
 
         # Create session and execute
         session = await asyncio.wait_for(
-            client.create_session(session_config),
+            client.create_session(**session_kwargs),
             timeout=30,
         )
         session.on(event_handler)
 
         result_event = await session.send_and_wait(
-            {"prompt": user_prompt},
+            user_prompt,
             timeout=120,
         )
         # send_and_wait may return a final event — only process if not
@@ -267,7 +269,7 @@ def _convert_messages(messages: list[ModelMessage]) -> tuple[str, str]:
 
     Flattens the structured PydanticAI message history into a single system
     prompt and conversation prompt suitable for the Copilot SDK's
-    ``send_and_wait({"prompt": ...})`` API.
+    ``send_and_wait(prompt)`` API.
     """
     system_parts: list[str] = []
     conversation_parts: list[str] = []
@@ -316,7 +318,7 @@ def _build_copilot_tools(
     ``captured_calls`` so they can be returned as ``ToolCallPart``
     in the ``ModelResponse``.
     """
-    from copilot.types import Tool, ToolResult
+    from copilot import Tool, ToolResult
 
     tools: list[Tool] = []
     for td in tool_defs:
@@ -326,8 +328,8 @@ def _build_copilot_tools(
                 args = invocation.get("arguments") or {}
                 captured_calls.append({"name": tool_name, "args": args})
                 return ToolResult(
-                    textResultForLlm=json.dumps({"status": "captured"}),
-                    resultType="success",
+                    text_result_for_llm=json.dumps({"status": "captured"}),
+                    result_type="success",
                 )
 
             return _handler

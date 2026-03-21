@@ -45,7 +45,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from copilot.types import Tool, ToolInvocation, ToolResult
+    from copilot import Tool, ToolInvocation, ToolResult
 
     from pytest_skill_engineering.copilot.eval import CopilotEval
     from pytest_skill_engineering.copilot.events import EventMapper
@@ -327,7 +327,7 @@ def _make_subagent_dispatch_tool(
         mapper: The ``EventMapper`` for the current run, used to record
             subagent lifecycle events.
     """
-    from copilot.types import Tool, ToolResult
+    from copilot import Tool, ToolResult
 
     from pytest_skill_engineering.copilot.eval import CopilotEval as _CopilotAgent
     from pytest_skill_engineering.copilot.runner import run_copilot
@@ -349,16 +349,20 @@ def _make_subagent_dispatch_tool(
         if not eval_name:
             available = sorted(agent_map)
             return ToolResult(
-                textResultForLlm=(f"Error: eval_name is required. Available agents: {available}"),
-                resultType="failure",
+                text_result_for_llm=(
+                    f"Error: eval_name is required. Available agents: {available}"
+                ),
+                result_type="failure",
             )
 
         agent_cfg = agent_map.get(eval_name)
         if agent_cfg is None:
             available = sorted(agent_map)
             return ToolResult(
-                textResultForLlm=(f"Error: agent '{eval_name}' not found. Available: {available}"),
-                resultType="failure",
+                text_result_for_llm=(
+                    f"Error: agent '{eval_name}' not found. Available: {available}"
+                ),
+                result_type="failure",
             )
 
         mapper.record_subagent_start(eval_name)
@@ -378,14 +382,14 @@ def _make_subagent_dispatch_tool(
         if sub_result.success:
             mapper.record_subagent_complete(eval_name)
             return ToolResult(
-                textResultForLlm=sub_result.final_response or "Sub-agent completed.",
-                resultType="success",
+                text_result_for_llm=sub_result.final_response or "Sub-agent completed.",
+                result_type="success",
             )
 
         mapper.record_subagent_failed(eval_name)
         return ToolResult(
-            textResultForLlm=f"Sub-agent '{eval_name}' failed: {sub_result.error}",
-            resultType="failure",
+            text_result_for_llm=f"Sub-agent '{eval_name}' failed: {sub_result.error}",
+            result_type="failure",
         )
 
     return Tool(
