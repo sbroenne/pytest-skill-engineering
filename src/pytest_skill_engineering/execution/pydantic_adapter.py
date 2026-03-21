@@ -103,10 +103,23 @@ def _build_azure_model(model_str: str) -> Any:
         from azure.identity import DefaultAzureCredential, get_bearer_token_provider
         from openai import AsyncAzureOpenAI
 
-        credential = DefaultAzureCredential()
-        token_provider = get_bearer_token_provider(
-            credential, "https://cognitiveservices.azure.com/.default"
+        tenant_id = os.environ.get("AZURE_TENANT_ID")
+        credential = DefaultAzureCredential(
+            additionally_allowed_tenants=["*"] if tenant_id else None,
         )
+
+        if tenant_id:
+            # Cross-tenant auth: get_bearer_token_provider doesn't forward
+            # tenant_id, so we build a custom provider that does.
+            _scope = "https://cognitiveservices.azure.com/.default"
+
+            def token_provider() -> str:
+                return credential.get_token(_scope, tenant_id=tenant_id).token
+        else:
+            token_provider = get_bearer_token_provider(
+                credential, "https://cognitiveservices.azure.com/.default"
+            )
+
         client = AsyncAzureOpenAI(
             azure_endpoint=azure_endpoint,
             azure_ad_token_provider=token_provider,
