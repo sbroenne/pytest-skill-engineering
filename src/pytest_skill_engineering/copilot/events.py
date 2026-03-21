@@ -451,6 +451,7 @@ def _resolve_subagent_name(event: SessionEvent) -> str:
     """Extract the subagent name from an event, trying SDK 0.2.0+ fields first."""
     return (
         _get_data_field(event, "agent_name", None)
+        or _get_data_field(event, "eval_name", None)
         or _get_data_field(event, "name", None)
         or "unknown"
     )

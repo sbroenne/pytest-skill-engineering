@@ -330,8 +330,8 @@ class TestRequest:
         mock_session.on = MagicMock()
         mock_session.send_and_wait = AsyncMock(return_value=None)
 
-        async def mock_create_session(config: dict) -> MagicMock:
-            created_config.update(config)
+        async def mock_create_session(**kwargs: Any) -> MagicMock:
+            created_config.update(kwargs)
             return mock_session
 
         mock_client = AsyncMock()
@@ -362,8 +362,8 @@ class TestRequest:
         mock_session.on = MagicMock()
         mock_session.send_and_wait = AsyncMock(return_value=None)
 
-        async def mock_create_session(config: dict) -> MagicMock:
-            created_config.update(config)
+        async def mock_create_session(**kwargs: Any) -> MagicMock:
+            created_config.update(kwargs)
             return mock_session
 
         mock_client = AsyncMock()
@@ -426,8 +426,8 @@ class TestRequest:
         mock_session.on = MagicMock()
         mock_session.send_and_wait = AsyncMock(return_value=None)
 
-        async def mock_create_session(config: dict) -> MagicMock:
-            created_config.update(config)
+        async def mock_create_session(**kwargs: Any) -> MagicMock:
+            created_config.update(kwargs)
             return mock_session
 
         mock_client = AsyncMock()
@@ -451,8 +451,8 @@ class TestRequest:
         mock_session.on = MagicMock()
         mock_session.send_and_wait = AsyncMock(return_value=None)
 
-        async def mock_create_session(config: dict) -> MagicMock:
-            created_config.update(config)
+        async def mock_create_session(**kwargs: Any) -> MagicMock:
+            created_config.update(kwargs)
             return mock_session
 
         mock_client = AsyncMock()
@@ -467,7 +467,7 @@ class TestRequest:
         assert "on_permission_request" in created_config
         # Handler should approve
         result = created_config["on_permission_request"]({}, {})
-        assert result == {"kind": "approved"}
+        assert result.kind == "approved"
 
     async def test_model_name_in_response(
         self, model: CopilotModel, mock_request_params: ModelRequestParameters

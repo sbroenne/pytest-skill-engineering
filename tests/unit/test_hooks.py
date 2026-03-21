@@ -53,7 +53,9 @@ class TestResolveAnalysisPrompt:
 
     def test_returns_none_when_no_cli_and_no_hook(self) -> None:
         """Returns None when neither CLI nor hook provides a prompt."""
-        from pytest_skill_engineering.plugin import _resolve_analysis_prompt
+        from pytest_skill_engineering.plugin_report import (
+            resolve_analysis_prompt as _resolve_analysis_prompt,
+        )
 
         config = self._make_config(cli_path=None, hook_result=None)
         result = _resolve_analysis_prompt(config)
@@ -61,7 +63,9 @@ class TestResolveAnalysisPrompt:
 
     def test_cli_option_returns_file_content(self, tmp_path: Path) -> None:
         """CLI --aitest-analysis-prompt reads and returns file content."""
-        from pytest_skill_engineering.plugin import _resolve_analysis_prompt
+        from pytest_skill_engineering.plugin_report import (
+            resolve_analysis_prompt as _resolve_analysis_prompt,
+        )
 
         prompt_file = tmp_path / "custom.md"
         prompt_file.write_text("Custom CLI prompt content", encoding="utf-8")
@@ -72,7 +76,9 @@ class TestResolveAnalysisPrompt:
 
     def test_cli_option_missing_file_raises(self, tmp_path: Path) -> None:
         """CLI option with nonexistent file raises UsageError."""
-        from pytest_skill_engineering.plugin import _resolve_analysis_prompt
+        from pytest_skill_engineering.plugin_report import (
+            resolve_analysis_prompt as _resolve_analysis_prompt,
+        )
 
         config = self._make_config(cli_path=str(tmp_path / "nonexistent.md"))
         with pytest.raises(pytest.UsageError, match="not found"):
@@ -80,7 +86,9 @@ class TestResolveAnalysisPrompt:
 
     def test_hook_result_returned_when_no_cli(self) -> None:
         """Hook result is returned when CLI option is not set."""
-        from pytest_skill_engineering.plugin import _resolve_analysis_prompt
+        from pytest_skill_engineering.plugin_report import (
+            resolve_analysis_prompt as _resolve_analysis_prompt,
+        )
 
         config = self._make_config(cli_path=None, hook_result="Hook prompt text")
         result = _resolve_analysis_prompt(config)
@@ -88,7 +96,9 @@ class TestResolveAnalysisPrompt:
 
     def test_cli_takes_precedence_over_hook(self, tmp_path: Path) -> None:
         """CLI option takes precedence over hook result."""
-        from pytest_skill_engineering.plugin import _resolve_analysis_prompt
+        from pytest_skill_engineering.plugin_report import (
+            resolve_analysis_prompt as _resolve_analysis_prompt,
+        )
 
         prompt_file = tmp_path / "cli-prompt.md"
         prompt_file.write_text("CLI wins", encoding="utf-8")
@@ -99,7 +109,9 @@ class TestResolveAnalysisPrompt:
 
     def test_empty_hook_result_returns_none(self) -> None:
         """Empty string from hook is treated as no result (falsy)."""
-        from pytest_skill_engineering.plugin import _resolve_analysis_prompt
+        from pytest_skill_engineering.plugin_report import (
+            resolve_analysis_prompt as _resolve_analysis_prompt,
+        )
 
         config = self._make_config(cli_path=None, hook_result="")
         result = _resolve_analysis_prompt(config)
@@ -258,7 +270,9 @@ class TestCompactSummaryOption:
 
     def test_pytest_compact_option_forwarded_to_generate_insights(self) -> None:
         """_generate_structured_insights passes compact flag through to insights."""
-        from pytest_skill_engineering.plugin import _generate_structured_insights
+        from pytest_skill_engineering.plugin import (
+            generate_structured_insights as _generate_structured_insights,
+        )
         from pytest_skill_engineering.reporting.collector import SuiteReport
 
         config = mock.MagicMock()
@@ -311,7 +325,9 @@ class TestCompactSummaryOption:
 
     def test_print_analysis_prompt_logs_source(self) -> None:
         """Runtime debug flag logs prompt source and path metadata."""
-        from pytest_skill_engineering.plugin import _generate_structured_insights
+        from pytest_skill_engineering.plugin import (
+            generate_structured_insights as _generate_structured_insights,
+        )
         from pytest_skill_engineering.reporting.collector import SuiteReport
 
         config = mock.MagicMock()

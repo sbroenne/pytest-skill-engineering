@@ -400,9 +400,6 @@
         'error': 'NoneType',
         'eval_name': 'str',
         'eval_result': dict({
-          '_messages': list([
-            '<empty>',
-          ]),
           'assertions': list([
             '<empty>',
           ]),
@@ -495,9 +492,6 @@
         'error': 'NoneType',
         'eval_name': 'str',
         'eval_result': dict({
-          '_messages': list([
-            '<empty>',
-          ]),
           'assertions': list([
             '<empty>',
           ]),
@@ -590,9 +584,6 @@
         'error': 'NoneType',
         'eval_name': 'str',
         'eval_result': dict({
-          '_messages': list([
-            '<empty>',
-          ]),
           'assertions': list([
             '<empty>',
           ]),
@@ -685,9 +676,6 @@
         'error': 'NoneType',
         'eval_name': 'str',
         'eval_result': dict({
-          '_messages': list([
-            '<empty>',
-          ]),
           'assertions': list([
             '<empty>',
           ]),
