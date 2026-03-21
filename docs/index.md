@@ -77,6 +77,25 @@ AI analyzes your test results and tells you **what to fix**, not just what faile
 
 ## Quick Start
 
+### GitHub Copilot (recommended)
+
+Test what your users actually experience — zero model setup:
+
+```python
+from pytest_skill_engineering.copilot import CopilotEval
+
+async def test_skill(copilot_eval):
+    agent = CopilotEval(skill_directories=["skills/my-skill"])
+    result = await copilot_eval(agent, "What can you help me with?")
+    assert result.success
+```
+
+> 📁 See [copilot/test_01_basic.py](https://github.com/sbroenne/pytest-skill-engineering/blob/main/tests/integration/copilot/test_01_basic.py) for complete examples.
+
+### Bring your own model (Azure, OpenAI, Anthropic…)
+
+Full control over model, introspection, and cost tracking:
+
 ```python
 from pytest_skill_engineering import Eval, Provider, MCPServer
 
@@ -87,9 +106,7 @@ async def test_balance_check(eval_run):
         provider=Provider(model="azure/gpt-5-mini"),
         mcp_servers=[banking_server],
     )
-    
     result = await eval_run(agent, "What's my checking account balance?")
-    
     assert result.success
     assert result.tool_was_called("get_balance")
 ```

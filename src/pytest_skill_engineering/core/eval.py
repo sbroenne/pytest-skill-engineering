@@ -117,7 +117,7 @@ def _expand_env(value: str | None) -> str | None:
     return re.sub(pattern, lambda m: os.environ.get(m.group(1), m.group(0)), value)
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, frozen=True)
 class Provider:
     """LLM provider configuration.
 

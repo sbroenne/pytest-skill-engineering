@@ -6,7 +6,7 @@ description: "Write your first AI test in under 5 minutes. Set up pytest-skill-e
 
 Write your first AI test in under 5 minutes.
 
-> **New here?** pytest-skill-engineering has two harnesses — `Eval + eval_run` (for MCP servers and tool testing) and `CopilotEval + copilot_eval` (for GitHub Copilot skills). Read [Choosing a Test Harness](../explanation/choosing-a-harness.md) first if you're unsure which to use.
+> **New here?** Start with `CopilotEval + copilot_eval` if you have a Copilot subscription — it tests what users actually experience, with zero model setup. Use `Eval + eval_run` when you need model flexibility or full per-call introspection. Read [Choosing a Test Harness](../explanation/choosing-a-harness.md) for the full comparison.
 
 ## What You're Testing
 

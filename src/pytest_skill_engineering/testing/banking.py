@@ -13,7 +13,7 @@ from typing import Any
 from pytest_skill_engineering.testing.types import ToolResult
 
 
-@dataclass
+@dataclass(slots=True)
 class Transaction:
     """A banking transaction record."""
 
@@ -26,7 +26,7 @@ class Transaction:
     description: str
 
 
-@dataclass
+@dataclass(slots=True)
 class BankingService:
     """In-memory banking service with account management.
 

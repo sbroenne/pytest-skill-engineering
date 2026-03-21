@@ -169,11 +169,64 @@ def _render_markdown(text: str) -> Markup:
 
     Mermaid fenced code blocks (```mermaid) are converted to
     ``<pre class="mermaid">`` so that Mermaid.js renders them as diagrams.
+
+    HTML is sanitized via nh3 to strip dangerous tags (script, iframe, etc.)
+    that could be injected through LLM-generated content.
     """
     import re
 
+    _ALLOWED_TAGS = {
+        "h1",
+        "h2",
+        "h3",
+        "h4",
+        "h5",
+        "h6",
+        "p",
+        "pre",
+        "code",
+        "div",
+        "span",
+        "a",
+        "strong",
+        "em",
+        "b",
+        "i",
+        "br",
+        "hr",
+        "ul",
+        "ol",
+        "li",
+        "table",
+        "thead",
+        "tbody",
+        "tr",
+        "th",
+        "td",
+        "blockquote",
+        "img",
+        "dl",
+        "dt",
+        "dd",
+        "sup",
+        "sub",
+        "abbr",
+        "del",
+        "ins",
+        "details",
+        "summary",
+    }
+    _ALLOWED_ATTRS: dict[str, set[str]] = {
+        "*": {"class", "id"},
+        "a": {"href", "title"},
+        "img": {"src", "alt", "title"},
+        "td": {"colspan", "rowspan"},
+        "th": {"colspan", "rowspan"},
+    }
+
     try:
         import markdown
+        import nh3
 
         html_text = markdown.markdown(text, extensions=["extra"])
         # Convert <pre><code class="language-mermaid">…</code></pre> to
@@ -184,6 +237,7 @@ def _render_markdown(text: str) -> Markup:
             html_text,
             flags=re.DOTALL,
         )
+        html_text = nh3.clean(html_text, tags=_ALLOWED_TAGS, attributes=_ALLOWED_ATTRS)
         return Markup(html_text)
     except ImportError:
         import html as html_module

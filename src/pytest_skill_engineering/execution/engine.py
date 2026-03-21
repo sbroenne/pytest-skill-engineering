@@ -374,12 +374,12 @@ class EvalEngine:
 
         toolset = FunctionToolset(id="skill-references")
 
-        @toolset.tool  # type: ignore[misc]
+        @toolset.tool_plain  # type: ignore[misc]
         def list_skill_references() -> str:
             """List available reference documents for the skill."""
             return execute_skill_tool(skill, "list_skill_references", {})
 
-        @toolset.tool  # type: ignore[misc]
+        @toolset.tool_plain  # type: ignore[misc]
         def read_skill_reference(filename: str) -> str:
             """Read a reference document from the skill."""
             return execute_skill_tool(skill, "read_skill_reference", {"filename": filename})

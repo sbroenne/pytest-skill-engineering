@@ -35,7 +35,7 @@ if TYPE_CHECKING:
 __all__ = ["InstructionSuggestion", "optimize_instruction"]
 
 
-@dataclass
+@dataclass(slots=True)
 class InstructionSuggestion:
     """A suggested improvement to an agent instruction.
 

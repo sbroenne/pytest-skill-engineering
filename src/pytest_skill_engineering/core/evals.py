@@ -69,11 +69,14 @@ Also provides prompt file loaders for VS Code prompt files
 
 from __future__ import annotations
 
+import logging
 import re
 from pathlib import Path
 from typing import Any
 
 import yaml
+
+_logger = logging.getLogger(__name__)
 
 _FRONTMATTER_RE = re.compile(r"^---\s*\n(.*?)\n---\s*\n", re.DOTALL)
 
@@ -95,6 +98,7 @@ def _extract_frontmatter(content: str) -> tuple[dict[str, Any], str]:
     try:
         parsed = yaml.safe_load(raw)
     except yaml.YAMLError:
+        _logger.warning("Failed to parse YAML frontmatter, treating as plain content")
         return {}, body
 
     if not isinstance(parsed, dict):

@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from pytest_skill_engineering.core.result import EvalResult
 
 
-@dataclass
+@dataclass(slots=True)
 class TestReport:
     """Report data for a single test.
 
@@ -46,6 +46,7 @@ class TestReport:
     system_prompt_name: str | None = None
     skill_name: str | None = None
     iteration: int | None = None
+    _copilot_test: bool = False
 
     @property
     def is_passed(self) -> bool:
@@ -88,7 +89,7 @@ class TestReport:
         return []
 
 
-@dataclass
+@dataclass(slots=True)
 class SuiteReport:
     """Report data for a test suite.
 

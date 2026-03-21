@@ -6,6 +6,9 @@ description: "Test multi-turn conversations where evals maintain context across 
 
 So far, each test is independent—the agent has no memory between tests. **Sessions** let multiple tests share conversation history, simulating real multi-turn interactions.
 
+!!! note "CopilotEval and sessions"
+    `CopilotEval` supports sessions using a **context-in-prompt** pattern — prior conversation turns are injected as context in each new prompt. This works for most workflows but differs from `Eval`, which maintains full turn-based message history via PydanticAI. The Copilot SDK accepts string prompts only (`send_and_wait(prompt: str)`), so true stateful multi-turn sessions are not available. See [copilot/test_06_sessions.py](https://github.com/sbroenne/pytest-skill-engineering/blob/main/tests/integration/copilot/test_06_sessions.py) for the Copilot pattern.
+
 ## Why Sessions?
 
 Real coding agents don't answer single questions. Users have conversations:

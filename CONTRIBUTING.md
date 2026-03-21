@@ -84,16 +84,27 @@ The hooks will:
 
 ## Running Tests
 
+**Integration tests are the only valid validation.** This project tests AI interfaces — mocks prove nothing.
+
 ```bash
-# Run unit tests (fast, no LLM calls)
-pytest tests/unit/ -v
+# Copilot SDK tests (primary — requires gh auth login)
+uv run python -m pytest tests/integration/copilot/ -v
 
-# Run integration tests (requires LLM credentials)
-pytest tests/integration/ -v
+# Pydantic tests (requires Azure/OpenAI credentials)
+uv run python -m pytest tests/integration/pydantic/ -v
 
-# Run all tests
-pytest -v
+# Run one file at a time, fix all failures before moving on
+uv run python -m pytest tests/integration/copilot/test_01_basic.py -v
+
+# Re-run only failed tests
+uv run python -m pytest --lf tests/integration/copilot/ -v
+
+# Unit tests (pure logic only — NOT a substitute for integration tests)
+uv run python -m pytest tests/unit/ -v
 ```
+
+!!! warning
+    Always use `uv run python -m pytest` — bare `pytest` may not find the installed package. Fast test execution (< 1 second) is a red flag — real LLM calls take time.
 
 For architecture details, report structure, and developer guides, see the **[Contributing docs](https://sbroenne.github.io/pytest-skill-engineering/contributing/)**.
 
@@ -102,13 +113,12 @@ For architecture details, report structure, and developer guides, see the **[Con
 Integration tests require LLM provider credentials. Set up at least one:
 
 ```bash
+# GitHub Copilot (recommended — zero model setup)
+gh auth login
+
 # Azure OpenAI (uses Entra ID - no API key needed)
 export AZURE_API_BASE=https://your-resource.cognitiveservices.azure.com
 az login
-
-# Google Vertex AI
-export GOOGLE_CLOUD_PROJECT=your-project-id
-gcloud auth application-default login
 ```
 
 ## Project Structure
@@ -116,20 +126,26 @@ gcloud auth application-default login
 ```
 pytest-skill-engineering/
 ├── src/pytest_skill_engineering/
-│   ├── __init__.py      # Package exports
-│   ├── cli.py           # CLI for report regeneration
-│   ├── plugin.py        # pytest plugin hooks
-│   ├── core/            # Core types (Eval, Provider, Result, Skill)
-│   ├── execution/       # Engine, server management, skill tools
-│   ├── fixtures/        # pytest fixtures (eval_run, factories)
-│   ├── reporting/       # Collector, aggregator, insights, generator
-│   └── templates/       # Jinja2 + Tailwind HTML report templates
+│   ├── __init__.py          # Package exports
+│   ├── cli.py               # CLI for report regeneration
+│   ├── plugin.py            # pytest plugin entry point (imports from plugin_*.py)
+│   ├── plugin_options.py    # --aitest-* CLI option registration
+│   ├── plugin_recording.py  # LLM assertion recording fixtures
+│   ├── plugin_report.py     # Test lifecycle & report orchestration
+│   ├── copilot/             # Copilot SDK harness (CopilotEval, runner, model)
+│   ├── core/                # Core types (Eval, Provider, Result, Skill)
+│   ├── execution/           # Engine, server management, skill tools
+│   ├── fixtures/            # pytest fixtures (eval_run, factories)
+│   ├── reporting/           # Collector, insights, generator, htpy components
+│   └── templates/           # CSS + JS for HTML reports
 ├── tests/
-│   ├── unit/            # Pure logic tests (no LLM calls)
-│   ├── integration/     # Integration tests (real LLM calls)
-│   └── showcase/        # Hero report generation
-├── docs/                # MkDocs documentation
-├── pyproject.toml       # Project configuration
+│   ├── unit/                # Pure logic tests (no LLM calls)
+│   ├── integration/
+│   │   ├── copilot/         # CopilotEval tests (primary, 11/12 features)
+│   │   └── pydantic/        # Eval tests (Azure/OpenAI, full introspection)
+│   └── showcase/            # Hero report generation
+├── docs/                    # MkDocs documentation
+├── pyproject.toml           # Project configuration
 └── .pre-commit-config.yaml
 ```
 
@@ -138,7 +154,7 @@ pytest-skill-engineering/
 1. Create a branch for your changes
 2. Make your changes
 3. Ensure all checks pass: `pre-commit run --all-files`
-4. Run tests: `pytest tests/unit/ -v`
+4. Run integration tests: `uv run python -m pytest tests/integration/ -v`
 5. Submit a pull request
 
 All PRs are **squash merged** to keep a clean commit history on main.
@@ -149,6 +165,46 @@ All PRs are **squash merged** to keep a clean commit history on main.
 - Use type hints for all public APIs
 - Keep functions focused and small
 - Write docstrings for public classes and methods
+
+### Dataclass Conventions
+
+- All `@dataclass` must use `slots=True`
+- Immutable config objects (`Provider`, `Prompt`, `Wait`) must also use `frozen=True`
+- Always include `from __future__ import annotations` at the top of every module
+
+```python
+# Immutable config
+@dataclass(slots=True, frozen=True)
+class Provider:
+    model: str
+    rpm: int = 10
+
+# Mutable data
+@dataclass(slots=True)
+class EvalResult:
+    turns: list[Turn]
+    success: bool
+```
+
+## Development Priorities
+
+### Copilot SDK First
+
+`CopilotEval` is the **primary test harness**. New features should be implemented and tested for the Copilot SDK first, then ported to `Eval` (PydanticAI). When writing documentation or examples, lead with the Copilot path.
+
+### Test Both Harnesses
+
+If adding a feature that affects both harnesses, write tests for both:
+
+```bash
+# Copilot tests first (primary)
+uv run python -m pytest tests/integration/copilot/test_0X_feature.py -v
+
+# Then pydantic tests
+uv run python -m pytest tests/integration/pydantic/test_0X_feature.py -v
+```
+
+The two harnesses **cannot** be mixed in a single pytest session — the plugin enforces this at collection time.
 
 ## Releasing
 

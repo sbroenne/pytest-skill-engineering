@@ -45,7 +45,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from copilot.types import Tool, ToolInvocation, ToolResult
+    from copilot import Tool, ToolInvocation, ToolResult
 
     from pytest_skill_engineering.copilot.eval import CopilotEval
     from pytest_skill_engineering.copilot.events import EventMapper
@@ -330,7 +330,7 @@ def _make_subagent_dispatch_tool(
         mapper: The ``EventMapper`` for the current run, used to record
             subagent lifecycle events.
     """
-    from copilot.types import Tool, ToolResult
+    from copilot import Tool, ToolResult
 
     from pytest_skill_engineering.copilot.eval import CopilotEval as _CopilotAgent
     from pytest_skill_engineering.copilot.runner import run_copilot
@@ -338,7 +338,7 @@ def _make_subagent_dispatch_tool(
     agent_map: dict[str, dict[str, Any]] = {a["name"]: a for a in custom_agents}
 
     async def _handler(invocation: "ToolInvocation") -> "ToolResult":
-        args: dict[str, Any] = invocation.get("arguments") or {}  # type: ignore[assignment]
+        args: dict[str, Any] = invocation.arguments or {}
 
         eval_name: str | None = args.get("eval_name") or args.get("agent") or args.get("agentName")
         prompt_text: str = (
@@ -352,16 +352,20 @@ def _make_subagent_dispatch_tool(
         if not eval_name:
             available = sorted(agent_map)
             return ToolResult(
-                textResultForLlm=(f"Error: eval_name is required. Available agents: {available}"),
-                resultType="failure",
+                text_result_for_llm=(
+                    f"Error: eval_name is required. Available agents: {available}"
+                ),
+                result_type="failure",
             )
 
         agent_cfg = agent_map.get(eval_name)
         if agent_cfg is None:
             available = sorted(agent_map)
             return ToolResult(
-                textResultForLlm=(f"Error: agent '{eval_name}' not found. Available: {available}"),
-                resultType="failure",
+                text_result_for_llm=(
+                    f"Error: agent '{eval_name}' not found. Available: {available}"
+                ),
+                result_type="failure",
             )
 
         mapper.record_subagent_start(eval_name)
@@ -381,14 +385,14 @@ def _make_subagent_dispatch_tool(
         if sub_result.success:
             mapper.record_subagent_complete(eval_name)
             return ToolResult(
-                textResultForLlm=sub_result.final_response or "Sub-agent completed.",
-                resultType="success",
+                text_result_for_llm=sub_result.final_response or "Sub-agent completed.",
+                result_type="success",
             )
 
         mapper.record_subagent_failed(eval_name)
         return ToolResult(
-            textResultForLlm=f"Sub-agent '{eval_name}' failed: {sub_result.error}",
-            resultType="failure",
+            text_result_for_llm=f"Sub-agent '{eval_name}' failed: {sub_result.error}",
+            result_type="failure",
         )
 
     return Tool(
@@ -465,14 +469,14 @@ def _inject_skill_reference_tools(
     if not reference_files:
         return
 
-    from copilot.types import Tool, ToolResult
+    from copilot import Tool, ToolResult
 
     # list_skill_references tool
     async def _list_handler(invocation: "ToolInvocation") -> "ToolResult":
         file_list = "\n".join(f"- {name}" for name in sorted(reference_files))
         return ToolResult(
-            textResultForLlm=f"Available skill reference documents:\n{file_list}",
-            resultType="success",
+            text_result_for_llm=f"Available skill reference documents:\n{file_list}",
+            result_type="success",
         )
 
     list_tool = Tool(
@@ -488,26 +492,26 @@ def _inject_skill_reference_tools(
 
     # read_skill_reference tool
     async def _read_handler(invocation: "ToolInvocation") -> "ToolResult":
-        args: dict[str, Any] = invocation.get("arguments") or {}  # type: ignore[assignment]
+        args: dict[str, Any] = invocation.arguments or {}
         filename = args.get("filename", "")
 
         if not filename:
             available = sorted(reference_files)
             return ToolResult(
-                textResultForLlm=f"Error: filename is required. Available: {available}",
-                resultType="failure",
+                text_result_for_llm=f"Error: filename is required. Available: {available}",
+                result_type="failure",
             )
 
         ref_path = reference_files.get(filename)
         if ref_path is None:
             available = sorted(reference_files)
             return ToolResult(
-                textResultForLlm=f"Error: '{filename}' not found. Available: {available}",
-                resultType="failure",
+                text_result_for_llm=f"Error: '{filename}' not found. Available: {available}",
+                result_type="failure",
             )
 
         content = ref_path.read_text(encoding="utf-8")
-        return ToolResult(textResultForLlm=content, resultType="success")
+        return ToolResult(text_result_for_llm=content, result_type="success")
 
     read_tool = Tool(
         name="read_skill_reference",

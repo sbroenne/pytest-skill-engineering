@@ -10,6 +10,9 @@ pytest-skill-engineering provides two test harnesses. Picking the right one upfr
 
 Both harnesses can test MCP servers, tools, and skills. The difference is **what runs the agent**.
 
+!!! tip "Recommendation"
+    **Start with `CopilotEval + copilot_eval`** if you have a Copilot subscription. It's the primary test harness — it tests what users actually experience. Use `Eval + eval_run` when you need model flexibility (A/B testing across providers, fast CI without Copilot) or full per-call introspection.
+
 | | `Eval` + `eval_run` | `CopilotEval` + `copilot_eval` |
 |---|---|---|
 | **What runs the agent** | PydanticAI synthetic loop | Real GitHub Copilot (CLI SDK) |
@@ -91,6 +94,7 @@ async def test_skill_presents_scenarios(copilot_eval):
 - Slower to start (CLI process startup ~5-10s per test)
 - Less control over individual tool call assertions (no per-turn introspection)
 - Cannot swap LLM provider — always uses Copilot's active model
+- **Multi-turn sessions** use a context-in-prompt pattern (prior turns injected as prompt context), not true stateful sessions — the Copilot SDK accepts string prompts only
 
 ---
 

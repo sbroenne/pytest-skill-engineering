@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from htpy import Node, button, div, style
-from markupsafe import Markup
+from htpy import Node, button, div
 
 
 def overlay() -> Node:
@@ -56,20 +55,4 @@ def overlay() -> Node:
             onmouseleave="hideDiagramHover()",
             onclick=hover_onclick,
         )[div(".mermaid", id="hover-mermaid"),],
-        # Styles for overlay behavior
-        style[
-            Markup("""
-#overlay.active { display: flex !important; }
-#diagram-hover-popup.active { display: block !important; }
-
-/* Scale the mermaid SVG in overlay to fill available space */
-#overlay-mermaid svg {
-    max-width: 100%;
-    max-height: 100%;
-    width: auto;
-    height: auto;
-    min-height: 60vh;
-}
-""")
-        ],
     ]

@@ -96,6 +96,7 @@ class EventMapper:
         self._reasoning_buffer: list[str] = []
         self._subagents: list[SubagentInvocation] = []
         self._subagent_start_times: dict[str, float] = {}
+        self._tool_subagent_call_ids: dict[str, str] = {}  # call_id → agent_name
         self._permissions: list[dict[str, Any]] = []
         self._permission_requested: bool = False
         self._model_used: str | None = None
@@ -244,6 +245,9 @@ class EventMapper:
 
     # ── Tool events ──
 
+    # Tool names that represent subagent dispatch (native SDK tools).
+    _SUBAGENT_TOOL_NAMES = frozenset({"runSubagent", "task"})
+
     def _handle_tool_execution_start(self, event: SessionEvent) -> None:
         """Handle tool execution starting."""
         call_id = _get_data_field(event, "tool_call_id", "")
@@ -267,6 +271,17 @@ class EventMapper:
             self._current_tool_call_ids.add(call_id)
             self._current_tool_calls.append(tc)
 
+        # Detect subagent dispatch via native tool calls (runSubagent/task).
+        # The SDK may or may not emit separate subagent.* events, so we
+        # also track invocations here as a fallback.
+        if name in self._SUBAGENT_TOOL_NAMES:
+            args = arguments or {}
+            agent_name = args.get("agentSlug") or args.get("agent_name") or "unknown"
+            self._tool_subagent_call_ids[call_id] = agent_name
+            # Only add if not already tracked by subagent.* events
+            if not any(sa.name == agent_name for sa in self._subagents):
+                self.record_subagent_start(agent_name)
+
     def _handle_tool_execution_complete(self, event: SessionEvent) -> None:
         """Handle tool execution completed."""
         call_id = _get_data_field(event, "tool_call_id", "")
@@ -286,6 +301,16 @@ class EventMapper:
             start = self._pending_tool_start_times.pop(call_id, None)
             if start is not None:
                 tc.duration_ms = (time.monotonic() - start) * 1000
+
+        # Complete subagent tracking from tool call
+        agent_name = self._tool_subagent_call_ids.pop(call_id, None)
+        if agent_name:
+            # Only complete if still in "started" status (not already
+            # completed by a subagent.completed event)
+            for sa in self._subagents:
+                if sa.name == agent_name and sa.status == "started":
+                    sa.status = "completed"
+                    break
 
         # Add a tool turn for reporting
         tool_name = _get_data_field(event, "tool_name", tc.name if tc else "unknown")
@@ -321,12 +346,12 @@ class EventMapper:
 
     def _handle_subagent_selected(self, event: SessionEvent) -> None:
         """Handle subagent selection."""
-        name = _get_data_field(event, "eval_name", "unknown")
+        name = _resolve_subagent_name(event)
         self._subagents.append(SubagentInvocation(name=name, status="selected"))
 
     def _handle_subagent_started(self, event: SessionEvent) -> None:
         """Handle subagent execution start."""
-        name = _get_data_field(event, "eval_name", "unknown")
+        name = _resolve_subagent_name(event)
         self._subagent_start_times[name] = time.monotonic()
         # Update existing or add new
         for sa in self._subagents:
@@ -337,7 +362,7 @@ class EventMapper:
 
     def _handle_subagent_completed(self, event: SessionEvent) -> None:
         """Handle subagent execution completion."""
-        name = _get_data_field(event, "eval_name", "unknown")
+        name = _resolve_subagent_name(event)
         start = self._subagent_start_times.pop(name, None)
         duration = (time.monotonic() - start) * 1000 if start else None
         for sa in self._subagents:
@@ -351,7 +376,7 @@ class EventMapper:
 
     def _handle_subagent_failed(self, event: SessionEvent) -> None:
         """Handle subagent execution failure."""
-        name = _get_data_field(event, "eval_name", "unknown")
+        name = _resolve_subagent_name(event)
         for sa in self._subagents:
             if sa.name == name and sa.status in ("selected", "started"):
                 sa.status = "failed"
@@ -420,6 +445,16 @@ class EventMapper:
 def _get_data_field(event: SessionEvent, field: str, default: Any = None) -> Any:
     """Safely get a field from event.data (which has ~90 optional fields)."""
     return getattr(event.data, field, default)
+
+
+def _resolve_subagent_name(event: SessionEvent) -> str:
+    """Extract the subagent name from an event, trying SDK 0.2.0+ fields first."""
+    return (
+        _get_data_field(event, "agent_name", None)
+        or _get_data_field(event, "eval_name", None)
+        or _get_data_field(event, "name", None)
+        or "unknown"
+    )
 
 
 # ── Event type → handler dispatch table ──

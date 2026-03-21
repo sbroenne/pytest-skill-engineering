@@ -15,7 +15,6 @@ from .test_grid import test_grid
 
 __all__ = [
     "eval_leaderboard",
-    "agent_leaderboard",  # backward-compat alias
     "agent_selector",
     "full_report",
     "overlay",
