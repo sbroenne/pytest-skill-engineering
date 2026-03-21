@@ -3,13 +3,21 @@
 Skills are domain-specific knowledge modules that enhance agent capabilities.
 A skill consists of:
 - SKILL.md file with YAML frontmatter (metadata) and markdown body (instructions)
-- Optional references/ directory with additional documentation
+- Optional references/ directory with additional documentation (.md files)
+- Optional scripts/ directory with executable scripts (.py, .sh, .js, .bash)
+- Optional assets/ directory with supporting files (any type)
 
 Example SKILL.md:
     ---
     name: my-skill
     description: What this skill does
     version: 1.0.0
+    license: Apache-2.0
+    compatibility: Requires Python 3.11+
+    allowed-tools: bash python
+    metadata:
+      author: my-team
+      category: development
     ---
 
     # Skill Instructions
@@ -42,6 +50,9 @@ class SkillMetadata:
     - version: semantic version string
     - license: SPDX license identifier
     - tags: list of categorization tags
+    - compatibility: environment requirements, max 500 chars
+    - metadata: arbitrary key-value pairs (stored as tuple of tuples for frozen compat)
+    - allowed_tools: tool names the skill is designed to work with
     """
 
     name: str
@@ -49,6 +60,14 @@ class SkillMetadata:
     version: str | None = None
     license: str | None = None
     tags: tuple[str, ...] = ()
+    compatibility: str | None = None
+    metadata_entries: tuple[tuple[str, str], ...] = ()
+    allowed_tools: tuple[str, ...] = ()
+
+    @property
+    def metadata_dict(self) -> dict[str, str]:
+        """Return metadata entries as a dict for convenient access."""
+        return dict(self.metadata_entries)
 
     def __post_init__(self) -> None:
         """Validate metadata per agentskills.io spec."""
@@ -70,6 +89,17 @@ class SkillMetadata:
         if len(self.description) > 1024:
             raise SkillError(f"Skill description exceeds 1024 characters: {len(self.description)}")
 
+        # Compatibility validation
+        if self.compatibility is not None and len(self.compatibility) > 500:
+            raise SkillError(
+                f"Skill compatibility exceeds 500 characters: {len(self.compatibility)}"
+            )
+
+        # Allowed tools validation
+        for tool in self.allowed_tools:
+            if not tool or not tool.strip():
+                raise SkillError("allowed_tools entries must be non-empty strings")
+
 
 @dataclass(slots=True)
 class Skill:
@@ -88,6 +118,8 @@ class Skill:
     metadata: SkillMetadata
     content: str
     references: dict[str, str] = field(default_factory=dict)
+    scripts: dict[str, str] = field(default_factory=dict)
+    assets: tuple[str, ...] = ()
 
     @property
     def name(self) -> str:
@@ -103,6 +135,22 @@ class Skill:
     def has_references(self) -> bool:
         """Whether this skill has reference documents."""
         return bool(self.references)
+
+    @property
+    def has_scripts(self) -> bool:
+        """Whether this skill has executable scripts."""
+        return bool(self.scripts)
+
+    @property
+    def has_assets(self) -> bool:
+        """Whether this skill has asset files."""
+        return bool(self.assets)
+
+    @property
+    def assets_dir(self) -> Path | None:
+        """Path to assets directory, if it exists."""
+        d = self.path / "assets"
+        return d if d.is_dir() else None
 
     @classmethod
     def from_path(cls, path: Path | str) -> Skill:
@@ -146,11 +194,25 @@ class Skill:
         if refs_dir.is_dir():
             references = _load_references(refs_dir)
 
+        # Load scripts if directory exists
+        scripts: dict[str, str] = {}
+        scripts_dir = skill_dir / "scripts"
+        if scripts_dir.is_dir():
+            scripts = _load_scripts(scripts_dir)
+
+        # Discover assets if directory exists
+        assets: tuple[str, ...] = ()
+        assets_dir = skill_dir / "assets"
+        if assets_dir.is_dir():
+            assets = tuple(sorted(f.name for f in assets_dir.iterdir() if f.is_file()))
+
         return cls(
             path=skill_dir,
             metadata=metadata,
             content=content,
             references=references,
+            scripts=scripts,
+            assets=assets,
         )
 
 
@@ -190,6 +252,9 @@ def _parse_skill_md(content: str) -> tuple[SkillMetadata, str]:
     version = metadata_raw.get("version")
     license_str = metadata_raw.get("license")
     tags_raw = metadata_raw.get("tags", [])
+    compatibility = metadata_raw.get("compatibility")
+    metadata_entries_raw = metadata_raw.get("metadata", {})
+    allowed_tools_raw = metadata_raw.get("allowed-tools", "")
 
     # Handle tags (could be string or list)
     if isinstance(tags_raw, str):
@@ -199,12 +264,29 @@ def _parse_skill_md(content: str) -> tuple[SkillMetadata, str]:
     else:
         tags = ()
 
+    # Handle metadata entries (dict → tuple of tuples for frozen dataclass)
+    if isinstance(metadata_entries_raw, dict):
+        metadata_entries = tuple((str(k), str(v)) for k, v in metadata_entries_raw.items())
+    else:
+        metadata_entries = ()
+
+    # Handle allowed-tools (space-delimited string or list)
+    if isinstance(allowed_tools_raw, str):
+        allowed_tools = tuple(t for t in allowed_tools_raw.split() if t)
+    elif isinstance(allowed_tools_raw, list):
+        allowed_tools = tuple(str(t) for t in allowed_tools_raw)
+    else:
+        allowed_tools = ()
+
     metadata = SkillMetadata(
         name=str(name),
         description=str(description),
         version=str(version) if version else None,
         license=str(license_str) if license_str else None,
         tags=tags,
+        compatibility=str(compatibility) if compatibility else None,
+        metadata_entries=metadata_entries,
+        allowed_tools=allowed_tools,
     )
 
     return metadata, body
@@ -234,6 +316,35 @@ def _load_references(refs_dir: Path) -> dict[str, str]:
         references[file_path.name] = content
 
     return references
+
+
+_SCRIPT_EXTENSIONS = frozenset({".py", ".sh", ".js", ".bash"})
+
+
+def _load_scripts(scripts_dir: Path) -> dict[str, str]:
+    """Load executable scripts from scripts/ directory.
+
+    Supports .py, .sh, .js, and .bash files.
+
+    Returns:
+        Dict mapping filename to content
+    """
+    scripts: dict[str, str] = {}
+
+    for file_path in scripts_dir.iterdir():
+        if not file_path.is_file():
+            continue
+        if file_path.suffix.lower() not in _SCRIPT_EXTENSIONS:
+            continue
+        try:
+            content = file_path.read_text(encoding="utf-8")
+        except UnicodeDecodeError as exc:
+            raise SkillError(f"Script file must be valid UTF-8 text: {file_path.name}") from exc
+        if not content.strip():
+            raise SkillError(f"Script file must not be empty: {file_path.name}")
+        scripts[file_path.name] = content
+
+    return scripts
 
 
 def load_skill(path: Path | str) -> Skill:

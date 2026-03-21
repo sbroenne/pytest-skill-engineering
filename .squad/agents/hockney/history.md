@@ -190,3 +190,38 @@ Completed comprehensive test suite review as part of 5-agent session. Filed 10 f
 - All files use `pytestmark = [pytest.mark.copilot]` — no `pytest.mark.integration` (copilot tests are implicitly integration)
 
 **Remaining parity gaps:** Sessions (test_06), Clarification (test_07), CLI servers (test_09). Sessions and CLI may not apply to CopilotEval's architecture.
+
+### Plugin Test Fixtures and Integration Tests (2026-03-21)
+
+**Context:** First-class plugin testing feature. Created test fixtures and integration tests ahead of implementation (Fenster/Verbal building `Plugin`, `load_plugin`, `Eval.from_plugin()`, `CopilotEval.from_plugin()`, `CopilotEval.from_claude_config()`).
+
+**Created — Fixture Directories (8 files):**
+- `tests/integration/plugins/banking-plugin/` — plugin.json, agents/banking-advisor.agent.md, skills/financial-literacy/SKILL.md, copilot-instructions.md
+- `tests/integration/plugins/claude-project/` — CLAUDE.md, .claude/agents/code-reviewer.md, .claude/skills/python-patterns/SKILL.md, .mcp.json
+
+**Created — Test Files:**
+1. `tests/integration/pydantic/test_13_plugins.py` — 12 tests across 4 classes:
+   - `TestPluginLoading` (5 sync): metadata parsing, agent/skill discovery, instructions loading, Claude project layout
+   - `TestPluginEval` (3 async): `Eval.from_plugin()` with banking server, instruction verification via `llm_assert`, Claude project layout
+   - `TestPluginMetadata` (2 sync): PluginMetadata field assertions, default metadata for projects without plugin.json
+
+2. `tests/integration/copilot/test_13_plugins.py` — 10 tests across 4 classes:
+   - `TestCopilotPluginLoading` (5 sync): `from_plugin()`, agent discovery, `from_claude_config()`, agent loading, field overrides
+   - `TestActiveAgent` (2 sync): `active_agent` field, default None
+   - `TestCopilotPluginExecution` (2 async): plugin eval file creation, Claude config eval execution
+
+**API Surface Tested (not yet implemented):**
+- `load_plugin(path)` → Plugin object with `.metadata`, `.agents`, `.skills`, `.instructions`
+- `PluginMetadata` — name, version, description, author
+- `Eval.from_plugin(path, provider=, mcp_servers=, max_turns=)`
+- `CopilotEval.from_plugin(path, model=, **overrides)`
+- `CopilotEval.from_claude_config(path, model=, **overrides)`
+- `CopilotEval.active_agent` field (str | None)
+
+**Validation:** ruff check 0 errors, ruff format clean. Tests will fail at import time until implementation lands — this is intentional.
+
+**Key decisions:**
+- Pydantic plugin tests reuse `banking_server` fixture from conftest (plugin defines config, but real MCP server is needed)
+- Claude project tests exercise the `.claude/` directory convention (different from `.github/` Copilot convention)
+- `active_agent` tests are pure sync since they only test the dataclass field, not SDK dispatch
+- Both test files follow existing patterns: `pytestmark`, section separators, docstring-per-method

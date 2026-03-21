@@ -413,6 +413,93 @@ class Eval:
         )
 
     @classmethod
+    def from_plugin(
+        cls,
+        path: "str | Path",
+        provider: "Provider",
+        *,
+        max_turns: int = 10,
+        system_prompt: str = "",
+        skill: "Skill | None" = None,
+        mcp_servers: "list[MCPServer] | None" = None,
+    ) -> "Eval":
+        """Create an Eval from a plugin directory.
+
+        Loads the plugin's agents, skills, MCP servers, and instructions,
+        then constructs an Eval with all components wired together.
+
+        Plugin MCP servers (from ``plugin.json``) are converted to
+        :class:`MCPServer` objects unless ``mcp_servers`` is provided
+        to override them. Plugin instructions become the system
+        prompt (with ``system_prompt`` appended if provided). The first
+        plugin skill is used unless ``skill`` overrides it.
+
+        Args:
+            path: Path to plugin directory (must contain ``plugin.json``,
+                or be a ``.github/`` / ``.claude/`` project config directory)
+            provider: LLM provider configuration.
+            max_turns: Maximum conversation turns.
+            system_prompt: Additional system prompt (appended to plugin instructions).
+            skill: Additional skill (overrides plugin skills if provided).
+            mcp_servers: Override MCP servers (skips plugin config if provided).
+
+        Returns:
+            A fully configured :class:`Eval` instance.
+
+        Example::
+
+            agent = Eval.from_plugin(
+                "my-plugin/",
+                provider=Provider(model="azure/gpt-5-mini"),
+            )
+        """
+        from pytest_skill_engineering.core.plugin import load_plugin  # noqa: PLC0415
+
+        plugin = load_plugin(path)
+
+        # Use provided servers or convert plugin MCP servers to MCPServer objects
+        resolved_servers: list[MCPServer] = []
+        if mcp_servers is not None:
+            resolved_servers = mcp_servers
+        else:
+            for _name, config in plugin.mcp_servers.items():
+                server_kwargs: dict[str, Any] = {}
+                if "command" in config:
+                    cmd = config["command"]
+                    server_kwargs["command"] = cmd if isinstance(cmd, list) else [cmd]
+                if "args" in config:
+                    server_kwargs["args"] = list(config["args"])
+                if "env" in config:
+                    server_kwargs["env"] = dict(config["env"])
+                if "url" in config:
+                    server_kwargs["url"] = str(config["url"])
+                if "transport" in config:
+                    server_kwargs["transport"] = config["transport"]
+                resolved_servers.append(MCPServer(**server_kwargs))
+
+        # Combine plugin instructions with additional system_prompt
+        prompt_parts: list[str] = []
+        if plugin.instructions:
+            prompt_parts.append(plugin.instructions)
+        if system_prompt:
+            prompt_parts.append(system_prompt)
+        combined_prompt = "\n\n".join(prompt_parts) or None
+
+        # Resolve skill: explicit override > first plugin skill > None
+        resolved_skill = skill
+        if resolved_skill is None and plugin.skills:
+            resolved_skill = plugin.skills[0]
+
+        return cls(
+            name=plugin.metadata.name,
+            provider=provider,
+            mcp_servers=resolved_servers,
+            system_prompt=combined_prompt,
+            skill=resolved_skill,
+            max_turns=max_turns,
+        )
+
+    @classmethod
     def from_instructions(
         cls,
         name: str,

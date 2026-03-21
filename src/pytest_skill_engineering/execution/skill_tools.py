@@ -1,7 +1,7 @@
-"""Virtual tools for skill references.
+"""Virtual tools for skill references, scripts, and assets.
 
-When a skill has a references/ directory, these tools are auto-injected
-to allow the agent to list and read reference documents on demand.
+When a skill has a references/, scripts/, or assets/ directory, these tools
+are auto-injected to allow the agent to list and read content on demand.
 """
 
 from __future__ import annotations
@@ -13,54 +13,118 @@ if TYPE_CHECKING:
 
 
 def get_skill_tools_schema(skill: Skill) -> list[dict[str, Any]]:
-    """Generate OpenAI-compatible tool schemas for skill references.
+    """Generate OpenAI-compatible tool schemas for skill virtual tools.
 
     Args:
-        skill: Skill with references to expose
+        skill: Skill with references/scripts/assets to expose
 
     Returns:
         List of tool definitions in OpenAI function format
     """
-    if not skill.has_references:
-        return []
+    tools: list[dict[str, Any]] = []
 
-    return [
-        {
-            "type": "function",
-            "function": {
-                "name": "list_skill_references",
-                "description": (
-                    f"List available reference documents for the '{skill.name}' skill. "
-                    "Returns filenames that can be read with read_skill_reference."
-                ),
-                "parameters": {
-                    "type": "object",
-                    "properties": {},
-                    "required": [],
-                },
-            },
-        },
-        {
-            "type": "function",
-            "function": {
-                "name": "read_skill_reference",
-                "description": (
-                    f"Read a reference document from the '{skill.name}' skill. "
-                    "Use list_skill_references first to see available files."
-                ),
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "filename": {
-                            "type": "string",
-                            "description": "Name of the reference file to read",
+    if skill.has_references:
+        tools.extend(
+            [
+                {
+                    "type": "function",
+                    "function": {
+                        "name": "list_skill_references",
+                        "description": (
+                            f"List available reference documents for the '{skill.name}' skill. "
+                            "Returns filenames that can be read with read_skill_reference."
+                        ),
+                        "parameters": {
+                            "type": "object",
+                            "properties": {},
+                            "required": [],
                         },
                     },
-                    "required": ["filename"],
                 },
-            },
-        },
-    ]
+                {
+                    "type": "function",
+                    "function": {
+                        "name": "read_skill_reference",
+                        "description": (
+                            f"Read a reference document from the '{skill.name}' skill. "
+                            "Use list_skill_references first to see available files."
+                        ),
+                        "parameters": {
+                            "type": "object",
+                            "properties": {
+                                "filename": {
+                                    "type": "string",
+                                    "description": "Name of the reference file to read",
+                                },
+                            },
+                            "required": ["filename"],
+                        },
+                    },
+                },
+            ]
+        )
+
+    if skill.has_scripts:
+        tools.extend(
+            [
+                {
+                    "type": "function",
+                    "function": {
+                        "name": "list_skill_scripts",
+                        "description": (
+                            f"List available scripts for the '{skill.name}' skill. "
+                            "Returns filenames that can be read with read_skill_script."
+                        ),
+                        "parameters": {
+                            "type": "object",
+                            "properties": {},
+                            "required": [],
+                        },
+                    },
+                },
+                {
+                    "type": "function",
+                    "function": {
+                        "name": "read_skill_script",
+                        "description": (
+                            f"Read a script from the '{skill.name}' skill. "
+                            "Use list_skill_scripts first to see available files."
+                        ),
+                        "parameters": {
+                            "type": "object",
+                            "properties": {
+                                "filename": {
+                                    "type": "string",
+                                    "description": "Name of the script file to read",
+                                },
+                            },
+                            "required": ["filename"],
+                        },
+                    },
+                },
+            ]
+        )
+
+    if skill.has_assets:
+        tools.append(
+            {
+                "type": "function",
+                "function": {
+                    "name": "list_skill_assets",
+                    "description": (
+                        f"List available asset files for the '{skill.name}' skill. "
+                        "Returns filenames of supporting assets."
+                    ),
+                    "parameters": {
+                        "type": "object",
+                        "properties": {},
+                        "required": [],
+                    },
+                },
+            }
+        )
+
+    return tools
 
 
 def execute_skill_tool(
@@ -68,11 +132,11 @@ def execute_skill_tool(
     tool_name: str,
     arguments: dict[str, Any],
 ) -> str:
-    """Execute a skill reference tool.
+    """Execute a skill virtual tool.
 
     Args:
-        skill: Skill containing the references
-        tool_name: Either 'list_skill_references' or 'read_skill_reference'
+        skill: Skill containing the resources
+        tool_name: Tool name to execute
         arguments: Tool arguments
 
     Returns:
@@ -80,20 +144,38 @@ def execute_skill_tool(
 
     Raises:
         ValueError: If tool_name is unknown
-        KeyError: If reference file not found
+        KeyError: If requested file not found
     """
     if tool_name == "list_skill_references":
         return _list_references(skill)
     elif tool_name == "read_skill_reference":
         filename = arguments.get("filename", "")
         return _read_reference(skill, filename)
+    elif tool_name == "list_skill_scripts":
+        return _list_scripts(skill)
+    elif tool_name == "read_skill_script":
+        filename = arguments.get("filename", "")
+        return _read_script(skill, filename)
+    elif tool_name == "list_skill_assets":
+        return _list_assets(skill)
     else:
         raise ValueError(f"Unknown skill tool: {tool_name}")
 
 
+_SKILL_TOOL_NAMES = frozenset(
+    {
+        "list_skill_references",
+        "read_skill_reference",
+        "list_skill_scripts",
+        "read_skill_script",
+        "list_skill_assets",
+    }
+)
+
+
 def is_skill_tool(tool_name: str) -> bool:
-    """Check if a tool name is a skill reference tool."""
-    return tool_name in ("list_skill_references", "read_skill_reference")
+    """Check if a tool name is a skill virtual tool."""
+    return tool_name in _SKILL_TOOL_NAMES
 
 
 def _list_references(skill: Skill) -> str:
@@ -115,3 +197,32 @@ def _read_reference(skill: Skill, filename: str) -> str:
         return f"Error: Reference '{filename}' not found. Available: {available}"
 
     return skill.references[filename]
+
+
+def _list_scripts(skill: Skill) -> str:
+    """List available script files."""
+    if not skill.scripts:
+        return "No scripts available."
+
+    files = sorted(skill.scripts.keys())
+    return "Available scripts:\n" + "\n".join(f"- {f}" for f in files)
+
+
+def _read_script(skill: Skill, filename: str) -> str:
+    """Read a specific script file."""
+    if not filename:
+        return "Error: filename parameter is required"
+
+    if filename not in skill.scripts:
+        available = ", ".join(sorted(skill.scripts.keys()))
+        return f"Error: Script '{filename}' not found. Available: {available}"
+
+    return skill.scripts[filename]
+
+
+def _list_assets(skill: Skill) -> str:
+    """List available asset files."""
+    if not skill.assets:
+        return "No assets available."
+
+    return "Available assets:\n" + "\n".join(f"- {f}" for f in skill.assets)

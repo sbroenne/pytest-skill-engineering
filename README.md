@@ -83,6 +83,24 @@ async def test_skill(copilot_eval):
 
 → [Choosing a Test Harness](https://sbroenne.github.io/pytest-skill-engineering/explanation/choosing-a-harness/) — full trade-off guide
 
+### Plugin Testing — load a whole plugin directory
+
+Point at a plugin directory and everything is auto-discovered — instructions, skills, agents, MCP configs:
+
+```python
+from pytest_skill_engineering import Eval, Provider
+from pytest_skill_engineering.core.plugin import load_plugin
+
+async def test_plugin(eval_run):
+    plugin = load_plugin("my-plugin/")
+    agent = Eval.from_plugin(
+        plugin,
+        provider=Provider(model="azure/gpt-5-mini"),
+    )
+    result = await eval_run(agent, "What can you help me with?")
+    assert result.success
+```
+
 ## AI Analysis
 
 AI analyzes your results and tells you **what to fix**: which model to deploy, how to improve tool descriptions, where to cut costs. [See a sample report →](https://sbroenne.github.io/pytest-skill-engineering/demo/hero-report.html)
@@ -133,6 +151,7 @@ addopts = "--aitest-summary-model=azure/gpt-5.2-chat"
 - **CLI Server Testing** — Wrap CLIs as testable tool servers
 - **Real Coding Agent Testing** — `CopilotEval + copilot_eval` runs the actual Copilot coding agent (native OAuth, skill loading, custom agent dispatch, exact user experience)
 - **`.agent.md` Testing** — Load `.agent.md` files with `Eval.from_agent_file()` to test instructions with any model, or use `load_custom_agent()` + `CopilotEval` to test real custom agent dispatch
+- 🔌 **Plugin Testing** — Load and test complete plugin directories (plugin.json, .github/, .claude/ layouts) with auto-discovery of instructions, skills, agents, and MCP servers
 - **Eval Comparison** — Compare models, skills, `.agent.md` versions, and server configurations
 - **Eval Leaderboard** — Auto-ranked by pass rate and cost
 - **Multi-Turn Sessions** — Test conversations that build on context

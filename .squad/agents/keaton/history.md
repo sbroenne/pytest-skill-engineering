@@ -9,6 +9,26 @@
 
 <!-- Append new learnings below. Each entry is something lasting about the project. -->
 
+### Plugin Testing Architecture Analysis (2026-03-21)
+
+Completed strategic analysis of plugin testing gaps for Copilot CLI and Claude Code ecosystems. Key findings:
+
+**Current coverage is strong for individual components** — MCP servers, custom agents (both synthetic and real dispatch), skills, instruction files, prompt files, CLIs, and personas all have test support. The persona system (`VSCodePersona`, `ClaudeCodePersona`, `CopilotCLIPersona`) is the right abstraction for cross-ecosystem testing.
+
+**Critical gaps are at the composition layer:**
+1. No `plugin.json` manifest loader — users must manually decompose plugins into components
+2. No hook testing — hooks are a core plugin primitive with zero test support
+3. No multi-plugin composition testing — individual plugins pass, combined environment breaks
+4. No extension testing (Node.js JSON-RPC) — most powerful Copilot CLI mechanism is untestable
+
+**Both ecosystems converge on identical primitives:** agents, skills, MCP servers, hooks, instructions. The `plugin.json` manifest format is similar. A single `load_plugin()` parser could handle both.
+
+**Competitive landscape is single-layer:** MCPBench, MCPEval, LiveMCPBench test MCP protocol compliance only. No tool tests plugins holistically as a composition of MCP + agents + skills + hooks + instructions. This is our unique differentiation.
+
+**Recommended priority:** Quick wins first — `load_plugin()` and `from_plugin()` factory methods (1-2 days each, glue code over existing infrastructure). Then hook testing and multi-plugin composition (1-2 weeks each). Native Claude Code runner is Phase 3 — the persona polyfill works well.
+
+Filed decision document: `.squad/decisions/inbox/keaton-plugin-testing-analysis.md`
+
 ### Architecture Review (2026-03-21)
 
 **Project size:** ~13,900 LOC across src/, 10 subpackages, 50+ modules.

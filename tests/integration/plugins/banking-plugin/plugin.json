@@ -1,0 +1,6 @@
+{
+    "name": "banking-plugin",
+    "version": "1.0.0",
+    "description": "A banking assistant plugin for testing",
+    "author": "pytest-skill-engineering"
+}

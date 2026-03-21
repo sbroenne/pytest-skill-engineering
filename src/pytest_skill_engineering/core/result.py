@@ -303,6 +303,26 @@ class EvalResult:
         """Check if a specific tool was called."""
         return name in self.tool_names_called
 
+    def tool_was_called_from_server(self, server_name: str, tool_name: str) -> bool:
+        """Check if a specific tool from a named MCP server was called.
+
+        Useful for plugin testing where tools may be namespaced by server.
+        Checks both the plain tool name and the ``server_tool`` prefixed form.
+
+        Args:
+            server_name: Name of the MCP server (e.g., ``"filesystem"``).
+            tool_name: Name of the tool (e.g., ``"read_file"``).
+
+        Returns:
+            True if either ``tool_name`` or ``server_name_tool_name`` was called.
+
+        Example::
+
+            assert result.tool_was_called_from_server("banking", "get_balance")
+        """
+        full_name = f"{server_name}_{tool_name}"
+        return self.tool_was_called(tool_name) or self.tool_was_called(full_name)
+
     def tool_call_count(self, name: str) -> int:
         """Count how many times a specific tool was called."""
         return len(self.tool_calls_for(name))

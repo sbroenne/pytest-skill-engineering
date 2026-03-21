@@ -76,3 +76,39 @@ Created 3 new copilot integration test files to close the feature gap identified
 ### Full Repo Review (2026-03-21)
 
 Completed post-0.2.0 SDK deep review as part of 5-agent session. Reviewed SDK API, found and fixed critical bug: `ToolInvocation.get()` broken because SDK 0.2 changed class from TypedDict to regular class. Fixed 2 call sites in copilot/model.py and copilot/personas.py. Filed 2 findings in formal decision document: (1) bug fix applied, (2) team action item for integration test coverage verification, (3) informational: EventMapper handles 17/70 event types safely, CopilotModel session management architecturally correct.
+
+### Plugin Ecosystem Deep Analysis (2026-03-21)
+
+Performed deep technical analysis of Copilot CLI and Claude Code plugin ecosystems. Key findings:
+
+**Copilot CLI has 4 plugin layers:** Custom instructions, custom agents (.agent.md), skills (SKILL.md), and extensions (extension.mjs via JSON-RPC). We support the first 3 well. Extensions and plugin manifests (plugin.json) are not supported.
+
+**Claude Code has 7 plugin components:** CLAUDE.md, agents (.claude/agents/), slash commands (.claude/commands/), skills, hooks (hooks.json), MCP servers (.mcp.json), and plugin packages. We support file loading for agents/commands/instructions but lack auto-discovery factories.
+
+**SDK 0.2.0 has untapped APIs:** `SessionHooks` (pre/post tool use, session lifecycle), `agent` param (activate specific custom agent at session start), `SystemMessageCustomizeConfig` (section-level prompt surgery across 10 named sections), `on_user_input_request` (elicitation testing), `config_dir` (isolated config testing), and pre-flight health checks (`get_auth_status`, `list_models`).
+
+**Top 3 gaps identified:**
+1. No `CopilotEval.from_claude_config()` — Claude Code users can't auto-discover their project config
+2. No `hooks` passthrough on CopilotEval — can't test SDK hook handlers
+3. No `active_agent` / SDK `agent` param — can't test real agent activation (only polyfill dispatch)
+
+Filed comprehensive decision document with 8 prioritized recommendations in `.squad/decisions/inbox/verbal-plugin-formats.md`.
+
+### Plugin Support for CopilotEval (2026-03-21)
+
+Implemented first-class plugin testing support on the CopilotEval side:
+
+1. **`CopilotEval.from_plugin(path)`** — Loads a plugin directory via `core.plugin.load_plugin()`, maps agents → `custom_agents`, skills → `skill_directories`, MCP servers → `mcp_servers`, instructions → `instructions`. Auto-detects persona from path (`.claude/` → `ClaudeCodePersona`, else `VSCodePersona`). Supports all override kwargs.
+
+2. **`CopilotEval.from_claude_config(path)`** — Mirror of `from_copilot_config()` for Claude Code projects. Scans `CLAUDE.md` + `.claude/CLAUDE.md` (concatenated as instructions), `.claude/agents/*.md`, `.claude/skills/` (subdirs with SKILL.md), and `.mcp.json`. Defaults persona to `ClaudeCodePersona()`.
+
+3. **SDK passthroughs** — Two new fields on CopilotEval:
+   - `active_agent: str = ""` → maps to SDK's `agent=` param on `create_session()` — activates a specific custom agent at session start
+   - `hooks: dict[str, Any] = field(default_factory=dict)` → maps to SDK's `hooks=` param — lifecycle hooks (SessionHooks)
+   Both are wired through `build_session_config()` and only included when non-empty.
+
+4. **`load_mcp_config(path)`** — New utility in `copilot/config.py`. Parses `.mcp.json` files, handles both `mcpServers` (Claude Code) and `servers` (VS Code) top-level keys. Returns `dict[str, dict[str, Any]]` compatible with `CopilotEval(mcp_servers=...)`.
+
+**Pattern followed:** Existing `from_copilot_config()` was the template. New classmethods use explicit keyword args (not `**overrides`) for cleaner API. All deferred imports follow the `# noqa: PLC0415` pattern already established.
+
+**Dependency on Fenster's work:** `from_plugin()` imports `load_plugin()` from `core.plugin` which Fenster already created. The `Plugin` dataclass has `skills: list[Skill]` — mapped to `skill_directories` via `[str(s.path) for s in plugin.skills]`.

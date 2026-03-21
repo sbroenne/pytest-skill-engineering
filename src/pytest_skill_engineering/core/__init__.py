@@ -19,6 +19,7 @@ from pytest_skill_engineering.core.evals import (
     load_prompt_file,
     load_prompt_files,
 )
+from pytest_skill_engineering.core.plugin import HookDefinition, Plugin, PluginMetadata, load_plugin
 from pytest_skill_engineering.core.prompt import (
     Prompt,
     load_prompt,
@@ -38,6 +39,12 @@ from pytest_skill_engineering.core.result import (
     Turn,
 )
 from pytest_skill_engineering.core.skill import Skill, SkillError, SkillMetadata, load_skill
+from pytest_skill_engineering.core.skill_evals import (
+    SkillEvalCase,
+    has_skill_evals,
+    load_skill_evals,
+)
+from pytest_skill_engineering.core.skill_grading import export_grading
 
 __all__ = [
     "AITestError",
@@ -49,10 +56,13 @@ __all__ = [
     "ClarificationLevel",
     "ClarificationStats",
     "EngineTimeoutError",
+    "HookDefinition",
     "ImageContent",
     "MCPPrompt",
     "MCPPromptArgument",
     "MCPServer",
+    "Plugin",
+    "PluginMetadata",
     "Prompt",
     "Provider",
     "ServerStartError",
@@ -69,10 +79,15 @@ __all__ = [
     "load_custom_agents",
     "load_instruction_file",
     "load_instruction_files",
+    "load_plugin",
     "load_prompt_file",
     "load_prompt_files",
     "load_prompt",
     "load_prompts",
     "load_skill",
     "load_system_prompts",
+    "SkillEvalCase",
+    "has_skill_evals",
+    "load_skill_evals",
+    "export_grading",
 ]

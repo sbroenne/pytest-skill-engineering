@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [Unreleased]
+
+### Added
+
+- **Plugin testing support** — First-class testing for GitHub Copilot CLI plugins and Claude Code projects
+- **`load_plugin()`** — Unified loader for plugin.json manifests, .github/ project directories, and .claude/ project roots
+- **`Eval.from_plugin()`** — Create a PydanticAI eval from any plugin directory with auto-discovery of instructions, skills, agents, and MCP configs
+- **`CopilotEval.from_plugin()`** — Create a Copilot SDK eval from a plugin with automatic persona detection
+- **`CopilotEval.from_claude_config()`** — Auto-discover and test Claude Code projects (CLAUDE.md + .claude/ tree)
+- **`load_mcp_config()`** — Parse .mcp.json files for MCP server configurations
+- **`EvalResult.tool_was_called_from_server()`** — Assert a tool was called from a specific MCP server (plugin testing helper)
+- **`Plugin`, `PluginMetadata`, `HookDefinition`** — New dataclasses for plugin structure representation
+- **`active_agent`** field on `CopilotEval` — SDK passthrough for routing to a specific agent
+- **`hooks`** field on `CopilotEval` — SDK passthrough for session lifecycle hooks
+
 ## v0.2.0
 
 ### Added

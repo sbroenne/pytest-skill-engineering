@@ -103,3 +103,25 @@ Fixed all findings from the repo review session:
 6. Minor: `_extract_frontmatter` now logs a warning on YAML parse errors. `_shutdown_copilot_model_client` uses `asyncio.new_event_loop()` instead of deprecated `asyncio.get_event_loop()`.
 
 **Verification:** 0 pyright errors, 0 ruff errors, 73 pydantic tests + 29 copilot tests + 650 unit tests all collect successfully.
+
+### 2026-03-21 — Plugin loading infrastructure (core/plugin.py)
+
+Created first-class plugin testing support. A "plugin" is a directory with `plugin.json` that bundles agents, skills, MCP servers, hooks, instructions, and extensions.
+
+**New files:**
+- `core/plugin.py` — `Plugin`, `PluginMetadata`, `HookDefinition` dataclasses + `load_plugin()` function
+
+**Modified files:**
+- `core/eval.py` — Added `Eval.from_plugin()` classmethod
+- `core/result.py` — Added `EvalResult.tool_was_called_from_server()` method
+- `core/__init__.py` — Exported `Plugin`, `PluginMetadata`, `HookDefinition`, `load_plugin`
+- `__init__.py` — Same exports at package level
+
+**Key design decisions:**
+1. All new dataclasses use `@dataclass(slots=True, frozen=True)` per project convention
+2. `load_plugin()` auto-detects `.github/` and `.claude/` project directories (not just `plugin.json` packages)
+3. Lazy imports for `load_custom_agent` and `Skill.from_path()` to avoid circular deps
+4. `from_plugin()` follows same pattern as `from_agent_file()` and `from_instructions()`
+5. `tool_was_called_from_server()` checks both plain name and `server_tool` prefixed form
+
+**Verification:** 0 pyright errors, 0 ruff errors, imports verified.
