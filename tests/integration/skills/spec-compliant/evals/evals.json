@@ -1,0 +1,23 @@
+{
+  "skill_name": "spec-compliant",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Validate the text 'hello world' using the validation script",
+      "expected_output": "The validation script should confirm the text is valid",
+      "expectations": [
+        "The response mentions validation",
+        "The result indicates the text is valid"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Read the skill guide and summarize the usage patterns",
+      "expected_output": "A summary of the two usage patterns from the guide",
+      "expectations": [
+        "The response mentions checking metadata",
+        "The response mentions using scripts for validation"
+      ]
+    }
+  ]
+}

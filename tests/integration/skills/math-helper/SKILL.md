@@ -1,8 +1,13 @@
 ---
 name: math-helper
-description: Mathematical calculation helper with formulas reference
+description: Math calculation and formula helper for financial and algebraic computations
 version: 1.0.0
-license: MIT
+license: Apache-2.0
+compatibility: Python 3.11+
+allowed-tools: bash python
+metadata:
+  author: test-team
+  category: mathematics
 tags:
   - math
   - calculations

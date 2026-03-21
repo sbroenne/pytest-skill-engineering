@@ -16,7 +16,19 @@ from pathlib import Path
 
 import pytest
 
-from pytest_skill_engineering import Eval, MCPServer, Provider, SkillError, Wait, load_skill
+from pytest_skill_engineering import (
+    Eval,
+    MCPServer,
+    Provider,
+    Skill,
+    SkillError,
+    Wait,
+    export_grading,
+    has_skill_evals,
+    load_skill,
+    load_skill_evals,
+)
+from pytest_skill_engineering.core.result import EvalResult
 
 from ..conftest import DEFAULT_MODEL, DEFAULT_RPM, DEFAULT_TPM
 
@@ -39,9 +51,9 @@ class TestSkillLoading:
         skill = load_skill(SKILLS_DIR / "math-helper")
 
         assert skill.name == "math-helper"
-        assert skill.description == "Mathematical calculation helper with formulas reference"
+        assert skill.description == "Math calculation and formula helper for financial and algebraic computations"
         assert skill.metadata.version == "1.0.0"
-        assert skill.metadata.license == "MIT"
+        assert skill.metadata.license == "Apache-2.0"
         assert "math" in skill.metadata.tags
         assert skill.has_references
         assert "formulas.md" in skill.references
@@ -177,3 +189,130 @@ class TestSkillWithAgent:
         assert result.success
         assert result.tool_was_called("read_skill_reference")
         assert "a²" in result.final_response or "a^2" in result.final_response
+
+
+# =============================================================================
+# Agent Skills Spec Compliance (no LLM calls)
+# =============================================================================
+
+
+class TestAgentSkillsSpec:
+    """Test full agentskills.io spec compliance."""
+
+    async def test_load_spec_compliant_skill(self):
+        """Load a skill with all agentskills.io fields."""
+        skill = Skill.from_path(SKILLS_DIR / "spec-compliant")
+
+        # Required fields
+        assert skill.metadata.name == "spec-compliant"
+        assert skill.metadata.description.startswith("A fully spec-compliant")
+
+        # Optional spec fields
+        assert skill.metadata.compatibility == "Requires Python 3.11+ and bash"
+        assert skill.metadata.allowed_tools == ("bash", "python")
+        assert skill.metadata.metadata_dict == {
+            "author": "pytest-skill-engineering-team",
+            "category": "testing",
+        }
+        assert skill.metadata.version == "2.0.0"
+        assert skill.metadata.license == "MIT"
+
+    async def test_scripts_discovery(self):
+        """Scripts directory is discovered and loaded."""
+        skill = Skill.from_path(SKILLS_DIR / "spec-compliant")
+        assert skill.has_scripts
+        assert "validate.py" in skill.scripts
+        assert "def validate" in skill.scripts["validate.py"]
+
+    async def test_assets_discovery(self):
+        """Assets directory is discovered (filenames only)."""
+        skill = Skill.from_path(SKILLS_DIR / "spec-compliant")
+        assert skill.has_assets
+        assert "template.txt" in skill.assets
+        assert "schema.json" in skill.assets
+        assert skill.assets_dir is not None
+
+    async def test_references_still_work(self):
+        """References directory still works with new features."""
+        skill = Skill.from_path(SKILLS_DIR / "spec-compliant")
+        assert skill.has_references
+        assert "guide.md" in skill.references
+
+    async def test_skill_without_optional_dirs(self):
+        """Skills without scripts/assets still load fine."""
+        skill = Skill.from_path(SKILLS_DIR / "simple-assistant")
+        assert not skill.has_scripts
+        assert not skill.has_assets
+        assert skill.scripts == {}
+        assert skill.assets == ()
+
+    async def test_metadata_entries_frozen_compatible(self):
+        """Metadata entries work with frozen dataclass."""
+        skill = Skill.from_path(SKILLS_DIR / "spec-compliant")
+        meta = skill.metadata
+        # Access as dict via property
+        assert isinstance(meta.metadata_dict, dict)
+        assert meta.metadata_dict["author"] == "pytest-skill-engineering-team"
+        # The underlying storage is tuple-of-tuples (frozen compatible)
+        assert isinstance(meta.metadata_entries, tuple)
+
+
+# =============================================================================
+# Skill-Creator Eval Bridge (no LLM calls)
+# =============================================================================
+
+
+class TestSkillCreatorEvals:
+    """Test skill-creator eval format import."""
+
+    async def test_load_skill_evals(self):
+        """Load evals from evals/evals.json."""
+        cases = load_skill_evals(SKILLS_DIR / "spec-compliant")
+        assert len(cases) == 2
+        assert cases[0].prompt.startswith("Validate")
+        assert len(cases[0].expectations) == 2
+
+    async def test_has_skill_evals(self):
+        """Check if skill has evals."""
+        assert has_skill_evals(SKILLS_DIR / "spec-compliant")
+        assert has_skill_evals(SKILLS_DIR / "math-helper")
+        assert not has_skill_evals(SKILLS_DIR / "simple-assistant")
+
+    async def test_eval_case_fields(self):
+        """Eval cases have correct fields."""
+        cases = load_skill_evals(SKILLS_DIR / "math-helper")
+        case = cases[0]
+        assert case.id == 1
+        assert case.prompt  # non-empty
+        assert case.expected_output  # present
+        assert len(case.expectations) == 3
+        assert case.name  # auto-generated name
+
+    async def test_export_grading(self):
+        """Export grading in skill-creator format."""
+        # Create a minimal result for testing export
+        result = EvalResult(
+            turns=[],
+            success=True,
+        )
+
+        grading = export_grading(
+            result=result,
+            expectations=["Has result", "Is correct"],
+            expectation_results=[True, False],
+            evidence=["Found result in output", "Missing expected value"],
+        )
+
+        assert grading["summary"]["passed"] == 1
+        assert grading["summary"]["failed"] == 1
+        assert grading["summary"]["total"] == 2
+        assert grading["summary"]["pass_rate"] == 0.5
+        assert len(grading["expectations"]) == 2
+        assert grading["expectations"][0]["text"] == "Has result"
+        assert grading["expectations"][0]["passed"] is True
+        assert grading["expectations"][1]["passed"] is False
+
+    async def test_missing_evals_error(self):
+        """Error when evals/evals.json doesn't exist."""
+        with pytest.raises(FileNotFoundError):
+            load_skill_evals(SKILLS_DIR / "simple-assistant")
