@@ -37,7 +37,6 @@ if TYPE_CHECKING:
     from _pytest.reports import TestReport as PytestTestReport
     from _pytest.terminal import TerminalReporter
 
-    from pytest_skill_engineering.core.eval import Eval
     from pytest_skill_engineering.core.result import EvalResult
 
 
@@ -350,7 +349,7 @@ def pytest_runtest_makereport(item: Item, call: Any) -> Any:
 def _add_junit_properties(
     report: PytestTestReport,
     eval_result: EvalResult,
-    agent: Eval | None = None,
+    agent: Any | None = None,
 ) -> None:
     """Add agent metadata to pytest report for JUnit XML output.
 

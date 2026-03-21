@@ -112,3 +112,34 @@ Implemented first-class plugin testing support on the CopilotEval side:
 **Pattern followed:** Existing `from_copilot_config()` was the template. New classmethods use explicit keyword args (not `**overrides`) for cleaner API. All deferred imports follow the `# noqa: PLC0415` pattern already established.
 
 **Dependency on Fenster's work:** `from_plugin()` imports `load_plugin()` from `core.plugin` which Fenster already created. The `Plugin` dataclass has `skills: list[Skill]` — mapped to `skill_directories` via `[str(s.path) for s in plugin.skills]`.
+
+### Copilot SDK Rewrites for Full Pivot (2026-03-21)
+
+**Context:** Full COPILOT PIVOT removing PydanticAI entirely. CopilotEval becomes the ONLY eval harness. Rewrote 6 modules to use Copilot SDK instead of pydantic-ai/pydantic-evals.
+
+**Files rewritten:**
+1. **`copilot/judge.py`** (new) — Shared Copilot SDK judge utility for LLM-as-judge evaluations. Provides `copilot_judge(prompt, model, timeout)` that creates a minimal Copilot session, sends the prompt, and returns the response text.
+
+2. **`fixtures/llm_assert.py`** — Removed pydantic-evals dependency. Uses `copilot_judge()` with structured prompt ("PASS" or "FAIL" on first line, reasoning on second). Default model changed from `openai/gpt-5-mini` to `copilot/gpt-5-mini`.
+
+3. **`fixtures/llm_assert_image.py`** — Raises `NotImplementedError` with clear message. Copilot SDK does not currently expose a documented API for sending images in session messages. Placeholder until vision support confirmed.
+
+4. **`fixtures/llm_score.py`** — Removed PydanticAI Agent + BaseModel structured output. Uses `copilot_judge()` with formatted prompt requesting `DIMENSION_NAME: SCORE - Justification` format. Response parsing via regex to extract scores. Default model changed to `copilot/gpt-5-mini`.
+
+5. **`execution/clarification.py`** — Removed pydantic-evals `judge_output()`. Uses `copilot_judge()` with PASS/FAIL rubric. Function signature changed: `judge_model` is now `str` (not `pydantic_ai.Model | str`).
+
+6. **`reporting/insights.py`** — Removed PydanticAI Agent and `build_model_from_string()`. Uses `copilot_judge()` for insights generation. NOTE: Token usage and cost estimation set to 0 (Copilot SDK doesn't expose token counts without event parsing). Removed `execution.cost` import. Default model changed to `copilot/gpt-5-mini`.
+
+**Key patterns:**
+- All rewrites use the shared `copilot_judge()` utility for consistency
+- Model prefixes (copilot/, azure/, openai/) are stripped before calling Copilot SDK
+- All fixtures still use ThreadPoolExecutor + asyncio.run for sync test compatibility
+- Error handling: fail-open for clarification detection, explicit errors for llm_assert/llm_score failures
+- Default model across all fixtures: `copilot/gpt-5-mini` (was `openai/gpt-5-mini`)
+
+**Limitations accepted:**
+- Image assertions not supported (Copilot SDK limitation)
+- Token usage/cost tracking in insights is 0 (would require event parsing refactor)
+- Structured output via prompt engineering (not native Pydantic models)
+
+**Verification:** `ruff check` and `ruff format` passed on all 6 files.
