@@ -19,6 +19,7 @@ from pytest_skill_engineering.core.evals import (
     load_prompt_file,
     load_prompt_files,
 )
+from pytest_skill_engineering.core.plugin import HookDefinition, Plugin, PluginMetadata, load_plugin
 from pytest_skill_engineering.core.prompt import (
     Prompt,
     load_prompt,
@@ -49,10 +50,13 @@ __all__ = [
     "ClarificationLevel",
     "ClarificationStats",
     "EngineTimeoutError",
+    "HookDefinition",
     "ImageContent",
     "MCPPrompt",
     "MCPPromptArgument",
     "MCPServer",
+    "Plugin",
+    "PluginMetadata",
     "Prompt",
     "Provider",
     "ServerStartError",
@@ -69,6 +73,7 @@ __all__ = [
     "load_custom_agents",
     "load_instruction_file",
     "load_instruction_files",
+    "load_plugin",
     "load_prompt_file",
     "load_prompt_files",
     "load_prompt",

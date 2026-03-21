@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal
@@ -10,6 +11,8 @@ import yaml
 
 if TYPE_CHECKING:
     from pytest_skill_engineering.copilot.personas import Persona
+
+_logger = logging.getLogger(__name__)
 
 
 def _parse_agent_file(path: Path) -> dict[str, Any]:
@@ -133,6 +136,14 @@ class CopilotEval:
     # SDK passthrough for unmapped fields
     extra_config: dict[str, Any] = field(default_factory=dict)
 
+    # SDK passthrough: activate a specific custom agent at session start.
+    # Maps to the SDK's ``agent`` parameter on ``create_session()``.
+    active_agent: str = ""
+
+    # SDK passthrough: lifecycle hooks (SessionHooks).
+    # Maps to the SDK's ``hooks`` parameter on ``create_session()``.
+    hooks: dict[str, Any] = field(default_factory=dict)
+
     # IDE persona — controls which polyfill tools are injected to simulate
     # the target runtime environment (VS Code, Claude Code, Copilot CLI, etc.)
     # VSCodePersona is the default: it polyfills runSubagent when custom_agents
@@ -195,6 +206,12 @@ class CopilotEval:
 
         if self.disabled_skills:
             config["disabled_skills"] = self.disabled_skills
+
+        if self.active_agent:
+            config["agent"] = self.active_agent
+
+        if self.hooks:
+            config["hooks"] = self.hooks
 
         # Apply extra_config passthrough
         config.update(self.extra_config)
@@ -265,6 +282,195 @@ class CopilotEval:
         }
         config.update(overrides)
         return cls(**config)
+
+    @classmethod
+    def from_plugin(
+        cls,
+        path: str | Path,
+        *,
+        model: str = "",
+        persona: "Persona | None" = None,
+        instructions: str = "",
+        working_directory: str = "",
+        name: str = "",
+    ) -> "CopilotEval":
+        """Create a CopilotEval from a plugin directory.
+
+        Loads the plugin's agents, skills, MCP servers, and instructions,
+        then constructs a CopilotEval with all components wired together.
+
+        Uses :func:`~pytest_skill_engineering.core.plugin.load_plugin` to
+        discover the plugin structure.  The persona is auto-detected from the
+        plugin path (``ClaudeCodePersona`` for ``.claude/`` paths,
+        ``VSCodePersona`` otherwise) unless explicitly overridden.
+
+        Args:
+            path: Path to the plugin directory (may contain ``plugin.json``,
+                or be a ``.github/`` / ``.claude/`` project config directory).
+            model: Model override for the eval.
+            persona: IDE persona override.  Auto-detected when ``None``.
+            instructions: Additional instructions to **append** to the
+                plugin's discovered instructions.
+            working_directory: Override the working directory.
+            name: Override the eval name (defaults to plugin metadata name).
+
+        Returns:
+            A ``CopilotEval`` initialised from the plugin.
+
+        Example::
+
+            agent = CopilotEval.from_plugin("my-plugin/")
+
+            agent = CopilotEval.from_plugin(
+                ".claude/",
+                model="claude-sonnet-4",
+                instructions="Focus on security reviews.",
+            )
+        """
+        from pytest_skill_engineering.core.plugin import load_plugin  # noqa: PLC0415
+
+        plugin = load_plugin(path)
+
+        # Build combined instructions: plugin base + caller override
+        combined_instructions = plugin.instructions
+        if instructions:
+            if combined_instructions:
+                combined_instructions = combined_instructions + "\n\n" + instructions
+            else:
+                combined_instructions = instructions
+
+        # Map plugin.skills to skill directory paths
+        skill_dirs = [str(s.path) for s in plugin.skills]
+
+        # Auto-detect persona from plugin path
+        if persona is None:
+            resolved = Path(path).resolve()
+            if resolved.name == ".claude" or (resolved / ".claude").is_dir():
+                from pytest_skill_engineering.copilot.personas import (  # noqa: PLC0415
+                    ClaudeCodePersona,
+                )
+
+                persona = ClaudeCodePersona()
+            else:
+                persona = _default_persona()
+
+        return cls(
+            name=name or plugin.metadata.name or "plugin-eval",
+            model=model or None,
+            instructions=combined_instructions or None,
+            custom_agents=plugin.agents,
+            skill_directories=skill_dirs,
+            mcp_servers=plugin.mcp_servers,
+            working_directory=working_directory or None,
+            persona=persona,
+        )
+
+    @classmethod
+    def from_claude_config(
+        cls,
+        path: str | Path = ".",
+        *,
+        model: str = "",
+        persona: "Persona | None" = None,
+        instructions: str = "",
+        working_directory: str = "",
+        name: str = "claude-code-eval",
+    ) -> "CopilotEval":
+        """Create a CopilotEval from a Claude Code project directory.
+
+        Scans for:
+
+        * ``CLAUDE.md`` (project root) and ``.claude/CLAUDE.md`` → instructions
+        * ``.claude/agents/*.md`` → custom agents
+        * ``.claude/skills/`` → skill directories (subdirs with ``SKILL.md``)
+        * ``.mcp.json`` → MCP server configs
+
+        Args:
+            path: Root of the Claude Code project (default: current directory).
+            model: Model override for the eval.
+            persona: IDE persona override.  Defaults to ``ClaudeCodePersona``.
+            instructions: Additional instructions to **append** to the
+                discovered ``CLAUDE.md`` content.
+            working_directory: Override the working directory.
+            name: Override the eval name.
+
+        Returns:
+            A ``CopilotEval`` initialised from the discovered config files.
+
+        Example::
+
+            # Load from the current project
+            agent = CopilotEval.from_claude_config()
+
+            # Load from a specific directory with model override
+            agent = CopilotEval.from_claude_config(
+                "tests/fixtures/claude-project",
+                model="claude-sonnet-4",
+            )
+        """
+        from pytest_skill_engineering.copilot.config import load_mcp_config  # noqa: PLC0415
+        from pytest_skill_engineering.core.evals import load_custom_agent  # noqa: PLC0415
+
+        root = Path(path).resolve()
+        claude_dir = root / ".claude"
+
+        # 1. Concatenate instructions from CLAUDE.md files
+        instruction_parts: list[str] = []
+        for md_path in [root / "CLAUDE.md", claude_dir / "CLAUDE.md"]:
+            if md_path.is_file():
+                content = md_path.read_text(encoding="utf-8").strip()
+                if content:
+                    instruction_parts.append(content)
+        if instructions:
+            instruction_parts.append(instructions)
+        combined_instructions = "\n\n".join(instruction_parts) or None
+
+        # 2. Load custom agents from .claude/agents/
+        agents: list[dict[str, Any]] = []
+        agents_dir = claude_dir / "agents"
+        if agents_dir.is_dir():
+            # Claude Code uses plain .md files for agents
+            for agent_file in sorted(agents_dir.glob("*.md")):
+                try:
+                    agents.append(load_custom_agent(agent_file))
+                except (FileNotFoundError, ValueError) as exc:
+                    _logger.warning("Skipping agent file %s: %s", agent_file.name, exc)
+
+        # 3. Discover skill directories from .claude/skills/
+        skill_dirs: list[str] = []
+        skills_dir = claude_dir / "skills"
+        if skills_dir.is_dir():
+            for subdir in sorted(skills_dir.iterdir()):
+                if subdir.is_dir() and (subdir / "SKILL.md").exists():
+                    skill_dirs.append(str(subdir))
+
+        # 4. Parse .mcp.json if it exists
+        mcp_servers: dict[str, dict[str, Any]] = {}
+        mcp_config_path = root / ".mcp.json"
+        if mcp_config_path.is_file():
+            try:
+                mcp_servers = load_mcp_config(mcp_config_path)
+            except (ValueError, FileNotFoundError) as exc:
+                _logger.warning("Failed to load .mcp.json: %s", exc)
+
+        # 5. Default persona to ClaudeCodePersona
+        if persona is None:
+            from pytest_skill_engineering.copilot.personas import (  # noqa: PLC0415
+                ClaudeCodePersona,
+            )
+
+            persona = ClaudeCodePersona()
+
+        return cls(
+            name=name,
+            model=model or None,
+            instructions=combined_instructions,
+            custom_agents=agents,
+            skill_directories=skill_dirs,
+            mcp_servers=mcp_servers,
+            working_directory=working_directory or None,
+            persona=persona,
+        )
 
 
 def _default_persona() -> "Persona":

@@ -8,6 +8,7 @@ Install with: ``uv add pytest-skill-engineering[copilot]``
 
 from __future__ import annotations
 
+from pytest_skill_engineering.copilot.config import load_mcp_config
 from pytest_skill_engineering.copilot.eval import CopilotEval
 from pytest_skill_engineering.copilot.evals import load_custom_agent, load_custom_agents
 from pytest_skill_engineering.copilot.fixtures import copilot_eval
@@ -36,6 +37,7 @@ __all__ = [
     "copilot_eval",
     "load_custom_agent",
     "load_custom_agents",
+    "load_mcp_config",
     "optimize_instruction",
     "run_copilot",
 ]

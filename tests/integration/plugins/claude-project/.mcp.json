@@ -1,0 +1,8 @@
+{
+    "mcpServers": {
+        "banking": {
+            "command": "python",
+            "args": ["-m", "pytest_skill_engineering.testing.banking_mcp"]
+        }
+    }
+}
