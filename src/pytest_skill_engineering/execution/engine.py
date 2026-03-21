@@ -363,25 +363,49 @@ class EvalEngine:
 
     def _build_skill_toolset(self) -> AbstractToolset[Any] | None:
         """Build a FunctionToolset for skill reference tools."""
-        if not self.agent.skill or not self.agent.skill.has_references:
+        skill = self.agent.skill
+        if not skill:
             return None
 
-        from pytest_skill_engineering.execution.skill_tools import execute_skill_tool
-
-        skill = self.agent.skill
+        has_any_tools = skill.has_references or skill.has_scripts or skill.has_assets
+        if not has_any_tools:
+            return None
 
         from pydantic_ai import FunctionToolset
 
+        from pytest_skill_engineering.execution.skill_tools import execute_skill_tool
+
         toolset = FunctionToolset(id="skill-references")
 
-        @toolset.tool_plain  # type: ignore[misc]
-        def list_skill_references() -> str:
-            """List available reference documents for the skill."""
-            return execute_skill_tool(skill, "list_skill_references", {})
+        if skill.has_references:
 
-        @toolset.tool_plain  # type: ignore[misc]
-        def read_skill_reference(filename: str) -> str:
-            """Read a reference document from the skill."""
-            return execute_skill_tool(skill, "read_skill_reference", {"filename": filename})
+            @toolset.tool_plain  # type: ignore[misc]
+            def list_skill_references() -> str:
+                """List available reference documents for the skill."""
+                return execute_skill_tool(skill, "list_skill_references", {})
+
+            @toolset.tool_plain  # type: ignore[misc]
+            def read_skill_reference(filename: str) -> str:
+                """Read a reference document from the skill."""
+                return execute_skill_tool(skill, "read_skill_reference", {"filename": filename})
+
+        if skill.has_scripts:
+
+            @toolset.tool_plain  # type: ignore[misc]
+            def list_skill_scripts() -> str:
+                """List available scripts for the skill."""
+                return execute_skill_tool(skill, "list_skill_scripts", {})
+
+            @toolset.tool_plain  # type: ignore[misc]
+            def read_skill_script(filename: str) -> str:
+                """Read a script from the skill."""
+                return execute_skill_tool(skill, "read_skill_script", {"filename": filename})
+
+        if skill.has_assets:
+
+            @toolset.tool_plain  # type: ignore[misc]
+            def list_skill_assets() -> str:
+                """List available asset files for the skill."""
+                return execute_skill_tool(skill, "list_skill_assets", {})
 
         return toolset
