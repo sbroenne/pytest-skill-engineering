@@ -2,8 +2,35 @@
 
 - **Owner:** sbroenne
 - **Project:** pytest-skill-engineering — pytest plugin for testing MCP servers and CLIs with real LLMs. AI analyzes results and tells you what to fix.
-- **Stack:** Python 3.11+, PydanticAI, pydantic-evals, MCP, pytest, htpy, async/await, uv, hatch, ruff, pyright
+- **Stack:** Python 3.11+, **Copilot SDK only** (PydanticAI removed 2026-03-21), MCP, pytest, htpy, async/await, uv, hatch, ruff, pyright
 - **Created:** 2026-03-21
+- **Current Phase:** Copilot-only pivot complete. Plugin system design phase.
+
+## Cross-Agent Context
+
+### 2026-03-21 — Copilot Pivot Session (COMPLETE)
+
+**Directive:** User decision (2026-03-21T10:35Z) to remove PydanticAI harness and make Copilot SDK the **only** eval infrastructure.
+
+**What Verbal did in this session:**
+- Rewrote 6 modules to use Copilot SDK instead of PydanticAI:
+  1. `copilot/judge.py` (NEW) — Shared judge utility for llm_assert, llm_score, clarification, insights
+  2. `fixtures/llm_assert.py` — Now uses copilot_judge() with PASS/FAIL prompt
+  3. `fixtures/llm_score.py` — Prompt engineering for structured output (no Pydantic models)
+  4. `execution/clarification.py` — Uses copilot_judge() for clarification detection
+  5. `reporting/insights.py` — Copilot SDK for AI analysis (no token tracking; set to 0)
+  6. `fixtures/llm_assert_image.py` — NotImplementedError (SDK limitation)
+- Accepted limitations: image assertions unsupported, token/cost tracking is 0, structured output via prompt engineering
+- Commits: included in `622a508` (Fenster's pivot) + `09ff5e1` (Coordinator's imports)
+
+**Cross-team parallel work:**
+- **Fenster:** Removed 6 core PydanticAI files, deleted dependencies
+- **Hockney:** Deleted `tests/integration/pydantic/` (12 test files, ~72 tests). Discovered `copilot/model.py` blocker.
+- **McManus:** Docs rewrite (IN PROGRESS, blocked on copilot/model.py fix)
+
+**BLOCKER:** `copilot/model.py` lines 21–38 still import from pydantic_ai (which is deleted). Blocks all test collection. Needs rewrite or deletion.
+
+---
 
 ## Learnings
 

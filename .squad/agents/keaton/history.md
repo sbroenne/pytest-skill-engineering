@@ -2,8 +2,32 @@
 
 - **Owner:** sbroenne
 - **Project:** pytest-skill-engineering — pytest plugin for testing MCP servers and CLIs with real LLMs. AI analyzes results and tells you what to fix.
-- **Stack:** Python 3.11+, PydanticAI, pydantic-evals, MCP, pytest, htpy, async/await, uv, hatch, ruff, pyright
+- **Stack:** Python 3.11+, **Copilot SDK only** (PydanticAI removed 2026-03-21), MCP, pytest, htpy, async/await, uv, hatch, ruff, pyright
 - **Created:** 2026-03-21
+- **Current Phase:** Copilot-only pivot complete. Plugin system design phase.
+
+## Cross-Agent Context
+
+### 2026-03-21 — Copilot Pivot Session (COMPLETE)
+
+**Directive:** User decision (2026-03-21T10:35Z) to remove PydanticAI harness and make Copilot SDK the **only** eval infrastructure.
+
+**What Keaton did in this session:**
+- Completed plugin testing ecosystem analysis covering GitHub Copilot CLI and Claude Code
+- Identified 4 critical gaps (plugin manifest loading, hook testing, multi-plugin composition, extension testing) and recommended 9-item roadmap
+- Proposed Copilot CLI & Claude Code unified plugin loading (single `load_plugin()` parser for both)
+- Strategic insight: pytest-skill-engineering is unique in testing plugins holistically (others test only single layers: MCP protocol, code correctness, model capability)
+- Recommendation: Prioritize Q1/Q2/Q3 quick wins (plugin loaders + assertions) before M1-M3 (hook testing, composition)
+
+**Cross-team parallel work:**
+- **Fenster:** Removed 6 core PydanticAI files, deleted dependencies
+- **Verbal:** Rewrote 6 modules to use Copilot SDK
+- **Hockney:** Deleted `tests/integration/pydantic/` (12 test files), discovered `copilot/model.py` blocker
+- **McManus:** Docs rewrite (IN PROGRESS)
+
+**Impact on plugin system:** The plugin ecosystem analysis informs plugin loading design. Fenster/Verbal will implement `core/plugin.py` + `Eval.from_plugin()` + `CopilotEval.from_plugin()` based on this analysis.
+
+---
 
 ## Learnings
 

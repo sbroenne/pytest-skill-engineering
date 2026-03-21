@@ -2,8 +2,40 @@
 
 - **Owner:** sbroenne
 - **Project:** pytest-skill-engineering — pytest plugin for testing MCP servers and CLIs with real LLMs. AI analyzes results and tells you what to fix.
-- **Stack:** Python 3.11+, PydanticAI, pydantic-evals, MCP, pytest, htpy, async/await, uv, hatch, ruff, pyright
+- **Stack:** Python 3.11+, **Copilot SDK only** (PydanticAI removed 2026-03-21), MCP, pytest, htpy, async/await, uv, hatch, ruff, pyright
 - **Created:** 2026-03-21
+- **Current Phase:** Copilot-only pivot complete. Plugin system design phase.
+
+## Cross-Agent Context
+
+### 2026-03-21 — Copilot Pivot Session (COMPLETE)
+
+**Directive:** User decision (2026-03-21T10:35Z) to remove PydanticAI harness and make Copilot SDK the **only** eval infrastructure.
+
+**What Hockney did in this session:**
+- Removed `tests/integration/pydantic/` directory (12 test files, ~72 tests)
+  - test_01_basic.py, test_02_models.py, test_03_prompts.py, test_04_matrix.py, test_05_skills.py, test_06_sessions.py, test_07_clarification.py, test_08_scoring.py, test_09_cli.py, test_10_ab_servers.py, test_11_iterations.py, test_12_custom_agents.py
+- Deleted fixture scenarios (13 files, ~68KB) that generated test JSON reports
+- Updated `tests/integration/copilot/conftest.py` for isolated Copilot-only testing
+- Updated `tests/integration/conftest.py` to only shared server fixtures (Banking, Todo MCP servers)
+- Commits: `b2098ef`, `ce68c7c`
+
+**BLOCKER discovered:** `copilot/model.py` still has PydanticAI imports (lines 21–38):
+```python
+from pydantic_ai.messages import (ModelMessage, ModelRequest, ...)
+from pydantic_ai.models import Model
+```
+- **Impact:** Cannot run ANY tests — pytest plugin fails to load with `ModuleNotFoundError: No module named 'pydantic_ai'`
+- **Root cause:** Fenster listed file as "needs rewrite" but deleted pydantic-ai dependency without removing file
+- **Options:** 1) Delete file entirely, 2) Rewrite to not import pydantic_ai, 3) Re-add pydantic-ai (reverses pivot)
+- **Flagged to:** Fenster/Verbal (src/ code, outside Hockney's charter)
+
+**Cross-team parallel work:**
+- **Fenster:** Removed 6 core PydanticAI files, deleted dependencies
+- **Verbal:** Rewrote 6 modules to use Copilot SDK
+- **McManus:** Docs rewrite (IN PROGRESS, blocked on copilot/model.py fix)
+
+---
 
 ## Learnings
 

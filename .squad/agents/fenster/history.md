@@ -2,8 +2,31 @@
 
 - **Owner:** sbroenne
 - **Project:** pytest-skill-engineering — pytest plugin for testing MCP servers and CLIs with real LLMs. AI analyzes results and tells you what to fix.
-- **Stack:** Python 3.11+, PydanticAI, pydantic-evals, MCP, pytest, htpy, async/await, uv, hatch, ruff, pyright
+- **Stack:** Python 3.11+, **Copilot SDK only** (PydanticAI removed 2026-03-21), MCP, pytest, htpy, async/await, uv, hatch, ruff, pyright
 - **Created:** 2026-03-21
+- **Current Phase:** Copilot-only pivot complete. Plugin system design phase.
+
+## Cross-Agent Context
+
+### 2026-03-21 — Copilot Pivot Session (COMPLETE)
+
+**Directive:** User decision (2026-03-21T10:35Z) to remove PydanticAI harness and make Copilot SDK the **only** eval infrastructure.
+
+**What Fenster did in this session:**
+- Removed 6 core files: `core/eval.py`, `execution/engine.py`, `execution/pydantic_adapter.py`, `execution/cli_toolset.py`, `execution/optimizer.py`, `fixtures/run.py` (~4833 lines deleted)
+- Removed dependencies: pydantic-ai, pydantic-evals, litellm, azure-identity
+- Made github-copilot-sdk a required dependency
+- Left TODO stubs in: `execution/servers.py`, `execution/cost.py`, `reporting/insights.py`, `copilot/fixtures.py`, `copilot/__init__.py`
+- Commits: `622a508` (main pivot), `09ff5e1` (import fixes from Coordinator)
+
+**Cross-team parallel work:**
+- **Verbal:** Rewrote llm_assert, llm_score, clarification, insights to use Copilot SDK (6 modules)
+- **Hockney:** Deleted `tests/integration/pydantic/` (12 test files, ~72 tests). Discovered blocker in `copilot/model.py` (still has PydanticAI imports)
+- **McManus:** Docs rewrite (IN PROGRESS, blocked on copilot/model.py fix)
+
+**BLOCKER:** `copilot/model.py` lines 21–38 still import from pydantic_ai (which is deleted). Blocks all test collection. Needs rewrite or deletion.
+
+---
 
 ## Learnings
 
