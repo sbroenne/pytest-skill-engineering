@@ -1,56 +1,51 @@
 ---
-description: "Write your first AI test in under 5 minutes. Set up pytest-skill-engineering to test MCP servers, tools, skills, and custom agents with real LLMs."
+description: "Write your first AI test in under 5 minutes. Set up pytest-skill-engineering to test MCP servers, tools, skills, and custom agents with the real GitHub Copilot coding agent."
 ---
 
 # Getting Started
 
-Write your first AI test in under 5 minutes.
-
-> **New here?** Start with `CopilotEval + copilot_eval` if you have a Copilot subscription — it tests what users actually experience, with zero model setup. Use `Eval + eval_run` when you need model flexibility or full per-call introspection. Read [Choosing a Test Harness](../explanation/choosing-a-harness.md) for the full comparison.
+Write your first AI test in under 5 minutes using the **real GitHub Copilot coding agent**.
 
 ## What You're Testing
 
-pytest-skill-engineering tests whether an LLM can understand and use your tools:
+pytest-skill-engineering tests whether GitHub Copilot can understand and use your tools:
 
-- **MCP Server Tools** — Can the LLM discover and call your tools correctly?
+- **MCP Server Tools** — Can Copilot discover and call your tools correctly?
+- **Agent Skills** — Does domain knowledge improve performance?
+- **Custom Agents** — Do your `.agent.md` instructions produce the right behavior and trigger subagent dispatch?
 - **MCP Server Prompts** — Do your bundled prompt templates render and produce the right behavior?
-- **Prompt Files** — Does invoking a slash command (`.prompt.md` / `.claude/commands/`) produce the right agent behavior?
-- **Skill** — Does domain knowledge help the LLM perform?
-- **Custom Agents** — Do your `.agent.md` instructions produce the right behavior?
+- **CLI Tools** — Can Copilot effectively use command-line interfaces?
 
-## The Eval
+## Installation
 
-An **Eval** is the test harness that bundles your configuration:
-
-```python
-from pytest_skill_engineering import Eval, Provider, MCPServer
-
-Eval(
-    provider=Provider(model="azure/gpt-5-mini"),   # LLM provider (required)
-    mcp_servers=[banking_server],                   # MCP servers with tools
-    skill=financial_skill,                          # Eval Skill (optional)
-)
+```bash
+uv add pytest-skill-engineering
 ```
+
+## Authentication
+
+Authenticate with GitHub Copilot (one-time):
+
+```bash
+gh auth login
+```
+
+This gives pytest-skill-engineering access to the real GitHub Copilot coding agent.
 
 ## Your First Test
 
-The simplest case: verify an LLM can use your MCP server correctly.
+The simplest case: verify GitHub Copilot can use your MCP server correctly.
 
 ```python
-import pytest
-from pytest_skill_engineering import Eval, Provider, MCPServer
+from pytest_skill_engineering.copilot import CopilotEval
 
-# The MCP server you're testing
-banking_server = MCPServer(command=["python", "banking_mcp.py"])
-
-agent = Eval(
-    provider=Provider(model="azure/gpt-5-mini"),
-    mcp_servers=[banking_server],
-)
-
-async def test_balance_query(eval_run):
-    """Verify the LLM can use get_balance correctly."""
-    result = await eval_run(agent, "What's my checking account balance?")
+async def test_balance_query(copilot_eval):
+    """Verify Copilot can use get_balance correctly."""
+    agent = CopilotEval(
+        skill_directories=["skills/banking-advisor"],  # Optional skill
+        max_turns=10,
+    )
+    result = await copilot_eval(agent, "What's my checking account balance?")
     
     assert result.success
     assert result.tool_was_called("get_balance")
@@ -58,22 +53,23 @@ async def test_balance_query(eval_run):
 
 **What this tests:**
 
-- **Tool discovery** — Did the LLM find `get_balance`?
+- **Tool discovery** — Did Copilot find `get_balance`?
 - **Parameter inference** — Did it pass `account="checking"` correctly?
 - **Response handling** — Did it interpret the tool output?
+- **Skill integration** — Did the banking skill improve performance?
 
-If this fails, your MCP server's tool descriptions or schemas need work.
+If this fails, your MCP server's tool descriptions, schemas, or skill content need work.
 
 ## The Workflow
 
-This is **skill engineering** — iterate on what you're testing the same way you iterate on code:
+This is **test-driven skill engineering** — iterate on your AI interface the same way you iterate on code:
 
 1. **Write a test** — describe what a user would say
-2. **Run it** — the LLM tries to use your tools
-3. **Fix the interface** — improve descriptions, schemas, or prompts until it passes
+2. **Run it** — GitHub Copilot tries to use your tools
+3. **Fix the interface** — improve tool descriptions, skills, or agent instructions until it passes
 4. **Generate a report** — AI analysis tells you what else to optimize
 
-You iterate on your skills the same way you iterate on code. See [Skill Engineering](../explanation/skill-engineering.md) for the full concept.
+Red/Green/Refactor for the skill stack.
 
 ## Running the Test
 
@@ -81,35 +77,34 @@ You iterate on your skills the same way you iterate on code. See [Skill Engineer
 pytest tests/test_banking.py -v
 ```
 
-## Generating Reports
+## AI-Powered Reports
 
-First, configure reporting in `pyproject.toml`:
+Configure reporting in `pyproject.toml`:
 
 ```toml
 [tool.pytest.ini_options]
 addopts = """
---aitest-summary-model=azure/gpt-5.2-chat
+--aitest-summary-model=copilot/gpt-5-mini
 --aitest-html=aitest-reports/report.html
 """
 ```
 
-Then just run pytest:
+Run pytest:
 
 ```bash
 pytest tests/
 ```
 
-AI analysis is included automatically. See [Configuration](../reference/configuration.md) for details.
+The report includes:
 
-The report shows:
-
-- **Configuration Leaderboard** — Which setups work best
-- **Failure Analysis** — Root cause + suggested fix for each failure
-- **Tool Feedback** — How to improve your tool descriptions
+- **Eval Leaderboard** — Which configurations work best (pass rate + cost)
+- **AI Analysis** — Deployment recommendation, failure root causes, tool description improvements
+- **Tool Feedback** — Specific suggestions with copy-to-clipboard buttons
+- **Cost Tracking** — Premium requests and USD estimates
 
 ## Next Steps
 
-- [Custom Agents](custom-agents.md) — Test `.agent.md` files and A/B test agent instructions
-- [Eval Skills](skills.md) — Add domain knowledge
-- [Comparing Configurations](comparing.md) — Find what works best
-- [A/B Testing Servers](ab-testing-servers.md) — Compare MCP server versions
+- [Custom Agents](custom-agents.md) — Test `.agent.md` files and validate subagent dispatch
+- [Agent Skills](skills.md) — Add domain knowledge (agentskills.io spec-compliant)
+- [Plugin Testing](plugins.md) — Load complete plugin directories
+- [Test Coding Agents](../how-to/test-coding-agents.md) — Full `CopilotEval` reference
