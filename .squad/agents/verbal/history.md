@@ -61,6 +61,18 @@
 - CopilotEval is properly separated from pydantic Eval
 - Provider routing (`copilot/` prefix) is clean
 
+### Copilot Feature-Parity Tests (test_06, test_07, test_09)
+
+Created 3 new copilot integration test files to close the feature gap identified in Hockney's test suite review:
+
+1. **test_06_sessions.py** (4 tests) — Context retention via single-prompt embedding. CopilotEval has no message history reuse (string prompts only), so true `@pytest.mark.session` multi-turn is impossible. Tests embed context in the prompt and verify the agent uses it: project name reference, convention adherence, domain field names, and multi-step create-then-refactor.
+
+2. **test_07_clarification.py** (4 tests) — Clarification detection via response inspection. CopilotEval lacks engine-level `ClarificationDetection`. Tests use substring checks + `llm_assert` to detect "would you like" / "shall I" patterns. Covers: clear request (no clarification), multi-step clear request, ambiguous request (either outcome OK), and strong "never ask" instructions suppressing clarification.
+
+3. **test_09_cli.py** (5 tests) — Shell tool usage via Copilot's native terminal tools. No `CLIServer` needed — Copilot has built-in shell access. Tests: echo + redirection, ls with pre-populated files, mkdir + echo + cat pipeline, line-counting pipeline, and error handling on nonexistent files.
+
+**Key SDK limitation documented:** CopilotEval sessions are stateless string prompts. Each `copilot_eval()` call is a fresh session — no conversation history carries over.
+
 ### Full Repo Review (2026-03-21)
 
 Completed post-0.2.0 SDK deep review as part of 5-agent session. Reviewed SDK API, found and fixed critical bug: `ToolInvocation.get()` broken because SDK 0.2 changed class from TypedDict to regular class. Fixed 2 call sites in copilot/model.py and copilot/personas.py. Filed 2 findings in formal decision document: (1) bug fix applied, (2) team action item for integration test coverage verification, (3) informational: EventMapper handles 17/70 event types safely, CopilotModel session management architecturally correct.

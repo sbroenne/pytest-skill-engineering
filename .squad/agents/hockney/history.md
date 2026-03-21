@@ -35,6 +35,41 @@
 - Document in README/CONTRIBUTING (Verbal)
 - Consider adding to CI env vars if/when CI is set up (Fenster)
 
+### 2026-03-21: Post-Fix Verification Run (McManus + Fenster + Hockney changes)
+
+**Context:** Three agents made significant changes in the same session:
+- **McManus:** XSS fixes (nh3 sanitization), removed legacy alias, removed duplicate CSS, added CSS utilities
+- **Fenster:** serialize_dataclass deep-copy fix, rate limiter reset, Azure model cache fix, slots=True on 9 dataclasses, frozen=True on Provider/Prompt, plugin.py decomposition (→ plugin_recording.py, plugin_options.py, plugin_report.py), YAML silent swallow fix, deprecated asyncio.get_event_loop() fix
+- **Hockney (earlier):** 4 negative test cases in TestBankingNegative class
+
+**Verification Results:**
+- Lint (ruff check): **CLEAN** — 0 issues
+- Format (ruff format): **CLEAN** — 135 files unchanged
+- Type check (pyright): **CLEAN** — 0 errors, 0 warnings
+- Test collection: **73 tests collected** in 0.02s — plugin decomposition did NOT break imports
+- Integration tests: **73/73 PASSED** across all 12 test files, zero failures, zero flaky
+
+| File | Tests | Result | Duration |
+|------|-------|--------|----------|
+| test_01_basic.py | 7 | ✅ | 2m27s |
+| test_02_models.py | 4 | ✅ | 57s |
+| test_03_prompts.py | 4 | ✅ | 57s |
+| test_04_matrix.py | 8 | ✅ | 1m29s |
+| test_05_skills.py | 10 | ✅ | 1m01s |
+| test_06_sessions.py | 8 | ✅ | 2m34s |
+| test_07_clarification.py | 3 | ✅ | 1m27s |
+| test_08_scoring.py | 2 | ✅ | 59s |
+| test_09_cli.py | 6 | ✅ | 2m15s |
+| test_10_ab_servers.py | 7 | ✅ | 1m40s |
+| test_11_iterations.py | 3 | ✅ | 48s |
+| test_12_custom_agents.py | 11 | ✅ | 1m18s |
+
+- Report regeneration: **WORKS** — CLI successfully generates HTML from JSON with AI insights
+
+**Issues found:** None. All three sets of changes integrate cleanly. The plugin decomposition (Fenster) was the highest-risk change and test collection confirmed no import breakage. The frozen=True on Provider/Prompt didn't cause any test issues. The XSS sanitization (McManus) runs in the report pipeline which was exercised on every test file run. My negative tests (TestBankingNegative) all passed on first run against real LLMs.
+
+**Note:** `AZURE_TENANT_ID` must be set for all runs (known from previous session). Without it, every test fails with tenant mismatch error.
+
 ### 2026-03-21: Comprehensive Test Suite Review
 
 **Context:** Full audit of test coverage, harness design, fixture patterns, and gaps across all test directories.
@@ -116,3 +151,42 @@ Completed comprehensive test suite review as part of 5-agent session. Filed 10 f
 **Key insight:** `success=False` only occurs via exception paths (timeout, `UsageLimitExceeded`). The `adapt_result()` function in `pydantic_adapter.py` always sets `success=True`. So to get a genuine failure, you need to trigger the exception handler — `max_turns=1` with a tool-calling prompt is the cleanest way.
 
 **Collection result:** 73 tests total (up from 72 parametrized invocations), all collect cleanly. Not yet executed against real LLM (intentionally — expensive).
+
+### 2026-03-21: Copilot Feature Parity — Scoring, A/B, Iterations
+
+**Context:** Closing the Copilot integration test feature gap. Created 3 new test files to bring CopilotEval closer to parity with the Pydantic harness.
+
+**Files created:**
+
+1. **`test_08_scoring.py`** — LLM-judged rubric scoring via `llm_score` fixture
+   - 3 tests: verbose, direct, and production instruction styles
+   - Uses `PROMPT_QUALITY_RUBRIC` with instruction_adherence, code_quality, actionability dimensions
+   - `llm_score` is harness-agnostic — operates on `result.final_response` text
+   - `assert_score(score, min_pct=0.4)` threshold keeps tests realistic for LLM variability
+
+2. **`test_10_ab_servers.py`** — A/B instruction comparison (not server comparison)
+   - 6 tests (3 parametrized × 2 variants: "detailed" vs "minimal")
+   - `TestInstructionABComparison`: code creation quality, error handling presence
+   - `TestDocumentationQualityImpact`: documentation presence across variants
+   - Key difference from pydantic: no MCP servers — compares instruction quality via file output
+
+3. **`test_11_iterations.py`** — Reliability baselines for `--aitest-iterations=N`
+   - 3 tests: file creation, code refactoring, multi-file operations
+   - Tests are stable enough to run N times without flakiness
+   - Refactor test seeds `messy.py` then asserts modification occurred
+   - Multi-file test asserts ≥2 `.py` files created
+
+**Validation:**
+- ruff check: 0 issues
+- ruff format: clean (1 file reformatted during creation)
+- pyright: 0 errors, 0 warnings
+- Collection: 12 new tests, all collect in 0.02s
+- Total copilot tests: 45 (33 existing + 12 new)
+
+**Pattern decisions:**
+- `llm_score` works on text, not result objects — no harness coupling needed
+- A/B tests use `tmp_path / variant` subdirectories for workspace isolation (same pattern as `test_05_skills.py`)
+- Iteration tests avoid stateful assertions (no banking server state) — file existence is idempotent
+- All files use `pytestmark = [pytest.mark.copilot]` — no `pytest.mark.integration` (copilot tests are implicitly integration)
+
+**Remaining parity gaps:** Sessions (test_06), Clarification (test_07), CLI servers (test_09). Sessions and CLI may not apply to CopilotEval's architecture.
