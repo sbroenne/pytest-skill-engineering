@@ -60,3 +60,7 @@
 - Runner retry logic for transient errors is solid
 - CopilotEval is properly separated from pydantic Eval
 - Provider routing (`copilot/` prefix) is clean
+
+### Full Repo Review (2026-03-21)
+
+Completed post-0.2.0 SDK deep review as part of 5-agent session. Reviewed SDK API, found and fixed critical bug: `ToolInvocation.get()` broken because SDK 0.2 changed class from TypedDict to regular class. Fixed 2 call sites in copilot/model.py and copilot/personas.py. Filed 2 findings in formal decision document: (1) bug fix applied, (2) team action item for integration test coverage verification, (3) informational: EventMapper handles 17/70 event types safely, CopilotModel session management architecturally correct.

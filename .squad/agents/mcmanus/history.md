@@ -37,3 +37,20 @@
 
 **Backward-compat alias:**
 - `agent_leaderboard = eval_leaderboard` in `__init__.py` + `__all__` — never imported externally, violates no-legacy-code rule
+
+### Full Repo Review (2026-03-21)
+
+Completed full reporting pipeline security review as part of 5-agent session. Filed 6 findings (3 critical XSS vectors, 3 CSS/alias issues) in formal decision document. **Critical XSS fixes:** (1) Mermaid securityLevel 'loose'→'strict', (2) showDiagramHover() innerHTML→textContent, (3) _render_markdown() add HTML sanitization. **CSS fixes:** Add missing py-1.5, py-0.5, hover:bg-primary/5 utility classes. **Code cleanup:** Remove backward-compat agent_leaderboard alias. All items immediate priority.
+
+### XSS & CSS Fixes Applied (2026-03-21)
+
+All 6 findings from the repo review are now fixed:
+
+1. **Mermaid securityLevel** — `'loose'` → `'strict'` in scripts.js. Prevents click-handler injection in diagrams.
+2. **showDiagramHover() innerHTML** — Changed to `textContent`. Mermaid.js still picks it up via `mermaid.run()`.
+3. **_render_markdown() sanitization** — Added `nh3` (Rust-based HTML sanitizer) with explicit tag/attribute allowlist. Preserves `<pre class="mermaid">` for diagram rendering while stripping `<script>`, event handlers, etc. `nh3>=0.3.3` added to pyproject.toml.
+4. **Missing CSS utilities** — Added `py-0.5`, `py-1.5`, `hover:bg-primary/5` to report.css in the correct utility sections.
+5. **Legacy alias removed** — Deleted `agent_leaderboard = eval_leaderboard` from `agent_leaderboard.py` and its `__all__` entry from `__init__.py`. Not used anywhere externally.
+6. **Duplicate inline CSS removed** — Removed `_grid_styles()` function from `test_grid.py` and inline `<style>` block from `overlay()`. Both rule sets already exist in `report.css` (lines 986-1000). CSS file is now the single source of truth.
+
+**Key design decision:** Used `nh3` over `bleach` (deprecated) or regex. `nh3` is Rust-backed, zero-config secure defaults, and the allowlist approach ensures we only permit safe HTML elements that markdown legitimately produces.
