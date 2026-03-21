@@ -12,7 +12,6 @@ from pytest_skill_engineering.copilot.config import load_mcp_config
 from pytest_skill_engineering.copilot.eval import CopilotEval
 from pytest_skill_engineering.copilot.evals import load_custom_agent, load_custom_agents
 from pytest_skill_engineering.copilot.fixtures import copilot_eval
-from pytest_skill_engineering.copilot.model import CopilotModel
 from pytest_skill_engineering.copilot.personas import (
     ClaudeCodePersona,
     CopilotCLIPersona,
@@ -31,7 +30,6 @@ from pytest_skill_engineering.copilot.runner import run_copilot
 
 __all__ = [
     "CopilotEval",
-    "CopilotModel",
     "CopilotResult",
     # "InstructionSuggestion",  # TODO(Verbal): Removed with optimizer.py
     "ClaudeCodePersona",

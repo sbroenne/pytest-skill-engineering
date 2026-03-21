@@ -11,7 +11,7 @@ Example:
     @pytest.mark.asyncio
     async def test_banking(copilot_eval, tmp_path):
         from pytest_skill_engineering.copilot.eval import CopilotEval
-        
+
         agent = CopilotEval(
             name="banking-test",
             instructions=BANKING_PROMPT,
@@ -23,12 +23,6 @@ Example:
 """
 
 from __future__ import annotations
-
-import sys
-
-import pytest
-
-from pytest_skill_engineering import MCPServer, Wait
 
 # =============================================================================
 # Pytest Configuration Hooks
@@ -75,49 +69,3 @@ Available tools:
 When asked to manage tasks, ALWAYS use the appropriate tools. After modifying tasks, use list_tasks to verify and show the user the current state."""
 
 KEYVALUE_PROMPT = "You are a helpful assistant. Use the tools to complete tasks."
-
-# =============================================================================
-# MCP Server Fixtures
-# =============================================================================
-
-
-@pytest.fixture(scope="module")
-def todo_server():
-    """Todo MCP server - stateful task management."""
-    return MCPServer(
-        command=[
-            sys.executable,
-            "-u",
-            "-m",
-            "pytest_skill_engineering.testing.todo_mcp",
-        ],
-        wait=Wait.for_tools(["add_task", "list_tasks", "complete_task"]),
-    )
-
-
-@pytest.fixture(scope="module")
-def banking_server():
-    """Banking MCP server - realistic banking scenario.
-
-    Provides:
-    - 2 accounts: checking ($1,500), savings ($3,000)
-    - Tools: get_balance, get_all_balances, transfer, deposit, withdraw, get_transactions
-    """
-    return MCPServer(
-        command=[
-            sys.executable,
-            "-u",
-            "-m",
-            "pytest_skill_engineering.testing.banking_mcp",
-        ],
-        wait=Wait.for_tools(
-            [
-                "get_balance",
-                "get_all_balances",
-                "transfer",
-                "deposit",
-                "withdraw",
-                "get_transactions",
-            ]
-        ),
-    )
