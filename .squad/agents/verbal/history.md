@@ -35,3 +35,28 @@
 **Fenster's parallel work (same session):** Ran `uv lock --upgrade` and brought all ~40 dependencies to latest compatible versions. Key: pydantic-ai 1.61→1.70, openai 2.21→2.29, ruff 0.15.1→0.15.7. The `github-copilot-sdk 0.1→0.2` bump that necessitated this file's migration was part of Fenster's broader upgrade. All static analysis passed clean. See Fenster's history for full transitive dep list.
 
 **Hockney's parallel work (same session):** Integration test verification of combined upgrades. Found that this migration required additional compatibility fixes: subagent event field rename (`agent_name` in SDK 0.2), and event detection fallback from `tool.execution_start` when native subagent events missing. See Hockney's history for detailed fixes. 105/105 integration tests now passing.
+
+### 2026-03-21 — Post-0.2.0 Deep Review (Verbal)
+
+**🔴 CRITICAL BUG FIXED: `ToolInvocation.get()` broken in SDK 0.2.0**
+- `ToolInvocation` changed from TypedDict (dict subclass) to a regular class in 0.2.0
+- `.get("arguments")` raises `AttributeError` — must use `.arguments` (attribute access)
+- Fixed in 2 files: `copilot/model.py:328`, `copilot/personas.py:338`
+- Bug survived initial migration because these paths only execute when CopilotModel is used as a PydanticAI provider with tools (model.py) or when the polyfill subagent dispatch handler is invoked (personas.py) — neither path was exercised by existing integration tests
+
+**CORRECTION to earlier learning:** The entry "ToolInvocation is a TypedDict — .get('arguments') pattern still works" was **wrong** for SDK 0.2.0. `ToolInvocation` is now a regular class (`__bases__ = (object,)`), not a dict subclass. Attribute access (`.arguments`, `.tool_name`, etc.) is the correct pattern.
+
+**SDK 0.2.0 API facts verified:**
+- `ToolInvocation`: regular class, NOT TypedDict. Use `.arguments`, `.tool_name`, `.tool_call_id`, `.session_id` as attributes
+- `SystemMessageAppendConfig`/`SystemMessageReplaceConfig`: still TypedDicts (dict subclasses). Plain dicts work at runtime
+- `CustomAgentConfig`: still TypedDict. Plain dicts work
+- `create_session()`: now accepts `on_event` callback kwarg directly (alternative to `session.on()`)
+- SDK now has 70 event types (up from ~38 in 0.1). EventMapper handles 17 — the rest are silently ignored (safe)
+- New notable events: `permission.requested`/`.completed`, `session.task_complete`, `subagent.deselected`, `elicitation.*`, `tool.execution_partial_result`
+
+**Architecture assessment (all ✅):**
+- Persona system is well-designed — clean hierarchy, polyfill injection only when needed
+- CopilotModel singleton client handles event loop changes correctly
+- Runner retry logic for transient errors is solid
+- CopilotEval is properly separated from pydantic Eval
+- Provider routing (`copilot/` prefix) is clean

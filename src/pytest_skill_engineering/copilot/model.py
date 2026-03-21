@@ -325,7 +325,7 @@ def _build_copilot_tools(
 
         def _make_handler(tool_name: str) -> Any:
             async def _handler(invocation: Any) -> ToolResult:
-                args = invocation.get("arguments") or {}
+                args = invocation.arguments or {}
                 captured_calls.append({"name": tool_name, "args": args})
                 return ToolResult(
                     text_result_for_llm=json.dumps({"status": "captured"}),

@@ -335,7 +335,7 @@ def _make_subagent_dispatch_tool(
     agent_map: dict[str, dict[str, Any]] = {a["name"]: a for a in custom_agents}
 
     async def _handler(invocation: "ToolInvocation") -> "ToolResult":
-        args: dict[str, Any] = invocation.get("arguments") or {}  # type: ignore[assignment]
+        args: dict[str, Any] = invocation.arguments or {}
 
         eval_name: str | None = args.get("eval_name") or args.get("agent") or args.get("agentName")
         prompt_text: str = (
