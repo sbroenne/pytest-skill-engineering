@@ -6,9 +6,6 @@ import os
 import subprocess
 
 import pytest
-from pydantic_ai import Agent as Eval
-
-from pytest_skill_engineering.execution.pydantic_adapter import build_model_from_string
 
 # Default model — None means Copilot picks its default
 DEFAULT_MODEL: str | None = None
@@ -24,7 +21,7 @@ DEFAULT_MAX_TURNS: int = 25
 
 
 def _has_github_auth() -> bool:
-    """Check whether GitHub auth is available for Copilot-backed models."""
+    """Check whether GitHub auth is available for Copilot SDK."""
     if os.environ.get("GITHUB_TOKEN"):
         return True
     try:
@@ -39,47 +36,11 @@ def _has_github_auth() -> bool:
         return False
 
 
-def _candidate_judge_models() -> list[str]:
-    """Build ordered model candidates from available providers."""
-    override = os.environ.get("AITEST_INTEGRATION_JUDGE_MODEL")
-    if override:
-        return [override]
-
-    candidates: list[str] = []
-    if os.environ.get("AZURE_API_BASE") or os.environ.get("AZURE_OPENAI_ENDPOINT"):
-        candidates.append("azure/gpt-5-mini")
-    if os.environ.get("OPENAI_API_KEY"):
-        candidates.append("openai/gpt-5-mini")
-    if _has_github_auth():
-        candidates.append("copilot/gpt-5-mini")
-    return candidates
-
-
-@pytest.fixture(scope="session")
-async def integration_judge_model() -> str:
-    """Return a verified accessible model for integration judge calls.
-
-    Fails loudly when no configured provider can serve a minimal request.
-    """
-    candidates = _candidate_judge_models()
-    if not candidates:
-        pytest.fail(
-            "No model provider configured for integration judge calls. "
-            "Set one of: AZURE_API_BASE/AZURE_OPENAI_ENDPOINT, OPENAI_API_KEY, "
-            "or GitHub auth (GITHUB_TOKEN or `gh auth login`)."
+@pytest.fixture(scope="session", autouse=True)
+def _check_github_auth():
+    """Verify GitHub auth is available for Copilot integration tests."""
+    if not _has_github_auth():
+        pytest.skip(
+            "GitHub auth required for Copilot integration tests. "
+            "Set GITHUB_TOKEN or run `gh auth login`."
         )
-
-    errors: list[str] = []
-    for model_str in candidates:
-        try:
-            model = build_model_from_string(model_str)
-            agent = Eval(model)
-            result = await agent.run("Reply with exactly: OK")
-            if "OK" in result.output:
-                return model_str
-            errors.append(f"{model_str}: unexpected probe output {result.output!r}")
-        except Exception as exc:  # noqa: BLE001
-            errors.append(f"{model_str}: {exc}")
-
-    joined = "\n- ".join(errors)
-    pytest.fail(f"Model access probe failed for all configured providers:\n- {joined}")

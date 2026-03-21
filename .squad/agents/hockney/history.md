@@ -225,3 +225,55 @@ Completed comprehensive test suite review as part of 5-agent session. Filed 10 f
 - Claude project tests exercise the `.claude/` directory convention (different from `.github/` Copilot convention)
 - `active_agent` tests are pure sync since they only test the dataclass field, not SDK dispatch
 - Both test files follow existing patterns: `pytestmark`, section separators, docstring-per-method
+
+### 2026-03-21: Copilot Pivot Test Migration (PARTIAL - BLOCKED)
+
+**Context:** After full Copilot pivot (commits `622a508`, `09ff5e1`), tasked to remove pydantic tests and update conftest files for Copilot-only harness.
+
+**Work Completed:**
+
+1. **Deleted `tests/integration/pydantic/`** — 12 test files (~72 tests) that used the deleted `eval_run` fixture and `Eval`/`Provider` classes
+
+2. **Updated `tests/integration/conftest.py`** — Removed all PydanticAI-specific content:
+   - Removed `DEFAULT_MODEL`, `BENCHMARK_MODELS`, `DEFAULT_RPM`, `DEFAULT_TPM` constants
+   - Removed `.env` loading and `AZURE_API_BASE` workaround (Pydantic-specific)
+   - Changed `DEFAULT_MAX_TURNS` from 5 to 25 (Copilot's default)
+   - Updated docstring with CopilotEval example
+   - Kept `todo_server`, `banking_server` fixtures (unused by copilot tests, but harmless)
+
+3. **Updated `tests/integration/copilot/conftest.py`** — Removed broken imports:
+   - Deleted `from pydantic_ai import Agent as Eval`
+   - Deleted `from pytest_skill_engineering.execution.pydantic_adapter import build_model_from_string`
+   - Deleted `integration_judge_model` fixture (used PydanticAI for model probing)
+   - Replaced with simple `_check_github_auth()` autouse fixture
+
+**BLOCKER DISCOVERED:**
+
+**Cannot run ANY tests** — pytest plugin fails to load:
+```
+ModuleNotFoundError: No module named 'pydantic_ai'
+  File "src/pytest_skill_engineering/copilot/model.py", line 21
+    from pydantic_ai.messages import (...)
+```
+
+**Root cause:** Copilot pivot removed `pydantic-ai` from dependencies but left imports in `src/pytest_skill_engineering/copilot/model.py` (lines 21-38). This file is a PydanticAI Model adapter that depends on the deleted package.
+
+**Impact:** 
+- ✗ Cannot run `pytest --collect-only`
+- ✗ Cannot verify copilot test imports
+- ✗ Cannot run structural validation
+- ✗ Blocked from completing charter tasks
+
+**Also found:** `tests/showcase/test_hero.py` imports from deleted `core.eval` module and uses `eval_run` fixture. Hero report generation is broken.
+
+**Action taken:** 
+- Documented blocker in `.squad/decisions/inbox/hockney-copilot-pivot-blocker.md`
+- Completed structural cleanup (conftest updates, pydantic test removal)
+- Cannot proceed further without src/ code fix
+
+**Decision needed:** Fenster/Verbal must either:
+1. Delete `copilot/model.py` (if no longer needed)
+2. Rewrite `copilot/model.py` without pydantic_ai dependency
+3. Fix/delete `tests/showcase/test_hero.py`
+
+**Key learning:** The Copilot pivot is INCOMPLETE. Commits `622a508` and `09ff5e1` removed PydanticAI from dependencies and deleted core modules, but missed updating dependent code in `copilot/` and `tests/showcase/`. The codebase is in a broken state that blocks all testing.
