@@ -2,6 +2,36 @@
 
 ## Active Decisions
 
+### Copilot SDK Feature Parity — Sessions, Clarification, CLI, Scoring, A/B, Iterations (2026-03-21T10:50Z)
+**Author:** Verbal + Hockney | **Status:** Implemented
+
+Closed 5 of 6 remaining Copilot/Pydantic feature coverage gaps via parallel test authoring. Copilot harness now covers 11/12 feature areas.
+
+**Key Decisions:**
+1. **Sessions (test_06):** Context-in-prompt pattern (not true multi-turn) — only option with string-only SDK interface
+2. **Clarification (test_07):** Response-level detection via substring matching + assertion (no engine changes)
+3. **CLI (test_09):** Native Copilot shell tools (not CLIServer wrapper); tests superset of Pydantic
+4. **Scoring (test_08):** LLM judge identical across harnesses; no CopilotEval changes
+5. **A/B Comparison (test_10):** Instructions, not servers (Copilot doesn't use MCP); maintains report structure
+6. **Iterations (test_11):** Framework-level `--aitest-iterations` flag applies to all evals
+
+**Test Count:** 6 new files, 25 new tests (54 total collected)
+
+**Remaining Gap:** test_12 (custom agents) — unported; requires Copilot SDK subagent dispatch investigation
+
+**Strategic Context:** User directive (2026-03-21T10:35) confirmed: Copilot SDK is primary harness. All new features prioritized for Copilot first.
+
+---
+
+### Strategic Direction: Copilot SDK Primary Harness (2026-03-21T10:35Z)
+**Author:** Stefan (Product Owner, via Copilot) | **Status:** Active
+
+User directive: The project should prioritize the Copilot SDK harness over the Pydantic/Azure harness. New features should be developed in Copilot tests first. The 6 missing feature areas should be ported to Copilot tests. Documentation should reflect this priority.
+
+**Implication:** Copilot is the primary integration testing harness. Pydantic remains as optional secondary harness for Azure/OpenAI-direct testing.
+
+---
+
 ### Full Dependency Upgrade (2026-03-21)
 **Author:** Fenster | **Status:** Verified
 
