@@ -6,7 +6,7 @@ description: "Test custom agent definitions from .agent.md files. Use Eval.from_
 
 A **custom agent** is a specialized AI sub-agent defined in a `.agent.md` file (VS Code format) or `.md` file (Claude Code format). These files describe the agent's purpose, instructions, and optional tool restrictions using YAML frontmatter and a markdown prompt body.
 
-pytest-skill-engineering supports custom agent files as a first-class concept — you can test them synthetically with `Eval.from_agent_file()`, or test real Copilot subagent dispatch with `load_custom_agent()` + `CopilotEval`.
+pytest-skill-engineering supports custom agent files as a first-class concept. **For end-to-end testing, use `load_custom_agent()` + `CopilotEval`** — it tests real Copilot subagent dispatch exactly as users experience it. Use `Eval.from_agent_file()` for fast synthetic iteration on agent instructions without a Copilot subscription.
 
 ## Custom Eval File Format
 
@@ -195,7 +195,7 @@ async def test_reviewer_improves_feedback_quality(copilot_eval):
 | **Requires Copilot** | No | Yes (`gh auth login`) |
 | **Best for** | Iterating on agent instructions in CI | End-to-end dispatch validation |
 
-> **Rule of thumb:** Use `Eval.from_agent_file()` to iterate on and validate the agent's instructions. Use `load_custom_agent()` + `CopilotEval` to verify that Copilot correctly routes tasks to the right sub-agent.
+> **Rule of thumb:** Start with `load_custom_agent()` + `CopilotEval` for end-to-end dispatch validation — it's the primary path and tests what users experience. Use `Eval.from_agent_file()` for fast iteration on agent instructions in CI or when you don't have a Copilot subscription.
 
 See [Choosing a Test Harness](../explanation/choosing-a-harness.md) for a full comparison.
 

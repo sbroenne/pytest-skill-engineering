@@ -8,7 +8,7 @@ The core concept in pytest-skill-engineering.
 
 ## What is an Eval?
 
-An **Eval** is a test configuration that bundles everything needed to run a test:
+An **Eval** is a test configuration that bundles everything needed to run a test. Two harnesses are available: **`CopilotEval`** (primary — tests the real Copilot coding agent) and **`Eval`** (synthetic — any LLM provider with full introspection). See [Choosing a Test Harness](choosing-a-harness.md) for which to use.
 
 ```
 Eval = Model + Skill + Custom Agents + Server(s)
