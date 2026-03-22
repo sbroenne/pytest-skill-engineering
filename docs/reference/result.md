@@ -213,7 +213,7 @@ if not result.success:
 
 ## AI-Powered Assertions
 
-For semantic validation, use the built-in `llm_assert` fixture (powered by pydantic-evals LLM judge):
+For semantic validation, use the built-in `llm_assert` fixture (powered by GitHub Copilot SDK):
 
 ```python
 async def test_response_quality(eval_run, agent, llm_assert):

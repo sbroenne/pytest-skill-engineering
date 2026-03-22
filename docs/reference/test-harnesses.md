@@ -38,33 +38,24 @@ Stateful task management for testing CRUD operations.
 
 ```python
 import sys
-from pytest_skill_engineering import Eval, Provider, MCPServer, Wait
-from pytest_skill_engineering.testing import TodoStore
-
-@pytest.fixture(scope="module")
-def todo_server():
-    return MCPServer(
-        command=[sys.executable, "-m", "pytest_skill_engineering.testing.todo_mcp"],
-        wait=Wait.for_tools(["add_task", "list_tasks", "complete_task"]),
-    )
+from pytest_skill_engineering.copilot import CopilotEval
 
 @pytest.fixture
-def todo_agent(todo_server):
-    return Eval.from_instructions(
-        "todo",
-        "You are a task management assistant.",
-        provider=Provider(model="azure/gpt-5-mini"),
-        mcp_servers=[todo_server],
+def todo_agent():
+    return CopilotEval(
+        name="todo-assistant",
+        model="gpt-5-mini",
+        instructions="You are a task management assistant.",
     )
 
-async def test_add_and_complete(eval_run, todo_agent):
-    result = await eval_run(
+async def test_add_and_complete(copilot_eval, todo_agent):
+    result = await copilot_eval(
         todo_agent,
         "Add a task: Buy groceries"
     )
     assert result.tool_was_called("add_task")
     
-    result = await eval_run(
+    result = await copilot_eval(
         todo_agent,
         "Mark the groceries task as done"
     )
@@ -121,39 +112,30 @@ Stateful banking service for multi-turn session testing.
 
 ```python
 import sys
-from pytest_skill_engineering import Eval, Provider, MCPServer, Wait
-
-@pytest.fixture(scope="module")
-def banking_server():
-    return MCPServer(
-        command=[sys.executable, "-m", "pytest_skill_engineering.testing.banking_mcp"],
-        wait=Wait.for_tools(["get_balance", "transfer", "get_transactions"]),
-    )
+from pytest_skill_engineering.copilot import CopilotEval
 
 @pytest.mark.session("banking-workflow")
 class TestBankingWorkflow:
     """Tests share conversation context via session decorator."""
 
-    async def test_check_balance(self, eval_run, banking_server):
-        agent = Eval.from_instructions(
-            "banking",
-            "You are a banking assistant.",
-            provider=Provider(model="azure/gpt-5-mini"),
-            mcp_servers=[banking_server],
+    async def test_check_balance(self, copilot_eval):
+        agent = CopilotEval(
+            name="banking",
+            model="gpt-5-mini",
+            instructions="You are a banking assistant.",
         )
         
-        result = await eval_run(agent, "What's my checking balance?")
+        result = await copilot_eval(agent, "What's my checking balance?")
         assert result.tool_was_called("get_balance")
 
-    async def test_transfer_funds(self, eval_run, banking_server):
-        agent = Eval.from_instructions(
-            "banking",
-            "You are a banking assistant.",
-            provider=Provider(model="azure/gpt-5-mini"),
-            mcp_servers=[banking_server],
+    async def test_transfer_funds(self, copilot_eval):
+        agent = CopilotEval(
+            name="banking",
+            model="gpt-5-mini",
+            instructions="You are a banking assistant.",
         )
         
-        result = await eval_run(
+        result = await copilot_eval(
             agent,
             "Transfer $500 from checking to savings"
         )

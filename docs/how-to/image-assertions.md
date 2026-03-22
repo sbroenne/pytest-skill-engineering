@@ -65,7 +65,7 @@ async def test_dashboard_layout(eval_run, agent, llm_assert_image):
 
 ### How It Works
 
-`llm_assert_image` uses [`pydantic-evals`](https://ai.pydantic.dev/evals/) `judge_output()` which natively supports multimodal content. The image is sent to a vision-capable model along with your criterion, and the model evaluates whether the criterion is met.
+`llm_assert_image` uses the GitHub Copilot SDK which natively supports multimodal content. The image is sent to a vision-capable model along with your criterion, and the model evaluates whether the criterion is met.
 
 ### Accepted Input Types
 
@@ -92,8 +92,8 @@ assert llm_assert_image(jpeg_bytes, "shows a table", media_type="image/jpeg")
 ### Command-Line Options
 
 ```bash
-# GitHub Copilot (no extra setup if pytest-skill-engineering[copilot] installed)
-pytest --llm-vision-model=copilot/gpt-4o
+# GitHub Copilot (no extra setup required)
+pytest --llm-vision-model=gpt-4o
 
 # Azure OpenAI
 pytest --llm-vision-model=azure/gpt-4o

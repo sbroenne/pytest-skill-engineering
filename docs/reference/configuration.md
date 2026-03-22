@@ -12,12 +12,12 @@ description: "Configure pytest-skill-engineering via pyproject.toml or command-l
 [tool.pytest.ini_options]
 addopts = """
 --aitest-summary-model=copilot/gpt-5-mini
---llm-model=copilot/gpt-5-mini
+--llm-model=gpt-5-mini
 --aitest-html=aitest-reports/report.html
 """
 ```
 
-Requires `uv add pytest-skill-engineering[copilot]` and `gh auth login`.
+Requires `uv add pytest-skill-engineering` and `gh auth login`.
 
 **Enterprise — Azure OpenAI:**
 
@@ -39,9 +39,9 @@ Reports are generated automatically with AI insights.
 
 ## LLM Provider Setup
 
-pytest-skill-engineering uses [Pydantic AI](https://ai.pydantic.dev/) for LLM access. Configure via environment variables.
+pytest-skill-engineering uses the GitHub Copilot SDK for LLM access. Configure via `gh auth login` or `GITHUB_TOKEN`.
 
-### Azure OpenAI (Enterprise / CI)
+### GitHub Copilot (Required)
 
 ```bash
 export AZURE_API_BASE=https://your-resource.openai.azure.com/
@@ -60,7 +60,7 @@ See [Pydantic AI model docs](https://ai.pydantic.dev/models/) for Anthropic, Goo
 
 ### GitHub Copilot (via SDK)
 
-If you have `pytest-skill-engineering[copilot]` installed, you can use Copilot-accessible models for **all** LLM calls — no separate API key needed:
+You can use Copilot-accessible models for **all** LLM calls — no separate API key needed:
 
 ```bash
 gh auth login  # One-time authentication
@@ -93,14 +93,15 @@ AITEST_INTEGRATION_JUDGE_MODEL=copilot/gpt-5-mini
 ## Provider Configuration
 
 ```python
-from pytest_skill_engineering import Provider
+from pytest_skill_engineering.copilot import CopilotEval
 
-# Basic - Pydantic AI handles auth via env vars
-provider = Provider(model="azure/gpt-5-mini")
+# Basic - Copilot SDK handles auth
+agent = CopilotEval(name="assistant", model="gpt-5-mini")
 
 # With generation parameters
-provider = Provider(
-    model="openai/gpt-4o-mini",
+agent = CopilotEval(
+    name="assistant",
+    model="gpt-4o-mini",
     temperature=0.7,
     max_tokens=1000,
 )

@@ -90,9 +90,6 @@ The hooks will:
 # Copilot SDK tests (primary — requires gh auth login)
 uv run python -m pytest tests/integration/copilot/ -v
 
-# Pydantic tests (requires Azure/OpenAI credentials)
-uv run python -m pytest tests/integration/pydantic/ -v
-
 # Run one file at a time, fix all failures before moving on
 uv run python -m pytest tests/integration/copilot/test_01_basic.py -v
 
@@ -133,9 +130,8 @@ pytest-skill-engineering/
 │   ├── plugin_recording.py  # LLM assertion recording fixtures
 │   ├── plugin_report.py     # Test lifecycle & report orchestration
 │   ├── copilot/             # Copilot SDK harness (CopilotEval, runner, model)
-│   ├── core/                # Core types (Eval, Provider, Result, Skill)
-│   ├── execution/           # Engine, server management, skill tools
-│   ├── fixtures/            # pytest fixtures (eval_run, factories)
+│   ├── core/                # Core types (Skill, errors)
+│   ├── fixtures/            # pytest fixtures (copilot_eval, factories)
 │   ├── reporting/           # Collector, insights, generator, htpy components
 │   └── templates/           # CSS + JS for HTML reports
 ├── tests/

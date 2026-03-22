@@ -58,9 +58,8 @@ This happens automatically — no configuration needed. Just parametrize your te
 ```python
 from pathlib import Path
 import pytest
-from pytest_skill_engineering import Eval, Provider, MCPServer, Skill
-
-banking_server = MCPServer(command=["python", "banking_mcp.py"])
+from pytest_skill_engineering.copilot import CopilotEval
+from pytest_skill_engineering import Skill
 
 SKILLS = {
     "v1": Skill.from_path("skills/financial-advisor-v1"),
@@ -68,13 +67,13 @@ SKILLS = {
 }
 
 @pytest.mark.parametrize("skill_name,skill", SKILLS.items())
-async def test_banking(eval_run, skill_name, skill):
-    agent = Eval(
-        provider=Provider(model="azure/gpt-5-mini"),
-        mcp_servers=[banking_server],
+async def test_banking(copilot_eval, skill_name, skill):
+    agent = CopilotEval(
+        name=f"banking-{skill_name}",
+        model="gpt-5-mini",
         skill=skill,
     )
-    result = await eval_run(agent, "What's my checking balance?")
+    result = await copilot_eval(agent, "What's my checking balance?")
     assert result.success
 ```
 
@@ -114,12 +113,12 @@ MODELS = ["azure/gpt-5-mini", "azure/gpt-4.1"]
 banking_server = MCPServer(command=["python", "banking_mcp.py"])
 
 @pytest.mark.parametrize("model", MODELS)
-async def test_with_model(eval_run, model):
-    agent = Eval(
-        provider=Provider(model=model),
-        mcp_servers=[banking_server],
+async def test_with_model(copilot_eval, model):
+    agent = CopilotEval(
+        name=f"banking-{model}",
+        model=model,
     )
-    result = await eval_run(agent, "What's my checking balance?")
+    result = await copilot_eval(agent, "What's my checking balance?")
     assert result.success
 ```
 
@@ -158,13 +157,13 @@ SKILLS = {
 
 @pytest.mark.parametrize("model", MODELS)
 @pytest.mark.parametrize("skill_name,skill", SKILLS.items())
-async def test_combinations(eval_run, model, skill_name, skill):
-    agent = Eval(
-        provider=Provider(model=f"azure/{model}"),
-        mcp_servers=[banking_server],
+async def test_combinations(copilot_eval, model, skill_name, skill):
+    agent = CopilotEval(
+        name=f"banking-{model}-{skill_name}",
+        model=model,
         skill=skill,
     )
-    result = await eval_run(agent, "What's my checking balance?")
+    result = await copilot_eval(agent, "What's my checking balance?")
     assert result.success
 ```
 

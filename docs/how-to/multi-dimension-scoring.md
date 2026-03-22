@@ -232,8 +232,8 @@ The judge model is resolved in this order:
 3. `openai/gpt-5-mini` as final fallback
 
 ```bash
-# GitHub Copilot (no extra setup if pytest-skill-engineering[copilot] installed)
-pytest --llm-model=copilot/gpt-5-mini
+# GitHub Copilot (no extra setup required)
+pytest --llm-model=gpt-5-mini
 
 # Azure OpenAI
 pytest --llm-model=azure/gpt-5.2-chat

@@ -111,7 +111,7 @@ async def test_balance_check(eval_run):
     assert result.tool_was_called("get_balance")
 ```
 
-> 📁 See [pydantic/test_01_basic.py](https://github.com/sbroenne/pytest-skill-engineering/blob/main/tests/integration/pydantic/test_01_basic.py) for complete examples.
+> 📁 See [copilot/test_01_basic.py](https://github.com/sbroenne/pytest-skill-engineering/blob/main/tests/integration/copilot/test_01_basic.py) for complete examples.
 
 ## Features
 
@@ -131,7 +131,7 @@ async def test_balance_check(eval_run):
 - **Semantic Assertions** — `llm_assert` for binary pass/fail checks on response content
 - **Multi-Dimension Scoring** — `llm_score` for granular quality measurement across named dimensions
 - **Image Assertions** — AI-graded visual evaluation of screenshots and visual tool output
-- **Cost Estimation** — Automatic per-test cost tracking with pricing from litellm + custom overrides
+- **Cost Estimation** — Automatic per-test cost tracking with pricing from `pricing.toml`
 
 ## Installation
 

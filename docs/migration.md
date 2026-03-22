@@ -13,7 +13,7 @@ This guide covers migrating from `pytest-aitest` to `pytest-skill-engineering`.
 pip uninstall pytest-aitest
 
 # Install new package
-pip install pytest-skill-engineering
+uv add pytest-skill-engineering
 ```
 
 ### Import path

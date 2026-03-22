@@ -141,7 +141,7 @@ assert "transferred" in all_text.lower()
 
 ### Semantic assertions
 
-Use the built-in `llm_assert` fixture (powered by pydantic-evals LLM judge) for meaning-based checks:
+Use the built-in `llm_assert` fixture (powered by GitHub Copilot SDK) for meaning-based checks:
 
 ```python
 async def test_response_quality(eval_run, agent, llm_assert):
