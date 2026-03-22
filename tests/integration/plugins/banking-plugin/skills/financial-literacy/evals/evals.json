@@ -1,0 +1,24 @@
+{
+  "skill_name": "financial-literacy",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Explain the difference between a checking account and a savings account.",
+      "expected_output": "A clear explanation distinguishing checking and savings accounts",
+      "expectations": [
+        "The response mentions that checking accounts are for daily transactions",
+        "The response mentions that savings accounts earn interest",
+        "The response mentions withdrawal limits on savings accounts"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Can I transfer money between my checking and savings accounts instantly?",
+      "expected_output": "Confirmation that same-bank transfers are instant",
+      "expectations": [
+        "The response confirms transfers within the same bank are instant",
+        "The response is clear and concise"
+      ]
+    }
+  ]
+}
