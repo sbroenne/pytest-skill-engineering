@@ -58,7 +58,7 @@ async def copilot_judge(
         TimeoutError: If the session takes longer than timeout_seconds.
         RuntimeError: If the Copilot CLI fails to start or session errors.
     """
-    from copilot import SubprocessConfig  # noqa: PLC0415
+    from copilot import PermissionHandler, SubprocessConfig  # noqa: PLC0415
 
     CopilotClient = _get_copilot_client()
 
@@ -74,7 +74,9 @@ async def copilot_judge(
         await asyncio.wait_for(client.start(), timeout=60)
 
         # Build session config
-        session_config: dict[str, Any] = {}
+        session_config: dict[str, Any] = {
+            "on_permission_request": PermissionHandler.approve_all,
+        }
         if model is not None:
             session_config["model"] = model
 
