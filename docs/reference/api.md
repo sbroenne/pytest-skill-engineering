@@ -94,11 +94,6 @@ Auto-generated API documentation from source code.
 
 ## Custom Agent Types
 
-::: pytest_skill_engineering.copilot.types.CustomAgent
-    options:
-      show_source: false
-      heading_level: 3
-
 ::: pytest_skill_engineering.core.evals.load_custom_agent
     options:
       show_source: false
