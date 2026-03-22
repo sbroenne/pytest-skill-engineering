@@ -225,8 +225,8 @@ def create_my_server(store: MyStore | None = None):
 def my_server():
     return create_my_server()
 
-async def test_my_tool(eval_run, agent_with_my_server):
-    result = await eval_run(agent_with_my_server, "Use my tool")
+async def test_my_tool(copilot_eval, agent_with_my_server):
+    result = await copilot_eval(agent_with_my_server, "Use my tool")
     assert result.tool_was_called("my_tool")
 ```
 

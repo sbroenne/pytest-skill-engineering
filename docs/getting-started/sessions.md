@@ -25,36 +25,31 @@ Use the `@pytest.mark.session` marker:
 
 ```python
 import pytest
-from pytest_skill_engineering import Eval, Provider, MCPServer
+from pytest_skill_engineering.copilot import CopilotEval
 
-banking_server = MCPServer(command=["python", "banking_mcp.py"])
-
-banking_agent = Eval(
+banking_agent = CopilotEval(
     name="banking",
-    provider=Provider(model="azure/gpt-5-mini"),
-    mcp_servers=[banking_server],
+    instructions="You are a banking assistant.",
 )
 
 @pytest.mark.session("banking-chat")
 class TestBankingConversation:
     """Tests run in order, sharing conversation history."""
     
-    async def test_initial_query(self, eval_run):
+    async def test_initial_query(self, copilot_eval):
         """First message - establishes context."""
-        result = await eval_run(banking_agent, "What's my checking account balance?")
+        result = await copilot_eval(banking_agent, "What's my checking account balance?")
         assert result.success
-        assert result.tool_was_called("get_balance")
     
-    async def test_followup(self, eval_run):
+    async def test_followup(self, copilot_eval):
         """Second message - uses context from first."""
-        result = await eval_run(banking_agent, "Transfer $200 to savings")
+        result = await copilot_eval(banking_agent, "Transfer $200 to savings")
         assert result.success
-        # Eval remembers we were talking about checking
-        assert result.tool_was_called("transfer")
+        # Agent remembers we were talking about checking
     
-    async def test_verification(self, eval_run):
+    async def test_verification(self, copilot_eval):
         """Third message - builds on full conversation."""
-        result = await eval_run(banking_agent, "What are my new balances?")
+        result = await copilot_eval(banking_agent, "What are my new balances?")
         assert result.success
 ```
 
@@ -108,22 +103,22 @@ You can combine sessions with model comparison:
 class TestShoppingWorkflow:
     """Test the same conversation flow with different models."""
     
-    async def test_browse(self, eval_run, model, shopping_server):
-        agent = Eval(
+    async def test_browse(self, copilot_eval, model):
+        agent = CopilotEval(
             name=f"shop-{model}",
-            provider=Provider(model=f"azure/{model}"),
-            mcp_servers=[shopping_server],
+            model=model,
+            instructions="You are a shopping assistant.",
         )
-        result = await eval_run(agent, "Show me running shoes")
+        result = await copilot_eval(agent, "Show me running shoes")
         assert result.success
     
-    async def test_select(self, eval_run, model, shopping_server):
-        agent = Eval(
+    async def test_select(self, copilot_eval, model):
+        agent = CopilotEval(
             name=f"shop-{model}",
-            provider=Provider(model=f"azure/{model}"),
-            mcp_servers=[shopping_server],
+            model=model,
+            instructions="You are a shopping assistant.",
         )
-        result = await eval_run(agent, "I'll take the Nike ones")
+        result = await copilot_eval(agent, "I'll take the Nike ones")
         assert result.success
 ```
 

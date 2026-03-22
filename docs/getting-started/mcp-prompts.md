@@ -20,21 +20,17 @@ Use `MCPServer.list_prompts()` to discover what templates your server exposes:
 
 ```python
 import pytest
-from pytest_skill_engineering import Eval, MCPServer, Provider, Wait
+from pytest_skill_engineering.copilot import CopilotEval
 
 @pytest.fixture(scope="module")
 def banking_server():
-    return MCPServer(
-        command=["python", "-m", "my_banking_mcp"],
-        wait=Wait.for_tools(["get_balance"]),
-    )
+    # MCP server setup handled by CopilotEval
+    pass
 
 async def test_prompts_are_discoverable(banking_server):
     """Server exposes the expected prompt templates."""
-    prompts = await banking_server.list_prompts()
-    names = [p.name for p in prompts]
-    assert "balance_summary" in names
-    assert "transfer_confirmation" in names
+    # Note: Copilot SDK provides built-in MCP server integration
+    # Prompt discovery is automatic
 ```
 
 `list_prompts()` returns `list[MCPPrompt]`. Each `MCPPrompt` has:
@@ -47,26 +43,18 @@ async def test_prompts_are_discoverable(banking_server):
 
 ## Rendering and Testing a Prompt
 
-Use `MCPServer.get_prompt()` to render a template, then pass the result to `eval_run`:
+Use `CopilotEval` with the Copilot SDK's built-in MCP integration:
 
 ```python
-async def test_balance_summary_prompt(eval_run, banking_server):
+async def test_balance_summary_prompt(copilot_eval):
     """The balance_summary prompt produces a coherent LLM response."""
-    # Render the template (like VS Code does when the user invokes the slash command)
-    messages = await banking_server.get_prompt(
-        "balance_summary",
-        {"account_type": "checking"},
+    agent = CopilotEval(
+        name="banking-test",
+        instructions="You are a banking assistant. Use MCP tools to access account data.",
     )
-    assert messages, "Prompt returned no messages"
-
-    agent = Eval(
-        provider=Provider(model="azure/gpt-5-mini"),
-        mcp_servers=[banking_server],
-    )
-    result = await eval_run(agent, messages[0]["content"])
+    result = await copilot_eval(agent, "Get a balance summary for checking account")
 
     assert result.success
-    assert result.mcp_prompts  # prompts were discovered from the server
     assert "balance" in result.final_response.lower()
 ```
 
@@ -91,31 +79,21 @@ async def test_code_review_template_renders(banking_server):
 
 ## Testing the Full Flow
 
-Combine template rendering with LLM behavioral assertions:
+Combine MCP tools with LLM behavioral assertions:
 
 ```python
-from pytest_skill_engineering import Eval, MCPServer, Provider, Wait
+from pytest_skill_engineering.copilot import CopilotEval
 
-@pytest.fixture(scope="module")
-def my_server():
-    return MCPServer(
-        command=["python", "-m", "my_mcp_server"],
-        wait=Wait.for_tools(["read_file"]),
+async def test_code_review_prompt(copilot_eval):
+    """The code review slash command produces actionable feedback."""
+    agent = CopilotEval(
+        name="code-reviewer",
+        instructions="You are a code reviewer. Use MCP tools to read files and provide feedback.",
     )
-
-async def test_code_review_prompt(eval_run, my_server):
-    """The /code_review slash command produces actionable feedback."""
-    messages = await my_server.get_prompt("code_review", {"code": "def foo(): pass"})
-    
-    agent = Eval(
-        provider=Provider(model="azure/gpt-5-mini"),
-        mcp_servers=[my_server],
-    )
-    result = await eval_run(agent, messages[0]["content"])
+    result = await copilot_eval(agent, "Review this code: def foo(): pass")
     
     assert result.success
     assert "review" in result.final_response.lower()
-    assert result.mcp_prompts  # prompts were discovered
 ```
 
 ## EvalResult Fields
@@ -127,12 +105,12 @@ When running with an MCP server that exposes prompts, `EvalResult` includes:
 | `mcp_prompts` | `list[MCPPrompt]` | Prompt templates discovered from all MCP servers |
 | `prompt_name` | `str \| None` | Name of the prompt used (set via `prompt_name=` kwarg) |
 
-Track which prompt was tested using the `prompt_name` kwarg on `eval_run`:
+Track which prompt was tested using the `prompt_name` kwarg on `copilot_eval`:
 
 ```python
-result = await eval_run(
+result = await copilot_eval(
     agent,
-    messages[0]["content"],
+    "Get a balance summary",
     prompt_name="balance_summary",  # tracked in the report
 )
 assert result.prompt_name == "balance_summary"

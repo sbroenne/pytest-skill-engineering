@@ -153,7 +153,8 @@ Tool results are JSON with structured output:
 
 ```python
 import pytest
-from pytest_skill_engineering import Eval, CLIServer, Provider
+from pytest_skill_engineering import CLIServer
+from pytest_skill_engineering.copilot import CopilotEval
 
 @pytest.fixture(scope="module")
 def git_server():
@@ -165,23 +166,20 @@ def git_server():
     )
 
 @pytest.fixture
-def git_agent(git_server):
-    return Eval.from_instructions(
-        "git-assistant",
-        "You are a git assistant.",
-        provider=Provider(model="azure/gpt-5-mini"),
-        cli_servers=[git_server],
-        max_turns=5,
+def git_agent():
+    return CopilotEval(
+        name="git-assistant",
+        instructions="You are a git assistant.",
     )
 
-async def test_git_status(eval_run, git_agent):
-    result = await eval_run(git_agent, "What's the repo status?")
+async def test_git_status(copilot_eval, git_agent):
+    result = await copilot_eval(git_agent, "What's the repo status?")
     
     assert result.success
     assert result.tool_was_called("git_execute")
 
-async def test_git_log(eval_run, git_agent):
-    result = await eval_run(git_agent, "Show me the last 3 commits")
+async def test_git_log(copilot_eval, git_agent):
+    result = await copilot_eval(git_agent, "Show me the last 3 commits")
     
     assert result.success
     assert result.tool_was_called("git_execute")
@@ -206,14 +204,10 @@ def grep_server():
     )
 
 @pytest.fixture
-def hybrid_agent(filesystem_server, grep_server):
-    return Eval.from_instructions(
-        "hybrid",
-        "You can read/write files and search content.",
-        provider=Provider(model="azure/gpt-5-mini"),
-        mcp_servers=[filesystem_server],
-        cli_servers=[grep_server],
-        max_turns=10,
+def hybrid_agent():
+    return CopilotEval(
+        name="hybrid",
+        instructions="You can read/write files and search content.",
     )
 ```
 

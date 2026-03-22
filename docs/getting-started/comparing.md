@@ -11,45 +11,39 @@ The power of pytest-skill-engineering is comparing different configurations to f
 Define agents with meaningful names when testing distinct approaches:
 
 ```python
-from pytest_skill_engineering import Eval, Provider, MCPServer, Skill, load_custom_agent
-
-banking_server = MCPServer(command=["python", "banking_mcp.py"])
+from pytest_skill_engineering.copilot import CopilotEval
 
 # Compare: no skill vs with skill
-agent_baseline = Eval(
+agent_baseline = CopilotEval(
     name="baseline",
-    provider=Provider(model="azure/gpt-5-mini"),
-    mcp_servers=[banking_server],
+    instructions="You are a banking assistant.",
 )
 
-agent_with_skill = Eval(
+agent_with_skill = CopilotEval(
     name="with-skill",
-    provider=Provider(model="azure/gpt-5-mini"),
-    mcp_servers=[banking_server],
-    skill=Skill.from_path("skills/financial-advisor"),
+    instructions="You are a banking assistant.",
+    skill_directories=["skills/financial-advisor"],
 )
 
 # Compare: two versions of a custom agent file
-agent_v1 = Eval.from_agent_file(
-    ".github/agents/advisor-v1.agent.md",
+from pytest_skill_engineering.core.evals import load_custom_agent
+
+agent_v1 = CopilotEval(
     name="advisor-v1",
-    provider=Provider(model="azure/gpt-5-mini"),
-    mcp_servers=[banking_server],
+    custom_agents=[load_custom_agent(".github/agents/advisor-v1.agent.md")],
 )
 
-agent_v2 = Eval.from_agent_file(
-    ".github/agents/advisor-v2.agent.md",
+agent_v2 = CopilotEval(
     name="advisor-v2",
-    provider=Provider(model="azure/gpt-5-mini"),
-    mcp_servers=[banking_server],
+    custom_agents=[load_custom_agent(".github/agents/advisor-v2.agent.md")],
 )
 
 AGENTS = [agent_baseline, agent_with_skill, agent_v1, agent_v2]
 
 @pytest.mark.parametrize("agent", AGENTS, ids=lambda a: a.name)
-async def test_balance_query(eval_run, agent):
+async def test_balance_query(copilot_eval, agent):
     """Which configuration handles balance queries best?"""
-    result = await eval_run(agent, "What's my checking balance?")
+    result = await copilot_eval(agent, "What's my checking balance?")
     assert result.success
 ```
 
@@ -65,32 +59,26 @@ Generate configurations from all permutations for systematic testing:
 
 ```python
 from pathlib import Path
-from pytest_skill_engineering import Eval, Provider, MCPServer, Skill
+from pytest_skill_engineering.copilot import CopilotEval
 
 MODELS = ["gpt-5-mini", "gpt-4.1"]
-SKILL_VERSIONS = {
-    path.stem: Skill.from_path(path)
-    for path in Path("skills").iterdir() if path.is_dir()
-}
-
-banking_server = MCPServer(command=["python", "banking_mcp.py"])
+SKILL_VERSIONS = [path.stem for path in Path("skills").iterdir() if path.is_dir()]
 
 # Generate all combinations: 2 models × N skill versions
 AGENTS = [
-    Eval(
+    CopilotEval(
         name=f"{model}-{skill_name}",
-        provider=Provider(model=f"azure/{model}"),
-        mcp_servers=[banking_server],
-        skill=skill,
+        model=model,
+        skill_directories=[f"skills/{skill_name}"],
     )
     for model in MODELS
-    for skill_name, skill in SKILL_VERSIONS.items()
+    for skill_name in SKILL_VERSIONS
 ]
 
 @pytest.mark.parametrize("agent", AGENTS, ids=lambda a: a.name)
-async def test_balance_query(eval_run, agent):
-    """Test MCP server with different model/skill combinations."""
-    result = await eval_run(agent, "What's my checking balance?")
+async def test_balance_query(copilot_eval, agent):
+    """Test with different model/skill combinations."""
+    result = await copilot_eval(agent, "What's my checking balance?")
     assert result.success
 ```
 

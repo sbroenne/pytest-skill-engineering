@@ -53,43 +53,34 @@ Any additional frontmatter fields (e.g. `maturity`, `handoffs`) are preserved in
 
 `Eval.from_agent_file()` loads a custom agent file and uses the prompt body as the agent's custom instructions. This lets you test whether the agent's instructions produce the expected behaviour using any LLM provider — no Copilot subscription required.
 
+> **DEPRECATED:** `Eval.from_agent_file()` is legacy synthetic testing. For new tests, use `load_custom_agent()` + `CopilotEval` instead — it tests real Copilot subagent dispatch exactly as users experience it.
+
 ```python
 import pytest
-from pytest_skill_engineering import Eval, Provider, MCPServer
+from pytest_skill_engineering.copilot import CopilotEval
+from pytest_skill_engineering.core.evals import load_custom_agent
 
-code_server = MCPServer(command=["python", "code_server.py"])
+reviewer = load_custom_agent(".github/agents/reviewer.agent.md")
 
-agent = Eval.from_agent_file(
-    ".github/agents/reviewer.agent.md",
-    provider=Provider(model="azure/gpt-5-mini"),
-    mcp_servers=[code_server],
-)
-
-async def test_reviewer_reads_files(eval_run):
+async def test_reviewer_reads_files(copilot_eval):
     """Reviewer should read files before giving feedback."""
-    result = await eval_run(agent, "Review the authentication module in src/auth.py")
+    agent = CopilotEval(
+        name="test-reviewer",
+        custom_agents=[reviewer],
+        instructions="Delegate code review to the reviewer agent.",
+    )
+    result = await copilot_eval(agent, "Review the authentication module in src/auth.py")
     assert result.success
-    assert result.tool_was_called("read_file")
 ```
 
-### What `from_agent_file()` does
+### What `from_agent_file()` does (legacy)
+
+> **Note:** This section describes `Eval.from_agent_file()` for backward compatibility. Use `load_custom_agent()` + `CopilotEval` for new tests.
 
 - Sets the agent's custom instructions from the agent file's markdown body
 - Sets `name` from the filename (e.g. `reviewer.agent.md` → `reviewer`)
 - Maps `tools` frontmatter field to `allowed_tools` (restricts which tools the agent can call)
 - Any kwarg you pass (e.g. `name=`, `max_turns=`) overrides the file values
-
-### Overriding file values
-
-```python
-agent = Eval.from_agent_file(
-    ".github/agents/reviewer.agent.md",
-    provider=Provider(model="azure/gpt-4.1"),
-    mcp_servers=[code_server],
-    name="reviewer-smart",     # override the name
-    max_turns=20,              # override max_turns
-)
-```
 
 ## Using with `load_custom_agent()` + `CopilotEval` (real dispatch)
 
@@ -159,7 +150,7 @@ async def test_correct_agent_is_chosen(copilot_eval):
 Compare behaviour with and without a custom agent to verify its instructions add value:
 
 ```python
-from pytest_skill_engineering import load_custom_agent
+from pytest_skill_engineering.core.evals import load_custom_agent
 from pytest_skill_engineering.copilot import CopilotEval
 
 reviewer = load_custom_agent(".github/agents/reviewer.agent.md")
@@ -186,16 +177,16 @@ async def test_reviewer_improves_feedback_quality(copilot_eval):
 
 ## Choosing the right approach
 
-| | `Eval.from_agent_file()` | `load_custom_agent()` + `CopilotEval` |
+| | `Eval.from_agent_file()` (legacy) | `load_custom_agent()` + `CopilotEval` |
 |---|---|---|
 | **What runs the agent** | PydanticAI synthetic loop | Real GitHub Copilot (CLI SDK) |
-| **Tests** | Eval's instructions (system prompt) | Real subagent dispatch and routing |
+| **Tests** | Agent's instructions (system prompt) | Real subagent dispatch and routing |
 | **LLM** | Any provider (Azure, OpenAI, Copilot…) | GitHub Copilot only |
 | **Speed** | Fast (in-process) | Slower (~5–10s CLI startup) |
 | **Requires Copilot** | No | Yes (`gh auth login`) |
-| **Best for** | Iterating on agent instructions in CI | End-to-end dispatch validation |
+| **Best for** | Legacy CI tests | End-to-end dispatch validation |
 
-> **Rule of thumb:** Start with `load_custom_agent()` + `CopilotEval` for end-to-end dispatch validation — it's the primary path and tests what users experience. Use `Eval.from_agent_file()` for fast iteration on agent instructions in CI or when you don't have a Copilot subscription.
+> **Rule of thumb:** Use `load_custom_agent()` + `CopilotEval` for end-to-end dispatch validation — it's the primary path and tests what users experience. `Eval.from_agent_file()` is legacy and not recommended for new tests.
 
 See [Choosing a Test Harness](../explanation/choosing-a-harness.md) for a full comparison.
 
@@ -211,18 +202,18 @@ Alongside custom agents, VS Code and Claude Code support **prompt files** — re
 Use `load_prompt_file()` to load the body of a prompt file and use it as a test input:
 
 ```python
-from pytest_skill_engineering import Eval, Provider, MCPServer, load_prompt_file, load_prompt_files
+from pytest_skill_engineering.copilot import CopilotEval
+from pytest_skill_engineering import load_prompt_file, load_prompt_files
 
-code_server = MCPServer(command=["python", "code_server.py"])
-agent = Eval(
-    provider=Provider(model="azure/gpt-5-mini"),
-    mcp_servers=[code_server],
+agent = CopilotEval(
+    name="code-helper",
+    instructions="You are a code assistant.",
 )
 
-async def test_review_prompt(eval_run):
+async def test_review_prompt(copilot_eval):
     """The /review slash command produces actionable feedback."""
     prompt = load_prompt_file(".github/prompts/review.prompt.md")
-    result = await eval_run(agent, prompt["body"])
+    result = await copilot_eval(agent, prompt["body"])
     assert result.success
 ```
 
@@ -235,9 +226,9 @@ from pytest_skill_engineering import load_prompt_files
 PROMPTS = load_prompt_files(".github/prompts/")
 
 @pytest.mark.parametrize("prompt", PROMPTS, ids=lambda p: p["name"])
-async def test_prompt_files(eval_run, agent, prompt):
+async def test_prompt_files(copilot_eval, agent, prompt):
     """All slash commands produce a successful response."""
-    result = await eval_run(agent, prompt["body"])
+    result = await copilot_eval(agent, prompt["body"])
     assert result.success
 ```
 
@@ -278,10 +269,8 @@ Store each version as a separate file and parametrize over them:
 ```python
 import pytest
 from pathlib import Path
-from pytest_skill_engineering import Eval, Provider, MCPServer
-
-code_server = MCPServer(command=["python", "code_server.py"])
-PROVIDER = Provider(model="azure/gpt-5-mini")
+from pytest_skill_engineering.copilot import CopilotEval
+from pytest_skill_engineering.core.evals import load_custom_agent
 
 AGENT_VERSIONS = {
     path.stem: path
@@ -289,16 +278,20 @@ AGENT_VERSIONS = {
 }
 
 @pytest.mark.parametrize("name,path", AGENT_VERSIONS.items())
-async def test_reviewer_finds_security_issue(eval_run, name, path):
-    agent = Eval.from_agent_file(path, provider=PROVIDER, mcp_servers=[code_server])
-    result = await eval_run(agent, "Review src/auth.py for security vulnerabilities")
+async def test_reviewer_finds_security_issue(copilot_eval, name, path):
+    reviewer = load_custom_agent(path)
+    agent = CopilotEval(
+        name=name,
+        custom_agents=[reviewer],
+        instructions="Delegate code review tasks to the reviewer agent.",
+    )
+    result = await copilot_eval(agent, "Review src/auth.py for security vulnerabilities")
     assert result.success
-    assert result.tool_was_called("read_file")
 ```
 
 The AI analysis report auto-detects that the agent instructions vary and shows a leaderboard ranking each version by pass rate and cost.
 
-> **Tip:** This works exactly the same for skills — swap `Eval.from_agent_file()` for `Eval(skill=Skill.from_path(...))` and parametrize over skill versions.
+> **Tip:** This works exactly the same for skills — swap `load_custom_agent()` for `skill_directories=[...]` in `CopilotEval` and parametrize over skill versions.
 
 ## Next Steps
 

@@ -53,17 +53,14 @@ The simplest tests verify the agent can use individual tools correctly.
 class TestBasicOperations:
     """Basic single-tool operations demonstrating core functionality."""
 
-    async def test_check_single_balance(self, eval_run, banking_server):
+    async def test_check_single_balance(self, copilot_eval):
         """Check balance of one account - simplest possible test."""
-        agent = Eval.from_instructions(
-            "banking-v1",
-            BANKING_PROMPT_BASE,
-            provider=Provider(model=f"azure/{DEFAULT_MODEL}"),
-            mcp_servers=[banking_server],
-            max_turns=8,
+        agent = CopilotEval(
+            name="banking-v1",
+            instructions=BANKING_PROMPT_BASE,
         )
 
-        result = await eval_run(agent, "What's my checking account balance?")
+        result = await copilot_eval(agent, "What's my checking account balance?")
 
         assert result.success
         assert result.tool_was_called("get_balance")
@@ -83,17 +80,14 @@ Complex operations require coordinating multiple tools in sequence.
 class TestMultiToolWorkflows:
     """Complex workflows requiring coordination of multiple tools."""
 
-    async def test_transfer_and_verify(self, eval_run, llm_assert, banking_server):
+    async def test_transfer_and_verify(self, copilot_eval, llm_assert):
         """Transfer money and verify the result with balance check."""
-        agent = Eval.from_instructions(
-            "banking-v1",
-            BANKING_PROMPT_BASE,
-            provider=Provider(model=f"azure/{DEFAULT_MODEL}"),
-            mcp_servers=[banking_server],
-            max_turns=8,
+        agent = CopilotEval(
+            name="banking-v1",
+            instructions=BANKING_PROMPT_BASE,
         )
 
-        result = await eval_run(
+        result = await copilot_eval(
             agent,
             "Transfer $100 from checking to savings, then show me my new balances.",
         )
@@ -129,17 +123,14 @@ class TestSavingsPlanningSession:
     - Turn 3: Verify the result
     """
 
-    async def test_01_establish_context(self, eval_run, llm_assert, banking_server):
+    async def test_01_establish_context(self, copilot_eval, llm_assert):
         """First turn: check balances and discuss savings goals."""
-        agent = Eval.from_instructions(
-            "savings-01",
-            BANKING_PROMPT_BASE,
-            provider=Provider(model=f"azure/{DEFAULT_MODEL}"),
-            mcp_servers=[banking_server],
-            max_turns=8,
+        agent = CopilotEval(
+            name="savings-01",
+            instructions=BANKING_PROMPT_BASE,
         )
 
-        result = await eval_run(
+        result = await copilot_eval(
             agent,
             "I want to save more money. Can you check my accounts and suggest "
             "how much I could transfer to savings each month?",
@@ -148,17 +139,14 @@ class TestSavingsPlanningSession:
         assert result.success
         assert result.tool_was_called("get_all_balances") or result.tool_was_called("get_balance")
 
-    async def test_02_reference_without_naming(self, eval_run, llm_assert, banking_server):
+    async def test_02_reference_without_naming(self, copilot_eval, llm_assert):
         """Second turn: reference previous context."""
-        agent = Eval.from_instructions(
-            "savings-02",
-            BANKING_PROMPT_BASE,
-            provider=Provider(model=f"azure/{DEFAULT_MODEL}"),
-            mcp_servers=[banking_server],
-            max_turns=8,
+        agent = CopilotEval(
+            name="savings-02",
+            instructions=BANKING_PROMPT_BASE,
         )
 
-        result = await eval_run(
+        result = await copilot_eval(
             agent,
             "That sounds good. Let's start by moving $200 to savings right now.",
         )
@@ -185,17 +173,15 @@ class TestModelComparison:
     """Compare how different models handle complex financial advice."""
 
     @pytest.mark.parametrize("model", BENCHMARK_MODELS)
-    async def test_financial_advice_quality(self, eval_run, llm_assert, banking_server, model: str):
+    async def test_financial_advice_quality(self, copilot_eval, llm_assert, model: str):
         """Compare models on providing comprehensive financial advice."""
-        agent = Eval.from_instructions(
-            "banking-v1",
-            BANKING_PROMPT_BASE,
-            provider=Provider(model=f"azure/{model}"),
-            mcp_servers=[banking_server],
-            max_turns=8,
+        agent = CopilotEval(
+            name="banking-v1",
+            model=model,
+            instructions=BANKING_PROMPT_BASE,
         )
 
-        result = await eval_run(
+        result = await copilot_eval(
             agent,
             "I want to reach my vacation savings goal faster. Analyze my current "
             "financial situation and recommend a concrete savings plan.",
@@ -259,7 +245,8 @@ Then parametrize tests over them:
 
 ```python
 from pathlib import Path
-from pytest_skill_engineering import Eval, Provider
+from pytest_skill_engineering.copilot import CopilotEval
+from pytest_skill_engineering.core.evals import load_custom_agent
 
 AGENT_PATHS = list((Path(__file__).parent / "agents").glob("*.agent.md"))
 
@@ -267,16 +254,14 @@ class TestPromptComparison:
     """Compare how different agent instruction styles affect financial advice."""
 
     @pytest.mark.parametrize("agent_path", AGENT_PATHS, ids=lambda p: p.stem.replace(".agent", ""))
-    async def test_advice_style_comparison(self, eval_run, llm_assert, banking_server, agent_path):
+    async def test_advice_style_comparison(self, copilot_eval, llm_assert, agent_path):
         """Compare concise vs detailed vs friendly advisory styles."""
-        agent = Eval.from_agent_file(
-            agent_path,
-            provider=Provider(model=f"azure/{DEFAULT_MODEL}"),
-            mcp_servers=[banking_server],
-            max_turns=8,
+        agent = CopilotEval(
+            name=agent_path.stem,
+            custom_agents=[load_custom_agent(agent_path)],
         )
 
-        result = await eval_run(
+        result = await copilot_eval(
             agent,
             "I'm worried about my spending. Can you check my accounts "
             "and give me advice on managing my money better?",
@@ -327,19 +312,16 @@ class TestSkillEnhancement:
     """Test how skills improve financial advice quality."""
 
     async def test_with_financial_skill(
-        self, eval_run, llm_assert, banking_server, financial_advisor_skill
+        self, copilot_eval, llm_assert, financial_advisor_skill
     ):
         """Eval with financial advisor skill should give better advice."""
-        agent = Eval.from_instructions(
-            "banking-v1",
-            BANKING_PROMPT_BASE,
-            provider=Provider(model=f"azure/{DEFAULT_MODEL}"),
-            mcp_servers=[banking_server],
-            skill=financial_advisor_skill,  # <-- Inject domain knowledge
-            max_turns=8,
+        agent = CopilotEval(
+            name="banking-v1",
+            instructions=BANKING_PROMPT_BASE,
+            skill_directories=["tests/showcase/skills/financial-advisor"],
         )
 
-        result = await eval_run(
+        result = await copilot_eval(
             agent,
             "I have $1500 in checking. Should I keep it there or move some to savings? "
             "What's a good emergency fund target for someone like me?",
@@ -366,18 +348,15 @@ Test graceful recovery from invalid operations.
 class TestErrorHandling:
     """Test graceful handling of edge cases and errors."""
 
-    async def test_insufficient_funds_recovery(self, eval_run, llm_assert, banking_server):
+    async def test_insufficient_funds_recovery(self, copilot_eval, llm_assert):
         """Eval should handle insufficient funds gracefully."""
         instructions = BANKING_PROMPT_BASE + " If an operation fails, explain why and suggest alternatives."
-        agent = Eval.from_instructions(
-            "banking-v1",
-            instructions,
-            provider=Provider(model=f"azure/{DEFAULT_MODEL}"),
-            mcp_servers=[banking_server],
-            max_turns=8,
+        agent = CopilotEval(
+            name="banking-v1",
+            instructions=instructions,
         )
 
-        result = await eval_run(
+        result = await copilot_eval(
             agent,
             "Transfer $50,000 from my checking to savings.",  # Way more than available!
         )
@@ -400,7 +379,7 @@ class TestErrorHandling:
 
 ### Test Structure Best Practices
 
-1. **One server, many tests** — Reuse the same MCP server across test classes
+1. **One scenario, many tests** — Reuse the same test scenario across test classes
 2. **Named agents for sessions** — Use `name="session-01"` to track multi-turn state
 3. **Semantic assertions** — Use `llm_assert` for behavior verification
 4. **Parametrize for comparisons** — Use `@pytest.mark.parametrize` for model/prompt grids

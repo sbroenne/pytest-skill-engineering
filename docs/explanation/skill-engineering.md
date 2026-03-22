@@ -39,12 +39,12 @@ Skill engineering maps directly onto the Red/Green/Refactor cycle — with the t
 Start with what a user would say. Don't think about implementation — think about intent:
 
 ```python
-async def test_balance_check(eval_run):
-    agent = Eval(
-        provider=Provider(model="azure/gpt-5-mini"),
-        mcp_servers=[banking_server],
+async def test_balance_check(copilot_eval):
+    agent = CopilotEval(
+        name="banking-test",
+        instructions="You are a banking assistant.",
     )
-    result = await eval_run(agent, "What's my checking account balance?")
+    result = await copilot_eval(agent, "What's my checking account balance?")
 
     assert result.success
     assert result.tool_was_called("get_balance")

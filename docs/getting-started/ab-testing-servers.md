@@ -21,28 +21,22 @@ A/B testing answers these questions with data.
 Compare two versions of your MCP server:
 
 ```python
-from pytest_skill_engineering import Eval, Provider, MCPServer
-
-# Two versions to compare
-banking_v1 = MCPServer(command=["python", "banking_v1.py"])
-banking_v2 = MCPServer(command=["python", "banking_v2.py"])
+from pytest_skill_engineering.copilot import CopilotEval
 
 AGENTS = [
-    Eval(
+    CopilotEval(
         name="banking-v1",
-        provider=Provider(model="azure/gpt-5-mini"),
-        mcp_servers=[banking_v1],
+        mcp_servers={"banking": {"command": "python", "args": ["banking_v1.py"]}},
     ),
-    Eval(
+    CopilotEval(
         name="banking-v2",
-        provider=Provider(model="azure/gpt-5-mini"),
-        mcp_servers=[banking_v2],
+        mcp_servers={"banking": {"command": "python", "args": ["banking_v2.py"]}},
     ),
 ]
 
 @pytest.mark.parametrize("agent", AGENTS, ids=lambda a: a.name)
-async def test_balance_query(eval_run, agent):
-    result = await eval_run(agent, "What's my checking balance?")
+async def test_balance_query(copilot_eval, agent):
+    result = await copilot_eval(agent, "What's my checking balance?")
     assert result.success
     assert result.tool_was_called("get_balance")
 ```
@@ -73,8 +67,8 @@ Test whether a clearer description improves tool usage:
 # get_balance: "Get current balance for a bank account. Example: get_balance('checking')"
 
 @pytest.mark.parametrize("agent", [agent_v1, agent_v2], ids=["vague", "clear"])
-async def test_tool_discovery(eval_run, agent):
-    result = await eval_run(agent, "I need to check how much money I have")
+async def test_tool_discovery(copilot_eval, agent):
+    result = await copilot_eval(agent, "I need to check how much money I have")
     assert result.tool_was_called("get_balance")
 ```
 
@@ -83,12 +77,15 @@ async def test_tool_discovery(eval_run, agent):
 Test your server against an open-source alternative:
 
 ```python
-my_server = MCPServer(command=["python", "my_server.py"])
-reference = MCPServer(command=["npx", "-y", "@org/reference-server"])
-
 AGENTS = [
-    Eval(name="my-implementation", mcp_servers=[my_server], ...),
-    Eval(name="reference-implementation", mcp_servers=[reference], ...),
+    CopilotEval(
+        name="my-implementation",
+        mcp_servers={"server": {"command": "python", "args": ["my_server.py"]}},
+    ),
+    CopilotEval(
+        name="reference-implementation",
+        mcp_servers={"server": {"command": "npx", "args": ["-y", "@org/reference-server"]}},
+    ),
 ]
 ```
 
@@ -117,9 +114,9 @@ Test whether a new input schema is clearer:
 # v2: Separate "account" and "type" parameters
 
 @pytest.mark.parametrize("agent", [agent_v1, agent_v2])
-async def test_ambiguous_query(eval_run, agent):
+async def test_ambiguous_query(copilot_eval, agent):
     # This query is ambiguous - does the LLM handle it correctly?
-    result = await eval_run(agent, "How much do I have in checking?")
+    result = await copilot_eval(agent, "How much do I have in checking?")
     assert result.success
 ```
 
@@ -129,15 +126,14 @@ Test servers across multiple models to find interactions:
 
 ```python
 MODELS = ["gpt-5-mini", "gpt-4.1"]
-SERVERS = {"v1": banking_v1, "v2": banking_v2}
 
 AGENTS = [
-    Eval(
-        name=f"{server_name}-{model}",
-        provider=Provider(model=f"azure/{model}"),
-        mcp_servers=[server],
+    CopilotEval(
+        name=f"banking-{version}-{model}",
+        model=model,
+        mcp_servers={"banking": {"command": "python", "args": [f"banking_{version}.py"]}},
     )
-    for server_name, server in SERVERS.items()
+    for version in ["v1", "v2"]
     for model in MODELS
 ]
 
@@ -167,7 +163,7 @@ Description is clear and well-targeted.
 
 ## Best Practices
 
-1. **Use the same model** — Isolate the server variable by using identical providers
+1. **Use the same model** — Isolate the server variable by using the same `model` setting
 
 2. **Test edge cases** — Include ambiguous prompts that stress-test descriptions
 

@@ -21,21 +21,6 @@ A plugin is a directory containing instructions, skills, custom agents, and MCP 
 ## Quick Example
 
 ```python
-from pytest_skill_engineering import Eval, Provider
-
-async def test_my_plugin(eval_run, my_mcp_server):
-    agent = Eval.from_plugin(
-        "path/to/my-plugin",
-        provider=Provider(model="azure/gpt-5-mini"),
-        mcp_servers=[my_mcp_server],
-    )
-    result = await eval_run(agent, "What can you help me with?")
-    assert result.success
-```
-
-Or with the Copilot SDK:
-
-```python
 from pytest_skill_engineering.copilot import CopilotEval
 
 async def test_my_plugin(copilot_eval, tmp_path):

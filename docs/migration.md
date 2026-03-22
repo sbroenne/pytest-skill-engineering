@@ -23,7 +23,8 @@ uv add pytest-skill-engineering
 from pytest_aitest import Agent, AgentResult, ...
 
 # New
-from pytest_skill_engineering import Eval, EvalResult, ...
+from pytest_skill_engineering.copilot import CopilotEval
+from pytest_skill_engineering import EvalResult, ...
 ```
 
 ---
@@ -32,19 +33,19 @@ from pytest_skill_engineering import Eval, EvalResult, ...
 
 | pytest-aitest | pytest-skill-engineering |
 |---------------|--------------------------|
-| `Agent` | `Eval` |
+| `Agent` | `CopilotEval` |
 | `AgentResult` | `EvalResult` |
 | `CopilotAgent` | `CopilotEval` |
-| `aitest_run` fixture | `eval_run` fixture |
+| `aitest_run` fixture | `copilot_eval` fixture |
 | `copilot_run` fixture | `copilot_eval` fixture |
 
-All other types (`Provider`, `MCPServer`, `CLIServer`, `Skill`, `Wait`, etc.) are unchanged.
+All other types (`EvalResult`, `Skill`, `Wait`, etc.) are unchanged.
 
 ---
 
 ## 3. `system_prompt=` migration
 
-Use the `Eval.from_instructions()` factory method instead of the raw `system_prompt=` constructor argument.
+Use `CopilotEval` instead of the raw `system_prompt=` constructor argument.
 
 ### Before
 
@@ -61,12 +62,11 @@ agent = Agent(
 ### After
 
 ```python
-from pytest_skill_engineering import Eval, Provider
+from pytest_skill_engineering.copilot import CopilotEval
 
-agent = Eval.from_instructions(
-    "banking-v1",
-    "You are a banking assistant. Use tools to manage accounts.",
-    provider=Provider(model="azure/gpt-5-mini"),
+agent = CopilotEval(
+    name="banking-v1",
+    instructions="You are a banking assistant. Use tools to manage accounts.",
 )
 ```
 
@@ -82,24 +82,21 @@ agent = Eval(
 )
 
 # New
-agent = Eval.from_instructions(
-    "default",
-    "You are a helpful assistant.",
-    provider=Provider(model="azure/gpt-5-mini"),
+agent = CopilotEval(
+    name="default",
+    instructions="You are a helpful assistant.",
 )
 ```
 
 ### With extra options
 
-All other keyword arguments (`mcp_servers`, `cli_servers`, `max_turns`, `skill`, `allowed_tools`, etc.) are passed through:
+Other keyword arguments (`skill_directories`, `custom_agents`, `excluded_tools`, etc.) are passed through:
 
 ```python
-agent = Eval.from_instructions(
-    "banking-v1",
-    "You are a banking assistant.",
-    provider=Provider(model="azure/gpt-5-mini", rpm=10, tpm=10000),
-    mcp_servers=[banking_server],
-    max_turns=5,
+agent = CopilotEval(
+    name="banking-v1",
+    instructions="You are a banking assistant.",
+    model="gpt-5-mini",
 )
 ```
 
@@ -136,7 +133,8 @@ AGENTS = [
 Rename your prompt files from `*.md` to `*.agent.md`, then:
 
 ```python
-from pytest_skill_engineering import Eval, Provider, load_custom_agents
+from pytest_skill_engineering.copilot import CopilotEval
+from pytest_skill_engineering import load_custom_agents
 
 PROMPTS_DIR = Path("prompts/")
 AGENTS_DATA = load_custom_agents(PROMPTS_DIR)
@@ -146,10 +144,9 @@ AGENTS_DATA = load_custom_agents(PROMPTS_DIR)
 # ]
 
 AGENTS = [
-    Eval.from_instructions(
-        agent_data["name"],
-        agent_data["prompt"],
-        provider=Provider(model="azure/gpt-5-mini"),
+    CopilotEval(
+        name=agent_data["name"],
+        instructions=agent_data["prompt"],
     )
     for agent_data in AGENTS_DATA
 ]
@@ -165,8 +162,8 @@ async def test_with_prompt(eval_run, prompt_name, system_prompt):
 
 # New
 @pytest.mark.parametrize("agent_data", AGENTS_DATA, ids=lambda d: d["name"])
-async def test_with_prompt(eval_run, agent_data):
-    agent = Eval.from_instructions(agent_data["name"], agent_data["prompt"], ...)
+async def test_with_prompt(copilot_eval, agent_data):
+    agent = CopilotEval(name=agent_data["name"], instructions=agent_data["prompt"])
 ```
 
 ---
@@ -179,8 +176,8 @@ async def test_banking(aitest_run):
     result = await aitest_run(agent, "What's my balance?")
 
 # New
-async def test_banking(eval_run):
-    result = await eval_run(agent, "What's my balance?")
+async def test_banking(copilot_eval):
+    result = await copilot_eval(agent, "What's my balance?")
 ```
 
 ```python

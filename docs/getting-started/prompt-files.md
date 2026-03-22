@@ -11,18 +11,15 @@ description: "Test prompt files (slash commands) — verify that .prompt.md file
 Use `load_prompt_file()` to load the body of a single prompt file:
 
 ```python
-from pytest_skill_engineering import Eval, Provider, MCPServer, load_prompt_file
+from pytest_skill_engineering import load_prompt_file
+from pytest_skill_engineering.copilot import CopilotEval
 
-code_server = MCPServer(command=["python", "code_server.py"])
-agent = Eval(
-    provider=Provider(model="azure/gpt-5-mini"),
-    mcp_servers=[code_server],
-)
+agent = CopilotEval(name="prompt-test")
 
-async def test_review_command(eval_run):
+async def test_review_command(copilot_eval):
     """The /review slash command produces actionable feedback."""
     prompt = load_prompt_file(".github/prompts/review.prompt.md")
-    result = await eval_run(
+    result = await copilot_eval(
         agent,
         prompt["body"],
         prompt_name="review",  # tracked in the report
@@ -64,20 +61,17 @@ Use `load_prompt_files()` to load every prompt file in a directory and parametri
 
 ```python
 import pytest
-from pytest_skill_engineering import Eval, Provider, MCPServer, load_prompt_files
+from pytest_skill_engineering import load_prompt_files
+from pytest_skill_engineering.copilot import CopilotEval
 
 PROMPTS = load_prompt_files(".github/prompts/")
 
-code_server = MCPServer(command=["python", "code_server.py"])
-agent = Eval(
-    provider=Provider(model="azure/gpt-5-mini"),
-    mcp_servers=[code_server],
-)
+agent = CopilotEval(name="prompt-test")
 
 @pytest.mark.parametrize("prompt", PROMPTS, ids=lambda p: p["name"])
-async def test_prompt_files(eval_run, prompt):
+async def test_prompt_files(copilot_eval, prompt):
     """All slash commands produce a successful response."""
-    result = await eval_run(
+    result = await copilot_eval(
         agent,
         prompt["body"],
         prompt_name=prompt["name"],
@@ -97,10 +91,10 @@ async def test_prompt_files(eval_run, prompt):
 
 ## Tracking Prompt Names in Reports
 
-The `prompt_name` kwarg on `eval_run` tags the result so reports can group tests by slash command:
+The `prompt_name` kwarg on `copilot_eval` tags the result so reports can group tests by slash command:
 
 ```python
-result = await eval_run(agent, prompt["body"], prompt_name=prompt["name"])
+result = await copilot_eval(agent, prompt["body"], prompt_name=prompt["name"])
 # result.prompt_name == "review"
 ```
 
@@ -111,23 +105,14 @@ This appears in the HTML report's per-prompt breakdown, letting you compare how 
 Prompt files often reference tools. Test them with the appropriate MCP servers:
 
 ```python
-from pytest_skill_engineering import Eval, Provider, MCPServer, Wait, load_prompt_file
+from pytest_skill_engineering import load_prompt_file
+from pytest_skill_engineering.copilot import CopilotEval
 
-@pytest.fixture(scope="module")
-def code_server():
-    return MCPServer(
-        command=["python", "-m", "code_tools_mcp"],
-        wait=Wait.for_tools(["read_file", "list_directory"]),
-    )
-
-async def test_explain_command(eval_run, code_server):
+async def test_explain_command(copilot_eval):
     """The /explain command reads the file before explaining."""
     prompt = load_prompt_file(".github/prompts/explain.prompt.md")
-    agent = Eval(
-        provider=Provider(model="azure/gpt-5-mini"),
-        mcp_servers=[code_server],
-    )
-    result = await eval_run(agent, prompt["body"], prompt_name="explain")
+    agent = CopilotEval(name="explain-test")
+    result = await copilot_eval(agent, prompt["body"], prompt_name="explain")
     
     assert result.success
     assert result.tool_was_called("read_file")
