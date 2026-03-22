@@ -165,10 +165,10 @@ def skill_eval_runner(
             final_response = result.final_response or ""
 
             for expectation in case.expectations:
-                passed = llm_assert(final_response, expectation)
-                expectation_results.append(passed)
-                # Use the final response as evidence
-                evidence.append(final_response)
+                assertion = llm_assert(final_response, expectation)
+                expectation_results.append(bool(assertion))
+                reason = getattr(assertion, "reasoning", final_response[:200])
+                evidence.append(reason)
 
             case_passed = all(expectation_results)
             case_results.append(
