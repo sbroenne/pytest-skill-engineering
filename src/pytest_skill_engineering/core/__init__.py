@@ -30,15 +30,27 @@ from pytest_skill_engineering.core.result import (
     Turn,
 )
 from pytest_skill_engineering.core.skill import Skill, SkillError, SkillMetadata, load_skill
+from pytest_skill_engineering.core.skill_benchmark import (
+    BenchmarkComparison,
+    CaseBenchmark,
+    SkillBenchmarkResult,
+)
 from pytest_skill_engineering.core.skill_evals import (
     SkillEvalCase,
     has_skill_evals,
     load_skill_evals,
 )
 from pytest_skill_engineering.core.skill_grading import export_grading
+from pytest_skill_engineering.core.skill_refiner import (
+    RefinementResult,
+    RefinementSuggestion,
+    analyze_skill_failures,
+)
 
 __all__ = [
     "AITestError",
+    "BenchmarkComparison",
+    "CaseBenchmark",
     "EvalResult",
     "EngineTimeoutError",
     "HookDefinition",
@@ -48,8 +60,11 @@ __all__ = [
     "Plugin",
     "PluginMetadata",
     "Prompt",
+    "RefinementResult",
+    "RefinementSuggestion",
     "ServerStartError",
     "Skill",
+    "SkillBenchmarkResult",
     "SkillError",
     "SkillInfo",
     "SkillMetadata",
@@ -57,6 +72,7 @@ __all__ = [
     "ToolCall",
     "ToolInfo",
     "Turn",
+    "analyze_skill_failures",
     "load_custom_agent",
     "load_custom_agents",
     "load_instruction_file",
