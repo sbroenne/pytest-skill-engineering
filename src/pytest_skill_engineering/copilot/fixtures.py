@@ -104,10 +104,12 @@ def _convert_to_aitest(
     @dataclass
     class AgentWrapper:
         name: str
+        id: str
         provider: Provider
         system_prompt_name: str | None = None
         mcp_servers: list[Any] = None  # type: ignore[assignment]
         allowed_tools: list[str] | None = None
+        skill: Any = None
 
         def __post_init__(self) -> None:
             if self.mcp_servers is None:
@@ -115,6 +117,7 @@ def _convert_to_aitest(
 
     aitest_agent = AgentWrapper(
         name=agent.name,
+        id=agent.name,
         provider=Provider(model=result.model_used or agent.model or "claude-haiku-4-5"),
         system_prompt_name=None,  # CopilotEval doesn't have named prompts
         mcp_servers=[],  # Could convert agent.mcp_servers if needed

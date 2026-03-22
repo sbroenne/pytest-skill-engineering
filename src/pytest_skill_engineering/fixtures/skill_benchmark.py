@@ -110,7 +110,7 @@ def skill_benchmark(
         baseline_all_results: list[bool] = []
         treatment_all_expectations: list[str] = []
         treatment_all_results: list[bool] = []
-        
+
         # Keep track of last results for grading export
         last_baseline_result: CopilotResult | None = None
         last_treatment_result: CopilotResult | None = None
