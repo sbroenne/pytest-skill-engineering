@@ -20,19 +20,17 @@ These are distinct from Custom Agents (`.agent.md` specialist personas) and Prom
 Use `load_instruction_file()` to load a single file:
 
 ```python
-from pytest_skill_engineering import Eval, Provider, MCPServer, load_instruction_file
+from pytest_skill_engineering.copilot import CopilotEval
+from pytest_skill_engineering import load_instruction_file
 
-code_server = MCPServer(command=["python", "code_server.py"])
-
-async def test_follows_naming_conventions(eval_run):
+async def test_follows_naming_conventions(copilot_eval):
     """Agent follows snake_case naming conventions from coding-standards.instructions.md."""
     instr = load_instruction_file(".github/copilot-instructions.md")
-    agent = Eval(
-        provider=Provider(model="azure/gpt-5-mini"),
-        mcp_servers=[code_server],
-        system_prompt=instr["content"],
+    agent = CopilotEval(
+        name="standards-test",
+        instructions=instr["content"],
     )
-    result = await eval_run(agent, "Write a function that adds two numbers")
+    result = await copilot_eval(agent, "Write a function that adds two numbers")
     assert result.success
     assert "add_numbers" in result.final_response  # snake_case enforced
 ```
@@ -91,23 +89,20 @@ You are working in a Python monorepo. Always:
 ## Testing with `Eval.from_instruction_files()`
 
 The `from_instruction_files()` factory loads one or more instruction files and
-combines their content into the system prompt:
+combines their content into the agent instructions:
 
 ```python
 import pytest
-from pytest_skill_engineering import Eval, Provider, MCPServer
+from pytest_skill_engineering.copilot import CopilotEval
 
-code_server = MCPServer(command=["python", "code_server.py"])
-
-agent = Eval.from_instruction_files(
+agent = CopilotEval.from_instruction_files(
     [".github/copilot-instructions.md"],
-    provider=Provider(model="azure/gpt-5-mini"),
-    mcp_servers=[code_server],
+    name="conventions-test",
 )
 
-async def test_naming_conventions(eval_run):
+async def test_naming_conventions(copilot_eval):
     """Agent follows project naming conventions."""
-    result = await eval_run(agent, "Write a Python function to compute factorial")
+    result = await copilot_eval(agent, "Write a Python function to compute factorial")
     assert result.success
     assert "def " in result.final_response
 ```
@@ -115,14 +110,12 @@ async def test_naming_conventions(eval_run):
 ### Combining Multiple Instruction Files
 
 ```python
-agent = Eval.from_instruction_files(
+agent = CopilotEval.from_instruction_files(
     [
         ".github/copilot-instructions.md",
         ".github/instructions/python-style.instructions.md",
         ".github/instructions/testing-conventions.instructions.md",
     ],
-    provider=Provider(model="azure/gpt-5-mini"),
-    mcp_servers=[code_server],
     name="full-conventions",  # optional — auto-derived from file names
 )
 ```
@@ -136,18 +129,19 @@ well-known files (`copilot-instructions.md`, `AGENTS.md`, `CLAUDE.md`):
 
 ```python
 import pytest
-from pytest_skill_engineering import Eval, Provider, load_instruction_files
+from pytest_skill_engineering.copilot import CopilotEval
+from pytest_skill_engineering import load_instruction_files
 
 INSTRUCTIONS = load_instruction_files(".github/instructions/")
 
 @pytest.mark.parametrize("instr", INSTRUCTIONS, ids=lambda i: i["name"])
-async def test_instruction_file(eval_run, instr):
+async def test_instruction_file(copilot_eval, instr):
     """Each instruction file produces adherent LLM behavior."""
-    agent = Eval(
-        provider=Provider(model="azure/gpt-5-mini"),
-        system_prompt=instr["content"],
+    agent = CopilotEval(
+        name=f"test-{instr['name']}",
+        instructions=instr["content"],
     )
-    result = await eval_run(agent, "Write a Python class for a bank account")
+    result = await copilot_eval(agent, "Write a Python class for a bank account")
     assert result.success
 ```
 
@@ -169,7 +163,7 @@ INSTRUCTIONS = load_instruction_files(
 
 ## Instruction File Info in Reports
 
-When you use `Eval.from_instruction_files()`, the report tracks which instruction
+When you use `CopilotEval.from_instruction_files()`, the report tracks which instruction
 files were used and their pass rates in the **Custom Instruction Files** section
 of the AI analysis. The AI will assess whether the LLM followed each convention,
 cite specific tests where rules were violated, and suggest changes to improve

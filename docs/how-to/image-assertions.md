@@ -24,8 +24,8 @@ Your MCP tool must return images as `ImageContentBlock` in the MCP response. Pyd
 Use `result.tool_images_for(tool_name)` to get all images returned by a specific tool:
 
 ```python
-async def test_screenshot_captured(eval_run, agent):
-    result = await eval_run(agent, "Take a screenshot of the worksheet")
+async def test_screenshot_captured(copilot_eval, agent):
+    result = await copilot_eval(agent, "Take a screenshot of the worksheet")
 
     # Get all images from the "screenshot" tool
     screenshots = result.tool_images_for("screenshot")
@@ -50,8 +50,8 @@ async def test_screenshot_captured(eval_run, agent):
 Use the `llm_assert_image` fixture to have a vision-capable LLM evaluate an image against plain-English criteria:
 
 ```python
-async def test_dashboard_layout(eval_run, agent, llm_assert_image):
-    result = await eval_run(agent, "Create a dashboard with 4 charts")
+async def test_dashboard_layout(copilot_eval, agent, llm_assert_image):
+    result = await copilot_eval(agent, "Create a dashboard with 4 charts")
 
     screenshots = result.tool_images_for("screenshot")
     assert len(screenshots) > 0
@@ -65,7 +65,7 @@ async def test_dashboard_layout(eval_run, agent, llm_assert_image):
 
 ### How It Works
 
-`llm_assert_image` uses [`pydantic-evals`](https://ai.pydantic.dev/evals/) `judge_output()` which natively supports multimodal content. The image is sent to a vision-capable model along with your criterion, and the model evaluates whether the criterion is met.
+`llm_assert_image` uses the GitHub Copilot SDK which natively supports multimodal content. The image is sent to a vision-capable model along with your criterion, and the model evaluates whether the criterion is met.
 
 ### Accepted Input Types
 
@@ -92,8 +92,8 @@ assert llm_assert_image(jpeg_bytes, "shows a table", media_type="image/jpeg")
 ### Command-Line Options
 
 ```bash
-# GitHub Copilot (no extra setup if pytest-skill-engineering[copilot] installed)
-pytest --llm-vision-model=copilot/gpt-4o
+# GitHub Copilot (no extra setup required)
+pytest --llm-vision-model=gpt-4o
 
 # Azure OpenAI
 pytest --llm-vision-model=azure/gpt-4o
@@ -146,25 +146,23 @@ The vision model must support image input. Recommended models:
 """A/B test: Does a screenshot tool improve dashboard quality?"""
 
 import pytest
-from pytest_skill_engineering import Eval, Provider
+from pytest_skill_engineering.copilot import CopilotEval
 
-CONTROL = Eval(
+CONTROL = CopilotEval(
     name="without-screenshot",
-    provider=Provider(model="azure/gpt-4o"),
-    mcp_servers=[excel_server],
+    instructions="You are a dashboard builder.",
     allowed_tools=["file", "worksheet", "range", "table", "chart"],
 )
 
-EXPERIMENT = Eval(
+EXPERIMENT = CopilotEval(
     name="with-screenshot",
-    provider=Provider(model="azure/gpt-4o"),
-    mcp_servers=[excel_server],
+    instructions="You are a dashboard builder.",
     allowed_tools=["file", "worksheet", "range", "table", "chart", "screenshot"],
 )
 
 @pytest.mark.parametrize("agent", [CONTROL, EXPERIMENT], ids=lambda a: a.name)
-async def test_dashboard(eval_run, agent, llm_assert_image):
-    result = await eval_run(agent, "Create a dashboard with 4 charts")
+async def test_dashboard(copilot_eval, agent, llm_assert_image):
+    result = await copilot_eval(agent, "Create a dashboard with 4 charts")
     assert result.success
 
     # Both variants should create charts

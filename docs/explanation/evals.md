@@ -1,5 +1,5 @@
 ---
-description: "Understand Evals in pytest-skill-engineering: an Eval combines an LLM provider, MCP servers, skills, and custom agents into a test harness."
+description: "Understand Evals in pytest-skill-engineering: CopilotEval combines the GitHub Copilot coding agent with skills, custom agents, and working directory configuration."
 ---
 
 # Evals
@@ -8,21 +8,20 @@ The core concept in pytest-skill-engineering.
 
 ## What is an Eval?
 
-An **Eval** is a test configuration that bundles everything needed to run a test. Two harnesses are available: **`CopilotEval`** (primary — tests the real Copilot coding agent) and **`Eval`** (synthetic — any LLM provider with full introspection). See [Choosing a Test Harness](choosing-a-harness.md) for which to use.
+An **Eval** (specifically `CopilotEval`) is a test configuration that bundles everything needed to run a test using the **real GitHub Copilot coding agent**.
 
 ```
-Eval = Model + Skill + Custom Agents + Server(s)
+CopilotEval = Copilot Agent + Skills + Custom Agents + Instructions
 ```
 
 ```python
-from pytest_skill_engineering import Eval, Provider, MCPServer, Skill
+from pytest_skill_engineering.copilot import CopilotEval
 
-banking_server = MCPServer(command=["python", "banking_mcp.py"])
-
-agent = Eval(
-    provider=Provider(model="azure/gpt-5-mini"),
-    mcp_servers=[banking_server],
-    skill=Skill.from_path("skills/financial-advisor"),  # Optional
+agent = CopilotEval(
+    name="banking-test",
+    instructions="You are a banking assistant.",
+    skill_directories=["skills/banking-advisor"],  # Optional
+    max_turns=10,
 )
 ```
 
@@ -32,20 +31,23 @@ agent = Eval(
 
 | Target | Question |
 |--------|----------|
-| **MCP Server** | Can the LLM understand and use my tools? |
-| **Skill** | Does this domain knowledge improve performance? |
-| **Custom Agent** | Do these `.agent.md` instructions produce the right behavior? |
+| **MCP Server** | Can Copilot understand and use my tools? |
+| **Agent Skill** | Does this domain knowledge improve performance? |
+| **Custom Agent** | Do these `.agent.md` instructions trigger proper subagent dispatch? |
+| **Tool Descriptions** | Can Copilot discover and use tools correctly? |
 
-The Eval is the **test harness** that bundles an LLM with the configuration you want to evaluate.
+The Eval is the **test harness** that bundles the GitHub Copilot coding agent with the configuration you want to evaluate.
 
-## Eval Components
+## CopilotEval Components
 
 | Component | Required | Example |
 |-----------|----------|---------|
-| Provider | ✓ | `Provider(model="azure/gpt-5-mini")` |
-| MCP Servers | Optional | `MCPServer(command=["python", "server.py"])` |
-| Skill | Optional | `Skill.from_path("skills/financial-advisor")` |
-| Custom Agent | Optional | `Eval.from_agent_file("agents/reviewer.agent.md", provider=...)` |
+| Name | ✓ | `"banking-test"` |
+| Instructions | Optional | `"You are a helpful assistant."` |
+| Skills | Optional | `skill_directories=["skills/banking"]` |
+| Custom Agents | Optional | `custom_agents=[load_custom_agent("agents/reviewer.agent.md")]` |
+| Model | Optional | `model="gpt-5.2"` (defaults to Copilot's active model) |
+| Working Directory | Optional | `working_directory=str(tmp_path)` |
 
 ## Eval Leaderboard
 
@@ -56,9 +58,8 @@ This happens automatically — no configuration needed. Just parametrize your te
 ```python
 from pathlib import Path
 import pytest
-from pytest_skill_engineering import Eval, Provider, MCPServer, Skill
-
-banking_server = MCPServer(command=["python", "banking_mcp.py"])
+from pytest_skill_engineering.copilot import CopilotEval
+from pytest_skill_engineering import Skill
 
 SKILLS = {
     "v1": Skill.from_path("skills/financial-advisor-v1"),
@@ -66,13 +67,13 @@ SKILLS = {
 }
 
 @pytest.mark.parametrize("skill_name,skill", SKILLS.items())
-async def test_banking(eval_run, skill_name, skill):
-    agent = Eval(
-        provider=Provider(model="azure/gpt-5-mini"),
-        mcp_servers=[banking_server],
+async def test_banking(copilot_eval, skill_name, skill):
+    agent = CopilotEval(
+        name=f"banking-{skill_name}",
+        model="gpt-5-mini",
         skill=skill,
     )
-    result = await eval_run(agent, "What's my checking balance?")
+    result = await copilot_eval(agent, "What's my checking balance?")
     assert result.success
 ```
 
@@ -108,16 +109,15 @@ This is for **AI analysis only** — the leaderboard always appears when multipl
 ### Compare Models
 
 ```python
-MODELS = ["azure/gpt-5-mini", "azure/gpt-4.1"]
-banking_server = MCPServer(command=["python", "banking_mcp.py"])
+MODELS = ["gpt-5-mini", "gpt-4.1"]
 
 @pytest.mark.parametrize("model", MODELS)
-async def test_with_model(eval_run, model):
-    agent = Eval(
-        provider=Provider(model=model),
-        mcp_servers=[banking_server],
+async def test_with_model(copilot_eval, model):
+    agent = CopilotEval(
+        name=f"banking-{model}",
+        model=model,
     )
-    result = await eval_run(agent, "What's my checking balance?")
+    result = await copilot_eval(agent, "What's my checking balance?")
     assert result.success
 ```
 
@@ -127,21 +127,21 @@ A/B test two versions of a `.agent.md` file to find which instructions work bett
 
 ```python
 from pathlib import Path
-from pytest_skill_engineering import Eval, Provider
+from pytest_skill_engineering.copilot import CopilotEval
+from pytest_skill_engineering.core.evals import load_custom_agent
 
 AGENT_VERSIONS = {
-    path.stem: path
+    path.stem: load_custom_agent(path)
     for path in Path(".github/agents").glob("reviewer-*.agent.md")
 }
 
-@pytest.mark.parametrize("name,path", AGENT_VERSIONS.items())
-async def test_reviewer(eval_run, name, path):
-    agent = Eval.from_agent_file(
-        path,
-        provider=Provider(model="azure/gpt-5-mini"),
-        mcp_servers=[code_server],
+@pytest.mark.parametrize("name,agent_def", AGENT_VERSIONS.items())
+async def test_reviewer(copilot_eval, name, agent_def):
+    agent = CopilotEval(
+        name=f"reviewer-{name}",
+        custom_agents=[agent_def],
     )
-    result = await eval_run(agent, "Review src/auth.py for security issues")
+    result = await copilot_eval(agent, "Review src/auth.py for security issues")
     assert result.success
 ```
 
@@ -156,13 +156,13 @@ SKILLS = {
 
 @pytest.mark.parametrize("model", MODELS)
 @pytest.mark.parametrize("skill_name,skill", SKILLS.items())
-async def test_combinations(eval_run, model, skill_name, skill):
-    agent = Eval(
-        provider=Provider(model=f"azure/{model}"),
-        mcp_servers=[banking_server],
+async def test_combinations(copilot_eval, model, skill_name, skill):
+    agent = CopilotEval(
+        name=f"banking-{model}-{skill_name}",
+        model=model,
         skill=skill,
     )
-    result = await eval_run(agent, "What's my checking balance?")
+    result = await copilot_eval(agent, "What's my checking balance?")
     assert result.success
 ```
 
@@ -171,13 +171,13 @@ async def test_combinations(eval_run, model, skill_name, skill):
 A **custom agent** is a specialized sub-agent defined in a `.agent.md` or `.md` file with YAML frontmatter (`name`, `description`, `tools`) and a markdown prompt body.
 
 ```python
-from pytest_skill_engineering import Eval, Provider
+from pytest_skill_engineering.copilot import CopilotEval
+from pytest_skill_engineering.core.evals import load_custom_agent
 
-# Load and test a custom agent's instructions synthetically
-agent = Eval.from_agent_file(
-    ".github/agents/reviewer.agent.md",
-    provider=Provider(model="azure/gpt-5-mini"),
-    mcp_servers=[code_server],
+# Load and test a custom agent via CopilotEval
+agent = CopilotEval(
+    name="reviewer-test",
+    custom_agents=[load_custom_agent(".github/agents/reviewer.agent.md")],
 )
 ```
 

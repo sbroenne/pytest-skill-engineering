@@ -2,8 +2,34 @@
 
 - **Owner:** sbroenne
 - **Project:** pytest-skill-engineering — pytest plugin for testing MCP servers and CLIs with real LLMs. AI analyzes results and tells you what to fix.
-- **Stack:** Python 3.11+, PydanticAI, pydantic-evals, MCP, pytest, htpy, async/await, uv, hatch, ruff, pyright
+- **Stack:** Python 3.11+, **Copilot SDK only** (PydanticAI removed 2026-03-21), MCP, pytest, htpy, async/await, uv, hatch, ruff, pyright
 - **Created:** 2026-03-21
+- **Current Phase:** Copilot-only pivot complete. Plugin system design phase.
+
+## Cross-Agent Context
+
+### 2026-03-21 — Copilot Pivot Session (IN PROGRESS)
+
+**Directive:** User decision (2026-03-21T10:35Z) to remove PydanticAI harness and make Copilot SDK the **only** eval infrastructure.
+
+**What McManus is doing in this session:**
+- Docs rewrite for Copilot-only direction (IN PROGRESS)
+  - README.md: Remove PydanticAI references, emphasize Copilot harness
+  - CONTRIBUTING.md: Update dev workflow (only copilot integration tests)
+  - docs/architecture.md: Update diagrams for Copilot-only flow
+  - docs/testing.md: Consolidate to single harness
+  - CHANGELOG.md: v0.3.0 release notes for PydanticAI removal
+- **Blocked on:** `copilot/model.py` import fix (can't verify docs examples work without test collection)
+
+**Cross-team parallel work:**
+- **Fenster:** Removed 6 core PydanticAI files, deleted dependencies
+- **Verbal:** Rewrote 6 modules to use Copilot SDK
+- **Hockney:** Deleted `tests/integration/pydantic/` (12 test files, ~72 tests), discovered `copilot/model.py` blocker
+- **Coordinator:** Fixed leftover import errors
+
+**BLOCKER discovered by Hockney:** `copilot/model.py` still has PydanticAI imports. Blocks all test collection.
+
+---
 
 ## Learnings
 

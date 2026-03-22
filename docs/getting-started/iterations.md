@@ -104,15 +104,14 @@ Iterations are different from `Eval.retries`:
 | Feature | Purpose | Scope |
 |---------|---------|-------|
 | `--aitest-iterations=N` | Statistical reliability | Re-runs the entire test N times |
-| `Eval(retries=3)` | Error recovery | Retries failed tool calls within a single run |
+| `CopilotEval(max_retries=3)` | Error recovery | Retries failed tool calls within a single run |
 
 Use both together for robust testing:
 
 ```python
-agent = Eval(
-    provider=Provider(model="azure/gpt-5-mini"),
-    mcp_servers=[server],
-    retries=3,          # Retry tool errors within each run
+agent = CopilotEval(
+    name="banking-test",
+    max_retries=3,      # Retry tool errors within each run
     max_turns=10,
 )
 

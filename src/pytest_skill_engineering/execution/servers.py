@@ -1,4 +1,15 @@
-"""Server management for MCP and CLI servers."""
+"""Server management for MCP and CLI servers.
+
+TODO(Verbal): THIS ENTIRE FILE NEEDS REFACTORING
+This file was tightly coupled to the PydanticAI Eval harness (core.eval).
+The following were removed and need replacement:
+- MCPServer, CLIServer config types (need CopilotEval-compatible equivalents)
+- _expand_env() helper function (env var expansion for headers)
+- WaitStrategy enum (server startup wait configuration)
+
+The file currently has undefined references and will fail runtime checks.
+Either refactor to use CopilotEval server config or mark as deprecated.
+"""
 
 from __future__ import annotations
 
@@ -11,14 +22,26 @@ import sys
 from typing import TYPE_CHECKING, Any
 
 from pytest_skill_engineering.core.errors import ServerStartError
-from pytest_skill_engineering.core.eval import _expand_env
 
 _logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from mcp import ClientSession
 
-    from pytest_skill_engineering.core.eval import CLIServer, MCPServer
+    # Stub types - these were removed with core.eval
+    MCPServer = Any  # type: ignore[misc]
+    CLIServer = Any  # type: ignore[misc]
+
+
+# Stub function - this was removed with core.eval
+def _expand_env(value: str) -> str:  # noqa: F811
+    """Expand environment variables in a string.
+
+    TODO(Verbal): This was removed with core.eval - restore or replace.
+    """
+    import os
+
+    return os.path.expandvars(value)
 
 
 class MCPServerProcess:
@@ -49,7 +72,9 @@ class MCPServerProcess:
         """Start or connect to the MCP server and discover tools and prompts."""
         from mcp import ClientSession as _ClientSession
 
-        from pytest_skill_engineering.core.eval import WaitStrategy
+        # Stub - WaitStrategy was removed with core.eval
+        class WaitStrategy:  # type: ignore[no-redef]
+            TOOLS = "tools"
 
         self._exit_stack = contextlib.AsyncExitStack()
         label = self._transport_label()

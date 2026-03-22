@@ -49,15 +49,13 @@ pytest tests/fixtures/ -v
 `scenario_01_single_agent.py` — one agent, multiple prompts:
 
 ```python
-agent = Eval.from_instructions(
-    "banking-agent",
-    BANKING_PROMPT,
-    provider=Provider(model="azure/gpt-5-mini", rpm=10, tpm=10000),
-    mcp_servers=[banking_server],
+agent = CopilotEval(
+    name="banking-agent",
+    instructions=BANKING_PROMPT,
 )
 
-async def test_balance_check(eval_run, llm_assert):
-    result = await eval_run(agent, "What's my checking account balance?")
+async def test_balance_check(copilot_eval, llm_assert):
+    result = await copilot_eval(agent, "What's my checking account balance?")
     assert result.success
     assert result.tool_was_called("get_balance")
     assert llm_assert(result.final_response, "mentions the account balance")
@@ -72,13 +70,13 @@ async def test_balance_check(eval_run, llm_assert):
 
 ```python
 AGENTS = [
-    Eval(name="gpt-5-mini", provider=Provider(model="azure/gpt-5-mini"), ...),
-    Eval(name="gpt-4.1-mini", provider=Provider(model="azure/gpt-4.1-mini"), ...),
+    CopilotEval(name="gpt-5-mini"),
+    CopilotEval(name="gpt-4.1-mini"),
 ]
 
 @pytest.mark.parametrize("agent", AGENTS, ids=lambda a: a.name)
-async def test_balance_check(eval_run, agent, llm_assert):
-    result = await eval_run(agent, "What's my checking account balance?")
+async def test_balance_check(copilot_eval, agent, llm_assert):
+    result = await copilot_eval(agent, "What's my checking account balance?")
     assert result.success
 ```
 
@@ -92,14 +90,14 @@ Each test runs on both models — AI analysis auto-generates leaderboard.
 @pytest.mark.session("banking-workflow")
 class TestBankingWorkflow:
     @pytest.mark.parametrize("agent", AGENTS, ids=lambda a: a.name)
-    async def test_check_balance(self, eval_run, agent, llm_assert):
-        result = await eval_run(agent, "What's my checking account balance?")
+    async def test_check_balance(self, copilot_eval, agent, llm_assert):
+        result = await copilot_eval(agent, "What's my checking account balance?")
         assert result.success
         assert result.tool_was_called("get_balance")
 
     @pytest.mark.parametrize("agent", AGENTS, ids=lambda a: a.name)
-    async def test_transfer_funds(self, eval_run, agent, llm_assert):
-        result = await eval_run(agent, "Transfer $100 from checking to savings")
+    async def test_transfer_funds(self, copilot_eval, agent, llm_assert):
+        result = await copilot_eval(agent, "Transfer $100 from checking to savings")
         assert result.is_session_continuation
 ```
 
@@ -111,14 +109,14 @@ The `@pytest.mark.session` marker ensures tests share eval state.
 
 ```python
 AGENTS = [
-    Eval(name="gpt-5-mini", ...),
-    Eval(name="gpt-4.1-mini", ...),
-    Eval(name="gpt-5-mini+skill", ..., skill=FINANCIAL_SKILL),
+    CopilotEval(name="gpt-5-mini"),
+    CopilotEval(name="gpt-4.1-mini"),
+    CopilotEval(name="gpt-5-mini+skill", skill_directories=["skills/financial"]),
 ]
 
 @pytest.mark.parametrize("agent", AGENTS, ids=lambda a: a.name)
-async def test_balance_query(eval_run, agent, llm_assert):
-    result = await eval_run(agent, "What's my checking account balance?")
+async def test_balance_query(copilot_eval, agent, llm_assert):
+    result = await copilot_eval(agent, "What's my checking account balance?")
     assert result.success
 ```
 
@@ -231,7 +229,7 @@ This updates HTML reports in `docs/reports/` without re-running tests (faster).
 When writing fixture tests, follow this pattern:
 
 1. **Create eval** — Configure provider, servers, system prompt, skill
-2. **Run prompt** — Use `eval_run(agent, "user message")`
+2. **Run prompt** — Use `copilot_eval(agent, "user message")`
 3. **Validate success** — `assert result.success`
 4. **Assert tool usage** — `assert result.tool_was_called(...)`
 5. **Check arguments** — `assert result.tool_call_arg(...) == expected`
@@ -241,10 +239,10 @@ When writing fixture tests, follow this pattern:
 Example:
 
 ```python
-async def test_transfer_workflow(self, eval_run, banking_server, llm_assert):
-    agent = Eval(...)
+async def test_transfer_workflow(self, copilot_eval, llm_assert):
+    agent = CopilotEval(name="banking-test", instructions="You are a banking assistant.")
     
-    result = await eval_run(
+    result = await copilot_eval(
         agent,
         "Check my checking balance, then transfer $100 to savings."
     )

@@ -23,17 +23,18 @@ For LLMs, your API isn't functions and types — it's **tool descriptions, skill
 
 ## The Solution
 
-Write tests as natural language prompts. An **Eval** is your test harness — it combines an LLM provider, MCP servers, and the configuration you want to evaluate:
+Write tests as natural language prompts. A **CopilotEval** is your test harness — it combines the configuration you want to evaluate:
 
 ```python
-async def test_balance_and_transfer(eval_run, banking_server):
-    agent = Eval(
-        provider=Provider(model="azure/gpt-5-mini"),   # LLM provider
-        mcp_servers=[banking_server],                  # MCP servers with tools
-        skill=financial_skill,                         # Eval Skill (optional)
+from pytest_skill_engineering.copilot import CopilotEval
+
+async def test_balance_and_transfer(copilot_eval):
+    agent = CopilotEval(
+        name="banking-test",
+        skill_directories=["skills/financial"],         # Eval Skill (optional)
     )
 
-    result = await eval_run(
+    result = await copilot_eval(
         agent,
         "Transfer $200 from checking to savings and show me the new balances.",
     )
@@ -92,26 +93,24 @@ async def test_skill(copilot_eval):
 
 > 📁 See [copilot/test_01_basic.py](https://github.com/sbroenne/pytest-skill-engineering/blob/main/tests/integration/copilot/test_01_basic.py) for complete examples.
 
-### Bring your own model (Azure, OpenAI, Anthropic…)
+### Specify a model
 
-Full control over model, introspection, and cost tracking:
+Full control over model selection and cost tracking:
 
 ```python
-from pytest_skill_engineering import Eval, Provider, MCPServer
+from pytest_skill_engineering.copilot import CopilotEval
 
-banking_server = MCPServer(command=["python", "banking_mcp.py"])
-
-async def test_balance_check(eval_run):
-    agent = Eval(
-        provider=Provider(model="azure/gpt-5-mini"),
-        mcp_servers=[banking_server],
+async def test_balance_check(copilot_eval):
+    agent = CopilotEval(
+        name="banking-test",
+        model="gpt-5-mini",
     )
-    result = await eval_run(agent, "What's my checking account balance?")
+    result = await copilot_eval(agent, "What's my checking account balance?")
     assert result.success
     assert result.tool_was_called("get_balance")
 ```
 
-> 📁 See [pydantic/test_01_basic.py](https://github.com/sbroenne/pytest-skill-engineering/blob/main/tests/integration/pydantic/test_01_basic.py) for complete examples.
+> 📁 See [copilot/test_01_basic.py](https://github.com/sbroenne/pytest-skill-engineering/blob/main/tests/integration/copilot/test_01_basic.py) for complete examples.
 
 ## Features
 
@@ -122,7 +121,7 @@ async def test_balance_check(eval_run):
 - **Test CLI Tools** — Wrap command-line interfaces as testable servers
 - **Compare Models** — Benchmark different LLMs against your tools
 - **Eval Skills** — Add domain knowledge following [agentskills.io](https://agentskills.io)
-- **Custom Agents** — Test `.agent.md` custom agent files with `Eval.from_agent_file()` or load them as subagents in `CopilotEval`; A/B test custom agent versions
+- **Custom Agents** — Test `.agent.md` custom agent files with `CopilotEval`; A/B test custom agent versions
 - **Real Coding Agent Testing** — Test real coding agents like GitHub Copilot via the SDK (native OAuth, skill loading, exact user experience)
 - **Eval Leaderboard** — Auto-ranked by pass rate and cost; AI analysis tells you what to fix
 - **Multi-Turn Sessions** — Test conversations that build on context
@@ -131,7 +130,7 @@ async def test_balance_check(eval_run):
 - **Semantic Assertions** — `llm_assert` for binary pass/fail checks on response content
 - **Multi-Dimension Scoring** — `llm_score` for granular quality measurement across named dimensions
 - **Image Assertions** — AI-graded visual evaluation of screenshots and visual tool output
-- **Cost Estimation** — Automatic per-test cost tracking with pricing from litellm + custom overrides
+- **Cost Estimation** — Automatic per-test cost tracking with pricing from `pricing.toml`
 
 ## Installation
 

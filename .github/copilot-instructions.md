@@ -99,7 +99,7 @@ For LLMs, your API isn't functions and types — it's **tool descriptions, syste
 
 2. **RUN HTML INTEGRATION TESTS** (non-negotiable)
    ```bash
-   uv run python -m pytest tests/integration/pydantic/test_01_basic.py -q
+   uv run python -m pytest tests/integration/copilot/test_01_basic.py -q
    ```
    - Verifies end-to-end report generation
    - Fix ALL failures — no exceptions
@@ -127,8 +127,7 @@ For LLMs, your API isn't functions and types — it's **tool descriptions, syste
 ### Core Dependencies
 | Package | Purpose | Pattern |
 |---------|---------|---------|
-| `pydantic-ai` | LLM abstraction | Eval execution, MCP toolsets, Azure auth |
-| `pydantic-evals` | Evaluation | LLM judge for clarification detection |
+| `github-copilot-sdk` | LLM abstraction | Eval execution, coding agent testing |
 | `mcp` | MCP protocol | Server process management, tool discovery |
 | `pydantic` | Validation | Config validation (used sparingly) |
 | `pytest` | Test framework | Plugin system, fixtures, markers |
@@ -136,7 +135,7 @@ For LLMs, your API isn't functions and types — it's **tool descriptions, syste
 
 ### Data Modeling
 - **Use `@dataclass(slots=True)`** for all data objects
-- **Use `frozen=True`** for immutable config (Wait, Provider)
+- **Use `frozen=True`** for immutable config
 - **Use `TypedDict`** for template data contracts (see `components/types.py`)
 - **No Pydantic models** for core types - just dataclasses
 
@@ -161,8 +160,14 @@ class EvalResult:
 
 ```python
 # Tests are async by default (asyncio_mode = "auto" in pyproject.toml)
-async def test_balance(eval_run, banking_server):
-    result = await eval_run(agent, "What's my balance?")
+async def test_create_file(copilot_eval, tmp_path):
+    agent = CopilotEval(
+        name="coder",
+        model="gpt-5-mini",
+        instructions="You are a Python developer.",
+        working_directory=str(tmp_path),
+    )
+    result = await copilot_eval(agent, "Create hello.py")
     assert result.success
 ```
 
@@ -189,17 +194,17 @@ uv run ruff format src tests
 # Type check
 uv run pyright src
 
-# Run pydantic integration tests (ALWAYS use these, not unit tests)
-uv run python -m pytest tests/integration/pydantic/ -v
+# Run copilot integration tests (ALWAYS use these, not unit tests)
+uv run python -m pytest tests/integration/copilot/ -v
 
 # Re-run only failures
-uv run python -m pytest --lf tests/integration/pydantic/ -v
+uv run python -m pytest --lf tests/integration/copilot/ -v
 ```
 
 ### Import Conventions
 - Group imports: stdlib → third-party → local
 - Use `TYPE_CHECKING` block for type-only imports
-- Import from package root when possible (`from pytest_skill_engineering import Eval`)
+- Import from package root when possible (`from pytest_skill_engineering.copilot import CopilotEval`)
 
 ```python
 from __future__ import annotations
@@ -207,24 +212,24 @@ from __future__ import annotations
 import asyncio
 from typing import TYPE_CHECKING, Any
 
-import pydantic_ai
+from github_copilot_sdk import CopilotSDK
 from mcp import ClientSession
 
-from pytest_skill_engineering.core.result import EvalResult
+from pytest_skill_engineering.copilot.result import CopilotResult
 
 if TYPE_CHECKING:
-    from pytest_skill_engineering.core.eval import Eval
+    from pytest_skill_engineering.copilot.eval import CopilotEval
 ```
 
 ## What We're Building
 
-**pytest-skill-engineering** is a pytest plugin for testing MCP servers and CLIs. You write tests as natural language prompts, and an LLM executes them against your tools. Reports tell you **what to fix**, not just **what failed**.
+**pytest-skill-engineering** is a pytest plugin for testing MCP servers and CLIs with real coding agents. You write tests as natural language prompts, and GitHub Copilot executes them against your tools. Reports tell you **what to fix**, not just **what failed**.
 
 ### Core Features
 
 1. **Base Testing**: Define evals, run tests against MCP/CLI tool servers
-   - Eval = Provider (LLM) + System Prompt + MCP/CLI Servers + optional Skill + optional Custom Agents
-   - Use `eval_run` fixture to execute eval and verify tool usage
+   - Eval = Model + Instructions + MCP/CLI Servers + optional Skill + optional Custom Agents
+   - Use `copilot_eval` fixture to execute eval and verify tool usage
    - Assert on `result.success`, `result.tool_was_called("tool_name")`, `result.final_response`
 
 2. **Eval Leaderboard**: When you test multiple evals, the report shows a leaderboard
@@ -246,9 +251,8 @@ if TYPE_CHECKING:
    - Reports analyze skill effectiveness and suggest improvements
 
 6. **Custom Agent Testing**: Test `.agent.md` custom agent files (VS Code / Claude Code format)
-   - `Eval.from_agent_file(path, provider, ...)` — agent file becomes the system prompt; test it synthetically
    - `load_custom_agent(path)` + `CopilotEval(custom_agents=[...])` — test real subagent dispatch through Copilot
-   - Both approaches are first-class: same prominence as Skill Testing
+   - Tests whether custom agents are invoked correctly and produce the expected behavior
 
 7. **Clarification Detection**: Catch evals that ask questions instead of acting
    - LLM-as-judge detects "Would you like me to...?" style responses
@@ -280,39 +284,30 @@ pytest-skill-engineering-report results.json --html report.html --summary --summ
 ### Key Types
 
 ```python
-from pytest_skill_engineering import Eval, Provider, MCPServer, Skill, load_system_prompts, load_custom_agent
+from pytest_skill_engineering.copilot import CopilotEval
+from pytest_skill_engineering import Skill, load_custom_agent
 
-# Define an eval (auth via AZURE_API_BASE env var)
-agent = Eval(
-    provider=Provider(model="azure/gpt-5-mini"),
-    mcp_servers=[my_server],
-    system_prompt="You are helpful...",
+# Define an eval
+agent = CopilotEval(
+    name="financial-assistant",
+    model="gpt-5-mini",
+    instructions="You are a helpful financial assistant.",
     skill=Skill.from_path("skills/financial-advisor"),  # Optional domain knowledge
     max_turns=10,
 )
 
-# Load a custom agent file as the agent under test (synthetic testing)
-agent = Eval.from_agent_file(
-    "skills/my-skill/agent.md",
-    provider=Provider(model="azure/gpt-5-mini"),
-    mcp_servers=[my_server],
-)
-
 # Load a custom agent as a subagent for CopilotEval (real Copilot dispatch)
-from pytest_skill_engineering.copilot import CopilotEval
 copilot_agent = CopilotEval(
+    name="coder",
+    model="gpt-5-mini",
+    instructions="You are a coding assistant.",
     custom_agents=[load_custom_agent("skills/my-skill/agent.md")],
 )
 
-# Load system prompts from .md files - returns dict[str, str]
-prompts = load_system_prompts(Path("prompts/"))
-# {"concise": "Be brief...", "detailed": "Explain..."}
-
 # Run test
-result = await eval_run(agent, "Do something with tools")
+result = await copilot_eval(agent, "Do something with tools")
 assert result.success
 assert result.tool_was_called("my_tool")
-assert not result.asked_for_clarification  # Eval should act, not ask
 ```
 
 ### Multi-Turn Sessions
@@ -320,38 +315,35 @@ assert not result.asked_for_clarification  # Eval should act, not ask
 ```python
 @pytest.mark.session("banking-flow")
 class TestBankingWorkflow:
-    async def test_check_balance(self, eval_run, bank_agent):
-        result = await eval_run(bank_agent, "What's my balance?")
+    async def test_check_balance(self, copilot_eval, bank_agent):
+        result = await copilot_eval(bank_agent, "What's my balance?")
         assert result.success
 
-    async def test_transfer(self, eval_run, bank_agent):
+    async def test_transfer(self, copilot_eval, bank_agent):
         # Shares context with previous test
-        result = await eval_run(bank_agent, "Transfer $100 to savings")
+        result = await copilot_eval(bank_agent, "Transfer $100 to savings")
         assert result.tool_was_called("transfer")
 ```
 
-### System Prompts
+### Instructions
 
-System prompts can be plain `.md` files or YAML files with metadata.
+Instructions can be plain strings or loaded from `.md` files.
 
 ```python
-# Load .md files as plain strings - returns dict[str, str]
-prompts = load_system_prompts(Path("prompts/"))
-# {"concise": "Be brief...", "detailed": "Explain..."}
-
-# Or load .yaml files as Prompt objects - returns list[Prompt]
-from pytest_skill_engineering import load_prompts
-prompt_list = load_prompts(Path("prompts/"))
-
 # Use with pytest parametrize
-@pytest.mark.parametrize("prompt_name,system_prompt", prompts.items())
-async def test_with_prompt(eval_run, banking_server, prompt_name, system_prompt):
-    agent = Eval(
-        provider=Provider(model="azure/gpt-5-mini"),
-        mcp_servers=[banking_server],
-        system_prompt=system_prompt,
+INSTRUCTIONS = {
+    "concise": "Be brief and direct.",
+    "detailed": "Explain your reasoning step by step.",
+}
+
+@pytest.mark.parametrize("instruction_name,instructions", INSTRUCTIONS.items())
+async def test_with_instructions(copilot_eval, instruction_name, instructions):
+    agent = CopilotEval(
+        name=f"assistant-{instruction_name}",
+        model="gpt-5-mini",
+        instructions=instructions,
     )
-    result = await eval_run(agent, "What's my balance?")
+    result = await copilot_eval(agent, "What's my balance?")
     assert result.success
 ```
 
@@ -430,51 +422,28 @@ uv run python -m pytest tests/integration/pydantic/test_01_basic.py::TestBanking
 ```
 
 ### Rules for the AI assistant:
-1. **After making changes, ALWAYS run pydantic integration tests** — `tests/integration/pydantic/`, never `tests/unit/`
+1. **After making changes, ALWAYS run copilot integration tests** — `tests/integration/copilot/`, never `tests/unit/`
 2. **Run test files ONE AT A TIME, sequentially** — start with `test_01_basic.py`, fix all failures, then move to `test_02_models.py`, etc.
 3. **After fixing a test, run ONLY that specific test** to confirm
 4. **Use `--lf` to re-run only failed tests** after a full run
 5. **Fix ALL failures** — no exceptions, no "pre-existing" excuses
 6. **Quote the specific test paths when running individual tests**
-7. **Do NOT say "tests pass" without running `tests/integration/pydantic/`**
+7. **Do NOT say "tests pass" without running `tests/integration/copilot/`**
 8. **NEVER run `tests/unit/` as validation** — unit tests prove nothing in this project
 
-## Azure Configuration
+## Copilot SDK
 
-**Endpoint**: `https://stbrnner1.cognitiveservices.azure.com/`
-**Resource Group**: `rg_foundry`
-**Account**: `stbrnner1`
-
-**Authentication**: Entra ID (automatic via `az login`). No API keys needed!
-The engine uses `core.auth.get_azure_ad_token_provider()` internally (shared module).
-
-Available models (checked 2026-02-01):
-- `gpt-5-mini` - CHEAPEST, use for most tests
-- `gpt-5.2-chat` - More capable
-- `gpt-4.1` - Most capable
-
-Check for updates:
-```bash
-az cognitiveservices account deployment list \
-  --name stbrnner1 \
-  --resource-group rg_foundry \
-  -o table
-```
-
-## Copilot Model Provider
-
-Use the `copilot/` prefix to route LLM calls through the Copilot SDK instead of Azure/OpenAI.
-Requires `pytest-skill-engineering[copilot]` and Copilot auth (`gh auth login` or `GITHUB_TOKEN`).
+Uses GitHub Copilot SDK for all LLM calls. Requires Copilot auth (`gh auth login` or `GITHUB_TOKEN`).
 
 ```bash
 # Use Copilot for AI insights
-pytest tests/ --aitest-summary-model=copilot/gpt-5-mini
+pytest tests/ --aitest-summary-model=gpt-5-mini
 
 # Use Copilot for llm_assert / llm_score
-pytest tests/ --llm-model=copilot/gpt-5-mini
+pytest tests/ --llm-model=gpt-5-mini
 ```
 
-Handled in `build_model_from_string()` in `pydantic_adapter.py` — creates a `CopilotModel` from `copilot/model.py`.
+The Copilot SDK is REQUIRED (not optional). All eval execution goes through it.
 Available models are dynamic (whatever Copilot exposes).
 
 ## Project Structure
@@ -482,26 +451,21 @@ Available models are dynamic (whatever Copilot exposes).
 ```
 src/pytest_skill_engineering/
 ├── core/                  # Core types
-│   ├── agent.py           # Eval, Provider, MCPServer, CLIServer, Wait
-│   ├── auth.py            # Shared Azure AD auth (get_azure_ad_token_provider)
-│   ├── prompt.py          # load_system_prompts() for .md files (returns dict[str, str])
-│   ├── result.py          # EvalResult, Turn, ToolCall, ToolInfo, SkillInfo
 │   ├── skill.py           # Skill, load from markdown
 │   └── errors.py          # AITestError, ServerStartError, etc.
-├── execution/             # Runtime
-│   ├── engine.py          # EvalEngine (PydanticAI-powered agent execution)
-│   ├── pydantic_adapter.py # Adapter: our config types ↔ PydanticAI types (handles azure/, copilot/ prefixes)
-│   ├── cli_toolset.py     # Custom PydanticAI Toolset for CLI servers
-│   ├── clarification.py   # Clarification detection via pydantic-evals LLMJudge
-│   ├── servers.py         # Server process management
+├── copilot/               # GitHub Copilot SDK integration
+│   ├── eval.py            # CopilotEval - main eval harness
+│   ├── result.py          # CopilotResult - test result data
+│   ├── engine.py          # Copilot SDK agent execution
+│   ├── servers.py         # MCP server process management
 │   └── skill_tools.py     # Skill injection into agent
 ├── fixtures/              # Pytest fixtures
-│   ├── run.py             # eval_run fixture
+│   ├── copilot_run.py     # copilot_eval fixture
 │   └── factories.py       # skill_factory (Skills only - agents created inline)
 ├── reporting/             # AI analysis & reports
 │   ├── collector.py       # TestReport, SuiteReport dataclasses + build_suite_report()
 │   ├── generator.py       # generate_html(), generate_json(), generate_mermaid_sequence()
-│   ├── insights.py        # AI analysis engine (PydanticAI-powered) → InsightsResult
+│   ├── insights.py        # AI analysis engine → InsightsResult
 │   └── components/        # htpy report components
 │       ├── types.py       # TypedDicts for component data shapes
 │       ├── report.py      # Full report layout
@@ -522,69 +486,33 @@ src/pytest_skill_engineering/
 
 tests/
 ├── integration/           # REAL LLM tests (the only tests that matter)
-│   ├── conftest.py        # Constants + server fixtures (shared by both harnesses)
-│   ├── pydantic/          # Eval harness tests (BYOM via PydanticAI, USD costs)
-│   │   ├── conftest.py    # Minimal, inherits from parent
-│   │   ├── test_01_basic.py       # Single eval, basic MCP tool calls
-│   │   ├── test_02_models.py      # Model comparison (parametrize)
-│   │   ├── test_03_prompts.py     # System prompt comparison
-│   │   ├── test_04_matrix.py      # Model × Prompt 2×2 grid
-│   │   ├── test_05_skills.py      # Skill loading + skill-enhanced behavior
-│   │   ├── test_06_sessions.py    # Multi-turn sessions (@pytest.mark.session)
-│   │   ├── test_07_clarification.py # ClarificationDetection feature
-│   │   ├── test_08_scoring.py     # LLM scoring (llm_score + ScoringDimension)
-│   │   ├── test_09_cli.py         # CLIServer wrapping shell commands
-│   │   ├── test_10_ab_servers.py  # A/B server comparison
-│   │   ├── test_11_iterations.py  # --aitest-iterations=N reliability
-│   │   └── test_12_custom_agents.py # Eval.from_agent_file + load_custom_agent
-│   ├── agents/            # .agent.md test fixtures (banking-advisor, todo-manager, minimal)
-│   ├── copilot/           # CopilotEval harness tests (Copilot SDK, premium requests)
+│   ├── conftest.py        # Constants + server fixtures
+│   ├── copilot/           # CopilotEval harness tests (Copilot SDK)
 │   │   ├── conftest.py    # MODELS, DEFAULT_MODEL, integration_judge_model
 │   │   ├── test_01_basic.py       # File create + refactor (parametrize models)
 │   │   ├── test_02_models.py      # Model comparison
 │   │   ├── test_03_instructions.py # Instruction differentiation + excluded_tools
 │   │   ├── test_05_skills.py      # Skill A/B comparison
 │   │   └── test_12_custom_agents.py # Custom agents + forced subagent dispatch
-│   ├── prompts/           # Plain .md system prompt files
+│   ├── agents/            # .agent.md test fixtures (banking-advisor, todo-manager, minimal)
 │   └── skills/            # Test skills
 └── unit/                  # Pure logic only (no mocking LLMs)
 ```
 
 ## Test Configuration (conftest.py)
 
-Integration tests use centralized constants from `tests/integration/conftest.py`:
+Integration tests use centralized constants from `tests/integration/copilot/conftest.py`:
 
 ```python
 # Models
 DEFAULT_MODEL = "gpt-5-mini"           # Cheapest, use for most tests
-BENCHMARK_MODELS = ["gpt-5-mini", "gpt-4.1-mini"]  # For model comparison
-
-# Rate limits (Azure deployments)
-DEFAULT_RPM = 10
-DEFAULT_TPM = 10000
+MODELS = ["gpt-5-mini", "gpt-4.1-mini"]  # For model comparison
 
 # Turn limits
 DEFAULT_MAX_TURNS = 5
 
 # Server fixtures: todo_server, banking_server
 # Evals are created INLINE in each test using these constants
-```
-
-**Pattern for writing pydantic tests** (in `tests/integration/pydantic/`):
-```python
-from pytest_skill_engineering import Eval, Provider
-from ..conftest import DEFAULT_MODEL, DEFAULT_RPM, DEFAULT_TPM, DEFAULT_MAX_TURNS, BANKING_PROMPT
-
-async def test_balance(eval_run, banking_server):
-    agent = Eval.from_instructions(
-        "banking-test",
-        BANKING_PROMPT,
-        provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
-        mcp_servers=[banking_server],
-        max_turns=DEFAULT_MAX_TURNS,
-    )
-    result = await eval_run(agent, "What's my checking balance?")
-    assert result.success
 ```
 
 **Pattern for writing copilot tests** (in `tests/integration/copilot/`):
@@ -604,18 +532,14 @@ async def test_create_file(copilot_eval, tmp_path, model):
     assert result.success
 ```
 
-**CRITICAL: Never mix harnesses.** Pydantic tests (using `eval_run`) and Copilot tests
-(using `copilot_eval`) must be in separate directories. The plugin enforces this at
-collection time — if both fixtures appear in a single session, `pytest.UsageError` is raised.
-
 ## Semantic Assertions with llm_assert
 
-Use the built-in `llm_assert` fixture for AI-powered semantic assertions (powered by `pydantic-evals` LLMJudge):
+Use the built-in `llm_assert` fixture for AI-powered semantic assertions (powered by GitHub Copilot SDK):
 
 ```python
-async def test_response_quality(eval_run, banking_server, llm_assert):
-    agent = Eval(...)
-    result = await eval_run(agent, "Show me my account balances and recent transactions")
+async def test_response_quality(copilot_eval, llm_assert):
+    agent = CopilotEval(...)
+    result = await copilot_eval(agent, "Show me my account balances and recent transactions")
     
     # Semantic assertion - AI evaluates if condition is met
     assert llm_assert(result.final_response, "includes account balances and transaction details")

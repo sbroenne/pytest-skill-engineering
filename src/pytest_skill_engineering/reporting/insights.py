@@ -11,8 +11,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from pytest_skill_engineering.execution.cost import estimate_cost, models_without_pricing
-
 if TYPE_CHECKING:
     from pytest_skill_engineering.core.result import (
         CustomAgentInfo,
@@ -85,6 +83,9 @@ def _build_analysis_input(
         )
 
     # Pricing completeness — warn AI when cost data is unreliable
+    # NOTE: Cost estimation removed with PydanticAI pivot
+    # Copilot SDK does not expose token usage, so we can't estimate costs
+    models_without_pricing: set[str] = set()
     if models_without_pricing:
         models_list = ", ".join(sorted(models_without_pricing))
         sections.append("## ⚠️ Incomplete Pricing Data\n")
@@ -478,7 +479,7 @@ async def generate_insights(
     custom_agent_info: list[CustomAgentInfo] | None = None,
     prompt_names: list[str] | None = None,
     instruction_file_info: list[InstructionFileInfo] | None = None,
-    model: str = "azure/gpt-5-mini",
+    model: str = "copilot/gpt-5-mini",
     cache_dir: Path | None = None,
     min_pass_rate: int | None = None,
     analysis_prompt: str | None = None,
@@ -495,7 +496,7 @@ async def generate_insights(
         custom_agent_info: Custom agent metadata (optional)
         prompt_names: Names of prompt files tested (optional)
         instruction_file_info: Custom instruction file metadata (optional)
-        model: Model identifier (e.g., "azure/gpt-5-mini", "openai/gpt-5-mini")
+        model: Model identifier (e.g., "copilot/gpt-5-mini", "azure/gpt-5-mini")
         cache_dir: Directory for caching results (optional)
         min_pass_rate: Minimum pass rate threshold for disqualifying agents
         analysis_prompt: Custom analysis prompt text. If None, uses the built-in
@@ -512,9 +513,7 @@ async def generate_insights(
     """
     import asyncio
 
-    from pydantic_ai import Agent as PydanticAgent
-
-    from pytest_skill_engineering.execution.pydantic_adapter import build_model_from_string
+    from pytest_skill_engineering.copilot.judge import copilot_judge  # noqa: PLC0415
 
     # Check cache first
     results_hash = _get_results_hash(suite_report)
@@ -553,28 +552,31 @@ async def generate_insights(
 
     full_prompt = f"{prompt_template}\n\n---\n\n# Test Data\n\n{analysis_input}"
 
-    # Build PydanticAI model
-    pydantic_model = build_model_from_string(model)
-
-    # Create a simple PydanticAI agent for analysis
-    analysis_agent = PydanticAgent(pydantic_model, output_type=str)
+    # Strip model prefix if present (copilot/, azure/, openai/)
+    judge_model = model
+    if "/" in judge_model:
+        judge_model = judge_model.split("/", 1)[1]
 
     # Call with retry
     start_time = time.perf_counter()
 
     for attempt in range(3):
         try:
-            result = await analysis_agent.run(full_prompt)
+            # Use copilot_judge to call the Copilot SDK
+            # Timeout is generous for insights generation
+            markdown_content = await copilot_judge(
+                full_prompt,
+                model=judge_model,
+                timeout_seconds=300.0,
+            )
 
-            # Track usage
-            usage = result.usage()
-            input_tokens = usage.input_tokens or 0
-            output_tokens = usage.output_tokens or 0
-            total_tokens = input_tokens + output_tokens
-            insights_cost = estimate_cost(model, input_tokens, output_tokens)
-
-            markdown_content = result.output
             duration_ms = (time.perf_counter() - start_time) * 1000
+
+            # Token usage and cost estimation are not available from copilot_judge
+            # We'll return 0 for these values since we can't extract them easily
+            # from the Copilot SDK without major refactoring
+            total_tokens = 0
+            insights_cost = 0.0
 
             # Save to cache
             if cache_path:

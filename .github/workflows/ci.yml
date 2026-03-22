@@ -55,8 +55,8 @@ jobs:
       - name: Run pyright
         run: uv run pyright src/pytest_skill_engineering/
 
-  mcp-servers:
-    name: MCP Server Validation
+  unit-tests:
+    name: Unit Tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -74,8 +74,8 @@ jobs:
       - name: Install dependencies
         run: uv sync --all-extras
 
-      - name: Test MCP servers (no LLM)
-        run: uv run pytest tests/unit/test_mcp_servers.py -v --tb=short
+      - name: Run unit tests
+        run: uv run pytest tests/unit/ -v --tb=short
 
   smoke-test:
     name: Smoke Test

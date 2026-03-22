@@ -167,7 +167,8 @@ def api_server():
 
 ```python
 import pytest
-from pytest_skill_engineering import Eval, MCPServer, Provider, Wait
+from pytest_skill_engineering import MCPServer, Wait
+from pytest_skill_engineering.copilot import CopilotEval
 
 @pytest.fixture(scope="module")
 def banking_server():
@@ -177,17 +178,14 @@ def banking_server():
     )
 
 @pytest.fixture
-def banking_agent(banking_server):
-    return Eval.from_instructions(
-        "banking",
-        "You are a banking assistant.",
-        provider=Provider(model="azure/gpt-5-mini"),
-        mcp_servers=[banking_server],
-        max_turns=5,
+def banking_agent():
+    return CopilotEval(
+        name="banking",
+        instructions="You are a banking assistant.",
     )
 
-async def test_balance_query(eval_run, banking_agent):
-    result = await eval_run(banking_agent, "What's my checking balance?")
+async def test_balance_query(copilot_eval, banking_agent):
+    result = await copilot_eval(banking_agent, "What's my checking balance?")
     
     assert result.success
     assert result.tool_was_called("get_balance")
@@ -213,13 +211,10 @@ def calendar_server():
     )
 
 @pytest.fixture
-def assistant_agent(banking_server, calendar_server):
-    return Eval.from_instructions(
-        "assistant",
-        "You can check balances and manage calendar.",
-        provider=Provider(model="azure/gpt-5-mini"),
-        mcp_servers=[banking_server, calendar_server],
-        max_turns=10,
+def assistant_agent():
+    return CopilotEval(
+        name="assistant",
+        instructions="You can check balances and manage calendar.",
     )
 ```
 
@@ -229,13 +224,11 @@ Use `allowed_tools` on the Eval to limit which tools are exposed to the LLM. Thi
 
 ```python
 @pytest.fixture
-def balance_agent(banking_server):
+def balance_agent():
     # banking_server has 16 tools, but this test only needs 2
-    return Eval.from_instructions(
-        "balance-checker",
-        "You check account balances.",
-        provider=Provider(model="azure/gpt-5-mini"),
-        mcp_servers=[banking_server],
+    return CopilotEval(
+        name="balance-checker",
+        instructions="You check account balances.",
         allowed_tools=["get_balance", "get_all_balances"],
     )
 ```
@@ -248,7 +241,8 @@ Use `MCPServerProcess` directly to interact with the MCP protocol:
 
 ```python
 import pytest
-from pytest_skill_engineering import Eval, MCPPrompt, MCPServer, Provider
+from pytest_skill_engineering import MCPPrompt, MCPServer
+from pytest_skill_engineering.copilot import CopilotEval
 from pytest_skill_engineering.execution.servers import MCPServerProcess
 
 @pytest.fixture(scope="module")
@@ -265,7 +259,7 @@ async def test_prompts_are_discoverable(server_process):
     names = [p.name for p in prompts]
     assert "balance_summary" in names
 
-async def test_balance_summary_prompt(eval_run, server_process, banking_server):
+async def test_balance_summary_prompt(copilot_eval, server_process):
     """The balance_summary prompt produces a coherent LLM response."""
     # Render the template (like VS Code does when user invokes the slash command)
     messages = await server_process.get_prompt(
@@ -275,11 +269,11 @@ async def test_balance_summary_prompt(eval_run, server_process, banking_server):
     assert messages, "Prompt returned no messages"
 
     # Run the rendered prompt through the LLM
-    agent = Eval(
-        provider=Provider(model="azure/gpt-5-mini"),
-        mcp_servers=[banking_server],
+    agent = CopilotEval(
+        name="balance-summary",
+        instructions="You are a banking assistant.",
     )
-    result = await eval_run(agent, messages[0]["content"])
+    result = await copilot_eval(agent, messages[0]["content"])
     assert result.success
 ```
 

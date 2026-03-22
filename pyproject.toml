@@ -32,18 +32,12 @@ dependencies = [
     "markdown>=3.10.2",
     "htpy>=25.12.0",
     "mdutils>=1.8.1",
-    "azure-identity>=1.25.2",
-    "pydantic-ai>=1.61.0",
-    "pydantic-evals>=1.61.0",
-    "litellm>=1.81.13",
     "python-frontmatter>=1.1.0",
     "nh3>=0.3.3",
+    "github-copilot-sdk>=0.2.0",
 ]
 
 [project.optional-dependencies]
-copilot = [
-    "github-copilot-sdk>=0.2.0",
-]
 dev = [
     "pytest-cov>=7.0",
     "pytest-asyncio>=1.3",

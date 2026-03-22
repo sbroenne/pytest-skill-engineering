@@ -1,44 +1,19 @@
 ---
-description: "Auto-generated API documentation for pytest-skill-engineering core types: Eval, Provider, MCPServer, CLIServer, Skill, and more."
+description: "Auto-generated API documentation for pytest-skill-engineering core types: CopilotEval, Skill, EvalResult, and more."
 ---
 
 # API Reference
 
 Auto-generated API documentation from source code.
 
-## Core Types
+## Copilot Types
 
-::: pytest_skill_engineering.core.eval.Eval
+::: pytest_skill_engineering.copilot.eval.CopilotEval
     options:
       show_source: false
       heading_level: 3
 
-::: pytest_skill_engineering.core.eval.Provider
-    options:
-      show_source: false
-      heading_level: 3
-
-::: pytest_skill_engineering.core.eval.MCPServer
-    options:
-      show_source: false
-      heading_level: 3
-
-::: pytest_skill_engineering.core.eval.CLIServer
-    options:
-      show_source: false
-      heading_level: 3
-
-::: pytest_skill_engineering.core.eval.Wait
-    options:
-      show_source: false
-      heading_level: 3
-
-::: pytest_skill_engineering.core.eval.ClarificationDetection
-    options:
-      show_source: false
-      heading_level: 3
-
-::: pytest_skill_engineering.core.eval.ClarificationLevel
+::: pytest_skill_engineering.copilot.result.CopilotResult
     options:
       show_source: false
       heading_level: 3
@@ -117,24 +92,17 @@ Auto-generated API documentation from source code.
       show_source: false
       heading_level: 3
 
-## Prompt Types
-
-::: pytest_skill_engineering.core.prompt.Prompt
+::: pytest_skill_engineering.core.skill.SkillCompatibility
     options:
       show_source: false
       heading_level: 3
 
-::: pytest_skill_engineering.core.prompt.load_prompts
+## Custom Agent Types
+
+::: pytest_skill_engineering.copilot.types.CustomAgent
     options:
       show_source: false
       heading_level: 3
-
-::: pytest_skill_engineering.core.prompt.load_prompt
-    options:
-      show_source: false
-      heading_level: 3
-
-## Custom Agent Loaders
 
 ::: pytest_skill_engineering.core.evals.load_custom_agent
     options:
@@ -142,47 +110,6 @@ Auto-generated API documentation from source code.
       heading_level: 3
 
 ::: pytest_skill_engineering.core.evals.load_custom_agents
-    options:
-      show_source: false
-      heading_level: 3
-
-## Prompt File Loaders
-
-::: pytest_skill_engineering.core.evals.load_prompt_file
-    options:
-      show_source: false
-      heading_level: 3
-
-::: pytest_skill_engineering.core.evals.load_prompt_files
-    options:
-      show_source: false
-      heading_level: 3
-
-## MCP Prompt Types
-
-::: pytest_skill_engineering.core.result.MCPPrompt
-    options:
-      show_source: false
-      heading_level: 3
-
-::: pytest_skill_engineering.core.result.MCPPromptArgument
-    options:
-      show_source: false
-      heading_level: 3
-
-::: pytest_skill_engineering.core.result.CustomAgentInfo
-    options:
-      show_source: false
-      heading_level: 3
-
-## Optimizer
-
-::: pytest_skill_engineering.execution.optimizer.optimize_instruction
-    options:
-      show_source: false
-      heading_level: 3
-
-::: pytest_skill_engineering.execution.optimizer.InstructionSuggestion
     options:
       show_source: false
       heading_level: 3

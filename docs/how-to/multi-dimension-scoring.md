@@ -26,8 +26,8 @@ RUBRIC = [
     ScoringDimension("clarity", "Easy to understand"),
 ]
 
-async def test_plan_quality(eval_run, agent, llm_score):
-    result = await eval_run(agent, "Create an implementation plan")
+async def test_plan_quality(copilot_eval, agent, llm_score):
+    result = await copilot_eval(agent, "Create an implementation plan")
 
     scores = llm_score(
         result.final_response,
@@ -195,7 +195,8 @@ Compare eval variants by scoring both on the same rubric:
 
 ```python
 import pytest
-from pytest_skill_engineering import Eval, Provider, ScoringDimension, assert_score
+from pytest_skill_engineering import ScoringDimension, assert_score
+from pytest_skill_engineering.copilot import CopilotEval
 
 RUBRIC = [
     ScoringDimension("accuracy", "Factually correct"),
@@ -204,13 +205,13 @@ RUBRIC = [
 ]
 
 AGENTS = [
-    Eval(name="baseline", provider=Provider(model="azure/gpt-5-mini"), ...),
-    Eval(name="improved", provider=Provider(model="azure/gpt-5-mini"), ...),
+    CopilotEval(name="baseline", instructions="You are a task planner."),
+    CopilotEval(name="improved", instructions="You are a detailed task planner."),
 ]
 
 @pytest.mark.parametrize("agent", AGENTS, ids=lambda a: a.name)
-async def test_plan_quality(eval_run, agent, llm_score):
-    result = await eval_run(agent, "Create an implementation plan")
+async def test_plan_quality(copilot_eval, agent, llm_score):
+    result = await copilot_eval(agent, "Create an implementation plan")
     scores = llm_score(result.final_response, RUBRIC)
 
     print(f"{agent.name}: {scores.total}/{scores.max_total} "
@@ -232,8 +233,8 @@ The judge model is resolved in this order:
 3. `openai/gpt-5-mini` as final fallback
 
 ```bash
-# GitHub Copilot (no extra setup if pytest-skill-engineering[copilot] installed)
-pytest --llm-model=copilot/gpt-5-mini
+# GitHub Copilot (no extra setup required)
+pytest --llm-model=gpt-5-mini
 
 # Azure OpenAI
 pytest --llm-model=azure/gpt-5.2-chat

@@ -85,55 +85,39 @@ print(plugin.skills)              # Loaded Skill objects
 print(plugin.mcp_configs)         # MCP server configurations from manifest
 ```
 
-`load_plugin()` auto-detects the format based on directory contents and loads all components. Use this for programmatic inspection, or pass the path directly to `Eval.from_plugin()` / `CopilotEval.from_plugin()`.
+`load_plugin()` auto-detects the format based on directory contents and loads all components. Use this for programmatic inspection, or pass the path directly to `CopilotEval.from_plugin()`.
 
-## Testing with PydanticAI (Eval)
+## Testing Plugins
 
-Use `Eval.from_plugin()` when testing MCP tool usage and system prompt behavior with a synthetic agent:
+Use `CopilotEval.from_plugin()` to test plugin behavior:
 
 ```python
 import pytest
-from pytest_skill_engineering import Eval, MCPServer, Provider, Wait
+from pytest_skill_engineering.copilot import CopilotEval
 
-@pytest.fixture(scope="module")
-def banking_server():
-    return MCPServer(
-        command=["python", "-m", "my_banking_mcp"],
-        wait=Wait.for_tools(["get_balance", "transfer"]),
-    )
-
-async def test_plugin_tool_usage(eval_run, banking_server):
-    # Load plugin and override MCP servers with running instances
-    agent = Eval.from_plugin(
-        "path/to/my-plugin",
-        provider=Provider(model="azure/gpt-5-mini"),
-        mcp_servers=[banking_server],
-    )
-    result = await eval_run(agent, "What's my checking balance?")
+async def test_plugin_tool_usage(copilot_eval):
+    agent = CopilotEval.from_plugin("path/to/my-plugin")
+    result = await copilot_eval(agent, "What's my checking balance?")
 
     assert result.success
     assert result.tool_was_called("get_balance")
 ```
 
-`Eval.from_plugin()` loads instructions, skills, and custom agents from the directory, then uses PydanticAI to execute the agent. Pass `mcp_servers=` to override MCP configs with real running server instances.
+`CopilotEval.from_plugin()` loads instructions, skills, and custom agents from the directory. The Copilot SDK handles model selection and tool access.
 
 ### Overriding Plugin Settings
 
 ```python
-# Override the provider model
-agent = Eval.from_plugin(
+# Override the model
+agent = CopilotEval.from_plugin(
     "path/to/my-plugin",
-    provider=Provider(model="azure/gpt-5.2-chat"),
-    mcp_servers=[banking_server],
-    max_turns=10,  # Override turn limit
+    model="gpt-5.2-chat",
 )
 
-# Override system prompt (ignores plugin instructions)
-agent = Eval.from_plugin(
+# Override instructions (ignores plugin instructions)
+agent = CopilotEval.from_plugin(
     "path/to/my-plugin",
-    provider=Provider(model="azure/gpt-5-mini"),
-    mcp_servers=[banking_server],
-    system_prompt="Custom override instructions.",
+    instructions="Custom override instructions.",
 )
 ```
 
@@ -253,13 +237,9 @@ assert not result.tool_was_called_from_server("search", "web-server")
 Use `llm_assert` for AI-powered validation of response content:
 
 ```python
-async def test_plugin_response_quality(eval_run, llm_assert, banking_server):
-    agent = Eval.from_plugin(
-        "path/to/my-plugin",
-        provider=Provider(model="azure/gpt-5-mini"),
-        mcp_servers=[banking_server],
-    )
-    result = await eval_run(agent, "Summarize my financial situation")
+async def test_plugin_response_quality(copilot_eval, llm_assert):
+    agent = CopilotEval.from_plugin("path/to/my-plugin")
+    result = await copilot_eval(agent, "Summarize my financial situation")
 
     assert result.success
     assert llm_assert(
@@ -307,13 +287,9 @@ PLUGIN_DIRS = [
 ]
 
 @pytest.mark.parametrize("plugin_path", PLUGIN_DIRS, ids=lambda p: Path(p).name)
-async def test_plugin_versions(eval_run, banking_server, plugin_path):
-    agent = Eval.from_plugin(
-        plugin_path,
-        provider=Provider(model="azure/gpt-5-mini"),
-        mcp_servers=[banking_server],
-    )
-    result = await eval_run(agent, "What's my checking balance?")
+async def test_plugin_versions(copilot_eval, plugin_path):
+    agent = CopilotEval.from_plugin(plugin_path)
+    result = await copilot_eval(agent, "What's my checking balance?")
 
     assert result.success
     assert result.tool_was_called("get_balance")
@@ -325,8 +301,8 @@ The report generates an **eval leaderboard** comparing pass rates, costs, and AI
 
 | Format | Detection | Use With |
 |--------|-----------|----------|
-| `plugin.json` | File exists at root | `Eval.from_plugin()`, `CopilotEval.from_plugin()` |
-| `.github/` project | `copilot-instructions.md` exists | `Eval.from_plugin()`, `CopilotEval.from_plugin()` |
+| `plugin.json` | File exists at root | `CopilotEval.from_plugin()` |
+| `.github/` project | `copilot-instructions.md` exists | `CopilotEval.from_plugin()` |
 | `.claude/` project | `CLAUDE.md` or `.claude/` dir exists | `CopilotEval.from_claude_config()`, `CopilotEval.from_plugin()` |
 
 ## Next Steps

@@ -28,15 +28,15 @@ The judge performs a simple YES/NO classification, so a cheap model like `gpt-5-
 ### Configuration
 
 ```python
-from pytest_skill_engineering import Eval, Provider, ClarificationDetection, ClarificationLevel
+from pytest_skill_engineering.copilot import CopilotEval
+from pytest_skill_engineering import ClarificationDetection, ClarificationLevel
 
-agent = Eval(
-    provider=Provider(model="azure/gpt-5-mini"),
-    mcp_servers=[server],
+agent = CopilotEval(
+    name="my-agent",
     clarification_detection=ClarificationDetection(
         enabled=True,
         level=ClarificationLevel.ERROR,       # INFO, WARNING, or ERROR
-        judge_model="azure/gpt-5-mini",       # None = use agent's model
+        judge_model="gpt-5-mini",             # None = use agent's model
     ),
 )
 ```
@@ -213,12 +213,12 @@ if not result.success:
 
 ## AI-Powered Assertions
 
-For semantic validation, use the built-in `llm_assert` fixture (powered by pydantic-evals LLM judge):
+For semantic validation, use the built-in `llm_assert` fixture (powered by GitHub Copilot SDK):
 
 ```python
-async def test_response_quality(eval_run, agent, llm_assert):
+async def test_response_quality(copilot_eval, agent, llm_assert):
     """Use the llm_assert fixture for semantic validation."""
-    result = await eval_run(agent, "What's my checking balance?")
+    result = await copilot_eval(agent, "What's my checking balance?")
     
     assert result.success
     assert llm_assert(result.final_response, "mentions account balance")
@@ -229,8 +229,8 @@ async def test_response_quality(eval_run, agent, llm_assert):
 ### Testing Tool Selection
 
 ```python
-async def test_correct_tool_selection(eval_run, agent):
-    result = await eval_run(agent, "What's my checking balance?")
+async def test_correct_tool_selection(copilot_eval, agent):
+    result = await copilot_eval(agent, "What's my checking balance?")
     
     assert result.success
     assert result.tool_was_called("get_balance")
@@ -243,8 +243,8 @@ async def test_correct_tool_selection(eval_run, agent):
 ### Testing Multi-Step Workflow
 
 ```python
-async def test_trip_planning(eval_run, agent):
-    result = await eval_run(
+async def test_trip_planning(copilot_eval, agent):
+    result = await copilot_eval(
         agent,
         "Show me both my checking and savings balances"
     )

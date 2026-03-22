@@ -5,7 +5,7 @@ pytest-skill-engineering can test **real coding agents** like GitHub Copilot —
 ## Install
 
 ```bash
-uv add pytest-skill-engineering[copilot]
+uv add pytest-skill-engineering
 ```
 
 This installs the `github-copilot-sdk` package alongside pytest-skill-engineering.
@@ -163,7 +163,7 @@ async def test_full_agent_team(copilot_eval):
     assert result.success
 ```
 
-Both functions are available directly from `pytest_skill_engineering` (no `[copilot]` extra required for loading):
+Both functions are available directly from `pytest_skill_engineering`:
 
 ```python
 from pytest_skill_engineering import load_custom_agent, load_custom_agents
@@ -262,17 +262,17 @@ assert not result.tool_was_called("run_in_terminal")
 
 ## Reporting
 
-Copilot test results flow into the same HTML report as synthetic tests. The report auto-detects whether tests used `eval_run` (synthetic) or `copilot_eval` (coding agent) and adapts the AI analysis accordingly.
+Copilot test results flow into the same HTML report. The report auto-detects whether tests used the Copilot SDK and adapts the AI analysis accordingly.
 
 ## Copilot as Model Provider
 
-If you have `pytest-skill-engineering[copilot]` installed, you can use Copilot-accessible models for **all** LLM calls in aitest — judge assertions, AI insights, scoring, and prompt optimization — without needing a separate Azure or OpenAI subscription.
+You can use Copilot-accessible models for **all** LLM calls in aitest — judge assertions, AI insights, scoring, and prompt optimization — without needing a separate Azure or OpenAI subscription.
 
-Use the `copilot/` prefix:
+Use model names directly (no prefix needed):
 
 ```bash
 # AI insights report
-pytest tests/ --aitest-summary-model=copilot/gpt-5-mini --aitest-html=report.html
+pytest tests/ --aitest-summary-model=gpt-5-mini --aitest-html=report.html
 
 # LLM assertions and scoring
 pytest tests/ --llm-model=copilot/gpt-5-mini

@@ -12,12 +12,12 @@ description: "Configure pytest-skill-engineering via pyproject.toml or command-l
 [tool.pytest.ini_options]
 addopts = """
 --aitest-summary-model=copilot/gpt-5-mini
---llm-model=copilot/gpt-5-mini
+--llm-model=gpt-5-mini
 --aitest-html=aitest-reports/report.html
 """
 ```
 
-Requires `uv add pytest-skill-engineering[copilot]` and `gh auth login`.
+Requires `uv add pytest-skill-engineering` and `gh auth login`.
 
 **Enterprise — Azure OpenAI:**
 
@@ -39,9 +39,9 @@ Reports are generated automatically with AI insights.
 
 ## LLM Provider Setup
 
-pytest-skill-engineering uses [Pydantic AI](https://ai.pydantic.dev/) for LLM access. Configure via environment variables.
+pytest-skill-engineering uses the GitHub Copilot SDK for LLM access. Configure via `gh auth login` or `GITHUB_TOKEN`.
 
-### Azure OpenAI (Enterprise / CI)
+### GitHub Copilot (Required)
 
 ```bash
 export AZURE_API_BASE=https://your-resource.openai.azure.com/
@@ -60,7 +60,7 @@ See [Pydantic AI model docs](https://ai.pydantic.dev/models/) for Anthropic, Goo
 
 ### GitHub Copilot (via SDK)
 
-If you have `pytest-skill-engineering[copilot]` installed, you can use Copilot-accessible models for **all** LLM calls — no separate API key needed:
+You can use Copilot-accessible models for **all** LLM calls — no separate API key needed:
 
 ```bash
 gh auth login  # One-time authentication
@@ -93,42 +93,33 @@ AITEST_INTEGRATION_JUDGE_MODEL=copilot/gpt-5-mini
 ## Provider Configuration
 
 ```python
-from pytest_skill_engineering import Provider
+from pytest_skill_engineering.copilot import CopilotEval
 
-# Basic - Pydantic AI handles auth via env vars
-provider = Provider(model="azure/gpt-5-mini")
+# Basic - Copilot SDK handles auth
+agent = CopilotEval(name="assistant", model="gpt-5-mini")
 
 # With generation parameters
-provider = Provider(
-    model="openai/gpt-4o-mini",
+agent = CopilotEval(
+    name="assistant",
+    model="gpt-4o-mini",
     temperature=0.7,
     max_tokens=1000,
 )
-
-# With rate limits (model-specific)
-provider = Provider(
-    model="azure/gpt-5-mini",
-    rpm=10,    # Requests per minute
-    tpm=10000, # Tokens per minute
-)
 ```
 
-## Eval Configuration
+## CopilotEval Configuration
 
 ```python
-from pytest_skill_engineering import Eval, ClarificationDetection, Provider, MCPServer
+from pytest_skill_engineering.copilot import CopilotEval
 
-agent = Eval.from_instructions(
-    "my-agent",                         # Identifier for reports (optional)
-    "You are...",                       # Agent instructions
-    provider=Provider(model="azure/gpt-5-mini"),
-    mcp_servers=[server],               # MCP servers
-    cli_servers=[cli],                  # CLI servers (optional)
-    skill=my_skill,                     # Eval Skill (optional)
-    max_turns=10,                       # Max tool-call rounds
-    retries=3,                          # Max retries on tool errors (default: 1)
-    allowed_tools=["tool1", "tool2"],   # Filter tools (optional, reduces tokens)
-    clarification_detection=ClarificationDetection(enabled=True),  # Detect clarification questions
+agent = CopilotEval(
+    name="my-agent",                         # Identifier for reports
+    instructions="You are...",               # Agent instructions
+    model="gpt-5-mini",                      # Model selection (optional)
+    skill_directories=["skills/my-skill"],   # Skill directories (optional)
+    custom_agents=[agent_def],               # Custom agent definitions (optional)
+    excluded_tools=["tool3"],                # Filter out tools (optional)
+    reasoning_effort="medium",               # Reasoning effort (optional)
 )
 ```
 
@@ -166,19 +157,18 @@ See [Test CLI Tools](../how-to/test-cli-tools.md) for complete options.
 
 ## Fixtures
 
-### eval_run
+### copilot_eval
 
 The main fixture for running tests:
 
 ```python
-async def test_banking(eval_run):
-    agent = Eval(
+async def test_banking(copilot_eval):
+    agent = CopilotEval(
         name="banking",
-        provider=Provider(model="azure/gpt-5-mini"),
-        mcp_servers=[banking_server],
+        model="gpt-5-mini",
     )
     
-    result = await eval_run(agent, "What's my checking balance?")
+    result = await copilot_eval(agent, "What's my checking balance?")
     assert result.success
 ```
 

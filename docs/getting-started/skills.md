@@ -94,15 +94,11 @@ This keeps your base prompt lean while providing detailed information when neede
 ## Using a Skill
 
 ```python
-from pytest_skill_engineering import Eval, Provider, MCPServer, Skill
+from pytest_skill_engineering.copilot import CopilotEval
 
-skill = Skill.from_path("skills/financial-advisor")
-
-agent = Eval(
+agent = CopilotEval(
     name="with-skill",
-    provider=Provider(model="azure/gpt-5-mini"),
-    mcp_servers=[banking_server],
-    skill=skill,
+    skill_directories=["skills/financial-advisor"],
 )
 ```
 
@@ -111,27 +107,25 @@ agent = Eval(
 Compare agents with and without skills:
 
 ```python
-skill = Skill.from_path("skills/financial-advisor")
+from pytest_skill_engineering.copilot import CopilotEval
 
-agent_without_skill = Eval(
+agent_without_skill = CopilotEval(
     name="without-skill",
-    provider=Provider(model="azure/gpt-5-mini"),
-    mcp_servers=[banking_server],
+    instructions="You are a banking assistant.",
 )
 
-agent_with_skill = Eval(
+agent_with_skill = CopilotEval(
     name="with-skill",
-    provider=Provider(model="azure/gpt-5-mini"),
-    mcp_servers=[banking_server],
-    skill=skill,
+    instructions="You are a banking assistant.",
+    skill_directories=["skills/financial-advisor"],
 )
 
 AGENTS = [agent_without_skill, agent_with_skill]
 
 @pytest.mark.parametrize("agent", AGENTS, ids=lambda a: a.name)
-async def test_financial_advice(eval_run, agent):
+async def test_financial_advice(copilot_eval, agent):
     """Does the skill improve financial recommendations?"""
-    result = await eval_run(
+    result = await copilot_eval(
         agent, 
         "I have $5,000 to allocate. How should I split it between needs, savings, and wants?"
     )

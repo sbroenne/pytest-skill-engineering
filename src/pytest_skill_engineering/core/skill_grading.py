@@ -4,7 +4,7 @@ This enables our CI/CD results to be consumed by skill-creator's
 eval-viewer and analysis agents.
 
 Example:
-    result = await eval_run(agent, case.prompt)
+    result = await copilot_eval(agent, case.prompt)
     passed = [llm_assert(result.final_response, e) for e in case.expectations]
     grading = export_grading(result, case.expectations, passed)
     Path("grading.json").write_text(json.dumps(grading, indent=2))
@@ -17,11 +17,12 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
+    from pytest_skill_engineering.copilot.result import CopilotResult
     from pytest_skill_engineering.core.result import EvalResult
 
 
 def export_grading(
-    result: EvalResult,
+    result: EvalResult | CopilotResult,
     expectations: Sequence[str],
     expectation_results: Sequence[bool],
     evidence: Sequence[str] | None = None,
@@ -29,7 +30,7 @@ def export_grading(
     """Export eval result as skill-creator compatible grading.json.
 
     Args:
-        result: The eval result from a test run
+        result: The eval result from a test run (EvalResult or CopilotResult)
         expectations: The assertion texts that were checked
         expectation_results: Whether each expectation passed
         evidence: Optional evidence strings for each expectation

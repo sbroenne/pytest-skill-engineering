@@ -1,16 +1,8 @@
-"""Core module - agent configuration and result types."""
+"""Core module - result types and skill management."""
+
+from typing import TYPE_CHECKING
 
 from pytest_skill_engineering.core.errors import AITestError, EngineTimeoutError, ServerStartError
-from pytest_skill_engineering.core.eval import (
-    ClarificationDetection,
-    ClarificationLevel,
-    CLIExecution,
-    CLIServer,
-    Eval,
-    MCPServer,
-    Provider,
-    Wait,
-)
 from pytest_skill_engineering.core.evals import (
     load_custom_agent,
     load_custom_agents,
@@ -27,7 +19,6 @@ from pytest_skill_engineering.core.prompt import (
     load_system_prompts,
 )
 from pytest_skill_engineering.core.result import (
-    ClarificationStats,
     EvalResult,
     ImageContent,
     MCPPrompt,
@@ -39,34 +30,41 @@ from pytest_skill_engineering.core.result import (
     Turn,
 )
 from pytest_skill_engineering.core.skill import Skill, SkillError, SkillMetadata, load_skill
+from pytest_skill_engineering.core.skill_benchmark import (
+    BenchmarkComparison,
+    CaseBenchmark,
+    SkillBenchmarkResult,
+)
 from pytest_skill_engineering.core.skill_evals import (
     SkillEvalCase,
     has_skill_evals,
     load_skill_evals,
 )
 from pytest_skill_engineering.core.skill_grading import export_grading
+from pytest_skill_engineering.core.skill_refiner import (
+    RefinementResult,
+    RefinementSuggestion,
+    analyze_skill_failures,
+)
 
 __all__ = [
     "AITestError",
-    "Eval",
+    "BenchmarkComparison",
+    "CaseBenchmark",
     "EvalResult",
-    "CLIExecution",
-    "CLIServer",
-    "ClarificationDetection",
-    "ClarificationLevel",
-    "ClarificationStats",
     "EngineTimeoutError",
     "HookDefinition",
     "ImageContent",
     "MCPPrompt",
     "MCPPromptArgument",
-    "MCPServer",
     "Plugin",
     "PluginMetadata",
     "Prompt",
-    "Provider",
+    "RefinementResult",
+    "RefinementSuggestion",
     "ServerStartError",
     "Skill",
+    "SkillBenchmarkResult",
     "SkillError",
     "SkillInfo",
     "SkillMetadata",
@@ -74,7 +72,7 @@ __all__ = [
     "ToolCall",
     "ToolInfo",
     "Turn",
-    "Wait",
+    "analyze_skill_failures",
     "load_custom_agent",
     "load_custom_agents",
     "load_instruction_file",
@@ -91,3 +89,23 @@ __all__ = [
     "load_skill_evals",
     "export_grading",
 ]
+
+
+# Re-export SkillCaseResult and SkillGradingResult for public API
+# These are defined in fixtures.skill_eval but conceptually part of core skill-creator integration
+def __getattr__(name: str):
+    """Lazy import for SkillCaseResult and SkillGradingResult to avoid circular imports."""
+    if name in ("SkillCaseResult", "SkillGradingResult"):
+        from pytest_skill_engineering.fixtures.skill_eval import (
+            SkillCaseResult,
+            SkillGradingResult,
+        )
+
+        return SkillCaseResult if name == "SkillCaseResult" else SkillGradingResult
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+
+if TYPE_CHECKING:
+    from pytest_skill_engineering.fixtures.skill_eval import SkillCaseResult, SkillGradingResult
+
+    __all__ += ["SkillCaseResult", "SkillGradingResult"]
