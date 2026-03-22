@@ -120,4 +120,7 @@ async def copilot_judge(
             await client.stop()
         except Exception:
             logger.warning("Failed to stop Copilot CLI cleanly, force stopping")
-            await client.force_stop()
+            try:
+                await client.force_stop()
+            except Exception:
+                logger.warning("force_stop also failed", exc_info=True)

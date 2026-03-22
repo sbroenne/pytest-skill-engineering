@@ -121,7 +121,7 @@ def skill_benchmark(
             last_baseline_result = baseline_result
             baseline_expectations: list[bool] = []
             for expectation in case.expectations:
-                passed = llm_assert(baseline_result.final_response or "", expectation)
+                passed = bool(llm_assert(baseline_result.final_response or "", expectation))
                 baseline_expectations.append(passed)
                 baseline_all_expectations.append(expectation)
                 baseline_all_results.append(passed)
@@ -131,7 +131,7 @@ def skill_benchmark(
             last_treatment_result = treatment_result
             treatment_expectations: list[bool] = []
             for expectation in case.expectations:
-                passed = llm_assert(treatment_result.final_response or "", expectation)
+                passed = bool(llm_assert(treatment_result.final_response or "", expectation))
                 treatment_expectations.append(passed)
                 treatment_all_expectations.append(expectation)
                 treatment_all_results.append(passed)
