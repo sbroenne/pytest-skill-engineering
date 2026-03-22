@@ -31,46 +31,87 @@ jobs:
 
       - name: Calculate version
         id: calculate_version
+        env:
+          VERSION_BUMP: ${{ inputs.version_bump }}
+          CUSTOM_VERSION: ${{ inputs.custom_version }}
         run: |
-          # If custom version is provided, use it
-          if [ -n "${{ inputs.custom_version }}" ]; then
-            VERSION="${{ inputs.custom_version }}"
-            echo "Using custom version: ${VERSION}"
-          else
-            # Get the latest tag
-            LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
-            echo "Latest tag: ${LATEST_TAG}"
-            
-            # Remove 'v' prefix if present
-            CURRENT_VERSION="${LATEST_TAG#v}"
-            echo "Current version: ${CURRENT_VERSION}"
-            
-            # Parse version components
-            IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT_VERSION"
-            
-            # Increment based on bump type
-            case "${{ inputs.version_bump }}" in
-              major)
-                MAJOR=$((MAJOR + 1))
-                MINOR=0
-                PATCH=0
-                ;;
-              minor)
-                MINOR=$((MINOR + 1))
-                PATCH=0
-                ;;
-              patch)
-                PATCH=$((PATCH + 1))
-                ;;
-            esac
-            
-            VERSION="${MAJOR}.${MINOR}.${PATCH}"
-            echo "New version: ${VERSION}"
-          fi
-          
-          TAG="v${VERSION}"
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          python <<'PY'
+          from __future__ import annotations
+
+          import os
+          import subprocess
+          import tomllib
+          from pathlib import Path
+
+
+          def parse_semver(version: str) -> tuple[int, int, int]:
+              parts = version.strip().split(".")
+              if len(parts) != 3 or any(not part.isdigit() for part in parts):
+                  msg = (
+                      "release.yml only supports plain semver X.Y.Z for automatic "
+                      f"version calculation, got {version!r}. Use custom_version for "
+                      "pre-releases or other custom versions."
+                  )
+                  raise SystemExit(msg)
+              return tuple(int(part) for part in parts)
+
+
+          custom_version = os.environ.get("CUSTOM_VERSION", "").strip()
+          if custom_version:
+              version = custom_version
+              print(f"Using custom version: {version}")
+          else:
+              pyproject = tomllib.loads(Path("pyproject.toml").read_text(encoding="utf-8"))
+              pyproject_version = str(pyproject["project"]["version"])
+              tag_versions = [
+                  tag.removeprefix("v")
+                  for tag in subprocess.run(
+                      ["git", "tag", "--list", "v*"],
+                      check=True,
+                      capture_output=True,
+                      text=True,
+                  ).stdout.splitlines()
+                  if tag.strip()
+              ]
+              if tag_versions:
+                  tag_version = max(tag_versions, key=parse_semver)
+                  latest_tag = f"v{tag_version}"
+              else:
+                  latest_tag = "v0.0.0"
+                  tag_version = "0.0.0"
+
+              print(f"Latest tag: {latest_tag}")
+              print(f"pyproject.toml version: {pyproject_version}")
+
+              tag_semver = parse_semver(tag_version)
+              pyproject_semver = parse_semver(pyproject_version)
+              bump = os.environ["VERSION_BUMP"]
+
+              if pyproject_semver > tag_semver:
+                  version = pyproject_version
+                  print(
+                      "pyproject.toml is ahead of the latest tag; "
+                      f"releasing {version} as-is."
+                  )
+              else:
+                  major, minor, patch = tag_semver
+                  if bump == "major":
+                      version = f"{major + 1}.0.0"
+                  elif bump == "minor":
+                      version = f"{major}.{minor + 1}.0"
+                  elif bump == "patch":
+                      version = f"{major}.{minor}.{patch + 1}"
+                  else:
+                      raise SystemExit(f"Unsupported version bump: {bump}")
+
+                  print(f"Calculated new version from tag: {version}")
+
+          tag = f"v{version}"
+          output_path = Path(os.environ["GITHUB_OUTPUT"])
+          with output_path.open("a", encoding="utf-8") as output:
+              output.write(f"version={version}\n")
+              output.write(f"tag={tag}\n")
+          PY
 
   build:
     name: Build Package

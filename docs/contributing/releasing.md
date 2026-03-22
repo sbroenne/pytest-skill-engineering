@@ -8,7 +8,7 @@ This guide explains how to create a new release of pytest-skill-engineering.
 
 ## Release Process
 
-Releases are triggered via **GitHub Actions workflow dispatch**. No manual tagging or version updates are required.
+Releases are triggered via **GitHub Actions workflow dispatch**. No manual tagging is required.
 
 ### Steps
 
@@ -36,7 +36,7 @@ Custom versions can be any valid semver string (e.g., `1.2.3`, `2.0.0-beta.1`).
 
 The release workflow automatically:
 
-1. **Calculates version** — Fetches the latest git tag and increments based on your selection
+1. **Calculates version** — Uses `custom_version` when provided. Otherwise, if `pyproject.toml` is already ahead of the latest git tag, releases that version as-is. If not, increments the latest git tag based on your selection.
 2. **Updates pyproject.toml** — Writes the new version to the package metadata
 3. **Builds package** — Creates wheel and source distribution
 4. **Tests build** — Installs and verifies the package
@@ -47,10 +47,12 @@ The release workflow automatically:
 
 ## Version Management
 
-!!! note "No manual version updates"
-    The version in `pyproject.toml` is automatically updated during the release workflow. **Do not** manually edit it before releasing.
+!!! note "Version source of truth"
+    The release workflow prefers `custom_version`, otherwise it will release the checked-in `pyproject.toml` version when it is already ahead of the latest tag. If `pyproject.toml` is not ahead, the workflow computes the next version from the latest tag.
 
-The workflow uses `git describe --tags --abbrev=0` to find the latest release tag. If no tags exist, it starts from `v0.0.0`.
+The workflow scans all `v*` tags and uses the highest semantic version as the latest release tag. If no tags exist, it starts from `v0.0.0`.
+
+This means a repository version like `0.5.7` will no longer be ignored just because the latest published tag is still `v0.3.0`.
 
 ## Custom Versions
 
