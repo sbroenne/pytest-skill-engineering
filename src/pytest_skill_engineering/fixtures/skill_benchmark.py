@@ -110,10 +110,15 @@ def skill_benchmark(
         baseline_all_results: list[bool] = []
         treatment_all_expectations: list[str] = []
         treatment_all_results: list[bool] = []
+        
+        # Keep track of last results for grading export
+        last_baseline_result: CopilotResult | None = None
+        last_treatment_result: CopilotResult | None = None
 
         for case in cases:
             # Run baseline (without skill)
             baseline_result = await copilot_eval(baseline_agent, case.prompt)
+            last_baseline_result = baseline_result
             baseline_expectations: list[bool] = []
             for expectation in case.expectations:
                 passed = llm_assert(baseline_result.final_response or "", expectation)
@@ -123,6 +128,7 @@ def skill_benchmark(
 
             # Run treatment (with skill)
             treatment_result = await copilot_eval(treatment_agent, case.prompt)
+            last_treatment_result = treatment_result
             treatment_expectations: list[bool] = []
             for expectation in case.expectations:
                 passed = llm_assert(treatment_result.final_response or "", expectation)
@@ -169,15 +175,18 @@ def skill_benchmark(
             )
 
         # 5. Export grading.json for baseline and treatment
-        # Use the first case's result as representative for execution metrics
+        # Use the last result for execution metrics
+        if last_baseline_result is None or last_treatment_result is None:
+            raise ValueError("No results to export - no cases were run")
+
         baseline_grading = export_grading(
-            case_benchmarks[0].case if case_benchmarks else baseline_result,
+            last_baseline_result,
             baseline_all_expectations,
             baseline_all_results,
         )
 
         treatment_grading = export_grading(
-            case_benchmarks[0].case if case_benchmarks else treatment_result,
+            last_treatment_result,
             treatment_all_expectations,
             treatment_all_results,
         )
