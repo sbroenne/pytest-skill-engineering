@@ -92,11 +92,6 @@ Auto-generated API documentation from source code.
       show_source: false
       heading_level: 3
 
-::: pytest_skill_engineering.core.skill.SkillCompatibility
-    options:
-      show_source: false
-      heading_level: 3
-
 ## Custom Agent Types
 
 ::: pytest_skill_engineering.copilot.types.CustomAgent
