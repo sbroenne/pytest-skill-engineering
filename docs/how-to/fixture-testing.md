@@ -82,26 +82,22 @@ async def test_balance_check(copilot_eval, agent, llm_assert):
 
 Each test runs on both models — AI analysis auto-generates leaderboard.
 
-### 3. Sessions (6 tests)
+### 3. Multi-Turn Context (6 tests)
 
-`scenario_03_sessions.py` — multi-turn conversation with context:
+`scenario_03_sessions.py` — compound instructions covering multiple steps:
 
 ```python
-@pytest.mark.session("banking-workflow")
-class TestBankingWorkflow:
-    @pytest.mark.parametrize("agent", AGENTS, ids=lambda a: a.name)
-    async def test_check_balance(self, copilot_eval, agent, llm_assert):
-        result = await copilot_eval(agent, "What's my checking account balance?")
-        assert result.success
-        assert result.tool_was_called("get_balance")
-
-    @pytest.mark.parametrize("agent", AGENTS, ids=lambda a: a.name)
-    async def test_transfer_funds(self, copilot_eval, agent, llm_assert):
-        result = await copilot_eval(agent, "Transfer $100 from checking to savings")
-        assert result.is_session_continuation
+@pytest.mark.parametrize("agent", AGENTS, ids=lambda a: a.name)
+async def test_plan_and_execute(copilot_eval, agent, llm_assert):
+    result = await copilot_eval(
+        agent,
+        "Check my balance, then transfer $100 from checking to savings",
+    )
+    assert result.success
+    assert result.tool_was_called("transfer")
 ```
 
-The `@pytest.mark.session` marker ensures tests share eval state.
+Each test is independent; complex multi-step behavior is captured in a single prompt.
 
 ### 4. Eval Selector (6 tests)
 

@@ -111,35 +111,30 @@ Stateful banking service for multi-turn session testing.
 ### Example
 
 ```python
-import sys
 from pytest_skill_engineering.copilot import CopilotEval
 
-@pytest.mark.session("banking-workflow")
-class TestBankingWorkflow:
-    """Tests share conversation context via session decorator."""
+async def test_check_balance(copilot_eval):
+    agent = CopilotEval(
+        name="banking",
+        model="gpt-5-mini",
+        instructions="You are a banking assistant.",
+    )
+    
+    result = await copilot_eval(agent, "What's my checking balance?")
+    assert result.tool_was_called("get_balance")
 
-    async def test_check_balance(self, copilot_eval):
-        agent = CopilotEval(
-            name="banking",
-            model="gpt-5-mini",
-            instructions="You are a banking assistant.",
-        )
-        
-        result = await copilot_eval(agent, "What's my checking balance?")
-        assert result.tool_was_called("get_balance")
-
-    async def test_transfer_funds(self, copilot_eval):
-        agent = CopilotEval(
-            name="banking",
-            model="gpt-5-mini",
-            instructions="You are a banking assistant.",
-        )
-        
-        result = await copilot_eval(
-            agent,
-            "Transfer $500 from checking to savings"
-        )
-        assert result.tool_was_called("transfer")
+async def test_transfer_funds(copilot_eval):
+    agent = CopilotEval(
+        name="banking",
+        model="gpt-5-mini",
+        instructions="You are a banking assistant.",
+    )
+    
+    result = await copilot_eval(
+        agent,
+        "Transfer $500 from checking to savings"
+    )
+    assert result.tool_was_called("transfer")
 ```
 
 ### Direct Usage

@@ -64,6 +64,12 @@ from pytest_skill_engineering.core import (  # noqa: E402
     load_skill_evals,
     load_system_prompts,
 )
+from pytest_skill_engineering.execution import (  # noqa: E402
+    CLIServer,
+    MCPServer,
+    Wait,
+    WaitStrategy,
+)
 
 # Scoring
 from pytest_skill_engineering.fixtures.llm_score import (  # noqa: E402
@@ -141,6 +147,11 @@ __all__ = [  # noqa: RUF022
     "Persona",
     "VSCodePersona",
     "run_copilot",
+    # Server config types
+    "CLIServer",
+    "MCPServer",
+    "Wait",
+    "WaitStrategy",
     # Reporting
     "SuiteReport",
     "TestReport",

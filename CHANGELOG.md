@@ -6,6 +6,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added
+
+- **Agent Skills spec compliance** — Full support for `agentskills.io` compatibility metadata, `allowed-tools`, `scripts`, and `assets` fields in `SKILL.md`
+- **`skill_eval_runner` fixture** — Auto-discovers `evals/evals.json`, runs cases via `copilot_eval`, validates with `llm_assert`, exports skill-creator compatible `grading.json`
+- **`MCPServer`, `CLIServer`, `Wait`, `WaitStrategy` dataclasses restored** — Config types for MCP and CLI servers are now importable from `pytest_skill_engineering` directly (`from pytest_skill_engineering import MCPServer, Wait`)
+- **`slow` pytest marker** — Expensive benchmarking tests now use `@pytest.mark.slow` instead of `@pytest.mark.skip`
+
+### Changed
+
+- **`copilot/` module now fully type-checked** — Removed `exclude = ["src/pytest_skill_engineering/copilot"]` from pyright config; all modules are type-checked
+- **Auth documentation** — `.env.example` updated to document `gh auth login` / `GITHUB_TOKEN` (LiteLLM references removed)
+
+### Fixed
+
+- **Stale `copilot.types.CustomAgent` and `SkillCompatibility` removed** from API reference docs
+- **Release version selection** — fixed edge case in version selection logic
+- **Documentation** — Removed all `@pytest.mark.session` references from docs and instructions (multi-turn sessions were removed in v0.3.0; docs still referenced them)
+- **Project structure in `copilot-instructions.md`** — `copilot/engine.py` → `copilot/runner.py`, removed non-existent `copilot/servers.py` and `copilot/skill_tools.py`, fixed fixture paths
+
 ## [0.3.0] — 2026-03-21
 
 ### ⚠️ Breaking Changes

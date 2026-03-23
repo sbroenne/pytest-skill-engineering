@@ -50,7 +50,7 @@ class TestCodingAgentAnalysisPrompt:
             assert section in content, f"Missing section: {section}"
 
     def test_prompt_has_pricing_placeholder(self) -> None:
-        """Prompt includes the pricing table placeholder for litellm."""
+        """Prompt includes the pricing table placeholder (replaced at runtime with pricing.toml reference)."""
         prompt_path = (
             Path(__file__).parent.parent.parent
             / "src"

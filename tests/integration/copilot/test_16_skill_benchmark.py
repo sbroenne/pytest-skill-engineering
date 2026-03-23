@@ -110,7 +110,7 @@ class TestSkillBenchmark:
         for reg in result.regressions:
             assert reg.delta == "regressed"
 
-    @pytest.mark.skip(reason="Expensive - tests both baseline and treatment for all cases")
+    @pytest.mark.slow
     async def test_benchmark_with_custom_model(self, skill_benchmark):
         """Benchmark works with custom model specification."""
         skill_path = Path(__file__).parent.parent / "skills" / "simple-assistant"
@@ -119,7 +119,7 @@ class TestSkillBenchmark:
         assert len(result.cases) > 0
         assert result.skill_name == "simple-assistant"
 
-    @pytest.mark.skip(reason="Expensive - tests both baseline and treatment for all cases")
+    @pytest.mark.slow
     async def test_benchmark_with_instructions(self, skill_benchmark):
         """Benchmark works with base instructions for both runs."""
         skill_path = Path(__file__).parent.parent / "skills" / "math-helper"

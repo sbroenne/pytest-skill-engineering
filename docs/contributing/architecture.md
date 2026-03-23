@@ -104,6 +104,8 @@ Both server types provide tools, but work differently:
 Native MCP protocol over stdio:
 
 ```python
+from pytest_skill_engineering import MCPServer
+
 MCPServer(
     command=["python", "my_server.py"],
 )
@@ -118,8 +120,9 @@ MCPServer(
 Command-line tools wrapped as callable tools:
 
 ```python
+from pytest_skill_engineering import CLIServer
+
 CLIServer(
-    name="git",
     command="git",
     tool_prefix="git",  # Creates "git_execute" tool
 )
