@@ -1,14 +1,7 @@
 """Server management for MCP and CLI servers.
 
-TODO(Verbal): THIS ENTIRE FILE NEEDS REFACTORING
-This file was tightly coupled to the PydanticAI Eval harness (core.eval).
-The following were removed and need replacement:
-- MCPServer, CLIServer config types (need CopilotEval-compatible equivalents)
-- _expand_env() helper function (env var expansion for headers)
-- WaitStrategy enum (server startup wait configuration)
-
-The file currently has undefined references and will fail runtime checks.
-Either refactor to use CopilotEval server config or mark as deprecated.
+Provides process classes for connecting to MCP servers and wrapping CLI tools,
+plus configuration dataclasses (``MCPServer``, ``CLIServer``, ``Wait``).
 """
 
 from __future__ import annotations
@@ -19,7 +12,9 @@ import json
 import logging
 import os
 import sys
-from typing import TYPE_CHECKING, Any
+from dataclasses import dataclass, field
+from enum import Enum
+from typing import TYPE_CHECKING, Any, Literal
 
 from pytest_skill_engineering.core.errors import ServerStartError
 
@@ -28,19 +23,109 @@ _logger = logging.getLogger(__name__)
 if TYPE_CHECKING:
     from mcp import ClientSession
 
-    # Stub types - these were removed with core.eval
-    MCPServer = Any  # type: ignore[misc]
-    CLIServer = Any  # type: ignore[misc]
+
+class WaitStrategy(str, Enum):
+    """Strategy for waiting until an MCP server is ready."""
+
+    TOOLS = "tools"
+    """Wait until the server exposes the expected tools."""
 
 
-# Stub function - this was removed with core.eval
-def _expand_env(value: str) -> str:  # noqa: F811
-    """Expand environment variables in a string.
+@dataclass(slots=True, frozen=True)
+class Wait:
+    """Server startup wait configuration.
 
-    TODO(Verbal): This was removed with core.eval - restore or replace.
+    Example::
+
+        # Wait until specific tools are available
+        Wait.for_tools(["read_file", "write_file"])
+
+        # No wait — connect immediately
+        Wait(strategy=WaitStrategy.TOOLS, tools=[])
     """
-    import os
 
+    strategy: WaitStrategy = WaitStrategy.TOOLS
+    tools: list[str] = field(default_factory=list)
+    timeout_ms: int = 30_000
+
+    @classmethod
+    def for_tools(cls, tools: list[str], timeout_ms: int = 30_000) -> Wait:
+        """Wait until the server exposes the given tools."""
+        return cls(strategy=WaitStrategy.TOOLS, tools=tools, timeout_ms=timeout_ms)
+
+
+@dataclass(slots=True)
+class MCPServer:
+    """Configuration for an MCP server started by MCPServerProcess.
+
+    Supports stdio (subprocess), SSE, and Streamable HTTP transports.
+
+    Example::
+
+        # Stdio — launch a subprocess
+        MCPServer(command=["python", "-m", "my_server"])
+
+        # Stdio with wait — start server and check tools are ready
+        MCPServer(
+            command=["python", "-m", "my_server"],
+            wait=Wait.for_tools(["read_file", "write_file"]),
+        )
+
+        # SSE — connect to a remote endpoint
+        MCPServer(
+            transport="sse",
+            url="http://localhost:8080/sse",
+            headers={"Authorization": "Bearer ${MY_TOKEN}"},
+        )
+    """
+
+    command: list[str] = field(default_factory=list)
+    """Command to launch the server (required for stdio transport)."""
+    transport: Literal["stdio", "sse", "streamable-http"] = "stdio"
+    args: list[str] = field(default_factory=list)
+    env: dict[str, str] = field(default_factory=dict)
+    cwd: str | None = None
+    url: str | None = None
+    """URL for SSE or Streamable HTTP transports."""
+    headers: dict[str, str] = field(default_factory=dict)
+    wait: Wait = field(default_factory=Wait)
+
+    def __post_init__(self) -> None:
+        if self.transport in ("sse", "streamable-http") and not self.url:
+            msg = f"transport={self.transport!r} requires a url"
+            raise ValueError(msg)
+
+
+@dataclass(slots=True)
+class CLIServer:
+    """Configuration for a CLI tool wrapped as an MCP-compatible server.
+
+    Example::
+
+        CLIServer(
+            command="git",
+            tool_prefix="git",
+            shell="bash",
+            cwd="/path/to/repo",
+        )
+    """
+
+    command: str
+    tool_prefix: str
+    env: dict[str, str] = field(default_factory=dict)
+    shell: str | None = None
+    """Shell to use. None = auto-detect (bash on Linux/macOS, powershell on Windows)."""
+    cwd: str | None = None
+    discover_help: bool = False
+    help_flag: str = "--help"
+    timeout: int = 30
+    """Command timeout in seconds."""
+    description: str | None = None
+    """Custom tool description (overrides auto-discovered help text)."""
+
+
+def _expand_env(value: str) -> str:
+    """Expand environment variables in a string."""
     return os.path.expandvars(value)
 
 
@@ -71,10 +156,6 @@ class MCPServerProcess:
     async def start(self) -> None:
         """Start or connect to the MCP server and discover tools and prompts."""
         from mcp import ClientSession as _ClientSession
-
-        # Stub - WaitStrategy was removed with core.eval
-        class WaitStrategy:  # type: ignore[no-redef]
-            TOOLS = "tools"
 
         self._exit_stack = contextlib.AsyncExitStack()
         label = self._transport_label()

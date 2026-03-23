@@ -94,14 +94,14 @@ AGENTS = [
 Verify a database migration doesn't affect LLM interactions:
 
 ```python
-server_sqlite = MCPServer(
-    command=["python", "server.py"],
-    env={"DATABASE_URL": "sqlite:///test.db"},
+agent_sqlite = CopilotEval(
+    name="banking-sqlite",
+    mcp_servers={"server": {"command": "python", "args": ["server.py"], "env": {"DATABASE_URL": "sqlite:///test.db"}}},
 )
 
-server_postgres = MCPServer(
-    command=["python", "server.py"],
-    env={"DATABASE_URL": "postgresql://localhost/test"},
+agent_postgres = CopilotEval(
+    name="banking-postgres",
+    mcp_servers={"server": {"command": "python", "args": ["server.py"], "env": {"DATABASE_URL": "postgresql://localhost/test"}}},
 )
 ```
 

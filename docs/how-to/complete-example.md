@@ -108,59 +108,38 @@ class TestMultiToolWorkflows:
 - Does it call the right tools in sequence?
 - Does it synthesize information coherently?
 
-## 3. Session Continuity (Multi-Turn)
+## 3. Multi-Turn Context
 
-Session tests verify the agent maintains context across multiple turns.
+Context across turns is provided naturally through the conversation history in the LLM session.
+Each test is independent — use explicit context in your prompts to test multi-step scenarios.
 
 ```python
-@pytest.mark.session("savings-planning")
-class TestSavingsPlanningSession:
-    """Multi-turn session: Planning savings transfers.
-    
-    Tests that the agent remembers context across turns:
-    - Turn 1: Check balances and discuss savings plan
-    - Turn 2: Reference the plan (must remember context)
-    - Turn 3: Verify the result
-    """
+async def test_plan_then_execute(self, copilot_eval, llm_assert):
+    """Test that the agent can plan and then execute a savings transfer."""
+    agent = CopilotEval(
+        name="savings-planner",
+        instructions=BANKING_PROMPT_BASE,
+    )
 
-    async def test_01_establish_context(self, copilot_eval, llm_assert):
-        """First turn: check balances and discuss savings goals."""
-        agent = CopilotEval(
-            name="savings-01",
-            instructions=BANKING_PROMPT_BASE,
-        )
+    result = await copilot_eval(
+        agent,
+        "Check my account balances, identify the best opportunity to save more "
+        "money, then transfer $200 to my savings account.",
+    )
 
-        result = await copilot_eval(
-            agent,
-            "I want to save more money. Can you check my accounts and suggest "
-            "how much I could transfer to savings each month?",
-        )
-
-        assert result.success
-        assert result.tool_was_called("get_all_balances") or result.tool_was_called("get_balance")
-
-    async def test_02_reference_without_naming(self, copilot_eval, llm_assert):
-        """Second turn: reference previous context."""
-        agent = CopilotEval(
-            name="savings-02",
-            instructions=BANKING_PROMPT_BASE,
-        )
-
-        result = await copilot_eval(
-            agent,
-            "That sounds good. Let's start by moving $200 to savings right now.",
-        )
-
-        assert result.success
-        # Eval should remember context and execute the transfer
-        assert result.tool_was_called("transfer")
+    assert result.success
+    assert result.tool_was_called("transfer")
+    assert llm_assert(
+        result.final_response,
+        "shows updated balances after transfer",
+    )
 ```
 
 **What this tests:**
 
-- Does the agent maintain conversation context?
-- Can it resolve references to previous turns?
-- Does session state persist correctly?
+- Can the LLM handle a compound instruction?
+- Does it use tools in the right order?
+- Does it synthesize the result coherently?
 
 ## 4. Model Comparison
 

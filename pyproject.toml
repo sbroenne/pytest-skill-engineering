@@ -102,7 +102,6 @@ indent-style = "space"
 
 [tool.pyright]
 include = ["src"]
-exclude = ["src/pytest_skill_engineering/copilot"]
 pythonVersion = "3.11"
 typeCheckingMode = "basic"
 
@@ -118,7 +117,7 @@ filterwarnings = [
 ]
 # pytest-skill-engineering configuration for this project's own tests.
 # This demonstrates the recommended setup - configure once in pyproject.toml.
-# LLM auth is handled by Pydantic AI via env vars (AZURE_API_BASE, OPENAI_API_KEY, etc.)
+# LLM auth is handled by the GitHub Copilot SDK (gh auth login or GITHUB_TOKEN)
 addopts = """
 --aitest-summary-model=azure/gpt-5.2-chat
 --aitest-html=aitest-reports/report.html
@@ -138,6 +137,7 @@ markers = [
     "abtest: A/B server comparison tests",
     "cli: CLI server tests",
     "copilot: marks tests as requiring GitHub Copilot SDK credentials",
+    "slow: marks tests as slow/expensive (skipped by default, opt-in with -m slow)",
 ]
 
 # UV/PEP 735 dependency groups (for uv sync)

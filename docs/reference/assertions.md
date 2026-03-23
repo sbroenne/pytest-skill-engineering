@@ -363,49 +363,6 @@ cli_result = json.loads(call.result)
 assert re.search(r"commit [a-f0-9]{7}", cli_result["stdout"])
 ```
 
-## Session Assertions
-
-### Verifying context continuity
-
-```python
-@pytest.mark.session("banking-flow")
-class TestBankingWorkflow:
-    async def test_check_balance(self, copilot_eval, agent):
-        result = await copilot_eval(agent, "What's my checking balance?")
-        assert result.success
-        assert not result.is_session_continuation
-
-    async def test_transfer(self, copilot_eval, agent):
-        result = await copilot_eval(agent, "Transfer $100 to savings")
-        assert result.success
-        assert result.is_session_continuation
-        assert result.session_context_count > 0
-```
-
-### Data extraction between session tests
-
-Extract values from tool results and use them in later tests:
-
-```python
-@pytest.mark.session("user-flow")
-class TestUserWorkflow:
-    user_id: str
-
-    async def test_create(self, copilot_eval, agent):
-        result = await copilot_eval(agent, "Create a user named Alice")
-        assert result.success
-        # Extract from tool result
-        call = result.tool_calls_for("create_user")[0]
-        data = json.loads(call.result)
-        self.__class__.user_id = data["id"]
-
-    async def test_lookup(self, copilot_eval, agent):
-        result = await copilot_eval(
-            agent, f"Find user {self.user_id}"
-        )
-        assert result.tool_was_called("get_user")
-```
-
 ## Boolean Combinators
 
 Use Python's `and`, `or`, `not` — no special syntax needed:

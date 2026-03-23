@@ -11,8 +11,7 @@
 
 ## What I Own
 
-- `tests/integration/pydantic/` — All pydantic eval integration tests
-- `tests/integration/copilot/` — All copilot eval integration tests
+- `tests/integration/copilot/` — All CopilotEval integration tests
 - `tests/showcase/` — Hero report tests
 - `tests/integration/conftest.py` — Shared constants and server fixtures
 - Test harnesses in `src/pytest_skill_engineering/testing/` — banking, todo MCP servers

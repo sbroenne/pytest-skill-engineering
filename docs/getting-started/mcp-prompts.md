@@ -16,7 +16,7 @@ A prompt template is a server-side message recipe. When a user invokes `/mcp.mys
 
 ## Discovering Prompts
 
-Use `MCPServer.list_prompts()` to discover what templates your server exposes:
+Use `MCPServerProcess.list_prompts()` to discover what templates your server exposes:
 
 ```python
 import pytest

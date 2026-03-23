@@ -240,10 +240,9 @@ if TYPE_CHECKING:
 3. **Winning Criteria**: Highest pass rate → Lowest cost (tiebreaker)
    - Use `--aitest-min-pass-rate=N` to fail the session if overall pass rate falls below N%
 
-4. **Multi-Turn Sessions**: Test conversations that build on context
-   - Use `@pytest.mark.session("session-name")` on test class
-   - Tests share eval state within the session
-   - Reports track session flow and context continuity
+4. **Multi-Turn Context**: Test compound instructions that span multiple tool calls in one turn
+   - Each test is independent — context is provided in the prompt
+   - Chain tool-use assertions: `result.tool_was_called_in_order(["get_balance", "transfer"])`
 
 5. **Skill Testing**: Validate eval domain knowledge
    - Load skills from markdown files with `Skill.from_path()`
@@ -310,21 +309,6 @@ assert result.success
 assert result.tool_was_called("my_tool")
 ```
 
-### Multi-Turn Sessions
-
-```python
-@pytest.mark.session("banking-flow")
-class TestBankingWorkflow:
-    async def test_check_balance(self, copilot_eval, bank_agent):
-        result = await copilot_eval(bank_agent, "What's my balance?")
-        assert result.success
-
-    async def test_transfer(self, copilot_eval, bank_agent):
-        # Shares context with previous test
-        result = await copilot_eval(bank_agent, "Transfer $100 to savings")
-        assert result.tool_was_called("transfer")
-```
-
 ### Instructions
 
 Instructions can be plain strings or loaded from `.md` files.
@@ -358,14 +342,14 @@ This is a testing framework that validates AI interfaces (MCP tool descriptions,
 ### When you make a code change — run integration tests immediately:
 
 ```bash
-# Run ALL pydantic integration tests — do this after every change
-uv run python -m pytest tests/integration/pydantic/ -v
+# Run ALL copilot integration tests — do this after every change
+uv run python -m pytest tests/integration/copilot/ -v
 
 # Run a specific test file
-uv run python -m pytest tests/integration/pydantic/test_01_basic.py -v
+uv run python -m pytest tests/integration/copilot/test_01_basic.py -v
 
 # Re-run only failed tests after a full run
-uv run python -m pytest --lf tests/integration/pydantic/ -v
+uv run python -m pytest --lf tests/integration/copilot/ -v
 ```
 
 **Always use `uv run python -m pytest`** — bare `pytest` won't find the installed package.
@@ -377,13 +361,13 @@ uv run python -m pytest --lf tests/integration/pydantic/ -v
 - ❌ **NEVER declare a feature "done" based on unit tests passing**
 - ❌ **NEVER say "all tests pass" when you only ran unit tests**
 - ❌ Do NOT write unit tests with mocked LLM responses
-- ❌ Do NOT use `unittest.mock.patch` on PydanticAI or agent execution
+- ❌ Do NOT use `unittest.mock.patch` on agent execution
 
 ### What TO do:
-- ✅ Run `tests/integration/pydantic/` after EVERY code change — one file at a time, sequentially
+- ✅ Run `tests/integration/copilot/` after EVERY code change — one file at a time, sequentially
 - ✅ Start with `test_01_basic.py`, fix failures, then `test_02_models.py`, etc.
-- ✅ Write integration tests that call real Azure OpenAI models
-- ✅ Use the cheapest model (`gpt-5-mini`) via Azure
+- ✅ Write integration tests that call real GitHub Copilot models
+- ✅ Use the cheapest model (`gpt-5-mini`) via Copilot
 - ✅ Test with Banking or Todo MCP server (built-in test harnesses)
 - ✅ Accept that integration tests take 5–30+ seconds per test
 - ✅ Run integration tests BEFORE declaring a feature complete
@@ -406,10 +390,10 @@ uv run python -m pytest --lf tests/integration/pydantic/ -v
 ### pytest caching commands:
 ```bash
 # Run ONLY tests that failed last time (MOST COMMON)
-uv run python -m pytest --lf tests/integration/pydantic/
+uv run python -m pytest --lf tests/integration/copilot/
 
 # Run failed tests first, then the rest
-uv run python -m pytest --ff tests/integration/pydantic/
+uv run python -m pytest --ff tests/integration/copilot/
 
 # Check what's in the cache (see last failures)
 uv run python -m pytest --cache-show
@@ -418,7 +402,7 @@ uv run python -m pytest --cache-show
 uv run python -m pytest --cache-clear
 
 # Run specific failing test(s) only
-uv run python -m pytest tests/integration/pydantic/test_01_basic.py::TestBankingBasic::test_balance_check_and_transfer -v
+uv run python -m pytest tests/integration/copilot/test_01_basic.py -v
 ```
 
 ### Rules for the AI assistant:
@@ -456,12 +440,15 @@ src/pytest_skill_engineering/
 ├── copilot/               # GitHub Copilot SDK integration
 │   ├── eval.py            # CopilotEval - main eval harness
 │   ├── result.py          # CopilotResult - test result data
-│   ├── engine.py          # Copilot SDK agent execution
-│   ├── servers.py         # MCP server process management
-│   └── skill_tools.py     # Skill injection into agent
-├── fixtures/              # Pytest fixtures
-│   ├── copilot_run.py     # copilot_eval fixture
-│   └── factories.py       # skill_factory (Skills only - agents created inline)
+│   ├── runner.py          # Copilot SDK agent execution
+│   ├── fixtures.py        # copilot_eval fixture
+│   └── judge.py           # LLM judge (llm_assert, clarification detection)
+├── execution/             # MCP/CLI server process management
+│   └── servers.py         # MCPServer, CLIServer, MCPServerProcess, CLIServerProcess
+├── fixtures/              # Additional pytest fixtures
+│   ├── factories.py       # skill_factory (Skills only - agents created inline)
+│   ├── llm_assert.py      # llm_assert fixture
+│   └── llm_score.py       # llm_score fixture
 ├── reporting/             # AI analysis & reports
 │   ├── collector.py       # TestReport, SuiteReport dataclasses + build_suite_report()
 │   ├── generator.py       # generate_html(), generate_json(), generate_mermaid_sequence()
@@ -632,8 +619,8 @@ To modify styles:
 ### Generate Reports
 
 ```bash
-# Pydantic integration tests (development)
-uv run python -m pytest tests/integration/pydantic/ -v
+# Copilot integration tests (development)
+uv run python -m pytest tests/integration/copilot/ -v
 
 # Hero report for README showcase
 uv run python -m pytest tests/showcase/ -v --aitest-html=docs/demo/hero-report.html
@@ -644,11 +631,11 @@ uv run python -m pytest tests/showcase/ -v --aitest-html=docs/demo/hero-report.h
 **Integration tests use real LLM calls and are expensive. Run the relevant integration tests after every change.**
 
 ```bash
-# 1. Run the pydantic integration test(s) that cover your change
-uv run python -m pytest tests/integration/pydantic/test_01_basic.py -v
+# 1. Run the copilot integration test(s) that cover your change
+uv run python -m pytest tests/integration/copilot/test_01_basic.py -v
 
 # 2. Run all failed tests (if a broader run previously failed)
-uv run python -m pytest --lf tests/integration/pydantic/ -v
+uv run python -m pytest --lf tests/integration/copilot/ -v
 
 # 3. Generate hero report (before major releases)
 uv run python -m pytest tests/showcase/ -v --aitest-html=docs/demo/hero-report.html
