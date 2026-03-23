@@ -62,7 +62,7 @@ jobs:
             -o "addopts=--aitest-summary-model=azure/gpt-5.2-chat"
 
       - name: Publish JUnit results
-        uses: dorny/test-reporter@v2
+        uses: dorny/test-reporter@v3
         if: always()
         with:
           name: Hero Test Results
