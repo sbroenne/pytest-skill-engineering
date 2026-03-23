@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.5.8] - 2026-03-23
+
 ### Added
 
 - **Agent Skills spec compliance** — Full support for `agentskills.io` compatibility metadata, `allowed-tools`, `scripts`, and `assets` fields in `SKILL.md`
