@@ -8,6 +8,11 @@ on:
         required: false
         type: string
   workflow_dispatch:
+    inputs:
+      version:
+        description: "Version tag (e.g. v0.2.4) to stamp into docs"
+        required: false
+        type: string
 
 permissions:
   contents: read
