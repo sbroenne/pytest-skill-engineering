@@ -56,16 +56,18 @@ Auto-generated API documentation from source code.
       heading_level: 3
 
 ## Scoring Types
+
+::: pytest_skill_engineering.core.scoring.ScoringDimension
     options:
       show_source: false
       heading_level: 3
 
-::: pytest_skill_engineering.fixtures.llm_score.ScoreResult
+::: pytest_skill_engineering.core.scoring.ScoreResult
     options:
       show_source: false
       heading_level: 3
 
-::: pytest_skill_engineering.fixtures.llm_score.assert_score
+::: pytest_skill_engineering.core.scoring.assert_score
     options:
       show_source: false
       heading_level: 3
