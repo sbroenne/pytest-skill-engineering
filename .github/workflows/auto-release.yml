@@ -1,0 +1,32 @@
+name: Auto Release
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  release:
+    name: Patch release after Dependabot merge
+    runs-on: ubuntu-latest
+    # Only trigger when dependabot merges a dependency update
+    if: |
+      github.actor == 'dependabot[bot]' ||
+      startsWith(github.event.head_commit.message, 'chore(deps):') ||
+      startsWith(github.event.head_commit.message, 'chore(deps-dev):')
+    permissions:
+      actions: write
+    steps:
+      - name: Trigger patch release
+        uses: actions/github-script@v8
+        with:
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'release.yml',
+              ref: 'main',
+              inputs: {
+                version_bump: 'patch'
+              }
+            });
+            console.log(`Triggered patch release for commit: ${context.sha.substring(0, 7)}`);
