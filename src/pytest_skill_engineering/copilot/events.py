@@ -69,7 +69,7 @@ from pytest_skill_engineering.copilot.result import (
 from pytest_skill_engineering.core.result import SubagentInvocation
 
 if TYPE_CHECKING:
-    from copilot.session import SessionEvent
+    from copilot.generated.session_events import SessionEvent
 
 logger = logging.getLogger(__name__)
 

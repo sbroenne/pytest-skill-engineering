@@ -40,7 +40,8 @@ else:
     CopilotClient = _SdkCopilotClient
 
 if TYPE_CHECKING:
-    from copilot.session import CopilotSession, SessionEvent
+    from copilot.generated.session_events import SessionEvent
+    from copilot.session import CopilotSession
 
     from pytest_skill_engineering.copilot.eval import CopilotEval
     from pytest_skill_engineering.copilot.result import CopilotResult
