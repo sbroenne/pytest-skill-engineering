@@ -21,7 +21,7 @@ from pytest_skill_engineering.copilot.events import EventMapper
 
 CopilotClient: Any
 try:
-    from copilot import CopilotClient as _SdkCopilotClient
+    from copilot.client import CopilotClient as _SdkCopilotClient
 except ImportError as _exc:
     _import_error = _exc
 
@@ -40,7 +40,8 @@ else:
     CopilotClient = _SdkCopilotClient
 
 if TYPE_CHECKING:
-    from copilot import CopilotSession, SessionEvent
+    from copilot.generated.session_events import SessionEvent
+    from copilot.session import CopilotSession
 
     from pytest_skill_engineering.copilot.eval import CopilotEval
     from pytest_skill_engineering.copilot.result import CopilotResult
@@ -110,6 +111,13 @@ _TRANSIENT_PATTERNS = (
 )
 
 
+def _approve_all_permissions(*_args: Any, **_kwargs: Any) -> Any:
+    """Approve all permission requests using the current SDK result type."""
+    from copilot.session import PermissionRequestResult
+
+    return PermissionRequestResult(kind="approved")
+
+
 def _is_transient_error(error: str | None) -> bool:
     """Check if an error message matches a known transient SDK pattern."""
     if not error:
@@ -119,7 +127,7 @@ def _is_transient_error(error: str | None) -> bool:
 
 async def _run_copilot_once(agent: "CopilotEval", prompt: str) -> "CopilotResult":
     """Execute a single attempt of a prompt against GitHub Copilot."""
-    from copilot import PermissionHandler, SubprocessConfig
+    from copilot.client import SubprocessConfig
 
     subprocess_config = SubprocessConfig(
         cwd=agent.working_directory or ".",
@@ -152,7 +160,7 @@ async def _run_copilot_once(agent: "CopilotEval", prompt: str) -> "CopilotResult
 
         # Install permission handler if auto_confirm is enabled
         if agent.auto_confirm:
-            session_config["on_permission_request"] = PermissionHandler.approve_all
+            session_config["on_permission_request"] = _approve_all_permissions
 
         # Hard timeout on session creation — 30s is generous.
         session: CopilotSession = await asyncio.wait_for(

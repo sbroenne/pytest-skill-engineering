@@ -15,7 +15,7 @@ from pytest_skill_engineering.copilot.judge import copilot_judge
 
 if TYPE_CHECKING:
     from pytest_skill_engineering.core.skill import Skill
-    from pytest_skill_engineering.fixtures.skill_eval import SkillGradingResult
+    from pytest_skill_engineering.core.skill_eval_results import SkillGradingResult
 
 logger = logging.getLogger(__name__)
 

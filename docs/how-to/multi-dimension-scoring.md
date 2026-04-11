@@ -230,17 +230,17 @@ The judge model is resolved in this order:
 
 1. `--llm-model` if explicitly set
 2. `--aitest-summary-model` (shared analysis model)
-3. `openai/gpt-5-mini` as final fallback
+3. `copilot/gpt-5-mini` as final fallback
 
 ```bash
 # GitHub Copilot (no extra setup required)
 pytest --llm-model=gpt-5-mini
 
 # Azure OpenAI
-pytest --llm-model=azure/gpt-5.2-chat
+pytest --llm-model=azure/gpt-4.1
 
 # Share model with report summary generation
-pytest --aitest-summary-model=azure/gpt-5.2-chat
+pytest --aitest-summary-model=copilot/gpt-5.4
 ```
 
 ## Complete Example

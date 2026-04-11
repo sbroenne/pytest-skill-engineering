@@ -99,9 +99,9 @@ Answers: "Which configuration should I deploy?"
 ├─────────────────────────────────────────────────────────────────┤
 │ Rank │ Eval                          │ Pass │ Tokens │ Cost   │
 ├──────┼────────────────────────────────┼──────┼────────┼────────┤
-│  🥇  │ gpt-4.1-mini / concise         │ 100% │  561 ★ │ $0.001 │
+│  🥇  │ gpt-5.4 / concise              │ 100% │  561 ★ │ $0.001 │
 │  🥈  │ gpt-5-mini / concise           │ 100% │  743   │ $0.001 │
-│  🥉  │ gpt-4.1-mini / detailed        │ 100% │  764   │ $0.001 │
+│  🥉  │ gpt-5.4 / detailed             │ 100% │  764   │ $0.001 │
 │   4  │ gpt-5-mini / detailed          │ 100% │  973   │ $0.002 │
 └──────┴────────────────────────────────┴──────┴────────┴────────┘
   ★ = Best in column    Sorted by: Pass Rate → Cost (tiebreaker)
@@ -129,7 +129,7 @@ Allows picking exactly 2 evals for side-by-side comparison in test details.
 ┌─────────────────────────────────────────────────────────────────┐
 │ Compare evals:                                                 │
 │ ┌────────────────┐ ┌────────────────┐ ┌────────────────┐        │
-│ │ ☑ gpt-4.1-mini │ │ ☑ gpt-5-mini   │ │ ☐ gpt-5-mini   │        │
+│ │ ☑ gpt-5.4      │ │ ☑ gpt-5-mini   │ │ ☐ gpt-5-mini   │        │
 │ │   100% ✓       │ │   100% ✓       │ │   + skill      │        │
 │ └────────────────┘ └────────────────┘ └────────────────┘        │
 └─────────────────────────────────────────────────────────────────┘
@@ -175,7 +175,7 @@ Shows side-by-side comparison of selected evals:
 │ ▼ Check account balance                   ✅ passed │ 4.6s     │
 ├─────────────────────────────────────────────────────────────────┤
 │ ┌─────────────────────────┐ ┌─────────────────────────┐         │
-│ │ gpt-4.1-mini           ✅│ │ gpt-5-mini             ✅│         │
+│ │ gpt-5.4                ✅│ │ gpt-5-mini             ✅│         │
 │ │ 561 tokens │ $0.001     │ │ 743 tokens │ $0.002     │         │
 │ ├─────────────────────────┤ ├─────────────────────────┤         │
 │ │   [Mermaid Diagram]     │ │   [Mermaid Diagram]     │         │

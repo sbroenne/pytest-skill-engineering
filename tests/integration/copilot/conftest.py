@@ -7,11 +7,11 @@ import subprocess
 
 import pytest
 
-# Default model — None means Copilot picks its default
-DEFAULT_MODEL: str | None = None
+# Default model for integration tests
+DEFAULT_MODEL: str | None = "gpt-5.4"
 
-# Models for parametrized tests
-MODELS: list[str] = ["gpt-5.2", "claude-sonnet-4.6"]
+# Current GPT-family models for parametrized tests
+MODELS: list[str] = ["gpt-5.4", "gpt-5-mini"]
 
 # Timeouts
 DEFAULT_TIMEOUT_S: float = 300.0

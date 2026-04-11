@@ -43,6 +43,16 @@ PROMPT_QUALITY_RUBRIC: list[ScoringDimension] = [
 ]
 
 
+def _score_artifact(result: object, file_path: str, llm_score: object) -> object:
+    """Score the delivered artifact, not just the terminal confirmation message."""
+    content = result.file(file_path)
+    response = result.final_response or ""
+    return llm_score(
+        f"Final response:\n{response}\n\nGenerated file ({file_path}):\n{content}",
+        PROMPT_QUALITY_RUBRIC,
+    )
+
+
 class TestPromptScoring:
     """Compare instruction quality via LLM-judged rubric scoring."""
 
@@ -65,7 +75,7 @@ class TestPromptScoring:
         )
         assert result.success, f"Verbose run failed: {result.error}"
 
-        score = llm_score(result.final_response, PROMPT_QUALITY_RUBRIC)
+        score = _score_artifact(result, "calculator.py", llm_score)
         assert_score(score, min_pct=0.4)
 
     async def test_direct_instructions_score(self, copilot_eval, tmp_path, llm_score):
@@ -85,7 +95,7 @@ class TestPromptScoring:
         )
         assert result.success, f"Direct run failed: {result.error}"
 
-        score = llm_score(result.final_response, PROMPT_QUALITY_RUBRIC)
+        score = _score_artifact(result, "calculator.py", llm_score)
         assert_score(score, min_pct=0.4)
 
     async def test_production_instructions_score(self, copilot_eval, tmp_path, llm_score):
@@ -107,5 +117,5 @@ class TestPromptScoring:
         )
         assert result.success, f"Production run failed: {result.error}"
 
-        score = llm_score(result.final_response, PROMPT_QUALITY_RUBRIC)
+        score = _score_artifact(result, "user_manager.py", llm_score)
         assert_score(score, min_pct=0.5)

@@ -35,6 +35,8 @@ from pytest_skill_engineering.core import (  # noqa: E402
     Prompt,
     RefinementResult,
     RefinementSuggestion,
+    ScoreResult,
+    ScoringDimension,
     ServerStartError,
     Skill,
     SkillBenchmarkResult,
@@ -49,6 +51,7 @@ from pytest_skill_engineering.core import (  # noqa: E402
     ToolInfo,
     Turn,
     analyze_skill_failures,
+    assert_score,
     export_grading,
     has_skill_evals,
     load_custom_agent,
@@ -69,13 +72,6 @@ from pytest_skill_engineering.execution import (  # noqa: E402
     MCPServer,
     Wait,
     WaitStrategy,
-)
-
-# Scoring
-from pytest_skill_engineering.fixtures.llm_score import (  # noqa: E402
-    ScoreResult,
-    ScoringDimension,
-    assert_score,
 )
 
 # Hooks (for plugin extensibility)

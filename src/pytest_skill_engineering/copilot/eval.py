@@ -138,7 +138,7 @@ class CopilotEval:
 
     # SDK passthrough: activate a specific custom agent at session start.
     # Maps to the SDK's ``agent`` parameter on ``create_session()``.
-    active_agent: str = ""
+    active_agent: str | None = None
 
     # SDK passthrough: lifecycle hooks (SessionHooks).
     # Maps to the SDK's ``hooks`` parameter on ``create_session()``.
@@ -207,7 +207,7 @@ class CopilotEval:
         if self.disabled_skills:
             config["disabled_skills"] = self.disabled_skills
 
-        if self.active_agent:
+        if self.active_agent is not None:
             config["agent"] = self.active_agent
 
         if self.hooks:
@@ -293,6 +293,7 @@ class CopilotEval:
         instructions: str = "",
         working_directory: str = "",
         name: str = "",
+        **overrides: Any,
     ) -> "CopilotEval":
         """Create a CopilotEval from a plugin directory.
 
@@ -313,6 +314,8 @@ class CopilotEval:
                 plugin's discovered instructions.
             working_directory: Override the working directory.
             name: Override the eval name (defaults to plugin metadata name).
+            **overrides: Override any additional ``CopilotEval`` fields such as
+                ``max_turns`` or ``timeout_s``.
 
         Returns:
             A ``CopilotEval`` initialised from the plugin.
@@ -354,15 +357,19 @@ class CopilotEval:
             else:
                 persona = _default_persona()
 
+        config: dict[str, Any] = {
+            "name": name or plugin.metadata.name or "plugin-eval",
+            "model": model or None,
+            "instructions": combined_instructions or None,
+            "custom_agents": plugin.agents,
+            "skill_directories": skill_dirs,
+            "mcp_servers": plugin.mcp_servers,
+            "working_directory": working_directory or None,
+            "persona": persona,
+        }
+        config.update(overrides)
         return cls(
-            name=name or plugin.metadata.name or "plugin-eval",
-            model=model or None,
-            instructions=combined_instructions or None,
-            custom_agents=plugin.agents,
-            skill_directories=skill_dirs,
-            mcp_servers=plugin.mcp_servers,
-            working_directory=working_directory or None,
-            persona=persona,
+            **config,
         )
 
     @classmethod
@@ -375,6 +382,7 @@ class CopilotEval:
         instructions: str = "",
         working_directory: str = "",
         name: str = "claude-code-eval",
+        **overrides: Any,
     ) -> "CopilotEval":
         """Create a CopilotEval from a Claude Code project directory.
 
@@ -393,6 +401,8 @@ class CopilotEval:
                 discovered ``CLAUDE.md`` content.
             working_directory: Override the working directory.
             name: Override the eval name.
+            **overrides: Override any additional ``CopilotEval`` fields such as
+                ``max_turns`` or ``timeout_s``.
 
         Returns:
             A ``CopilotEval`` initialised from the discovered config files.
@@ -461,16 +471,18 @@ class CopilotEval:
 
             persona = ClaudeCodePersona()
 
-        return cls(
-            name=name,
-            model=model or None,
-            instructions=combined_instructions,
-            custom_agents=agents,
-            skill_directories=skill_dirs,
-            mcp_servers=mcp_servers,
-            working_directory=working_directory or None,
-            persona=persona,
-        )
+        config: dict[str, Any] = {
+            "name": name,
+            "model": model or None,
+            "instructions": combined_instructions,
+            "custom_agents": agents,
+            "skill_directories": skill_dirs,
+            "mcp_servers": mcp_servers,
+            "working_directory": working_directory or None,
+            "persona": persona,
+        }
+        config.update(overrides)
+        return cls(**config)
 
 
 def _default_persona() -> "Persona":

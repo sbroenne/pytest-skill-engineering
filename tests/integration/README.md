@@ -4,7 +4,7 @@ These tests verify pytest-skill-engineering works with real LLM providers. Tests
 
 ## Structure
 
-```
+```text
 tests/integration/
 ├── conftest.py           # Shared constants and server fixtures
 ├── agents/               # .agent.md test fixtures
@@ -45,7 +45,6 @@ tests/integration/
 # Prerequisites
 az login
 export AZURE_API_BASE=https://your-resource.cognitiveservices.azure.com
-
 # Run all pydantic tests
 uv run python -m pytest tests/integration/pydantic/ -v
 
@@ -62,7 +61,6 @@ uv run python -m pytest tests/integration/pydantic/test_01_basic.py::TestBanking
 # Prerequisites
 uv sync --extra copilot
 gh auth login
-
 # Run all copilot tests
 uv run python -m pytest tests/integration/copilot/ -v
 ```
@@ -72,17 +70,20 @@ uv run python -m pytest tests/integration/copilot/ -v
 ## Prerequisites
 
 1. **Azure login** (Entra ID auth — no API keys needed):
+
    ```bash
    az login
    export AZURE_API_BASE=https://your-resource.cognitiveservices.azure.com
    ```
 
-2. **Models available** (checked 2026-02-23):
-   - `gpt-5-mini` — cheapest, use for most tests
-   - `gpt-5.2-chat` — for AI summary generation
-   - `gpt-4.1` — most capable
+1. **Models available** (checked 2026-02-23):
 
-3. **For Copilot tests only:**
+   - `gpt-5-mini` — cheapest, use for most tests
+   - `gpt-5.4` — primary summary/default model
+   - `gpt-4.1` — alternative provider-backed model
+
+1. **For Copilot tests only:**
+
    ```bash
    uv sync --extra copilot
    gh auth login  # or set GITHUB_TOKEN
@@ -92,10 +93,8 @@ uv run python -m pytest tests/integration/copilot/ -v
 
 Built-in test servers in `src/pytest_skill_engineering/testing/`:
 
-| Server | Tools | Purpose |
-|--------|-------|---------|
-| `banking_mcp.py` | get_balance, get_all_balances, transfer, deposit, withdraw, get_transactions | Financial workflows |
-| `todo_mcp.py` | add_task, complete_task, list_tasks, delete_task, get_task, update_task | CRUD operations |
+- `banking_mcp.py`: `get_balance`, `get_all_balances`, `transfer`, `deposit`, `withdraw`, `get_transactions` for financial workflows.
+- `todo_mcp.py`: `add_task`, `complete_task`, `list_tasks`, `delete_task`, `get_task`, `update_task` for CRUD operations.
 
 ## Adding New Tests
 

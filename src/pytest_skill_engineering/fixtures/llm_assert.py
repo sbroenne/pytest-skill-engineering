@@ -119,8 +119,6 @@ def llm_assert(request: pytest.FixtureRequest) -> LLMAssert:
             assert llm_assert("Your balance is $1,500", "mentions a dollar amount")
     """
     model_str: str = request.config.getoption("--llm-model")
-    if model_str == "openai/gpt-5-mini":  # Old default
-        model_str = _LLM_MODEL_DEFAULT
     if model_str == _LLM_MODEL_DEFAULT:
         # Not explicitly set — fall back to summary model if available
         summary_model = request.config.getoption("--aitest-summary-model", default=None)

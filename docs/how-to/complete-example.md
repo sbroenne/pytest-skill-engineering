@@ -146,7 +146,7 @@ async def test_plan_then_execute(self, copilot_eval, llm_assert):
 Compare how different LLMs perform on the same task.
 
 ```python
-BENCHMARK_MODELS = ["gpt-5-mini", "gpt-4.1-mini"]
+BENCHMARK_MODELS = ["gpt-5.4", "gpt-5-mini"]
 
 class TestModelComparison:
     """Compare how different models handle complex financial advice."""

@@ -11,7 +11,7 @@ Configure once, run simply:
 ```toml
 [tool.pytest.ini_options]
 addopts = """
---aitest-summary-model=azure/gpt-5.2-chat
+--aitest-summary-model=copilot/gpt-5.4
 --aitest-html=aitest-reports/report.html
 """
 ```
@@ -31,7 +31,7 @@ Then just `pytest tests/` — reports are generated automatically.
 | `--aitest-analysis-prompt=PATH` | Custom analysis prompt file for AI insights | No |
 | `--aitest-summary-compact` | Omit full conversation turns for passed tests in AI analysis (reduces tokens) | No |
 | `--aitest-print-analysis-prompt` | Print resolved analysis prompt source/path at runtime | No |
-| `--llm-model=MODEL` | Model for `llm_assert` semantic assertions (default: `openai/gpt-5-mini`) | No |
+| `--llm-model=MODEL` | Model for `llm_assert` semantic assertions (default: `copilot/gpt-5-mini`) | No |
 | `--llm-vision-model=MODEL` | Vision model for `llm_assert_image` assertions (defaults to `--llm-model`) | No |
 
 !!! note
@@ -42,35 +42,35 @@ Then just `pytest tests/` — reports are generated automatically.
 ```bash
 # Run tests with HTML report
 pytest tests/ \
-    --aitest-summary-model=azure/gpt-5.2-chat \
+    --aitest-summary-model=copilot/gpt-5.4 \
     --aitest-html=report.html
 
 # Run tests with Markdown report
 pytest tests/ \
-    --aitest-summary-model=azure/gpt-5.2-chat \
+    --aitest-summary-model=copilot/gpt-5.4 \
     --aitest-md=report.md
 
 # With JSON output
 pytest tests/ \
-    --aitest-summary-model=azure/gpt-5.2-chat \
+    --aitest-summary-model=copilot/gpt-5.4 \
     --aitest-html=report.html \
     --aitest-json=results.json
 
 # Run each test 3 times for statistical confidence
 pytest tests/ \
-    --aitest-summary-model=azure/gpt-5.2-chat \
+    --aitest-summary-model=copilot/gpt-5.4 \
     --aitest-html=report.html \
     --aitest-iterations=3
 
 # Reduce summary token usage for large suites
 pytest tests/ \
-    --aitest-summary-model=azure/gpt-5.2-chat \
+    --aitest-summary-model=copilot/gpt-5.4 \
     --aitest-html=report.html \
     --aitest-summary-compact
 
 # Debug which analysis prompt is used (CLI file / hook / built-in)
 pytest tests/ \
-    --aitest-summary-model=azure/gpt-5.2-chat \
+    --aitest-summary-model=copilot/gpt-5.4 \
     --aitest-html=report.html \
     --aitest-print-analysis-prompt
 ```
@@ -111,13 +111,13 @@ pytest-skill-engineering-report results.json --html report.html --md report.md
 pytest-skill-engineering-report results.json \
     --html report.html \
     --summary \
-    --summary-model azure/gpt-5.2-chat
+    --summary-model copilot/gpt-5.4
 
 # Debug which prompt source is used (file vs built-in)
 pytest-skill-engineering-report results.json \
     --html report.html \
     --summary \
-    --summary-model azure/gpt-5.2-chat \
+    --summary-model copilot/gpt-5.4 \
     --print-analysis-prompt
 ```
 
