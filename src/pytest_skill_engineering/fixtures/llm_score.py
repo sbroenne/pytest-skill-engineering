@@ -14,61 +14,15 @@ from __future__ import annotations
 import asyncio
 import concurrent.futures
 import re
-from dataclasses import dataclass
 
 import pytest
 
+from pytest_skill_engineering.core.scoring import (
+    ScoreResult,
+    ScoringDimension,
+)
+
 _LLM_MODEL_DEFAULT = "copilot/gpt-5-mini"
-
-
-# ---------------------------------------------------------------------------
-# Public data types
-# ---------------------------------------------------------------------------
-
-
-@dataclass(slots=True)
-class ScoringDimension:
-    """A single dimension in a scoring rubric.
-
-    Attributes:
-        name: Short identifier (e.g. ``"accuracy"``).
-        description: What this dimension measures and how to score it.
-        max_score: Upper bound of the scale (default 5).  The minimum is
-            always 1.
-        weight: Relative weight for composite score calculation (default 1.0).
-    """
-
-    name: str
-    description: str
-    max_score: int = 5
-    weight: float = 1.0
-
-
-@dataclass(slots=True)
-class ScoreResult:
-    """Structured result from a multi-dimension LLM evaluation.
-
-    Attributes:
-        scores: Per-dimension scores keyed by dimension name.
-        total: Sum of all dimension scores.
-        max_total: Maximum possible total score.
-        weighted_score: Weighted composite score (0.0 – 1.0).
-        reasoning: Free-text explanation from the judge.
-    """
-
-    scores: dict[str, int]
-    total: int
-    max_total: int
-    weighted_score: float
-    reasoning: str
-
-    def __repr__(self) -> str:
-        pct = f"{self.weighted_score:.0%}"
-        dims = ", ".join(f"{k}={v}" for k, v in self.scores.items())
-        return (
-            f"ScoreResult({self.total}/{self.max_total} [{pct}]: {dims})\n"
-            f"  Reasoning: {self.reasoning}"
-        )
 
 
 # ---------------------------------------------------------------------------
@@ -269,52 +223,6 @@ class LLMScore:
 
 
 # ---------------------------------------------------------------------------
-# Assertion helper
-# ---------------------------------------------------------------------------
-
-
-def assert_score(
-    result: ScoreResult,
-    *,
-    min_total: int | None = None,
-    min_pct: float | None = None,
-    min_dimensions: dict[str, int] | None = None,
-) -> None:
-    """Assert that judge scores meet minimum thresholds.
-
-    Args:
-        result: ScoreResult from an LLMScore evaluation.
-        min_total: Minimum total score (sum of all dimensions).
-        min_pct: Minimum weighted percentage (0.0 – 1.0).
-        min_dimensions: Per-dimension minimum scores keyed by name.
-
-    Raises:
-        AssertionError: If any threshold is not met.
-    """
-    if min_total is not None:
-        assert result.total >= min_total, (
-            f"Total score {result.total}/{result.max_total} below minimum "
-            f"{min_total}. Scores: {result.scores}. "
-            f"Reasoning: {result.reasoning}"
-        )
-
-    if min_pct is not None:
-        assert result.weighted_score >= min_pct, (
-            f"Weighted score {result.weighted_score:.1%} below minimum "
-            f"{min_pct:.1%}. Scores: {result.scores}. "
-            f"Reasoning: {result.reasoning}"
-        )
-
-    if min_dimensions:
-        for dim, minimum in min_dimensions.items():
-            actual = result.scores.get(dim, 0)
-            assert actual >= minimum, (
-                f"Dimension '{dim}' scored {actual}, minimum is {minimum}. "
-                f"Reasoning: {result.reasoning}"
-            )
-
-
-# ---------------------------------------------------------------------------
 # Pytest fixture
 # ---------------------------------------------------------------------------
 
@@ -336,7 +244,7 @@ def llm_score(request: pytest.FixtureRequest) -> LLMScore:
 
     Example::
 
-        from pytest_skill_engineering.fixtures.llm_score import ScoringDimension, assert_score
+        from pytest_skill_engineering.core.scoring import ScoringDimension, assert_score
 
         def test_quality(llm_score):
             rubric = [
@@ -347,8 +255,6 @@ def llm_score(request: pytest.FixtureRequest) -> LLMScore:
             assert_score(result, min_total=7)
     """
     model_str: str = request.config.getoption("--llm-model")
-    if model_str == "openai/gpt-5-mini":  # Old default
-        model_str = _LLM_MODEL_DEFAULT
     if model_str == _LLM_MODEL_DEFAULT:
         summary_model = request.config.getoption("--aitest-summary-model", default=None)
         if summary_model:

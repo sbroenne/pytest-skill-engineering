@@ -46,7 +46,7 @@ The Eval is the **test harness** that bundles the GitHub Copilot coding agent wi
 | Instructions | Optional | `"You are a helpful assistant."` |
 | Skills | Optional | `skill_directories=["skills/banking"]` |
 | Custom Agents | Optional | `custom_agents=[load_custom_agent("agents/reviewer.agent.md")]` |
-| Model | Optional | `model="gpt-5.2"` (defaults to Copilot's active model) |
+| Model | Optional | `model="gpt-5.4"` (defaults to Copilot's active model) |
 | Working Directory | Optional | `working_directory=str(tmp_path)` |
 
 ## Eval Leaderboard

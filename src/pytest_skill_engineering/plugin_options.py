@@ -107,10 +107,10 @@ def add_aitest_options(group: OptionGroup) -> None:
     # LLM judge model for llm_assert fixture
     group.addoption(
         "--llm-model",
-        default="openai/gpt-5-mini",
+        default="copilot/gpt-5-mini",
         help=(
             "Model for llm_assert semantic assertions. "
-            "Defaults to --aitest-summary-model if set, otherwise openai/gpt-5-mini."
+            "Defaults to --aitest-summary-model if set, otherwise copilot/gpt-5-mini."
         ),
     )
 

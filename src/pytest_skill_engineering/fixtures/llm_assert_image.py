@@ -96,8 +96,6 @@ def llm_assert_image(request: pytest.FixtureRequest) -> LLMAssertImage:
     else:
         # Fall back to llm-model → summary model → default
         model_str = request.config.getoption("--llm-model")
-        if model_str == "openai/gpt-5-mini":  # Old default
-            model_str = _LLM_MODEL_DEFAULT
         if model_str == _LLM_MODEL_DEFAULT:
             summary_model = request.config.getoption("--aitest-summary-model", default=None)
             if summary_model:

@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import os
 from typing import Any
 
 logger = logging.getLogger(__name__)
@@ -22,7 +23,7 @@ def _get_copilot_client() -> type[Any]:
     global _CopilotClient  # noqa: PLW0603
     if _CopilotClient is None:
         try:
-            from copilot import CopilotClient as _Client  # noqa: PLC0415
+            from copilot.client import CopilotClient as _Client  # noqa: PLC0415
 
             _CopilotClient = _Client
         except ImportError as exc:
@@ -32,6 +33,18 @@ def _get_copilot_client() -> type[Any]:
             )
             raise ImportError(msg) from exc
     return _CopilotClient
+
+
+def _approve_all_permissions(*_args: Any, **_kwargs: Any) -> Any:
+    """Approve all permission requests using the current SDK result type."""
+    from copilot.session import PermissionRequestResult  # noqa: PLC0415
+
+    return PermissionRequestResult(kind="approved")
+
+
+def _get_data_field(event: Any, field: str, default: Any = None) -> Any:
+    """Safely get a field from SDK event data objects."""
+    return getattr(event.data, field, default)
 
 
 async def copilot_judge(
@@ -58,7 +71,7 @@ async def copilot_judge(
         TimeoutError: If the session takes longer than timeout_seconds.
         RuntimeError: If the Copilot CLI fails to start or session errors.
     """
-    from copilot import PermissionHandler, SubprocessConfig  # noqa: PLC0415
+    from copilot.client import SubprocessConfig  # noqa: PLC0415
 
     CopilotClient = _get_copilot_client()
 
@@ -66,6 +79,10 @@ async def copilot_judge(
         cwd=".",
         log_level="warning",
     )
+
+    github_token = os.environ.get("GITHUB_TOKEN")
+    if github_token:
+        subprocess_config.github_token = github_token
 
     client = CopilotClient(subprocess_config, auto_start=True)
 
@@ -75,7 +92,7 @@ async def copilot_judge(
 
         # Build session config
         session_config: dict[str, Any] = {
-            "on_permission_request": PermissionHandler.approve_all,
+            "on_permission_request": _approve_all_permissions,
         }
         if model is not None:
             session_config["model"] = model
@@ -86,17 +103,29 @@ async def copilot_judge(
             timeout=30,
         )
 
-        # Collect response chunks
         response_parts: list[str] = []
+        completed_response = ""
 
         def on_event(event: Any) -> None:
             """Collect assistant responses from events."""
             event_type = event.type.value if hasattr(event.type, "value") else str(event.type)
-            if event_type == "assistant.response":
-                data = event.data if hasattr(event, "data") else {}
-                content = data.get("content", "")
+
+            nonlocal completed_response
+
+            if event_type == "assistant.message_delta":
+                content = _get_data_field(event, "delta_content", "")
                 if content:
                     response_parts.append(content)
+                return
+
+            if event_type == "assistant.message":
+                content = _get_data_field(event, "content", "")
+                if content:
+                    completed_response = content
+                return
+
+            if event_type == "assistant.turn_end" and response_parts and not completed_response:
+                completed_response = "".join(response_parts)
 
         session.on(on_event)
 
@@ -106,7 +135,9 @@ async def copilot_judge(
             timeout=timeout_seconds,
         )
 
-        # Join all response parts
+        if completed_response:
+            return completed_response
+
         return "".join(response_parts)
 
     except TimeoutError:

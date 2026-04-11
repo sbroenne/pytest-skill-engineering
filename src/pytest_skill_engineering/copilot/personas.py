@@ -45,7 +45,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from copilot import Tool, ToolInvocation, ToolResult
+    from copilot.tools import Tool, ToolInvocation, ToolResult
 
     from pytest_skill_engineering.copilot.eval import CopilotEval
     from pytest_skill_engineering.copilot.events import EventMapper
@@ -184,11 +184,9 @@ class VSCodePersona(Persona):
 class ClaudeCodePersona(Persona):
     """Claude Code persona.
 
-    Polyfills a ``task``-dispatch tool (same dispatch mechanism as
-    ``runSubagent``, named ``task`` to match Claude Code's native API) so
-    agents written for Claude Code can dispatch sub-agents during testing.
-
-    The polyfill is only injected when ``agent.custom_agents`` is non-empty.
+    Current Copilot SDK releases already expose the native ``task`` tool, so
+    this persona only adds Claude-specific runtime context and the agent list
+    block that teaches the model which custom agents are available.
     """
 
     _SYSTEM_MSG = "You are running inside Claude Code."
@@ -208,8 +206,6 @@ class ClaudeCodePersona(Persona):
             if custom:
                 _prepend_system_message(session_config, custom)
         if agent.custom_agents:
-            tool = _make_task_tool(agent, agent.custom_agents, mapper)
-            _inject_tool(session_config, tool)
             agents_block = _build_agents_block(agent.custom_agents, tool_name="task")
             _prepend_system_message(session_config, agents_block)
         _inject_skill_reference_tools(agent, session_config)
@@ -330,7 +326,7 @@ def _make_subagent_dispatch_tool(
         mapper: The ``EventMapper`` for the current run, used to record
             subagent lifecycle events.
     """
-    from copilot import Tool, ToolResult
+    from copilot.tools import Tool, ToolResult
 
     from pytest_skill_engineering.copilot.eval import CopilotEval as _CopilotAgent
     from pytest_skill_engineering.copilot.runner import run_copilot
@@ -469,7 +465,7 @@ def _inject_skill_reference_tools(
     if not reference_files:
         return
 
-    from copilot import Tool, ToolResult
+    from copilot.tools import Tool, ToolResult
 
     # list_skill_references tool
     async def _list_handler(invocation: "ToolInvocation") -> "ToolResult":

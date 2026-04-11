@@ -159,7 +159,7 @@ Configure the judge model via `--llm-model`:
 pytest --llm-model=copilot/gpt-5-mini
 
 # Azure OpenAI
-pytest --llm-model=azure/gpt-5.2-chat
+pytest --llm-model=azure/gpt-4.1
 ```
 
 ## Multi-Dimension Scoring

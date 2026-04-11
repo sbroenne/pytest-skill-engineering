@@ -111,7 +111,7 @@ async def test_plugin_tool_usage(copilot_eval):
 # Override the model
 agent = CopilotEval.from_plugin(
     "path/to/my-plugin",
-    model="gpt-5.2-chat",
+    model="gpt-5.4",
 )
 
 # Override instructions (ignores plugin instructions)

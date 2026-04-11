@@ -13,7 +13,7 @@ Configure once in `pyproject.toml`:
 ```toml
 [tool.pytest.ini_options]
 addopts = """
---aitest-summary-model=azure/gpt-5.2-chat
+--aitest-summary-model=copilot/gpt-5.4
 --aitest-html=aitest-reports/report.html
 """
 ```
@@ -50,7 +50,7 @@ You can also use CLI flags directly:
 ```bash
 # Run tests with AI-powered HTML report
 pytest tests/ \
-    --aitest-summary-model=azure/gpt-5.2-chat \
+    --aitest-summary-model=copilot/gpt-5.4 \
     --aitest-html=report.html
 
 # Run tests without reports (JSON is still auto-generated)
@@ -86,7 +86,7 @@ pytest-skill-engineering-report results.json \
 # Regenerate with fresh AI insights from a different model
 pytest-skill-engineering-report results.json \
     --html report.html \
-    --summary --summary-model azure/gpt-4.1
+    --summary --summary-model copilot/gpt-5.4
 ```
 
 This is useful for:
@@ -137,7 +137,8 @@ Use the **most capable model you can afford** for quality analysis:
 
 | Provider | Recommended Models |
 |----------|-------------------|
-| Azure OpenAI | `azure/gpt-5.2-chat` (best), `azure/gpt-4.1` |
+| GitHub Copilot | `copilot/gpt-5.4` (best), `copilot/gpt-5-mini` |
+| Azure OpenAI | `azure/gpt-4.1` |
 | OpenAI | `openai/gpt-4.1`, `openai/gpt-4o` |
 | Anthropic | `anthropic/claude-opus-4`, `anthropic/claude-sonnet-4` |
 

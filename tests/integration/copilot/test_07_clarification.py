@@ -26,6 +26,9 @@ CLARIFICATION_PHRASES = [
     "let me know if",
     "would you prefer",
     "do you have a preference",
+    "what kind of",
+    "if you have a preference",
+    "if you want me to choose",
 ]
 
 
@@ -103,7 +106,7 @@ class TestClarificationDetection:
         )
         assert result.success, f"Agent failed: {result.error}"
 
-        created_files = list(tmp_path.rglob("*.py"))
+        created_files = [path for path in tmp_path.rglob("*") if path.is_file()]
         response = result.final_response or ""
 
         acted = len(created_files) > 0

@@ -274,10 +274,10 @@ Reports include:
 
 ```bash
 # Run tests with AI analysis (mandatory --aitest-summary-model)
-pytest tests/ --aitest-html=report.html --aitest-summary-model=azure/gpt-5.2-chat
+pytest tests/ --aitest-html=report.html --aitest-summary-model=copilot/gpt-5.4
 
 # Regenerate report with new AI insights from existing JSON (no re-run)
-pytest-skill-engineering-report results.json --html report.html --summary --summary-model azure/gpt-5-mini
+pytest-skill-engineering-report results.json --html report.html --summary --summary-model copilot/gpt-5.4
 ```
 
 ### Key Types
@@ -492,8 +492,8 @@ Integration tests use centralized constants from `tests/integration/copilot/conf
 
 ```python
 # Models
-DEFAULT_MODEL = "gpt-5-mini"           # Cheapest, use for most tests
-MODELS = ["gpt-5-mini", "gpt-4.1-mini"]  # For model comparison
+DEFAULT_MODEL = "gpt-5.4"              # Default integration model
+MODELS = ["gpt-5.4", "gpt-5-mini"]  # For model comparison
 
 # Turn limits
 DEFAULT_MAX_TURNS = 5
@@ -611,7 +611,7 @@ To modify styles:
 3. **Report config is in pyproject.toml**:
    ```toml
    addopts = """
-   --aitest-summary-model=azure/gpt-5.2-chat
+    --aitest-summary-model=copilot/gpt-5.4
    --aitest-html=aitest-reports/report.html
    """
    ```

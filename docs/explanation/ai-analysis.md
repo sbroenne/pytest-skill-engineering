@@ -19,7 +19,7 @@ For AI tool testing, this is useless. A test might fail because your tool descri
 pytest-skill-engineering **requires** an AI model to generate reports:
 
 ```bash
-pytest tests/ --aitest-html=report.html --aitest-summary-model=azure/gpt-5.2-chat
+pytest tests/ --aitest-html=report.html --aitest-summary-model=copilot/gpt-5.4
 ```
 
 Without `--aitest-summary-model`, report generation will error. See [How to Generate Reports](../how-to/generate-reports.md) for full configuration options.
@@ -54,7 +54,7 @@ The analysis prompt enforces strict rules for consistent, useful output:
 
 The summary model analyzes your test results, which are relatively small:
 
-| Tests | Approx. Input Tokens | Cost (gpt-5.2-chat) |
+| Tests | Approx. Input Tokens | Cost (gpt-5.4) |
 |-------|----------------------|---------------------|
 | 10    | ~2,000               | $0.01               |
 | 50    | ~8,000               | $0.04               |

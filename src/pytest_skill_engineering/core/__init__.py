@@ -1,7 +1,5 @@
 """Core module - result types and skill management."""
 
-from typing import TYPE_CHECKING
-
 from pytest_skill_engineering.core.errors import AITestError, EngineTimeoutError, ServerStartError
 from pytest_skill_engineering.core.evals import (
     load_custom_agent,
@@ -29,11 +27,16 @@ from pytest_skill_engineering.core.result import (
     ToolInfo,
     Turn,
 )
+from pytest_skill_engineering.core.scoring import ScoreResult, ScoringDimension, assert_score
 from pytest_skill_engineering.core.skill import Skill, SkillError, SkillMetadata, load_skill
 from pytest_skill_engineering.core.skill_benchmark import (
     BenchmarkComparison,
     CaseBenchmark,
     SkillBenchmarkResult,
+)
+from pytest_skill_engineering.core.skill_eval_results import (
+    SkillCaseResult,
+    SkillGradingResult,
 )
 from pytest_skill_engineering.core.skill_evals import (
     SkillEvalCase,
@@ -62,17 +65,22 @@ __all__ = [
     "Prompt",
     "RefinementResult",
     "RefinementSuggestion",
+    "ScoreResult",
+    "ScoringDimension",
     "ServerStartError",
     "Skill",
     "SkillBenchmarkResult",
+    "SkillCaseResult",
     "SkillError",
     "SkillInfo",
+    "SkillGradingResult",
     "SkillMetadata",
     "SubagentInvocation",
     "ToolCall",
     "ToolInfo",
     "Turn",
     "analyze_skill_failures",
+    "assert_score",
     "load_custom_agent",
     "load_custom_agents",
     "load_instruction_file",
@@ -89,23 +97,3 @@ __all__ = [
     "load_skill_evals",
     "export_grading",
 ]
-
-
-# Re-export SkillCaseResult and SkillGradingResult for public API
-# These are defined in fixtures.skill_eval but conceptually part of core skill-creator integration
-def __getattr__(name: str):
-    """Lazy import for SkillCaseResult and SkillGradingResult to avoid circular imports."""
-    if name in ("SkillCaseResult", "SkillGradingResult"):
-        from pytest_skill_engineering.fixtures.skill_eval import (
-            SkillCaseResult,
-            SkillGradingResult,
-        )
-
-        return SkillCaseResult if name == "SkillCaseResult" else SkillGradingResult
-    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
-
-
-if TYPE_CHECKING:
-    from pytest_skill_engineering.fixtures.skill_eval import SkillCaseResult, SkillGradingResult
-
-    __all__ += ["SkillCaseResult", "SkillGradingResult"]

@@ -14,7 +14,7 @@ pytest includes built-in JUnit XML output that works with all CI systems. Use it
 pytest tests/ \
     --junitxml=results.xml \
     --aitest-html=report.html \
-    --aitest-summary-model=azure/gpt-5.2-chat
+  --aitest-summary-model=copilot/gpt-5.4
 ```
 
 | Format | Purpose | Consumers |
@@ -95,7 +95,7 @@ This project includes a ready-to-use hero test workflow at `.github/workflows/he
     uv run pytest tests/showcase/ -v \
       --aitest-html=docs/demo/hero-report.html \
       --junitxml=hero-results.xml \
-      -o "addopts=--aitest-summary-model=azure/gpt-5.2-chat"
+      -o "addopts=--aitest-summary-model=copilot/gpt-5.4"
 
 - name: Publish JUnit results
   uses: dorny/test-reporter@v1
@@ -149,7 +149,7 @@ The `addopts` in `pyproject.toml` sets default report paths. The workflow overri
 ```bash
 # Override addopts to avoid conflict with pyproject.toml defaults
 uv run pytest tests/showcase/ -v \
-  -o "addopts=--aitest-summary-model=azure/gpt-5.2-chat" \
+  -o "addopts=--aitest-summary-model=copilot/gpt-5.4" \
   --aitest-html=docs/demo/hero-report.html \
   --junitxml=hero-results.xml
 ```
@@ -166,7 +166,7 @@ For your own tests, adapt the pattern:
       --junitxml=reports/results.xml \
       --aitest-html=reports/report.html \
       --aitest-json=reports/report.json \
-      --aitest-summary-model=azure/gpt-5.2-chat
+      --aitest-summary-model=copilot/gpt-5.4
 
 - name: Upload test results
   uses: actions/upload-artifact@v4

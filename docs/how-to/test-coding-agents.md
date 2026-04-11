@@ -40,7 +40,7 @@ from pytest_skill_engineering.copilot import CopilotEval
 agent = CopilotEval(
     name="my-agent",                    # Required: unique agent name
     instructions="Your instructions.",   # System prompt for the agent
-    model="gpt-5.2",                     # Optional: model override
+    model="gpt-5.4",                     # Optional: model override
     working_directory=str(tmp_path),     # Working directory for file ops
     max_turns=25,                        # Max conversation turns
     timeout_s=300.0,                     # Timeout in seconds
@@ -278,7 +278,7 @@ pytest tests/ --aitest-summary-model=gpt-5-mini --aitest-html=report.html
 pytest tests/ --llm-model=copilot/gpt-5-mini
 ```
 
-This routes calls through the Copilot SDK, authenticated via `gh auth login` or `GITHUB_TOKEN`. Available models are whatever your Copilot subscription provides (e.g., `gpt-5-mini`, `gpt-5.2`, `claude-opus-4.5`).
+This routes calls through the Copilot SDK, authenticated via `gh auth login` or `GITHUB_TOKEN`. Available models are whatever your Copilot subscription provides (e.g., `gpt-5.4`, `gpt-5-mini`, `claude-opus-4.5`).
 
 ## Prompt Optimization with Copilot
 

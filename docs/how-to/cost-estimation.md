@@ -18,7 +18,7 @@ Create a `pricing.toml` file in your project root (or any parent directory) to a
 # Per-million-token pricing.
 [models]
 "gpt-5-mini" = { input = 0.15, output = 0.60 }
-"gpt-4.1-mini" = { input = 0.30, output = 1.20 }
+"gpt-5.4" = { input = 0.30, output = 1.20 }
 "claude-sonnet-4" = { input = 3.00, output = 15.00 }
 ```
 

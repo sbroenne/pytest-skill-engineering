@@ -18,7 +18,7 @@ from pytest_skill_engineering.core.skill_refiner import RefinementResult, analyz
 if TYPE_CHECKING:
     from collections.abc import Callable, Coroutine
 
-    from pytest_skill_engineering.fixtures.skill_eval import SkillGradingResult
+    from pytest_skill_engineering.core.skill_eval_results import SkillGradingResult
 
 logger = logging.getLogger(__name__)
 

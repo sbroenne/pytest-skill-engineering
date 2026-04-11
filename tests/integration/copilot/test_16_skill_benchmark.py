@@ -113,11 +113,11 @@ class TestSkillBenchmark:
     @pytest.mark.slow
     async def test_benchmark_with_custom_model(self, skill_benchmark):
         """Benchmark works with custom model specification."""
-        skill_path = Path(__file__).parent.parent / "skills" / "simple-assistant"
-        result = await skill_benchmark(skill_path, model="gpt-5.4-mini")
+        skill_path = Path(__file__).parent.parent / "skills" / "math-helper"
+        result = await skill_benchmark(skill_path, model="gpt-5-mini")
 
         assert len(result.cases) > 0
-        assert result.skill_name == "simple-assistant"
+        assert result.skill_name == "math-helper"
 
     @pytest.mark.slow
     async def test_benchmark_with_instructions(self, skill_benchmark):

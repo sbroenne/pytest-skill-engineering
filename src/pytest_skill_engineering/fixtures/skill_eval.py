@@ -18,7 +18,6 @@ Example:
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -26,60 +25,17 @@ import pytest
 
 from pytest_skill_engineering.copilot.eval import CopilotEval
 from pytest_skill_engineering.core.skill import Skill
-from pytest_skill_engineering.core.skill_evals import SkillEvalCase, load_skill_evals
+from pytest_skill_engineering.core.skill_eval_results import (
+    SkillCaseResult,
+    SkillGradingResult,
+)
+from pytest_skill_engineering.core.skill_evals import load_skill_evals
 from pytest_skill_engineering.core.skill_grading import export_grading
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Coroutine
 
     from pytest_skill_engineering.copilot.result import CopilotResult
-
-
-@dataclass(slots=True)
-class SkillCaseResult:
-    """Result of running a single skill eval case.
-
-    Attributes:
-        case: The eval case that was run
-        result: The CopilotResult from running the eval
-        expectation_results: Whether each expectation passed
-        evidence: Evidence strings for each expectation
-        passed: Whether all expectations passed
-    """
-
-    case: SkillEvalCase
-    result: CopilotResult
-    expectation_results: list[bool]
-    evidence: list[str]
-    passed: bool
-
-
-@dataclass(slots=True)
-class SkillGradingResult:
-    """Result of running all skill-creator evals for a skill.
-
-    Attributes:
-        skill_name: Name of the skill
-        cases: Results for each eval case
-        grading: skill-creator compatible grading.json dict
-    """
-
-    skill_name: str
-    cases: list[SkillCaseResult]
-    grading: dict[str, Any]
-
-    @property
-    def pass_rate(self) -> float:
-        """Pass rate across all cases."""
-        if not self.cases:
-            return 0.0
-        passed = sum(1 for c in self.cases if c.passed)
-        return passed / len(self.cases)
-
-    @property
-    def all_passed(self) -> bool:
-        """Whether all cases passed."""
-        return all(c.passed for c in self.cases)
 
 
 @pytest.fixture
