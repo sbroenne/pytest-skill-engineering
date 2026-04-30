@@ -181,7 +181,8 @@ def pytest_generate_tests(metafunc: pytest.Metafunc) -> None:
     receives the parameter even though it does not declare the fixture
     explicitly.
     """
-    count: int = metafunc.config.getoption("--aitest-iterations", default=1)
+    count_option = metafunc.config.getoption("--aitest-iterations", default=1)
+    count = count_option if isinstance(count_option, int) else 1
     if count <= 1:
         return
     metafunc.fixturenames.append("_aitest_iteration")
@@ -360,7 +361,7 @@ def _add_junit_properties(
         <testcase name="test_balance">
           <properties>
             <property name="aitest.agent.name" value="banking-agent"/>
-            <property name="aitest.model" value="gpt-5-mini"/>
+            <property name="aitest.model" value="gpt-5.4-mini"/>
             <property name="aitest.skill" value="financial-advisor"/>
             <property name="aitest.tools.called" value="get_balance,transfer"/>
           </properties>

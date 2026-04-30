@@ -35,6 +35,7 @@ dependencies = [
     "python-frontmatter>=1.1.0",
     "nh3>=0.3.3",
     "github-copilot-sdk>=0.2.2",
+    "trio>=0.33.0",
 ]
 
 [project.optional-dependencies]
@@ -119,7 +120,7 @@ filterwarnings = [
 # This demonstrates the recommended setup - configure once in pyproject.toml.
 # LLM auth is handled by the GitHub Copilot SDK (gh auth login or GITHUB_TOKEN)
 addopts = """
---aitest-summary-model=copilot/gpt-5.4
+--aitest-summary-model=copilot/gpt-5.5
 --aitest-html=aitest-reports/report.html
 """
 markers = [

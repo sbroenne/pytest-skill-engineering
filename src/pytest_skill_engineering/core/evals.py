@@ -38,7 +38,7 @@ Example usage::
     from pytest_skill_engineering import Eval, Provider
     agent = Eval.from_agent_file(
         ".github/agents/reviewer.agent.md",
-        provider=Provider(model="azure/gpt-5-mini"),
+        provider=Provider(model="azure/gpt-5.4-mini"),
     )
 
     # Use with CopilotEval

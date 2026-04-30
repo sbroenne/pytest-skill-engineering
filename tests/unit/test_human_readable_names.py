@@ -30,7 +30,7 @@ from pytest_skill_engineering.reporting.insights import (
 @pytest.fixture
 def insights() -> InsightsResult:
     return InsightsResult(
-        markdown_summary="## Verdict\nDeploy gpt-5-mini.",
+        markdown_summary="## Verdict\nDeploy gpt-5.4-mini.",
         model="test-model",
         tokens_used=100,
         cost_usd=0.001,
@@ -55,24 +55,24 @@ def _make_suite_with_class_docstrings() -> SuiteReport:
         duration_ms=200.0,
         tests=[
             TestReport(
-                name="tests/test_hero.py::TestCoreOperations::test_transfer_and_verify[gpt-5-mini]",
+                name="tests/test_hero.py::TestCoreOperations::test_transfer_and_verify[gpt-5.4-mini]",
                 outcome="passed",
                 duration_ms=100.0,
                 eval_result=_make_result(),
                 agent_id="agent-1",
-                eval_name="gpt-5-mini",
-                model="gpt-5-mini",
+                eval_name="gpt-5.4-mini",
+                model="gpt-5.4-mini",
                 docstring="Transfer money and verify the result with balance check.",
                 class_docstring="Core banking tests — parametrized across all benchmark agents.",
             ),
             TestReport(
-                name="tests/test_hero.py::TestCoreOperations::test_check_balance[gpt-5-mini]",
+                name="tests/test_hero.py::TestCoreOperations::test_check_balance[gpt-5.4-mini]",
                 outcome="passed",
                 duration_ms=100.0,
                 eval_result=_make_result(),
                 agent_id="agent-1",
-                eval_name="gpt-5-mini",
-                model="gpt-5-mini",
+                eval_name="gpt-5.4-mini",
+                model="gpt-5.4-mini",
                 docstring="Check account balance for a specific account.",
                 class_docstring="Core banking tests — parametrized across all benchmark agents.",
             ),
@@ -115,7 +115,7 @@ class TestDisplayName:
 
     def test_uses_docstring_when_available(self) -> None:
         report = TestReport(
-            name="tests/test_hero.py::TestFoo::test_bar[gpt-5-mini]",
+            name="tests/test_hero.py::TestFoo::test_bar[gpt-5.4-mini]",
             outcome="passed",
             duration_ms=100.0,
             docstring="Check account balance for a specific account.",
@@ -124,11 +124,11 @@ class TestDisplayName:
 
     def test_falls_back_to_short_name(self) -> None:
         report = TestReport(
-            name="tests/test_hero.py::TestFoo::test_bar[gpt-5-mini]",
+            name="tests/test_hero.py::TestFoo::test_bar[gpt-5.4-mini]",
             outcome="passed",
             duration_ms=100.0,
         )
-        assert report.display_name == "test_bar[gpt-5-mini]"
+        assert report.display_name == "test_bar[gpt-5.4-mini]"
 
     def test_uses_first_line_of_multiline_docstring(self) -> None:
         report = TestReport(

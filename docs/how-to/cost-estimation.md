@@ -17,8 +17,8 @@ Create a `pricing.toml` file in your project root (or any parent directory) to a
 ```toml
 # Per-million-token pricing.
 [models]
-"gpt-5-mini" = { input = 0.15, output = 0.60 }
-"gpt-5.4" = { input = 0.30, output = 1.20 }
+"gpt-5.4-mini" = { input = 0.15, output = 0.60 }
+"gpt-5.5" = { input = 0.30, output = 1.20 }
 "claude-sonnet-4" = { input = 3.00, output = 15.00 }
 ```
 
@@ -47,7 +47,7 @@ When a model has no pricing:
 ## Pricing Lookup Summary
 
 ```text
-CopilotEval(model="gpt-5-mini")
+CopilotEval(model="gpt-5.4-mini")
          │
          ▼
 ┌─────────────────┐

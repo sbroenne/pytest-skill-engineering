@@ -128,38 +128,38 @@ class TestGetRateLimiter:
 
     def test_creates_new_limiter(self) -> None:
         """Creates a new limiter for unknown model."""
-        limiter = get_rate_limiter("azure/gpt-5-mini", rpm=10)
+        limiter = get_rate_limiter("azure/gpt-5.4-mini", rpm=10)
         assert limiter.rpm == 10
         assert limiter.tpm is None
 
     def test_returns_same_limiter(self) -> None:
         """Returns same limiter instance for same model."""
-        limiter1 = get_rate_limiter("azure/gpt-5-mini", rpm=10)
-        limiter2 = get_rate_limiter("azure/gpt-5-mini", rpm=10)
+        limiter1 = get_rate_limiter("azure/gpt-5.4-mini", rpm=10)
+        limiter2 = get_rate_limiter("azure/gpt-5.4-mini", rpm=10)
         assert limiter1 is limiter2
 
     def test_takes_most_restrictive_rpm(self) -> None:
         """When called with different rpm, takes the minimum."""
-        get_rate_limiter("azure/gpt-5-mini", rpm=20)
-        limiter = get_rate_limiter("azure/gpt-5-mini", rpm=10)
+        get_rate_limiter("azure/gpt-5.4-mini", rpm=20)
+        limiter = get_rate_limiter("azure/gpt-5.4-mini", rpm=10)
         assert limiter.rpm == 10
 
     def test_takes_most_restrictive_tpm(self) -> None:
         """When called with different tpm, takes the minimum."""
-        get_rate_limiter("azure/gpt-5-mini", tpm=50000)
-        limiter = get_rate_limiter("azure/gpt-5-mini", tpm=10000)
+        get_rate_limiter("azure/gpt-5.4-mini", tpm=50000)
+        limiter = get_rate_limiter("azure/gpt-5.4-mini", tpm=10000)
         assert limiter.tpm == 10000
 
     def test_adds_limit_to_existing(self) -> None:
         """Can add tpm to a limiter that only had rpm."""
-        get_rate_limiter("azure/gpt-5-mini", rpm=10)
-        limiter = get_rate_limiter("azure/gpt-5-mini", tpm=5000)
+        get_rate_limiter("azure/gpt-5.4-mini", rpm=10)
+        limiter = get_rate_limiter("azure/gpt-5.4-mini", tpm=5000)
         assert limiter.rpm == 10
         assert limiter.tpm == 5000
 
     def test_different_models_separate_limiters(self) -> None:
         """Different models get separate limiters."""
-        limiter1 = get_rate_limiter("azure/gpt-5-mini", rpm=10)
+        limiter1 = get_rate_limiter("azure/gpt-5.4-mini", rpm=10)
         limiter2 = get_rate_limiter("azure/gpt-4.1", rpm=20)
         assert limiter1 is not limiter2
         assert limiter1.rpm == 10
@@ -167,13 +167,13 @@ class TestGetRateLimiter:
 
     def test_no_limits_creates_limiter(self) -> None:
         """Creates limiter even with no limits (has_limits=False)."""
-        limiter = get_rate_limiter("azure/gpt-5-mini")
+        limiter = get_rate_limiter("azure/gpt-5.4-mini")
         assert not limiter.has_limits
 
     def test_reset_clears_all(self) -> None:
         """reset_rate_limiters clears all cached limiters."""
-        limiter1 = get_rate_limiter("azure/gpt-5-mini", rpm=10)
+        limiter1 = get_rate_limiter("azure/gpt-5.4-mini", rpm=10)
         reset_rate_limiters()
-        limiter2 = get_rate_limiter("azure/gpt-5-mini", rpm=20)
+        limiter2 = get_rate_limiter("azure/gpt-5.4-mini", rpm=20)
         assert limiter1 is not limiter2
         assert limiter2.rpm == 20  # Not constrained by old value

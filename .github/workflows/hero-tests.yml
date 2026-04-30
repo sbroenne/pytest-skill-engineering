@@ -59,7 +59,7 @@ jobs:
           uv run pytest tests/showcase/ -v \
             --aitest-html=docs/demo/hero-report.html \
             --junitxml=hero-results.xml \
-            -o "addopts=--aitest-summary-model=copilot/gpt-5.4"
+            -o "addopts=--aitest-summary-model=copilot/gpt-5.5"
 
       - name: Publish JUnit results
         uses: dorny/test-reporter@v3

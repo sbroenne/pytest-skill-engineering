@@ -63,7 +63,7 @@ Test whether a clearer description improves tool usage:
 # v1: Vague description
 # get_balance: "Gets balance data"
 
-# v2: Clear description with examples  
+# v2: Clear description with examples
 # get_balance: "Get current balance for a bank account. Example: get_balance('checking')"
 
 @pytest.mark.parametrize("agent", [agent_v1, agent_v2], ids=["vague", "clear"])
@@ -125,7 +125,7 @@ async def test_ambiguous_query(copilot_eval, agent):
 Test servers across multiple models to find interactions:
 
 ```python
-MODELS = ["gpt-5-mini", "gpt-4.1"]
+MODELS = ["gpt-5.4-mini", "gpt-4.1"]
 
 AGENTS = [
     CopilotEval(
@@ -141,8 +141,8 @@ AGENTS = [
 ```
 
 This reveals interactions like:
-- "v2 works great with gpt-4.1 but fails with gpt-5-mini"
-- "gpt-5-mini needs better tool descriptions to match gpt-4.1 performance"
+- "v2 works great with gpt-4.1 but fails with gpt-5.4-mini"
+- "gpt-5.4-mini needs better tool descriptions to match gpt-4.1 performance"
 
 ## AI Insights for Server Comparison
 
@@ -157,7 +157,7 @@ Issue: LLM often calls get_all_balances instead
 Suggested: "Get CURRENT balance for a specific bank account.
             For all accounts at once, use get_all_balances."
 
-banking-v2/get_balance — 95% success rate  
+banking-v2/get_balance — 95% success rate
 Description is clear and well-targeted.
 ```
 

@@ -11,8 +11,8 @@ description: "Configure pytest-skill-engineering via pyproject.toml or command-l
 ```toml
 [tool.pytest.ini_options]
 addopts = """
---aitest-summary-model=copilot/gpt-5.4
---llm-model=gpt-5-mini
+--aitest-summary-model=copilot/gpt-5.5
+--llm-model=gpt-5.4-mini
 --aitest-html=aitest-reports/report.html
 """
 ```
@@ -69,17 +69,17 @@ gh auth login  # One-time authentication
 ```toml
 [tool.pytest.ini_options]
 addopts = """
---aitest-summary-model=copilot/gpt-5-mini
---llm-model=copilot/gpt-5-mini
+--aitest-summary-model=copilot/gpt-5.4-mini
+--llm-model=copilot/gpt-5.4-mini
 """
 ```
 
-Available models depend on your Copilot subscription (e.g., `gpt-5.4`, `gpt-5-mini`, `claude-sonnet-4.5`).
+Available models depend on your Copilot subscription (e.g., `gpt-5.5`, `gpt-5.4-mini`, `claude-sonnet-4.5`).
 
 For Copilot integration tests that use auxiliary judge calls (for example optimizer integration), the suite now fails fast if no provider model is reachable. You can force the judge model with:
 
 ```bash
-AITEST_INTEGRATION_JUDGE_MODEL=copilot/gpt-5-mini
+AITEST_INTEGRATION_JUDGE_MODEL=copilot/gpt-5.4-mini
 ```
 
 | Provider | Variable |
@@ -96,7 +96,7 @@ AITEST_INTEGRATION_JUDGE_MODEL=copilot/gpt-5-mini
 from pytest_skill_engineering.copilot import CopilotEval
 
 # Basic - Copilot SDK handles auth
-agent = CopilotEval(name="assistant", model="gpt-5-mini")
+agent = CopilotEval(name="assistant", model="gpt-5.4-mini")
 
 # With generation parameters
 agent = CopilotEval(
@@ -115,7 +115,7 @@ from pytest_skill_engineering.copilot import CopilotEval
 agent = CopilotEval(
     name="my-agent",                         # Identifier for reports
     instructions="You are...",               # Agent instructions
-    model="gpt-5-mini",                      # Model selection (optional)
+    model="gpt-5.4-mini",                      # Model selection (optional)
     skill_directories=["skills/my-skill"],   # Skill directories (optional)
     custom_agents=[agent_def],               # Custom agent definitions (optional)
     excluded_tools=["tool3"],                # Filter out tools (optional)
@@ -165,9 +165,9 @@ The main fixture for running tests:
 async def test_banking(copilot_eval):
     agent = CopilotEval(
         name="banking",
-        model="gpt-5-mini",
+        model="gpt-5.4-mini",
     )
-    
+
     result = await copilot_eval(agent, "What's my checking balance?")
     assert result.success
 ```
@@ -179,14 +179,14 @@ Configure the LLM judge models for semantic and visual assertions:
 ```toml
 [tool.pytest.ini_options]
 addopts = """
---llm-model=copilot/gpt-5-mini
---llm-vision-model=copilot/gpt-5-mini
+--llm-model=copilot/gpt-5.4-mini
+--llm-vision-model=copilot/gpt-5.4-mini
 """
 ```
 
 | Option | Default | Description |
 |--------|---------|-------------|
-| `--llm-model` | `copilot/gpt-5-mini` | Model for `llm_assert` semantic assertions |
+| `--llm-model` | `copilot/gpt-5.4-mini` | Model for `llm_assert` semantic assertions |
 | `--llm-vision-model` | Falls back to `--llm-model` | Vision model for `llm_assert_image` assertions |
 | `--aitest-analysis-prompt` | Built-in prompt | Path to a custom analysis prompt file |
 | `--aitest-summary-compact` | Disabled | Omit full conversation turns for passed tests in AI analysis |
@@ -197,7 +197,7 @@ You can override pyproject.toml settings via CLI:
 
 ```bash
 # Use a different model for this run
-pytest tests/ --aitest-summary-model=copilot/gpt-5.4
+pytest tests/ --aitest-summary-model=copilot/gpt-5.5
 
 # Different output path
 pytest tests/ --aitest-html=custom-report.html
@@ -206,10 +206,10 @@ pytest tests/ --aitest-html=custom-report.html
 pytest tests/ --aitest-iterations=5
 
 # Custom assertion model
-pytest tests/ --llm-model=copilot/gpt-5-mini
+pytest tests/ --llm-model=copilot/gpt-5.4-mini
 
 # Compact AI analysis input for large suites
-pytest tests/ --aitest-summary-model=copilot/gpt-5.4 --aitest-summary-compact
+pytest tests/ --aitest-summary-model=copilot/gpt-5.5 --aitest-summary-compact
 ```
 
 ## Programmatic Prompt Access

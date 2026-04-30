@@ -99,10 +99,10 @@ Answers: "Which configuration should I deploy?"
 ├─────────────────────────────────────────────────────────────────┤
 │ Rank │ Eval                          │ Pass │ Tokens │ Cost   │
 ├──────┼────────────────────────────────┼──────┼────────┼────────┤
-│  🥇  │ gpt-5.4 / concise              │ 100% │  561 ★ │ $0.001 │
-│  🥈  │ gpt-5-mini / concise           │ 100% │  743   │ $0.001 │
-│  🥉  │ gpt-5.4 / detailed             │ 100% │  764   │ $0.001 │
-│   4  │ gpt-5-mini / detailed          │ 100% │  973   │ $0.002 │
+│  🥇  │ gpt-5.5 / concise              │ 100% │  561 ★ │ $0.001 │
+│  🥈  │ gpt-5.4-mini / concise           │ 100% │  743   │ $0.001 │
+│  🥉  │ gpt-5.5 / detailed             │ 100% │  764   │ $0.001 │
+│   4  │ gpt-5.4-mini / detailed          │ 100% │  973   │ $0.002 │
 └──────┴────────────────────────────────┴──────┴────────┴────────┘
   ★ = Best in column    Sorted by: Pass Rate → Cost (tiebreaker)
 ```
@@ -129,7 +129,7 @@ Allows picking exactly 2 evals for side-by-side comparison in test details.
 ┌─────────────────────────────────────────────────────────────────┐
 │ Compare evals:                                                 │
 │ ┌────────────────┐ ┌────────────────┐ ┌────────────────┐        │
-│ │ ☑ gpt-5.4      │ │ ☑ gpt-5-mini   │ │ ☐ gpt-5-mini   │        │
+│ │ ☑ gpt-5.5      │ │ ☑ gpt-5.4-mini   │ │ ☐ gpt-5.4-mini   │        │
 │ │   100% ✓       │ │   100% ✓       │ │   + skill      │        │
 │ └────────────────┘ └────────────────┘ └────────────────┘        │
 └─────────────────────────────────────────────────────────────────┘
@@ -146,7 +146,7 @@ Allows picking exactly 2 evals for side-by-side comparison in test details.
 
 All test results with comparison columns for selected evals.
 
-**Components:** 
+**Components:**
 - `test_grid.py` → `test_grid()` (main container)
 - `test_comparison.py` → `test_comparison()` (per-test details)
 
@@ -175,7 +175,7 @@ Shows side-by-side comparison of selected evals:
 │ ▼ Check account balance                   ✅ passed │ 4.6s     │
 ├─────────────────────────────────────────────────────────────────┤
 │ ┌─────────────────────────┐ ┌─────────────────────────┐         │
-│ │ gpt-5.4                ✅│ │ gpt-5-mini             ✅│         │
+│ │ gpt-5.5                ✅│ │ gpt-5.4-mini             ✅│         │
 │ │ 561 tokens │ $0.001     │ │ 743 tokens │ $0.002     │         │
 │ ├─────────────────────────┤ ├─────────────────────────┤         │
 │ │   [Mermaid Diagram]     │ │   [Mermaid Diagram]     │         │
@@ -262,10 +262,10 @@ The design MUST work at these scales:
 
 ### Anti-Patterns (What NOT to Do)
 
-❌ **Don't** show side-by-side cards that shrink with more items  
-❌ **Don't** truncate eval names — wrap or tooltip instead  
-❌ **Don't** show tiny unreadable diagrams  
-❌ **Don't** require horizontal scrolling for core content  
+❌ **Don't** show side-by-side cards that shrink with more items
+❌ **Don't** truncate eval names — wrap or tooltip instead
+❌ **Don't** show tiny unreadable diagrams
+❌ **Don't** require horizontal scrolling for core content
 ❌ **Don't** select more than 2 evals for comparison
 
 ## Visual Design Tokens

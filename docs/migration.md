@@ -53,7 +53,7 @@ Use `CopilotEval` instead of the raw `system_prompt=` constructor argument.
 from pytest_aitest import Agent, Provider
 
 agent = Agent(
-    provider=Provider(model="azure/gpt-5-mini"),
+    provider=Provider(model="azure/gpt-5.4-mini"),
     system_prompt="You are a banking assistant. Use tools to manage accounts.",
     system_prompt_name="banking-v1",
 )
@@ -77,7 +77,7 @@ If the original code had no `system_prompt_name`, use the test name or `"default
 ```python
 # Old
 agent = Eval(
-    provider=Provider(model="azure/gpt-5-mini"),
+    provider=Provider(model="azure/gpt-5.4-mini"),
     system_prompt="You are a helpful assistant.",
 )
 
@@ -96,7 +96,7 @@ Other keyword arguments (`skill_directories`, `custom_agents`, `excluded_tools`,
 agent = CopilotEval(
     name="banking-v1",
     instructions="You are a banking assistant.",
-    model="gpt-5-mini",
+    model="gpt-5.4-mini",
 )
 ```
 
@@ -120,7 +120,7 @@ PROMPTS = load_system_prompts(PROMPTS_DIR)
 
 AGENTS = [
     Agent(
-        provider=Provider(model="azure/gpt-5-mini"),
+        provider=Provider(model="azure/gpt-5.4-mini"),
         system_prompt=prompt_text,
         system_prompt_name=prompt_name,
     )

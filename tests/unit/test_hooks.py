@@ -278,7 +278,7 @@ class TestCompactSummaryOption:
         config = mock.MagicMock()
 
         options = {
-            "--aitest-summary-model": "copilot/gpt-5-mini",
+            "--aitest-summary-model": "copilot/gpt-5.4-mini",
             "--aitest-min-pass-rate": None,
             "--aitest-analysis-prompt": None,
             "--aitest-summary-compact": True,
@@ -303,7 +303,7 @@ class TestCompactSummaryOption:
 
         class _FakeResult:
             markdown_summary = "ok"
-            model = "copilot/gpt-5-mini"
+            model = "copilot/gpt-5.4-mini"
             tokens_used = 10
             cost_usd = 0.0
             cached = False
@@ -334,7 +334,7 @@ class TestCompactSummaryOption:
         terminalreporter = mock.MagicMock()
 
         options = {
-            "--aitest-summary-model": "copilot/gpt-5-mini",
+            "--aitest-summary-model": "copilot/gpt-5.4-mini",
             "--aitest-min-pass-rate": None,
             "--aitest-analysis-prompt": None,
             "--aitest-summary-compact": False,
@@ -362,7 +362,7 @@ class TestCompactSummaryOption:
 
         class _FakeResult:
             markdown_summary = "ok"
-            model = "copilot/gpt-5-mini"
+            model = "copilot/gpt-5.4-mini"
             tokens_used = 10
             cost_usd = 0.0
             cached = False

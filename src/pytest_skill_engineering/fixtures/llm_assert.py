@@ -12,7 +12,7 @@ from dataclasses import dataclass
 
 import pytest
 
-_LLM_MODEL_DEFAULT = "copilot/gpt-5-mini"
+_LLM_MODEL_DEFAULT = "copilot/gpt-5.4-mini"
 
 
 @dataclass(slots=True)
@@ -111,17 +111,19 @@ def llm_assert(request: pytest.FixtureRequest) -> LLMAssert:
     The judge model is resolved in this order:
     1. ``--llm-model`` if explicitly set
     2. ``--aitest-summary-model`` (same model for analysis and assertions)
-    3. ``copilot/gpt-5-mini`` as final fallback
+    3. ``copilot/gpt-5.4-mini`` as final fallback
 
     Example::
 
         def test_response(llm_assert):
             assert llm_assert("Your balance is $1,500", "mentions a dollar amount")
     """
-    model_str: str = request.config.getoption("--llm-model")
+    model_str = request.config.getoption("--llm-model")
+    if not isinstance(model_str, str):
+        model_str = _LLM_MODEL_DEFAULT
     if model_str == _LLM_MODEL_DEFAULT:
         # Not explicitly set — fall back to summary model if available
         summary_model = request.config.getoption("--aitest-summary-model", default=None)
-        if summary_model:
+        if isinstance(summary_model, str) and summary_model:
             model_str = summary_model
     return LLMAssert(model=model_str)

@@ -92,7 +92,7 @@ These are your "code." They have no type system, no compiler, no static analysis
 You could test manually: open a chat, type a prompt, see if the LLM uses the right tool. But:
 
 - **No regression detection** — You changed a description and broke three other tools. Manual testing won't catch that.
-- **No comparison** — Is `gpt-5-mini` better than `gpt-4.1` for your tools? Manual testing can't tell you.
+- **No comparison** — Is `gpt-5.4-mini` better than `gpt-4.1` for your tools? Manual testing can't tell you.
 - **No CI/CD** — You can't gate deployments on "I chatted with it and it seemed fine."
 - **No analysis** — You see what failed, but not *why* or *how to fix it*.
 

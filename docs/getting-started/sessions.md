@@ -35,18 +35,18 @@ banking_agent = CopilotEval(
 @pytest.mark.session("banking-chat")
 class TestBankingConversation:
     """Tests run in order, sharing conversation history."""
-    
+
     async def test_initial_query(self, copilot_eval):
         """First message - establishes context."""
         result = await copilot_eval(banking_agent, "What's my checking account balance?")
         assert result.success
-    
+
     async def test_followup(self, copilot_eval):
         """Second message - uses context from first."""
         result = await copilot_eval(banking_agent, "Transfer $200 to savings")
         assert result.success
         # Agent remembers we were talking about checking
-    
+
     async def test_verification(self, copilot_eval):
         """Third message - builds on full conversation."""
         result = await copilot_eval(banking_agent, "What are my new balances?")
@@ -71,7 +71,7 @@ test_initial_query
     Eval: "Your checking balance is $1,500.00..."
     ↓ context passed to next test
 
-test_followup  
+test_followup
     [Previous messages included]
     User: "Transfer $200 to savings"
     Eval: "Done! Transferred $200 from checking to savings..."
@@ -99,10 +99,10 @@ You can combine sessions with model comparison:
 
 ```python
 @pytest.mark.session("shopping-flow")
-@pytest.mark.parametrize("model", ["gpt-5-mini", "gpt-4.1"])
+@pytest.mark.parametrize("model", ["gpt-5.4-mini", "gpt-4.1"])
 class TestShoppingWorkflow:
     """Test the same conversation flow with different models."""
-    
+
     async def test_browse(self, copilot_eval, model):
         agent = CopilotEval(
             name=f"shop-{model}",
@@ -111,7 +111,7 @@ class TestShoppingWorkflow:
         )
         result = await copilot_eval(agent, "Show me running shoes")
         assert result.success
-    
+
     async def test_select(self, copilot_eval, model):
         agent = CopilotEval(
             name=f"shop-{model}",
@@ -124,7 +124,7 @@ class TestShoppingWorkflow:
 
 This creates two separate session flows:
 
-- `shopping-flow[gpt-5-mini]`: browse → select (with gpt-5-mini)
+- `shopping-flow[gpt-5.4-mini]`: browse → select (with gpt-5.4-mini)
 - `shopping-flow[gpt-4.1]`: browse → select (with gpt-4.1)
 
 The report shows each session as a complete flow with all turns visualized.

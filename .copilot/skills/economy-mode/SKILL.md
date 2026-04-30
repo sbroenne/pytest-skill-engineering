@@ -40,13 +40,13 @@ When economy mode is **active**, Layer 3 auto-selection uses this table instead 
 
 | Task Output | Normal Mode | Economy Mode |
 |-------------|-------------|--------------|
-| Writing code (implementation, refactoring, bug fixes) | `claude-sonnet-4.5` | `gpt-4.1` or `gpt-5-mini` |
-| Writing prompts or agent designs | `claude-sonnet-4.5` | `gpt-4.1` or `gpt-5-mini` |
-| Docs, planning, triage, changelogs, mechanical ops | `claude-haiku-4.5` | `gpt-4.1` or `gpt-5-mini` |
+| Writing code (implementation, refactoring, bug fixes) | `claude-sonnet-4.5` | `gpt-4.1` or `gpt-5.4-mini` |
+| Writing prompts or agent designs | `claude-sonnet-4.5` | `gpt-4.1` or `gpt-5.4-mini` |
+| Docs, planning, triage, changelogs, mechanical ops | `claude-haiku-4.5` | `gpt-4.1` or `gpt-5.4-mini` |
 | Architecture, code review, security audits | `claude-opus-4.5` | `claude-sonnet-4.5` |
 | Scribe / logger / mechanical file ops | `claude-haiku-4.5` | `gpt-4.1` |
 
-**Prefer `gpt-4.1` over `gpt-5-mini`** when the task involves structured output or agentic tool use. Prefer `gpt-5-mini` for pure text generation tasks where latency matters.
+**Prefer `gpt-4.1` over `gpt-5.4-mini`** when the task involves structured output or agentic tool use. Prefer `gpt-5.4-mini` for pure text generation tasks where latency matters.
 
 ## AGENT WORKFLOW
 

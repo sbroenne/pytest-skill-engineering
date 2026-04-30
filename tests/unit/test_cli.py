@@ -80,7 +80,7 @@ class TestLoadSuiteReport:
                     "duration_ms": 100.0,
                     "agent_id": "a1",
                     "eval_name": "a1",
-                    "model": "gpt-5-mini",
+                    "model": "gpt-5.4-mini",
                 },
                 {
                     "name": "test_b",
@@ -88,7 +88,7 @@ class TestLoadSuiteReport:
                     "duration_ms": 200.0,
                     "agent_id": "a1",
                     "eval_name": "a1",
-                    "model": "gpt-5-mini",
+                    "model": "gpt-5.4-mini",
                 },
                 {
                     "name": "test_c",
@@ -96,7 +96,7 @@ class TestLoadSuiteReport:
                     "duration_ms": 300.0,
                     "agent_id": "a1",
                     "eval_name": "a1",
-                    "model": "gpt-5-mini",
+                    "model": "gpt-5.4-mini",
                 },
             ],
         }

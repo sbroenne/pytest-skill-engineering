@@ -78,8 +78,8 @@ uv run python -m pytest tests/integration/copilot/ -v
 
 1. **Models available** (checked 2026-02-23):
 
-   - `gpt-5-mini` — cheapest, use for most tests
-   - `gpt-5.4` — primary summary/default model
+   - `gpt-5.4-mini` — cheapest, use for most tests
+   - `gpt-5.5` — primary summary/default model
    - `gpt-4.1` — alternative provider-backed model
 
 1. **For Copilot tests only:**

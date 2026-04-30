@@ -46,7 +46,7 @@ async def test_balance_query(copilot_eval):
         max_turns=10,
     )
     result = await copilot_eval(agent, "What's my checking account balance?")
-    
+
     assert result.success
     assert result.tool_was_called("get_balance")
 ```
@@ -84,7 +84,7 @@ Configure reporting in `pyproject.toml`:
 ```toml
 [tool.pytest.ini_options]
 addopts = """
---aitest-summary-model=copilot/gpt-5-mini
+--aitest-summary-model=copilot/gpt-5.4-mini
 --aitest-html=aitest-reports/report.html
 """
 ```

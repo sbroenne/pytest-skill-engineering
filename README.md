@@ -14,7 +14,7 @@ Test MCP servers, CLI tools, Agent Skills, and custom agents using the **real Gi
 Your MCP server passes all unit tests. Then a user tries it in GitHub Copilot and:
 
 - Copilot picks the wrong tool
-- Passes garbage parameters  
+- Passes garbage parameters
 - Can't recover from errors
 - Ignores your skill's instructions
 
@@ -49,7 +49,7 @@ async def test_balance_query(copilot_eval):
         max_turns=10,
     )
     result = await copilot_eval(agent, "What's my checking balance?")
-    
+
     assert result.success
     assert result.tool_was_called("get_balance")
 ```
@@ -100,7 +100,7 @@ The AI-powered report needs a model to generate insights. Configure it in `pypro
 
 ```toml
 [tool.pytest.ini_options]
-addopts = "--aitest-summary-model=copilot/gpt-5-mini"
+addopts = "--aitest-summary-model=copilot/gpt-5.4-mini"
 ```
 
 You can also use Azure OpenAI or other providers if you prefer — see [Configuration](https://sbroenne.github.io/pytest-skill-engineering/reference/configuration/).

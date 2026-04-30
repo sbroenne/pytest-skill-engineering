@@ -103,7 +103,7 @@ from pytest_skill_engineering.copilot import CopilotEval
 async def test_balance_check(copilot_eval):
     agent = CopilotEval(
         name="banking-test",
-        model="gpt-5-mini",
+        model="gpt-5.4-mini",
     )
     result = await copilot_eval(agent, "What's my checking account balance?")
     assert result.success
@@ -125,7 +125,7 @@ async def test_balance_check(copilot_eval):
 - **Real Coding Agent Testing** — Test real coding agents like GitHub Copilot via the SDK (native OAuth, skill loading, exact user experience)
 - **Eval Leaderboard** — Auto-ranked by pass rate and cost; AI analysis tells you what to fix
 - **Multi-Turn Sessions** — Test conversations that build on context
-- **Copilot Model Provider** — Use `copilot/gpt-5-mini` for all LLM calls — zero Azure/OpenAI setup
+- **Copilot Model Provider** — Use `copilot/gpt-5.4-mini` for all LLM calls — zero Azure/OpenAI setup
 - **Clarification Detection** — Catch evals that ask questions instead of acting
 - **Semantic Assertions** — `llm_assert` for binary pass/fail checks on response content
 - **Multi-Dimension Scoring** — `llm_score` for granular quality measurement across named dimensions

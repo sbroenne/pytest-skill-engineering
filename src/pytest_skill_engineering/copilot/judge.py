@@ -39,7 +39,7 @@ def _approve_all_permissions(*_args: Any, **_kwargs: Any) -> Any:
     """Approve all permission requests using the current SDK result type."""
     from copilot.session import PermissionRequestResult  # noqa: PLC0415
 
-    return PermissionRequestResult(kind="approved")
+    return PermissionRequestResult(kind="approve-once")
 
 
 def _get_data_field(event: Any, field: str, default: Any = None) -> Any:

@@ -5,7 +5,7 @@ tokens per minute (tpm). Rate limiters are shared across all engine instances
 using the same model, so concurrent tests respect deployment limits.
 
 Usage:
-    limiter = get_rate_limiter("azure/gpt-5-mini", rpm=10, tpm=10000)
+    limiter = get_rate_limiter("azure/gpt-5.4-mini", rpm=10, tpm=10000)
     await limiter.acquire()  # Waits if rate limit would be exceeded
     # ... make API call ...
     limiter.record_tokens(1500)  # Track token usage for tpm enforcement
@@ -38,7 +38,7 @@ def get_rate_limiter(
     restrictive limits (minimum of old and new values).
 
     Args:
-        model: Model identifier string (e.g. "azure/gpt-5-mini").
+        model: Model identifier string (e.g. "azure/gpt-5.4-mini").
         rpm: Requests per minute limit.
         tpm: Tokens per minute limit.
 

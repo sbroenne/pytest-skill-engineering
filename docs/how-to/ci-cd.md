@@ -14,7 +14,7 @@ pytest includes built-in JUnit XML output that works with all CI systems. Use it
 pytest tests/ \
     --junitxml=results.xml \
     --aitest-html=report.html \
-  --aitest-summary-model=copilot/gpt-5.4
+  --aitest-summary-model=copilot/gpt-5.5
 ```
 
 | Format | Purpose | Consumers |
@@ -32,7 +32,7 @@ pytest-skill-engineering automatically enriches JUnit XML with eval metadata as 
 <testcase name="test_balance" time="2.34">
   <properties>
     <property name="aitest.agent.name" value="banking-agent"/>
-    <property name="aitest.model" value="gpt-5-mini"/>
+    <property name="aitest.model" value="gpt-5.4-mini"/>
     <property name="aitest.skill" value="financial-advisor"/>
     <property name="aitest.prompt" value="concise"/>
     <property name="aitest.servers" value="banking_mcp,calendar_mcp"/>
@@ -95,7 +95,7 @@ This project includes a ready-to-use hero test workflow at `.github/workflows/he
     uv run pytest tests/showcase/ -v \
       --aitest-html=docs/demo/hero-report.html \
       --junitxml=hero-results.xml \
-      -o "addopts=--aitest-summary-model=copilot/gpt-5.4"
+      -o "addopts=--aitest-summary-model=copilot/gpt-5.5"
 
 - name: Publish JUnit results
   uses: dorny/test-reporter@v1
@@ -149,7 +149,7 @@ The `addopts` in `pyproject.toml` sets default report paths. The workflow overri
 ```bash
 # Override addopts to avoid conflict with pyproject.toml defaults
 uv run pytest tests/showcase/ -v \
-  -o "addopts=--aitest-summary-model=copilot/gpt-5.4" \
+  -o "addopts=--aitest-summary-model=copilot/gpt-5.5" \
   --aitest-html=docs/demo/hero-report.html \
   --junitxml=hero-results.xml
 ```
@@ -166,7 +166,7 @@ For your own tests, adapt the pattern:
       --junitxml=reports/results.xml \
       --aitest-html=reports/report.html \
       --aitest-json=reports/report.json \
-      --aitest-summary-model=copilot/gpt-5.4
+      --aitest-summary-model=copilot/gpt-5.5
 
 - name: Upload test results
   uses: actions/upload-artifact@v4

@@ -111,7 +111,7 @@ async def test_plugin_tool_usage(copilot_eval):
 # Override the model
 agent = CopilotEval.from_plugin(
     "path/to/my-plugin",
-    model="gpt-5.4",
+    model="gpt-5.5",
 )
 
 # Override instructions (ignores plugin instructions)
@@ -133,7 +133,7 @@ from pytest_skill_engineering.copilot import CopilotEval
 async def test_plugin_with_copilot(copilot_eval, tmp_path):
     agent = CopilotEval.from_plugin(
         "path/to/my-plugin",
-        model="gpt-5-mini",
+        model="gpt-5.4-mini",
         working_directory=str(tmp_path),
     )
     result = await copilot_eval(agent, "Create a hello world script")
@@ -151,7 +151,7 @@ When your plugin includes custom agents, verify that Copilot dispatches to the r
 async def test_plugin_routes_to_reviewer(copilot_eval, tmp_path):
     agent = CopilotEval.from_plugin(
         "path/to/my-plugin",
-        model="gpt-5-mini",
+        model="gpt-5.4-mini",
         working_directory=str(tmp_path),
     )
     result = await copilot_eval(agent, "Review this code for security issues")
@@ -172,7 +172,7 @@ from pytest_skill_engineering.copilot import CopilotEval
 async def test_claude_project(copilot_eval, tmp_path):
     agent = CopilotEval.from_claude_config(
         "path/to/claude-project",
-        model="gpt-5-mini",
+        model="gpt-5.4-mini",
         working_directory=str(tmp_path),
     )
     result = await copilot_eval(agent, "Explain this project")
@@ -257,7 +257,7 @@ from pytest_skill_engineering.copilot import CopilotEval
 
 agent = CopilotEval(
     name="my-test",
-    model="gpt-5-mini",
+    model="gpt-5.4-mini",
     active_agent="banking-advisor",  # Route to a specific custom agent
     hooks={"onSessionStart": "path/to/hook.py"},  # Lifecycle hooks
     working_directory=str(tmp_path),

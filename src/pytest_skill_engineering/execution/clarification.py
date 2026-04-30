@@ -38,7 +38,7 @@ async def check_clarification(
 
     Args:
         response_text: The agent's final response text to classify.
-        judge_model: Model string (e.g. "gpt-5-mini", "claude-sonnet-4").
+        judge_model: Model string (e.g. "gpt-5.4-mini", "claude-sonnet-4").
         timeout_seconds: Timeout for the judge LLM call.
 
     Returns:

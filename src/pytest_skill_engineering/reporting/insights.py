@@ -479,7 +479,7 @@ async def generate_insights(
     custom_agent_info: list[CustomAgentInfo] | None = None,
     prompt_names: list[str] | None = None,
     instruction_file_info: list[InstructionFileInfo] | None = None,
-    model: str = "copilot/gpt-5-mini",
+    model: str = "copilot/gpt-5.4-mini",
     cache_dir: Path | None = None,
     min_pass_rate: int | None = None,
     analysis_prompt: str | None = None,
@@ -496,7 +496,7 @@ async def generate_insights(
         custom_agent_info: Custom agent metadata (optional)
         prompt_names: Names of prompt files tested (optional)
         instruction_file_info: Custom instruction file metadata (optional)
-        model: Model identifier (e.g., "copilot/gpt-5-mini", "azure/gpt-5-mini")
+        model: Model identifier (e.g., "copilot/gpt-5.4-mini", "azure/gpt-5.4-mini")
         cache_dir: Directory for caching results (optional)
         min_pass_rate: Minimum pass rate threshold for disqualifying agents
         analysis_prompt: Custom analysis prompt text. If None, uses the built-in

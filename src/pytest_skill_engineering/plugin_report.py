@@ -107,7 +107,8 @@ def generate_structured_insights(
         from pytest_skill_engineering.reporting.insights import generate_insights
 
         # Require dedicated summary model - no fallback
-        model = config.getoption("--aitest-summary-model")
+        model_option = config.getoption("--aitest-summary-model")
+        model = model_option if isinstance(model_option, str) else None
         if not model:
             if required:
                 raise pytest.UsageError(
@@ -196,7 +197,7 @@ def generate_structured_insights(
                 model=model,
                 min_pass_rate=config.getoption("--aitest-min-pass-rate"),
                 analysis_prompt=analysis_prompt,
-                compact=config.getoption("--aitest-summary-compact"),
+                compact=config.getoption("--aitest-summary-compact") is True,
             )
 
         # Use asyncio.run() instead of deprecated get_event_loop().run_until_complete()

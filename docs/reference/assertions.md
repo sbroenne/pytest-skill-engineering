@@ -156,7 +156,7 @@ Configure the judge model via `--llm-model`:
 
 ```bash
 # GitHub Copilot
-pytest --llm-model=copilot/gpt-5-mini
+pytest --llm-model=copilot/gpt-5.4-mini
 
 # Azure OpenAI
 pytest --llm-model=azure/gpt-4.1
