@@ -120,7 +120,7 @@ filterwarnings = [
 # This demonstrates the recommended setup - configure once in pyproject.toml.
 # LLM auth is handled by the GitHub Copilot SDK (gh auth login or GITHUB_TOKEN)
 addopts = """
---aitest-summary-model=copilot/gpt-5.4
+--aitest-summary-model=copilot/gpt-5.5
 --aitest-html=aitest-reports/report.html
 """
 markers = [

@@ -321,7 +321,7 @@ prompt: |
   WORKTREE_PATH: {worktree_path}
   WORKTREE_MODE: {true|false}
   **Requested by:** {current user name}
-  
+
   {% if WORKTREE_MODE %}
   **WORKTREE:** Working in `{WORKTREE_PATH}`. All operations relative to this path. Do NOT switch branches.
   {% endif %}
@@ -365,7 +365,7 @@ Before spawning an agent, determine which model to use. Check these layers in or
 
 | Role | Default Model | Why | Override When |
 |------|--------------|-----|---------------|
-| Core Dev / Backend / Frontend | `claude-sonnet-4.5` | Writes code — quality first | Heavy code gen → `gpt-5.4` |
+| Core Dev / Backend / Frontend | `claude-sonnet-4.5` | Writes code — quality first | Heavy code gen → `gpt-5.5` |
 | Tester / QA | `claude-sonnet-4.5` | Writes test code — quality first | Simple test scaffolding → `claude-haiku-4.5` |
 | Lead / Architect | auto (per-task) | Mixed: code review needs quality, planning needs cost | Architecture proposals → premium; triage/planning → haiku |
 | Prompt Engineer | auto (per-task) | Mixed: prompt design is like code, research is not | Prompt architecture → sonnet; research/analysis → haiku |
@@ -378,7 +378,7 @@ Before spawning an agent, determine which model to use. Check these layers in or
 **Task complexity adjustments** (apply at most ONE — no cascading):
 - **Bump UP to premium:** architecture proposals, reviewer gates, security audits, multi-agent coordination (output feeds 3+ agents)
 - **Bump DOWN to fast/cheap:** typo fixes, renames, boilerplate, scaffolding, changelogs, version bumps
-- **Switch to code specialist (`gpt-5.4`):** large multi-file refactors, complex implementation from spec, heavy code generation (500+ lines)
+- **Switch to code specialist (`gpt-5.5`):** large multi-file refactors, complex implementation from spec, heavy code generation (500+ lines)
 - **Switch to analytical diversity (`gemini-3-pro-preview`):** code reviews where a second perspective helps, security reviews, architecture reviews after a rejection
 
 **Layer 4 — Default:** If nothing else matched, use `claude-haiku-4.5`. Cost wins when in doubt, unless code is being produced.
@@ -389,8 +389,8 @@ If a spawn fails because the selected model is unavailable (plan restriction, or
 
 ```
 Premium:  claude-opus-4.6 → claude-opus-4.6-fast → claude-opus-4.5 → claude-sonnet-4.5 → (omit model param)
-Standard: claude-sonnet-4.5 → gpt-5.4 → claude-sonnet-4 → gpt-5-mini → (omit model param)
-Fast:     claude-haiku-4.5 → gpt-5.1-codex-mini → gpt-4.1 → gpt-5-mini → (omit model param)
+Standard: claude-sonnet-4.5 → gpt-5.5 → claude-sonnet-4 → gpt-5.4-mini → (omit model param)
+Fast:     claude-haiku-4.5 → gpt-5.2-codex → gpt-4.1 → gpt-5.4-mini → (omit model param)
 ```
 
 `(omit model param)` = call the `task` tool WITHOUT the `model` parameter. The platform uses its built-in default. This is the nuclear fallback — it always works.
@@ -434,8 +434,8 @@ Include tier annotation only when the model was bumped or a specialist was chose
 **Valid models (current platform catalog):**
 
 Premium: `claude-opus-4.6`, `claude-opus-4.6-fast`, `claude-opus-4.5`
-Standard: `claude-sonnet-4.5`, `claude-sonnet-4`, `gpt-5.4`, `gpt-5-mini`, `gpt-5.1-codex-max`, `gpt-5.1-codex`, `gpt-5.1`, `gpt-5`, `gemini-3-pro-preview`
-Fast/Cheap: `claude-haiku-4.5`, `gpt-5.1-codex-mini`, `gpt-5-mini`, `gpt-4.1`
+Standard: `claude-sonnet-4.5`, `claude-sonnet-4`, `gpt-5.5`, `gpt-5.4-mini`, `gpt-5.3-codex`, `gpt-5.2-codex`, `gpt-5`, `gemini-3-pro-preview`
+Fast/Cheap: `claude-haiku-4.5`, `gpt-5.2-codex`, `gpt-5.4-mini`, `gpt-4.1`
 
 ### Client Compatibility
 
@@ -750,16 +750,16 @@ mode: "background"
 description: "{emoji} {Name}: {brief task summary}"
 prompt: |
   You are {Name}, the {Role} on this project.
-  
+
   YOUR CHARTER:
   {paste contents of .squad/agents/{name}/charter.md here}
-  
+
   TEAM ROOT: {team_root}
   All `.squad/` paths are relative to this root.
-  
+
   PERSONAL_AGENT: {true|false}  # Whether this is a personal agent
   GHOST_PROTOCOL: {true|false}  # Whether ghost protocol applies
-  
+
   {If PERSONAL_AGENT is true, append Ghost Protocol rules:}
   ## Ghost Protocol
   You are a personal agent operating in a project context. You MUST follow these rules:
@@ -768,10 +768,10 @@ prompt: |
   - Transparent origin: Tag all logs with [personal:{name}]
   - Consult mode: Provide recommendations, not direct changes
   {end Ghost Protocol block}
-  
+
   WORKTREE_PATH: {worktree_path}
   WORKTREE_MODE: {true|false}
-  
+
   {% if WORKTREE_MODE %}
   **WORKTREE:** You are working in a dedicated worktree at `{WORKTREE_PATH}`.
   - All file operations should be relative to this path
@@ -779,27 +779,27 @@ prompt: |
   - Build and test in the worktree, not the main repo
   - Commit and push from the worktree
   {% endif %}
-  
+
   Read .squad/agents/{name}/history.md (your project knowledge).
   Read .squad/decisions.md (team decisions to respect).
   If .squad/identity/wisdom.md exists, read it before starting work.
   If .squad/identity/now.md exists, read it at spawn time.
   If .squad/skills/ has relevant SKILL.md files, read them before working.
-  
+
   {only if MCP tools detected — omit entirely if none:}
   MCP TOOLS: {service}: ✅ ({tools}) | ❌. Fall back to CLI when unavailable.
   {end MCP block}
-  
+
   **Requested by:** {current user name}
-  
+
   INPUT ARTIFACTS: {list exact file paths to review/modify}
-  
+
   The user says: "{message}"
-  
+
   Do the work. Respond as {Name}.
-  
+
   ⚠️ OUTPUT: Report outcomes in human terms. Never expose tool internals or SQL.
-  
+
   AFTER work:
   1. APPEND to .squad/agents/{name}/history.md under "## Learnings":
      architecture decisions, patterns, user preferences, key file paths.
@@ -807,7 +807,7 @@ prompt: |
      .squad/decisions/inbox/{name}-{brief-slug}.md
   3. SKILL EXTRACTION: If you found a reusable pattern, write/update
      .squad/skills/{skill-name}/SKILL.md (read templates/skill.md for format).
-  
+
   ⚠️ RESPONSE ORDER: After ALL tool calls, write a 2-3 sentence plain text
   summary as your FINAL output. No tool calls after this summary.
 ```

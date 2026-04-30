@@ -46,7 +46,7 @@ The Eval is the **test harness** that bundles the GitHub Copilot coding agent wi
 | Instructions | Optional | `"You are a helpful assistant."` |
 | Skills | Optional | `skill_directories=["skills/banking"]` |
 | Custom Agents | Optional | `custom_agents=[load_custom_agent("agents/reviewer.agent.md")]` |
-| Model | Optional | `model="gpt-5.4"` (defaults to Copilot's active model) |
+| Model | Optional | `model="gpt-5.5"` (defaults to Copilot's active model) |
 | Working Directory | Optional | `working_directory=str(tmp_path)` |
 
 ## Eval Leaderboard
@@ -70,7 +70,7 @@ SKILLS = {
 async def test_banking(copilot_eval, skill_name, skill):
     agent = CopilotEval(
         name=f"banking-{skill_name}",
-        model="gpt-5-mini",
+        model="gpt-5.4-mini",
         skill=skill,
     )
     result = await copilot_eval(agent, "What's my checking balance?")
@@ -81,8 +81,8 @@ The report shows:
 
 | Eval | Pass Rate | Cost |
 |-------|-----------|------|
-| gpt-5-mini (v1) | 100% | $0.002 |
-| gpt-5-mini (v2) | 100% | $0.004 |
+| gpt-5.4-mini (v1) | 100% | $0.002 |
+| gpt-5.4-mini (v2) | 100% | $0.004 |
 
 ## Winning Criteria
 
@@ -109,7 +109,7 @@ This is for **AI analysis only** — the leaderboard always appears when multipl
 ### Compare Models
 
 ```python
-MODELS = ["gpt-5-mini", "gpt-4.1"]
+MODELS = ["gpt-5.4-mini", "gpt-4.1"]
 
 @pytest.mark.parametrize("model", MODELS)
 async def test_with_model(copilot_eval, model):
@@ -148,7 +148,7 @@ async def test_reviewer(copilot_eval, name, agent_def):
 ### Compare Multiple Dimensions
 
 ```python
-MODELS = ["gpt-5-mini", "gpt-4.1"]
+MODELS = ["gpt-5.4-mini", "gpt-4.1"]
 SKILLS = {
     "v1": Skill.from_path("skills/advisor-v1"),
     "v2": Skill.from_path("skills/advisor-v2"),

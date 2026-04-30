@@ -13,7 +13,7 @@ Configure once in `pyproject.toml`:
 ```toml
 [tool.pytest.ini_options]
 addopts = """
---aitest-summary-model=copilot/gpt-5.4
+--aitest-summary-model=copilot/gpt-5.5
 --aitest-html=aitest-reports/report.html
 """
 ```
@@ -50,7 +50,7 @@ You can also use CLI flags directly:
 ```bash
 # Run tests with AI-powered HTML report
 pytest tests/ \
-    --aitest-summary-model=copilot/gpt-5.4 \
+    --aitest-summary-model=copilot/gpt-5.5 \
     --aitest-html=report.html
 
 # Run tests without reports (JSON is still auto-generated)
@@ -86,7 +86,7 @@ pytest-skill-engineering-report results.json \
 # Regenerate with fresh AI insights from a different model
 pytest-skill-engineering-report results.json \
     --html report.html \
-    --summary --summary-model copilot/gpt-5.4
+    --summary --summary-model copilot/gpt-5.5
 ```
 
 This is useful for:
@@ -102,8 +102,8 @@ When you test multiple evals, the report shows an **Eval Leaderboard** ranking a
 | Eval | Pass Rate | Cost |
 |-------|-----------|------|
 | ✓ gpt-4.1 (detailed) | 100% | $0.15 |
-| ✓ gpt-5-mini (detailed) | 97% | $0.03 |
-| ✗ gpt-5-mini (concise) | 82% | $0.02 |
+| ✓ gpt-5.4-mini (detailed) | 97% | $0.03 |
+| ✗ gpt-5.4-mini (concise) | 82% | $0.02 |
 
 **Winning Eval = Highest pass rate → Lowest cost (tiebreaker)**
 
@@ -137,13 +137,13 @@ Use the **most capable model you can afford** for quality analysis:
 
 | Provider | Recommended Models |
 |----------|-------------------|
-| GitHub Copilot | `copilot/gpt-5.4` (best), `copilot/gpt-5-mini` |
+| GitHub Copilot | `copilot/gpt-5.5` (best), `copilot/gpt-5.4-mini` |
 | Azure OpenAI | `azure/gpt-4.1` |
 | OpenAI | `openai/gpt-4.1`, `openai/gpt-4o` |
 | Anthropic | `anthropic/claude-opus-4`, `anthropic/claude-sonnet-4` |
 
 !!! warning "Don't Use Cheap Models for Analysis"
-    Smaller models (gpt-4o-mini, gpt-5-mini) produce generic, low-quality insights.
+    Smaller models (gpt-4o-mini, gpt-5.4-mini) produce generic, low-quality insights.
     The summary model analyzes your test results and generates actionable feedback.
     Use your most capable model here—this is a one-time cost per test run.
 

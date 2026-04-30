@@ -23,7 +23,7 @@ Example::
     from pytest_skill_engineering import Eval, Provider
     agent = Eval.from_plugin(
         "my-plugin/",
-        provider=Provider(model="azure/gpt-5-mini"),
+        provider=Provider(model="azure/gpt-5.4-mini"),
     )
 """
 

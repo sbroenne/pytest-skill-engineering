@@ -57,7 +57,7 @@ class TestBuildAnalysisInput:
                     duration_ms=100,
                     eval_result=passed_result,
                     eval_name="agent-a",
-                    model="gpt-5-mini",
+                    model="gpt-5.4-mini",
                 ),
                 ReportTest(
                     name="tests/test_demo.py::test_failed",
@@ -65,7 +65,7 @@ class TestBuildAnalysisInput:
                     duration_ms=120,
                     eval_result=failed_result,
                     eval_name="agent-a",
-                    model="gpt-5-mini",
+                    model="gpt-5.4-mini",
                     error="boom",
                 ),
             ],

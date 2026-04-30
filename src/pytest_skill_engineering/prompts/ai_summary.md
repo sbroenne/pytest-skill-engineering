@@ -5,7 +5,7 @@ You are analyzing test results for **pytest-skill-engineering**, a skill enginee
 ## Key Concepts
 
 An **Eval** is a complete test configuration — the harness that exercises the skill stack:
-- **Model**: The LLM (e.g., `gpt-5-mini`, `gpt-4.1`)
+- **Model**: The LLM (e.g., `gpt-5.4-mini`, `gpt-4.1`)
 - **MCP/CLI Servers**: The tools being tested (tool descriptions + schemas)
 - **MCP Prompt Templates**: Slash-command prompts bundled with MCP servers (e.g., `/mcp.servername.promptname`)
 - **Skill**: Optional domain knowledge injected into context
@@ -309,7 +309,7 @@ Use these sections as needed (skip sections with no content):
 - **Effective**: Eval followed instructions correctly
 - **Mixed**: Some tests passed, others showed confusion
 - **Ineffective**: Instructions ignored or misunderstood
-- **Model-specific effectiveness**: Instructions that fail with one model may succeed with another. If a variant was tested with multiple models (e.g., `gpt-5-mini + detailed` failed but `gpt-4.1 + detailed` passed), label it **mixed** — NOT ineffective. Only label instructions **ineffective** if they failed across ALL models tested. Always qualify: "ineffective with gpt-5-mini" rather than just "ineffective".
+- **Model-specific effectiveness**: Instructions that fail with one model may succeed with another. If a variant was tested with multiple models (e.g., `gpt-5.4-mini + detailed` failed but `gpt-4.1 + detailed` passed), label it **mixed** — NOT ineffective. Only label instructions **ineffective** if they failed across ALL models tested. Always qualify: "ineffective with gpt-5.4-mini" rather than just "ineffective".
 - Note token bloat: "150 tokens of examples could be removed"
 
 ### Skill Feedback
@@ -372,7 +372,7 @@ Use these sections as needed (skip sections with no content):
     - **Gauge color values**: green=#4ade80, amber=#facc15, red=#f87171, blue=#60a5fa
 12. **Use pre-computed numbers** — The input includes a "Pre-computed Eval Statistics" section with exact values for pass rates, costs, tokens, winner designation, and aggregate stats (total tests, failures, agents, avg turns). Use these numbers verbatim. Never estimate or approximate.
 13. **Cost comparisons must use actual data** — When comparing costs between agents, use the **actual per-test cost** from the pre-computed statistics (total cost ÷ number of tests). Never cite model list pricing or theoretical cost differences. A cheaper model may use more tokens, making the realized cost difference much smaller than the per-token price difference. For example, if model A costs $0.0018/test and model B costs $0.0025/test, say "~28% cheaper" — NOT "85% cheaper" or "6× cheaper" based on list pricing.
-14. **Instruction labels must be model-specific** — Never label custom agent instructions as globally "ineffective" or globally "effective" when tested with multiple models and produced different outcomes. If `gpt-5-mini + detailed` failed but `gpt-4.1 + detailed` passed, the instructions are "mixed" — effective with gpt-4.1, ineffective with gpt-5-mini. The same applies to the Optimizations section: do not say "restrict [instructions] usage" if they work correctly with some models.
+14. **Instruction labels must be model-specific** — Never label custom agent instructions as globally "ineffective" or globally "effective" when tested with multiple models and produced different outcomes. If `gpt-5.4-mini + detailed` failed but `gpt-4.1 + detailed` passed, the instructions are "mixed" — effective with gpt-4.1, ineffective with gpt-5.4-mini. The same applies to the Optimizations section: do not say "restrict [instructions] usage" if they work correctly with some models.
 15. **Bullet lists need a blank line before them** — In markdown, a list must be preceded by a blank line to render correctly. NEVER put a bullet list directly after a `**bold label:**` on the next line — the markdown parser will collapse them into a single paragraph. Use `####` headings instead of bold labels when you need a label followed by a list.
 16. **Iteration awareness** — When iteration data is present ("Iter Pass Rate" in Pre-computed Eval Statistics), factor consistency into your recommendation. An agent with 100% pass rate at 5/5 iterations is more reliable than one with 100% pass rate at 3/5 iterations. Flag tests with <100% iteration pass rate as **flaky** in your analysis. When no iteration data is present, skip all iteration-related analysis.
 17. **Score awareness** — When LLM score data is present (`LLM Score: X/Y (Z%)`), mention the weighted score in the Winner Card summary and note any dimensions below 70% in the analysis. When no score data exists, skip all score-related commentary.

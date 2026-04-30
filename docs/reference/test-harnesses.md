@@ -44,7 +44,7 @@ from pytest_skill_engineering.copilot import CopilotEval
 def todo_agent():
     return CopilotEval(
         name="todo-assistant",
-        model="gpt-5-mini",
+        model="gpt-5.4-mini",
         instructions="You are a task management assistant.",
     )
 
@@ -54,7 +54,7 @@ async def test_add_and_complete(copilot_eval, todo_agent):
         "Add a task: Buy groceries"
     )
     assert result.tool_was_called("add_task")
-    
+
     result = await copilot_eval(
         todo_agent,
         "Mark the groceries task as done"
@@ -116,20 +116,20 @@ from pytest_skill_engineering.copilot import CopilotEval
 async def test_check_balance(copilot_eval):
     agent = CopilotEval(
         name="banking",
-        model="gpt-5-mini",
+        model="gpt-5.4-mini",
         instructions="You are a banking assistant.",
     )
-    
+
     result = await copilot_eval(agent, "What's my checking balance?")
     assert result.tool_was_called("get_balance")
 
 async def test_transfer_funds(copilot_eval):
     agent = CopilotEval(
         name="banking",
-        model="gpt-5-mini",
+        model="gpt-5.4-mini",
         instructions="You are a banking assistant.",
     )
-    
+
     result = await copilot_eval(
         agent,
         "Transfer $500 from checking to savings"
@@ -165,10 +165,10 @@ from pytest_skill_engineering.testing.types import ToolResult
 @dataclass
 class MyStore:
     state: dict = None
-    
+
     def __post_init__(self):
         self.state = self.state or {}
-    
+
     def my_tool(self, arg: str) -> ToolResult:
         """Do something."""
         return ToolResult(
@@ -186,7 +186,7 @@ from mcp.types import Tool, TextContent
 def create_my_server(store: MyStore | None = None):
     store = store or MyStore()
     server = Server("my-server")
-    
+
     @server.list_tools()
     async def list_tools():
         return [
@@ -202,14 +202,14 @@ def create_my_server(store: MyStore | None = None):
                 },
             ),
         ]
-    
+
     @server.call_tool()
     async def call_tool(name: str, arguments: dict):
         if name == "my_tool":
             result = store.my_tool(arguments["arg"])
             return [TextContent(type="text", text=str(result.value))]
         raise ValueError(f"Unknown tool: {name}")
-    
+
     return server
 ```
 

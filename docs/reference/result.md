@@ -23,7 +23,7 @@ Validate eval behavior using `EvalResult` properties and methods.
 
 Detect when the agent asks for clarification instead of acting autonomously. Uses an LLM judge to classify responses.
 
-The judge performs a simple YES/NO classification, so a cheap model like `gpt-5-mini` is sufficient. Unlike `--aitest-summary-model` (which generates complex analysis), the judge doesn't need a capable model.
+The judge performs a simple YES/NO classification, so a cheap model like `gpt-5.4-mini` is sufficient. Unlike `--aitest-summary-model` (which generates complex analysis), the judge doesn't need a capable model.
 
 ### Configuration
 
@@ -36,7 +36,7 @@ agent = CopilotEval(
     clarification_detection=ClarificationDetection(
         enabled=True,
         level=ClarificationLevel.ERROR,       # INFO, WARNING, or ERROR
-        judge_model="gpt-5-mini",             # None = use agent's model
+        judge_model="gpt-5.4-mini",             # None = use agent's model
     ),
 )
 ```
@@ -205,7 +205,7 @@ assert result.success, f"Eval failed: {result.error}"
 ```python
 if not result.success:
     print(f"Error: {result.error}")
-    
+
     # Check last turn for details
     last_turn = result.turns[-1]
     print(f"Last message: {last_turn.content}")
@@ -219,7 +219,7 @@ For semantic validation, use the built-in `llm_assert` fixture (powered by GitHu
 async def test_response_quality(copilot_eval, agent, llm_assert):
     """Use the llm_assert fixture for semantic validation."""
     result = await copilot_eval(agent, "What's my checking balance?")
-    
+
     assert result.success
     assert llm_assert(result.final_response, "mentions account balance")
 ```
@@ -231,11 +231,11 @@ async def test_response_quality(copilot_eval, agent, llm_assert):
 ```python
 async def test_correct_tool_selection(copilot_eval, agent):
     result = await copilot_eval(agent, "What's my checking balance?")
-    
+
     assert result.success
     assert result.tool_was_called("get_balance")
     assert not result.tool_was_called("transfer")
-    
+
     account = result.tool_call_arg("get_balance", "account")
     assert account.lower() == "checking"
 ```
@@ -248,10 +248,10 @@ async def test_trip_planning(copilot_eval, agent):
         agent,
         "Show me both my checking and savings balances"
     )
-    
+
     assert result.success
     assert result.tool_call_count("get_balance") >= 2 or result.tool_was_called("get_all_balances")
-    
+
     response = result.final_response.lower()
     assert "checking" in response
     assert "savings" in response

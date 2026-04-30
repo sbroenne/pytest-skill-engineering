@@ -40,7 +40,7 @@ from pytest_skill_engineering.copilot import CopilotEval
 agent = CopilotEval(
     name="my-agent",                    # Required: unique agent name
     instructions="Your instructions.",   # System prompt for the agent
-    model="gpt-5.4",                     # Optional: model override
+    model="gpt-5.5",                     # Optional: model override
     working_directory=str(tmp_path),     # Working directory for file ops
     max_turns=25,                        # Max conversation turns
     timeout_s=300.0,                     # Timeout in seconds
@@ -272,13 +272,13 @@ Use model names directly (no prefix needed):
 
 ```bash
 # AI insights report
-pytest tests/ --aitest-summary-model=gpt-5-mini --aitest-html=report.html
+pytest tests/ --aitest-summary-model=gpt-5.4-mini --aitest-html=report.html
 
 # LLM assertions and scoring
-pytest tests/ --llm-model=copilot/gpt-5-mini
+pytest tests/ --llm-model=copilot/gpt-5.4-mini
 ```
 
-This routes calls through the Copilot SDK, authenticated via `gh auth login` or `GITHUB_TOKEN`. Available models are whatever your Copilot subscription provides (e.g., `gpt-5.4`, `gpt-5-mini`, `claude-opus-4.5`).
+This routes calls through the Copilot SDK, authenticated via `gh auth login` or `GITHUB_TOKEN`. Available models are whatever your Copilot subscription provides (e.g., `gpt-5.5`, `gpt-5.4-mini`, `claude-opus-4.5`).
 
 ## Prompt Optimization with Copilot
 
@@ -293,7 +293,7 @@ async def test_optimize_system_prompt(optimize_instruction):
         test_cases=[
             {"prompt": "Transfer $100 to savings", "expected": "uses transfer tool"},
         ],
-        judge_model="copilot/gpt-5-mini",
+        judge_model="copilot/gpt-5.4-mini",
     )
     print(result.improved_instruction)
 ```
@@ -307,7 +307,7 @@ When writing integration tests that need an auxiliary LLM (for judge assertions,
 
 # The fixture is provided by pytest_skill_engineering and probes providers automatically.
 # Override with env var if needed:
-# AITEST_INTEGRATION_JUDGE_MODEL=copilot/gpt-5-mini pytest ...
+# AITEST_INTEGRATION_JUDGE_MODEL=copilot/gpt-5.4-mini pytest ...
 ```
 
 ```python
@@ -335,5 +335,5 @@ FAILED - No LLM provider available. Set AITEST_INTEGRATION_JUDGE_MODEL or config
 Force a specific provider:
 
 ```bash
-AITEST_INTEGRATION_JUDGE_MODEL=copilot/gpt-5-mini pytest tests/integration/copilot/test_optimizer_integration.py -v
+AITEST_INTEGRATION_JUDGE_MODEL=copilot/gpt-5.4-mini pytest tests/integration/copilot/test_optimizer_integration.py -v
 ```

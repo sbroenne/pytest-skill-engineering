@@ -109,5 +109,5 @@ class TestSkillRefinement:
         """
         skill_path = Path(__file__).parent.parent / "skills" / "math-helper"
         # Should not raise an error
-        result = await skill_refiner(skill_path, model="gpt-5-mini")
+        result = await skill_refiner(skill_path, model="gpt-5.4-mini")
         assert result is not None

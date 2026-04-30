@@ -74,7 +74,7 @@ def llm_assert_image(request: pytest.FixtureRequest) -> LLMAssertImage:
     1. ``--llm-vision-model`` if explicitly set
     2. ``--llm-model`` (same model for text and image assertions)
     3. ``--aitest-summary-model``
-    4. ``copilot/gpt-5-mini`` as final fallback
+    4. ``copilot/gpt-5.4-mini`` as final fallback
 
     NOTE: This fixture currently raises NotImplementedError when called,
     as the Copilot SDK does not yet support image inputs in a documented way.
@@ -86,7 +86,7 @@ def llm_assert_image(request: pytest.FixtureRequest) -> LLMAssertImage:
             screenshots = result.tool_images_for("screenshot")
             assert llm_assert_image(screenshots[-1], "shows a bar chart")
     """
-    _LLM_MODEL_DEFAULT = "copilot/gpt-5-mini"  # noqa: N806
+    _LLM_MODEL_DEFAULT = "copilot/gpt-5.4-mini"  # noqa: N806
 
     # Try vision-specific model first
     vision_model_option = request.config.getoption("--llm-vision-model", default=None)

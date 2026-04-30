@@ -70,8 +70,8 @@ async def test_balance_check(copilot_eval, llm_assert):
 
 ```python
 AGENTS = [
-    CopilotEval(name="gpt-5-mini"),
-    CopilotEval(name="gpt-5.4"),
+    CopilotEval(name="gpt-5.4-mini"),
+    CopilotEval(name="gpt-5.5"),
 ]
 
 @pytest.mark.parametrize("agent", AGENTS, ids=lambda a: a.name)
@@ -105,9 +105,9 @@ Each test is independent; complex multi-step behavior is captured in a single pr
 
 ```python
 AGENTS = [
-    CopilotEval(name="gpt-5-mini"),
-    CopilotEval(name="gpt-5.4"),
-    CopilotEval(name="gpt-5-mini+skill", skill_directories=["skills/financial"]),
+    CopilotEval(name="gpt-5.4-mini"),
+    CopilotEval(name="gpt-5.5"),
+    CopilotEval(name="gpt-5.4-mini+skill", skill_directories=["skills/financial"]),
 ]
 
 @pytest.mark.parametrize("agent", AGENTS, ids=lambda a: a.name)
@@ -169,7 +169,7 @@ assert result.cost_usd < 0.01  # Under 1 cent
 assert result.duration_ms < 30000  # Under 30 seconds
 
 # Token usage
-total_tokens = (result.token_usage.get("prompt", 0) + 
+total_tokens = (result.token_usage.get("prompt", 0) +
                 result.token_usage.get("completion", 0))
 assert total_tokens < 5000
 ```
@@ -237,23 +237,23 @@ Example:
 ```python
 async def test_transfer_workflow(self, copilot_eval, llm_assert):
     agent = CopilotEval(name="banking-test", instructions="You are a banking assistant.")
-    
+
     result = await copilot_eval(
         agent,
         "Check my checking balance, then transfer $100 to savings."
     )
-    
+
     # Validate execution
     assert result.success, f"Eval failed: {result.error}"
-    
+
     # Validate tools used
     assert result.tool_was_called("transfer")
     amount = result.tool_call_arg("transfer", "amount")
     assert amount == 100, f"Expected $100, got {amount}"
-    
+
     # Validate response quality
     assert llm_assert(result.final_response, "confirms transfer of $100 to savings")
-    
+
     # Validate efficiency
     assert result.cost_usd < 0.05, f"Cost too high: ${result.cost_usd}"
     assert result.duration_ms < 30000, f"Took too long: {result.duration_ms}ms"

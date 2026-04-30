@@ -416,7 +416,7 @@ class TestAgentLeaderboardSortOrder:
         report = self._make_report_with_models(
             [
                 {"model": "gpt-4.1", "passed": 5, "failed": 0, "cost": 0.10},  # 100%, $0.10
-                {"model": "gpt-5-mini", "passed": 5, "failed": 0, "cost": 0.05},  # 100%, $0.05
+                {"model": "gpt-5.4-mini", "passed": 5, "failed": 0, "cost": 0.05},  # 100%, $0.05
             ]
         )
 
@@ -429,8 +429,8 @@ class TestAgentLeaderboardSortOrder:
         assert leaderboard_start > 0, "Leaderboard section not found"
         leaderboard_html = html[leaderboard_start : leaderboard_start + 2000]
 
-        # gpt-5-mini (cheaper) should come before gpt-4.1 when both are 100%
-        assert leaderboard_html.index("gpt-5-mini") < leaderboard_html.index("gpt-4.1")
+        # gpt-5.4-mini (cheaper) should come before gpt-4.1 when both are 100%
+        assert leaderboard_html.index("gpt-5.4-mini") < leaderboard_html.index("gpt-4.1")
 
     def test_alphabetical_when_pass_rate_and_cost_equal(self, tmp_path: Path):
         """When pass rate and cost are equal, alphabetical order wins."""
@@ -456,13 +456,13 @@ class TestAgentLeaderboardSortOrder:
     def test_real_world_scenario_ai_summary_match(self, tmp_path: Path):
         """Test the real-world scenario from the bug report.
 
-        Both models at 100%, but gpt-5-mini is cheaper and should win.
+        Both models at 100%, but gpt-5.4-mini is cheaper and should win.
         This matches what the AI summary would recommend.
         """
         report = self._make_report_with_models(
             [
                 {"model": "gpt-4.1", "passed": 9, "failed": 0, "cost": 0.0210},
-                {"model": "gpt-5-mini", "passed": 9, "failed": 0, "cost": 0.0145},
+                {"model": "gpt-5.4-mini", "passed": 9, "failed": 0, "cost": 0.0145},
             ]
         )
 
@@ -475,10 +475,10 @@ class TestAgentLeaderboardSortOrder:
         assert leaderboard_start > 0, "Leaderboard section not found"
         leaderboard_html = html[leaderboard_start : leaderboard_start + 2000]
 
-        # gpt-5-mini should rank first (cheaper with same pass rate)
-        gpt5_pos = leaderboard_html.find("gpt-5-mini")
+        # gpt-5.4-mini should rank first (cheaper with same pass rate)
+        gpt5_pos = leaderboard_html.find("gpt-5.4-mini")
         gpt4_pos = leaderboard_html.find("gpt-4.1")
 
-        assert gpt5_pos > 0, "gpt-5-mini not found in leaderboard"
+        assert gpt5_pos > 0, "gpt-5.4-mini not found in leaderboard"
         assert gpt4_pos > 0, "gpt-4.1 not found in leaderboard"
-        assert gpt5_pos < gpt4_pos, "gpt-5-mini should rank before gpt-4.1 (lower cost)"
+        assert gpt5_pos < gpt4_pos, "gpt-5.4-mini should rank before gpt-4.1 (lower cost)"

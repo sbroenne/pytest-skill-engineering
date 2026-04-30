@@ -26,7 +26,7 @@ from pytest_skill_engineering.copilot import CopilotEval
 async def test_my_plugin(copilot_eval, tmp_path):
     agent = CopilotEval.from_plugin(
         "path/to/my-plugin",
-        model="gpt-5-mini",
+        model="gpt-5.4-mini",
         working_directory=str(tmp_path),
     )
     result = await copilot_eval(agent, "Create a hello world script")

@@ -361,7 +361,7 @@ def _add_junit_properties(
         <testcase name="test_balance">
           <properties>
             <property name="aitest.agent.name" value="banking-agent"/>
-            <property name="aitest.model" value="gpt-5-mini"/>
+            <property name="aitest.model" value="gpt-5.4-mini"/>
             <property name="aitest.skill" value="financial-advisor"/>
             <property name="aitest.tools.called" value="get_balance,transfer"/>
           </properties>

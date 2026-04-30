@@ -18,7 +18,7 @@ def skill_factory() -> Callable[[Path | str], Skill]:
         def test_with_skill(skill_factory, eval_run):
             skill = skill_factory("path/to/my-skill")
             agent = Eval(
-                provider=Provider(model="azure/gpt-5-mini"),
+                provider=Provider(model="azure/gpt-5.4-mini"),
                 skill=skill,
             )
             result = await eval_run(agent, "Do something with the skill")

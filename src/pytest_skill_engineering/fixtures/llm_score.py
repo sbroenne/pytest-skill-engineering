@@ -23,7 +23,7 @@ from pytest_skill_engineering.core.scoring import (
     assert_score,
 )
 
-_LLM_MODEL_DEFAULT = "copilot/gpt-5-mini"
+_LLM_MODEL_DEFAULT = "copilot/gpt-5.4-mini"
 
 __all__ = ["LLMScore", "ScoreResult", "ScoringDimension", "assert_score", "llm_score"]
 
@@ -243,7 +243,7 @@ def llm_score(request: pytest.FixtureRequest) -> LLMScore:
 
     1. ``--llm-model`` if explicitly set
     2. ``--aitest-summary-model`` (shared analysis model)
-    3. ``copilot/gpt-5-mini`` as final fallback
+    3. ``copilot/gpt-5.4-mini`` as final fallback
 
     Example::
 
