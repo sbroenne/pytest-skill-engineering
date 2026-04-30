@@ -118,10 +118,12 @@ def llm_assert(request: pytest.FixtureRequest) -> LLMAssert:
         def test_response(llm_assert):
             assert llm_assert("Your balance is $1,500", "mentions a dollar amount")
     """
-    model_str: str = request.config.getoption("--llm-model")
+    model_str = request.config.getoption("--llm-model")
+    if not isinstance(model_str, str):
+        model_str = _LLM_MODEL_DEFAULT
     if model_str == _LLM_MODEL_DEFAULT:
         # Not explicitly set — fall back to summary model if available
         summary_model = request.config.getoption("--aitest-summary-model", default=None)
-        if summary_model:
+        if isinstance(summary_model, str) and summary_model:
             model_str = summary_model
     return LLMAssert(model=model_str)

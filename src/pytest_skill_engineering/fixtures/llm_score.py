@@ -20,9 +20,12 @@ import pytest
 from pytest_skill_engineering.core.scoring import (
     ScoreResult,
     ScoringDimension,
+    assert_score,
 )
 
 _LLM_MODEL_DEFAULT = "copilot/gpt-5-mini"
+
+__all__ = ["LLMScore", "ScoreResult", "ScoringDimension", "assert_score", "llm_score"]
 
 
 # ---------------------------------------------------------------------------
@@ -254,9 +257,11 @@ def llm_score(request: pytest.FixtureRequest) -> LLMScore:
             result = llm_score(my_text, rubric)
             assert_score(result, min_total=7)
     """
-    model_str: str = request.config.getoption("--llm-model")
+    model_str = request.config.getoption("--llm-model")
+    if not isinstance(model_str, str):
+        model_str = _LLM_MODEL_DEFAULT
     if model_str == _LLM_MODEL_DEFAULT:
         summary_model = request.config.getoption("--aitest-summary-model", default=None)
-        if summary_model:
+        if isinstance(summary_model, str) and summary_model:
             model_str = summary_model
     return LLMScore(model=model_str)

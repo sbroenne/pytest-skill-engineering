@@ -115,7 +115,7 @@ def _approve_all_permissions(*_args: Any, **_kwargs: Any) -> Any:
     """Approve all permission requests using the current SDK result type."""
     from copilot.session import PermissionRequestResult
 
-    return PermissionRequestResult(kind="approved")
+    return PermissionRequestResult(kind="approve-once")
 
 
 def _is_transient_error(error: str | None) -> bool:

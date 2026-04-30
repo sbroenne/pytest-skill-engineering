@@ -89,16 +89,19 @@ def llm_assert_image(request: pytest.FixtureRequest) -> LLMAssertImage:
     _LLM_MODEL_DEFAULT = "copilot/gpt-5-mini"  # noqa: N806
 
     # Try vision-specific model first
-    vision_model_str: str | None = request.config.getoption("--llm-vision-model", default=None)
+    vision_model_option = request.config.getoption("--llm-vision-model", default=None)
+    vision_model_str = vision_model_option if isinstance(vision_model_option, str) else None
 
     if vision_model_str:
         model_str = vision_model_str
     else:
         # Fall back to llm-model → summary model → default
         model_str = request.config.getoption("--llm-model")
+        if not isinstance(model_str, str):
+            model_str = _LLM_MODEL_DEFAULT
         if model_str == _LLM_MODEL_DEFAULT:
             summary_model = request.config.getoption("--aitest-summary-model", default=None)
-            if summary_model:
+            if isinstance(summary_model, str) and summary_model:
                 model_str = summary_model
 
     return LLMAssertImage(model=model_str)

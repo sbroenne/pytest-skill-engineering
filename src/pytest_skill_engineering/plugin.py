@@ -181,7 +181,8 @@ def pytest_generate_tests(metafunc: pytest.Metafunc) -> None:
     receives the parameter even though it does not declare the fixture
     explicitly.
     """
-    count: int = metafunc.config.getoption("--aitest-iterations", default=1)
+    count_option = metafunc.config.getoption("--aitest-iterations", default=1)
+    count = count_option if isinstance(count_option, int) else 1
     if count <= 1:
         return
     metafunc.fixturenames.append("_aitest_iteration")

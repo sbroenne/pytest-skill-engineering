@@ -35,6 +35,7 @@ dependencies = [
     "python-frontmatter>=1.1.0",
     "nh3>=0.3.3",
     "github-copilot-sdk>=0.2.2",
+    "trio>=0.33.0",
 ]
 
 [project.optional-dependencies]
