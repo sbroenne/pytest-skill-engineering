@@ -73,27 +73,6 @@ document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') hideOverlay();
 });
 
-// Hover popup for side-by-side diagrams
-let hoverTimeout = null;
-function showDiagramHover(element, mermaidCode) {
-    clearTimeout(hoverTimeout);
-    const popup = document.getElementById('diagram-hover-popup');
-    const content = document.getElementById('hover-mermaid');
-    content.textContent = mermaidCode;
-    popup.classList.add('active');
-    mermaid.run({ nodes: [content] });
-}
-
-function hideDiagramHover() {
-    hoverTimeout = setTimeout(() => {
-        document.getElementById('diagram-hover-popup').classList.remove('active');
-    }, 100);
-}
-
-function keepDiagramHover() {
-    clearTimeout(hoverTimeout);
-}
-
 // Side-by-side test selector
 function showSideBySideTest(testId) {
     // Hide all groups

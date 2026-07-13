@@ -32,10 +32,10 @@ SDK Event Types (38 values) grouped by what they map to:
         session.resume           → Session resumed
         session.idle             → Eval finished processing
         session.error            → Error occurred
-        session.shutdown         → Session terminated
+        session.shutdown         → Session terminated; carries premium request count
         session.info             → Informational message
         session.model_change     → Model changed mid-session
-        session.usage_info       → Session-level usage
+        session.usage_info       → Context-window usage (tokens/limit; no premium requests)
         session.handoff          → Session handoff
         session.truncation       → Context truncation
         session.compaction_start → Compaction started
@@ -392,9 +392,31 @@ class EventMapper:
             self._model_used = model
 
     def _handle_session_usage_info(self, event: SessionEvent) -> None:
-        """Handle session-level usage summary including premium request count."""
+        """Handle session-level context-window usage (tokens/limit).
+
+        SDK 1.x's ``session.usage_info`` no longer carries a premium-request
+        count (it's context-window stats only). Retained as a documented
+        no-op handler so the event isn't logged as unhandled; see
+        ``_handle_session_shutdown`` for premium requests.
+        """
+
+    def _handle_session_shutdown(self, event: SessionEvent) -> None:
+        """Handle session shutdown — capture the total premium request count.
+
+        KNOWN GAP (SDK 1.0.6): ``_total_premium_requests`` exists on
+        ``SessionShutdownData`` per the generated schema, but empirically
+        ``session.shutdown`` is never delivered to ``session.on()`` listeners
+        via the ``client.stop()`` teardown path this runner uses — verified
+        by capturing every event in a live session and finding no field
+        containing "premium" anywhere in the stream. So ``premium_requests``
+        stays 0.0 in practice today. This handler is kept because it's
+        schema-correct and harmless, in case a future SDK version emits the
+        event (or an alternate teardown path does). If this still reads 0.0
+        after upgrading github-copilot-sdk, check whether the SDK now
+        exposes a public usage/metrics RPC instead of relying on this event.
+        """
         self._total_premium_requests = float(
-            _get_data_field(event, "total_premium_requests", 0) or 0
+            _get_data_field(event, "_total_premium_requests", 0) or 0
         )
 
     def _handle_session_error(self, event: SessionEvent) -> None:
@@ -480,6 +502,7 @@ _EVENT_HANDLERS: dict[str, Any] = {
     "session.start": EventMapper._handle_session_start,
     "session.error": EventMapper._handle_session_error,
     "session.usage_info": EventMapper._handle_session_usage_info,
+    "session.shutdown": EventMapper._handle_session_shutdown,
     # User
     "user.message": EventMapper._handle_user_message,
     # Permissions

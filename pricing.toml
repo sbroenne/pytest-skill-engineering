@@ -1,16 +1,24 @@
 # Per-million-token pricing overrides.
 #
-# Models listed here take priority over litellm's auto-maintained pricing.
+# Add an entry for each model you want cost estimates for. Models not listed
+# here contribute $0.00 to cost and are surfaced under "Incomplete Pricing
+# Data" in the report's AI analysis.
 # Use this to:
-#   - Add pricing for models missing from litellm (e.g. private deployments)
-#   - Correct stale or inaccurate litellm entries
+#   - Add pricing for models (e.g. private/Azure deployments)
+#   - Keep cost estimates accurate as vendor pricing changes
 #
 # Format:
 #   "model-key" = { input = <dollars_per_million_input_tokens>, output = <dollars_per_million_output_tokens> }
 #
-# The model key must match the string passed to Provider(model=...).
+# The model key must match the string passed to CopilotEval(model=...).
 
 [models]
+# Frontier flagship models used by tests/integration/copilot (as of 2026-07,
+# vendor list pricing per Anthropic/OpenAI via GitHub Copilot billing docs —
+# verify against your plan before relying on these for real cost decisions).
+"claude-opus-4.8" = { input = 5.00, output = 25.00 }
+"gpt-5.6-sol" = { input = 5.00, output = 30.00 }
+
 # Examples (uncomment and adjust as needed):
 # "azure/my-custom-deploy" = { input = 2.00, output = 8.00 }
 # "claude-sonnet-4" = { input = 3.00, output = 15.00 }

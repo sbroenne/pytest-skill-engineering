@@ -71,7 +71,7 @@ async def test_banking(copilot_eval, skill_name, skill):
     agent = CopilotEval(
         name=f"banking-{skill_name}",
         model="gpt-5.4-mini",
-        skill=skill,
+        skill_directories=[str(skill.path)],
     )
     result = await copilot_eval(agent, "What's my checking balance?")
     assert result.success
@@ -148,7 +148,7 @@ async def test_reviewer(copilot_eval, name, agent_def):
 ### Compare Multiple Dimensions
 
 ```python
-MODELS = ["gpt-5.4-mini", "gpt-4.1"]
+MODELS = ["claude-opus-4.8", "gpt-5.6-sol"]
 SKILLS = {
     "v1": Skill.from_path("skills/advisor-v1"),
     "v2": Skill.from_path("skills/advisor-v2"),
@@ -160,7 +160,7 @@ async def test_combinations(copilot_eval, model, skill_name, skill):
     agent = CopilotEval(
         name=f"banking-{model}-{skill_name}",
         model=model,
-        skill=skill,
+        skill_directories=[str(skill.path)],
     )
     result = await copilot_eval(agent, "What's my checking balance?")
     assert result.success

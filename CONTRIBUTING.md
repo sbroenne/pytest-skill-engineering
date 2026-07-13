@@ -137,8 +137,7 @@ pytest-skill-engineering/
 ├── tests/
 │   ├── unit/                # Pure logic tests (no LLM calls)
 │   ├── integration/
-│   │   ├── copilot/         # CopilotEval tests (primary, 11/12 features)
-│   │   └── pydantic/        # Eval tests (Azure/OpenAI, full introspection)
+│   │   └── copilot/         # CopilotEval tests (the only test harness)
 │   └── showcase/            # Hero report generation
 ├── docs/                    # MkDocs documentation
 ├── pyproject.toml           # Project configuration
@@ -184,23 +183,13 @@ class EvalResult:
 
 ## Development Priorities
 
-### Copilot SDK First
+### Single Harness
 
-`CopilotEval` is the **primary test harness**. New features should be implemented and tested for the Copilot SDK first, then ported to `Eval` (PydanticAI). When writing documentation or examples, lead with the Copilot path.
-
-### Test Both Harnesses
-
-If adding a feature that affects both harnesses, write tests for both:
+`CopilotEval` is the **only test harness** — the earlier PydanticAI-based `Eval` harness has been removed. New features are implemented and tested against the Copilot SDK:
 
 ```bash
-# Copilot tests first (primary)
 uv run python -m pytest tests/integration/copilot/test_0X_feature.py -v
-
-# Then pydantic tests
-uv run python -m pytest tests/integration/pydantic/test_0X_feature.py -v
 ```
-
-The two harnesses **cannot** be mixed in a single pytest session — the plugin enforces this at collection time.
 
 ## Releasing
 

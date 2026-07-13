@@ -6,8 +6,8 @@ description: "Test multi-turn conversations where evals maintain context across 
 
 So far, each test is independent—the agent has no memory between tests. **Sessions** let multiple tests share conversation history, simulating real multi-turn interactions.
 
-!!! note "CopilotEval and sessions"
-    `CopilotEval` supports sessions using a **context-in-prompt** pattern — prior conversation turns are injected as context in each new prompt. This works for most workflows but differs from `Eval`, which maintains full turn-based message history via PydanticAI. The Copilot SDK accepts string prompts only (`send_and_wait(prompt: str)`), so true stateful multi-turn sessions are not available. See [copilot/test_06_sessions.py](https://github.com/sbroenne/pytest-skill-engineering/blob/main/tests/integration/copilot/test_06_sessions.py) for the Copilot pattern.
+!!! note "Context-in-prompt, not stateful sessions"
+    `CopilotEval` has no message-history reuse — the Copilot SDK accepts string prompts only (`send_and_wait(prompt: str)`), so there's no server-side session state to share between tests. Instead, each test embeds whatever prior context it needs directly in its prompt string. See [test_06_sessions.py](https://github.com/sbroenne/pytest-skill-engineering/blob/main/tests/integration/copilot/test_06_sessions.py) for the pattern.
 
 ## Why Sessions?
 
@@ -21,10 +21,11 @@ Without sessions, test 2 would fail—the agent doesn't know which accounts were
 
 ## Defining a Session
 
-Use the `@pytest.mark.session` marker:
+`CopilotEval` has no message-history reuse, so there's no `@pytest.mark.session`
+marker to apply. Instead, embed the prior context **directly in the prompt**
+and let the agent use it:
 
 ```python
-import pytest
 from pytest_skill_engineering.copilot import CopilotEval
 
 banking_agent = CopilotEval(
@@ -32,9 +33,8 @@ banking_agent = CopilotEval(
     instructions="You are a banking assistant.",
 )
 
-@pytest.mark.session("banking-chat")
 class TestBankingConversation:
-    """Tests run in order, sharing conversation history."""
+    """Each test embeds the prior turns' context directly in its prompt."""
 
     async def test_initial_query(self, copilot_eval):
         """First message - establishes context."""
@@ -42,26 +42,30 @@ class TestBankingConversation:
         assert result.success
 
     async def test_followup(self, copilot_eval):
-        """Second message - uses context from first."""
-        result = await copilot_eval(banking_agent, "Transfer $200 to savings")
+        """Second message - context from the first turn is embedded in the prompt."""
+        result = await copilot_eval(
+            banking_agent,
+            "Context: we previously discussed my checking account balance.\n\n"
+            "Transfer $200 to savings",
+        )
         assert result.success
-        # Agent remembers we were talking about checking
 
     async def test_verification(self, copilot_eval):
-        """Third message - builds on full conversation."""
-        result = await copilot_eval(banking_agent, "What are my new balances?")
+        """Third message - context from all prior turns is embedded in the prompt."""
+        result = await copilot_eval(
+            banking_agent,
+            "Context: we previously discussed my checking balance and a $200 "
+            "transfer to savings.\n\n"
+            "What are my new balances?",
+        )
         assert result.success
 ```
 
 **Key points:**
 
-- Tests in a session run **in order** (top to bottom)
-- Each test sees the **full conversation history** from previous tests
-
-!!! warning "Not compatible with pytest-xdist"
-    Sessions require sequential test execution to maintain conversation order.
-    Don't use `-n auto` or other parallel execution with session tests.
-- The session name (`"banking-chat"`) groups related tests
+- There is no shared conversation state between tests — each `copilot_eval()` call starts a fresh Copilot session
+- Each test embeds whatever prior context it needs directly in its prompt string
+- See [test_06_sessions.py](https://github.com/sbroenne/pytest-skill-engineering/blob/main/tests/integration/copilot/test_06_sessions.py) for the full working pattern
 
 ## Session Context Flow
 
@@ -69,17 +73,17 @@ class TestBankingConversation:
 test_initial_query
     User: "What's my checking account balance?"
     Eval: "Your checking balance is $1,500.00..."
-    ↓ context passed to next test
+    ↓ context embedded in next test's prompt
 
 test_followup
-    [Previous messages included]
-    User: "Transfer $200 to savings"
+    User: "Context: we previously discussed my checking balance.
+            Transfer $200 to savings"
     Eval: "Done! Transferred $200 from checking to savings..."
-    ↓ context passed to next test
+    ↓ context embedded in next test's prompt
 
 test_verification
-    [All previous messages included]
-    User: "What are my new balances?"
+    User: "Context: we previously discussed my checking balance and a
+            $200 transfer to savings. What are my new balances?"
     Eval: "Checking: $1,300, Savings: $3,200..."
 ```
 
@@ -98,8 +102,7 @@ test_verification
 You can combine sessions with model comparison:
 
 ```python
-@pytest.mark.session("shopping-flow")
-@pytest.mark.parametrize("model", ["gpt-5.4-mini", "gpt-4.1"])
+@pytest.mark.parametrize("model", ["claude-opus-4.8", "gpt-5.6-sol"])
 class TestShoppingWorkflow:
     """Test the same conversation flow with different models."""
 
@@ -116,22 +119,25 @@ class TestShoppingWorkflow:
         agent = CopilotEval(
             name=f"shop-{model}",
             model=model,
-            instructions="You are a shopping assistant.",
+            instructions=(
+                "You are a shopping assistant. Context: the user was just "
+                "shown a list of running shoes."
+            ),
         )
         result = await copilot_eval(agent, "I'll take the Nike ones")
         assert result.success
 ```
 
-This creates two separate session flows:
+This creates two separate parametrized runs, each with its own browse → select prompts:
 
-- `shopping-flow[gpt-5.4-mini]`: browse → select (with gpt-5.4-mini)
-- `shopping-flow[gpt-4.1]`: browse → select (with gpt-4.1)
+- `test_browse[claude-opus-4.8]` / `test_select[claude-opus-4.8]`
+- `test_browse[gpt-5.6-sol]` / `test_select[gpt-5.6-sol]`
 
-The report shows each session as a complete flow with all turns visualized.
+The report shows each model's turns side by side for comparison.
 
 ## Next Steps
 
 - [Comparing Configurations](comparing.md) — Pattern for parametrized tests
 - [Generate Reports](../how-to/generate-reports.md) — Understand report output
 
-> 📁 **Real Example:** [pydantic/test_06_sessions.py](https://github.com/sbroenne/pytest-skill-engineering/blob/main/tests/integration/pydantic/test_06_sessions.py) — Banking workflow with session continuity
+> 📁 **Real Example:** [test_06_sessions.py](https://github.com/sbroenne/pytest-skill-engineering/blob/main/tests/integration/copilot/test_06_sessions.py) — Context-in-prompt pattern for simulating session continuity

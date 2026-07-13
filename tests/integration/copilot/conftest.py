@@ -8,10 +8,10 @@ import subprocess
 import pytest
 
 # Default model for integration tests
-DEFAULT_MODEL: str | None = "gpt-5.5"
+DEFAULT_MODEL: str | None = "claude-opus-4.8"
 
-# Current GPT-family models for parametrized tests
-MODELS: list[str] = ["gpt-5.5", "gpt-5.4-mini"]
+# Frontier flagship models for parametrized tests
+MODELS: list[str] = ["claude-opus-4.8", "gpt-5.6-sol"]
 
 # Timeouts
 DEFAULT_TIMEOUT_S: float = 300.0

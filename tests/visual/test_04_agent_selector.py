@@ -206,7 +206,13 @@ class TestAgentSelectorMermaidOverlay:
     """Test mermaid overlay with 3-agent report."""
 
     def test_mermaid_renders(self, page: Page, agent_selector_report: Path):
-        """Mermaid diagrams should render."""
+        """Mermaid diagrams should render without JS console errors."""
+        console_errors: list[str] = []
+        page.on(
+            "console", lambda msg: console_errors.append(msg.text) if msg.type == "error" else None
+        )
+        page.on("pageerror", lambda exc: console_errors.append(str(exc)))
+
         page.goto(f"file://{agent_selector_report}")
         page.wait_for_load_state("networkidle")
 
@@ -215,11 +221,7 @@ class TestAgentSelectorMermaidOverlay:
         header.click()
         page.wait_for_timeout(1000)
 
-        # Verify no JS errors during mermaid rendering
-        page.locator(".mermaid svg, [data-mermaid-code] svg")
-        # May have 0 if not rendered yet, or > 0 if rendered
-        # Just check no errors in loading
-        assert True  # If we got here, no JS errors
+        assert not console_errors, f"JS errors during mermaid rendering: {console_errors}"
 
     def test_overlay_opens(self, page: Page, agent_selector_report: Path):
         """Overlay should open when calling showDiagram."""

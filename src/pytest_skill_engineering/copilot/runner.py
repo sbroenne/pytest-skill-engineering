@@ -113,9 +113,9 @@ _TRANSIENT_PATTERNS = (
 
 def _approve_all_permissions(*_args: Any, **_kwargs: Any) -> Any:
     """Approve all permission requests using the current SDK result type."""
-    from copilot.session import PermissionRequestResult
+    from copilot.generated.rpc import PermissionDecisionApproveOnce
 
-    return PermissionRequestResult(kind="approve-once")
+    return PermissionDecisionApproveOnce()
 
 
 def _is_transient_error(error: str | None) -> bool:
@@ -127,20 +127,17 @@ def _is_transient_error(error: str | None) -> bool:
 
 async def _run_copilot_once(agent: "CopilotEval", prompt: str) -> "CopilotResult":
     """Execute a single attempt of a prompt against GitHub Copilot."""
-    from copilot.client import SubprocessConfig
-
-    subprocess_config = SubprocessConfig(
-        cwd=agent.working_directory or ".",
-        log_level="warning",
-    )
-
-    # Pass GITHUB_TOKEN from environment for CI authentication
+    # Pass GITHUB_TOKEN from environment for CI authentication.
+    # When None, the SDK falls back to the logged-in gh user.
     github_token = os.environ.get("GITHUB_TOKEN")
     if github_token:
-        subprocess_config.github_token = github_token
         logger.info("Using GITHUB_TOKEN from environment for authentication")
 
-    client = CopilotClient(subprocess_config, auto_start=True)
+    client = CopilotClient(
+        working_directory=agent.working_directory or ".",
+        log_level="warning",
+        github_token=github_token,
+    )
 
     mapper = EventMapper()
     loop = asyncio.get_running_loop()

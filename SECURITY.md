@@ -2,13 +2,13 @@
 
 ## Supported Versions
 
-| Version | Supported          |
-| ------- | ------------------ |
-| 0.1.x   | :white_check_mark: |
+Only the latest released version is supported. Please upgrade before reporting an issue.
 
 ## Reporting a Vulnerability
 
-If you discover a security vulnerability in pytest-skill-engineering, please report it by emailing the maintainers directly rather than opening a public issue.
+If you discover a security vulnerability in pytest-skill-engineering, please **do not open a public issue**. Instead, use GitHub's private vulnerability reporting:
+
+**[Report a vulnerability](https://github.com/sbroenne/pytest-skill-engineering/security/advisories/new)** (Security tab → "Report a vulnerability")
 
 **Please include:**
 - Description of the vulnerability
