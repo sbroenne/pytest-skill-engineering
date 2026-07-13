@@ -16,7 +16,6 @@ from uuid import uuid4
 import pytest
 from mcp import types
 
-import pytest_skill_engineering.execution.servers as servers_module
 from pytest_skill_engineering.core.errors import ServerStartError
 from pytest_skill_engineering.core.result import MCPPrompt
 from pytest_skill_engineering.execution.servers import (
@@ -473,11 +472,11 @@ class TestCLIServerProcess:
         explicit = CLIServerProcess(CLIServer(command="git", tool_prefix="git", shell="none"))
         assert explicit._shell == "none"
 
-        monkeypatch.setattr(servers_module.sys, "platform", "win32")
+        monkeypatch.setattr(sys, "platform", "win32")
         windows_default = CLIServerProcess(CLIServer(command="git", tool_prefix="git"))
         assert windows_default._shell == "powershell"
 
-        monkeypatch.setattr(servers_module.sys, "platform", "linux")
+        monkeypatch.setattr(sys, "platform", "linux")
         linux_default = CLIServerProcess(CLIServer(command="git", tool_prefix="git"))
         assert linux_default._shell == "bash"
 
