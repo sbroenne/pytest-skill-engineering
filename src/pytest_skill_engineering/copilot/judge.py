@@ -1,8 +1,7 @@
 """Shared Copilot SDK judge utility for LLM-as-judge evaluations.
 
 Provides a common interface for calling the Copilot SDK with judge prompts
-and parsing responses. Used by llm_assert, llm_score, clarification detection,
-and insights generation.
+and parsing responses. Used by llm_assert, llm_score, and insights generation.
 """
 
 from __future__ import annotations
