@@ -207,11 +207,16 @@ class MCPServerProcess:
                     raise ServerStartError("MCP", label, f"Required tools not available: {missing}")
 
         except ServerStartError:
+            if self._exit_stack:
+                await self._exit_stack.aclose()
+                self._exit_stack = None
+            self._session = None
             raise
         except Exception as e:
             if self._exit_stack:
                 await self._exit_stack.aclose()
                 self._exit_stack = None
+            self._session = None
             raise ServerStartError("MCP", label, str(e)) from e
 
     async def _open_transport(self) -> tuple[Any, Any]:

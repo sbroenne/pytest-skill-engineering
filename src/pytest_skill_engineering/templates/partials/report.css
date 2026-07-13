@@ -993,7 +993,6 @@ a:hover {
 
 /* ==================== Overlay ==================== */
 #overlay.active { display: flex !important; }
-#diagram-hover-popup.active { display: block !important; }
 #overlay-mermaid svg {
   max-width: 100%;
   max-height: 100%;

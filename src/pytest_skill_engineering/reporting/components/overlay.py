@@ -9,7 +9,7 @@ def overlay() -> Node:
     """Render the fullscreen overlay for diagram viewing.
 
     Returns:
-        htpy Node for the overlay and hover popup.
+        htpy Node for the overlay.
     """
     overlay_cls = (
         "fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center p-8"
@@ -23,36 +23,17 @@ def overlay() -> Node:
         "w-[90vw] h-[85vh] overflow-auto bg-surface-card rounded-lg p-6 "
         "shadow-material-lg flex items-center justify-center"
     )
-    hover_cls = (
-        "fixed z-40 bg-surface-card rounded-lg shadow-material-lg "
-        "border border-white/10 p-4 hidden max-w-xl"
-    )
-    hover_onclick = (
-        "hideOverlay(); this.classList.add('hidden'); "
-        "showDiagram(document.getElementById('hover-mermaid').innerHTML);"
-    )
-    return [
-        # Main fullscreen overlay
-        div(
-            id="overlay",
-            class_=overlay_cls,
+    return div(
+        id="overlay",
+        class_=overlay_cls,
+        onclick="hideOverlay()",
+    )[
+        button(
+            class_=close_btn_cls,
             onclick="hideOverlay()",
-        )[
-            button(
-                class_=close_btn_cls,
-                onclick="hideOverlay()",
-            )["✕"],
-            div(
-                class_=content_cls,
-                onclick="event.stopPropagation()",
-            )[div(".mermaid.w-full.h-full", id="overlay-mermaid"),],
-        ],
-        # Hover popup for side-by-side diagrams
+        )["✕"],
         div(
-            id="diagram-hover-popup",
-            class_=hover_cls,
-            onmouseenter="keepDiagramHover()",
-            onmouseleave="hideDiagramHover()",
-            onclick=hover_onclick,
-        )[div(".mermaid", id="hover-mermaid"),],
+            class_=content_cls,
+            onclick="event.stopPropagation()",
+        )[div(".mermaid.w-full.h-full", id="overlay-mermaid"),],
     ]

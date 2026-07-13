@@ -83,6 +83,19 @@ def _convert_to_aitest(
     from dataclasses import dataclass
 
     from pytest_skill_engineering.core.result import EvalResult
+    from pytest_skill_engineering.execution.cost import estimate_cost
+
+    # Estimate USD cost from captured token usage and pricing.toml.
+    # Models without pricing contribute 0.0 and are recorded in
+    # execution.cost.models_without_pricing (surfaced in AI insights).
+    cost_usd = sum(
+        estimate_cost(
+            usage.model or result.model_used or "",
+            usage.input_tokens,
+            usage.output_tokens,
+        )
+        for usage in result.usage
+    )
 
     # Turns already use aitest's Turn/ToolCall types — pass through directly
     aitest_result = EvalResult(
@@ -91,7 +104,7 @@ def _convert_to_aitest(
         error=result.error,
         duration_ms=result.duration_ms,
         token_usage=result.token_usage,
-        cost_usd=0.0,
+        cost_usd=cost_usd,
         effective_system_prompt=agent.instructions or "",
         premium_requests=result.total_premium_requests,
     )

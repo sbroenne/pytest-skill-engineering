@@ -82,10 +82,11 @@ def _build_analysis_input(
             "Still analyze their failures in the Failure Analysis section.\n"
         )
 
-    # Pricing completeness — warn AI when cost data is unreliable
-    # NOTE: Cost estimation removed with PydanticAI pivot
-    # Copilot SDK does not expose token usage, so we can't estimate costs
-    models_without_pricing: set[str] = set()
+    # Pricing completeness — warn AI when cost data is unreliable.
+    # Populated at runtime by execution.cost.estimate_cost() during result
+    # conversion: any model missing from pricing.toml lands here.
+    from pytest_skill_engineering.execution.cost import models_without_pricing
+
     if models_without_pricing:
         models_list = ", ".join(sorted(models_without_pricing))
         sections.append("## ⚠️ Incomplete Pricing Data\n")

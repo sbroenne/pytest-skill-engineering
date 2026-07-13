@@ -37,9 +37,9 @@ def _get_copilot_client() -> type[Any]:
 
 def _approve_all_permissions(*_args: Any, **_kwargs: Any) -> Any:
     """Approve all permission requests using the current SDK result type."""
-    from copilot.session import PermissionRequestResult  # noqa: PLC0415
+    from copilot.generated.rpc import PermissionDecisionApproveOnce  # noqa: PLC0415
 
-    return PermissionRequestResult(kind="approve-once")
+    return PermissionDecisionApproveOnce()
 
 
 def _get_data_field(event: Any, field: str, default: Any = None) -> Any:
@@ -71,20 +71,16 @@ async def copilot_judge(
         TimeoutError: If the session takes longer than timeout_seconds.
         RuntimeError: If the Copilot CLI fails to start or session errors.
     """
-    from copilot.client import SubprocessConfig  # noqa: PLC0415
-
     CopilotClient = _get_copilot_client()
 
-    subprocess_config = SubprocessConfig(
-        cwd=".",
-        log_level="warning",
-    )
-
+    # When None, the SDK falls back to the logged-in gh user.
     github_token = os.environ.get("GITHUB_TOKEN")
-    if github_token:
-        subprocess_config.github_token = github_token
 
-    client = CopilotClient(subprocess_config, auto_start=True)
+    client = CopilotClient(
+        working_directory=".",
+        log_level="warning",
+        github_token=github_token,
+    )
 
     try:
         # Hard timeout on startup — CLI must start within 60s
