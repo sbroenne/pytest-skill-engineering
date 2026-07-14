@@ -14,7 +14,13 @@ from __future__ import annotations
 import pytest
 
 from pytest_skill_engineering.copilot.eval import CopilotEval
-from pytest_skill_engineering.fixtures.llm_score import ScoringDimension, assert_score
+from pytest_skill_engineering.copilot.result import CopilotResult
+from pytest_skill_engineering.fixtures.llm_score import (
+    LLMScore,
+    ScoreResult,
+    ScoringDimension,
+    assert_score,
+)
 
 pytestmark = [pytest.mark.copilot]
 
@@ -43,7 +49,7 @@ PROMPT_QUALITY_RUBRIC: list[ScoringDimension] = [
 ]
 
 
-def _score_artifact(result: object, file_path: str, llm_score: object) -> object:
+def _score_artifact(result: CopilotResult, file_path: str, llm_score: LLMScore) -> ScoreResult:
     """Score the delivered artifact, not just the terminal confirmation message."""
     content = result.file(file_path)
     response = result.final_response or ""

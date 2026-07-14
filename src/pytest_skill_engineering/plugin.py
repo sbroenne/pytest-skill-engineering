@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -38,6 +39,9 @@ if TYPE_CHECKING:
     from _pytest.terminal import TerminalReporter
 
     from pytest_skill_engineering.core.result import EvalResult
+
+
+_logger = logging.getLogger(__name__)
 
 
 # Key for storing test reports in config
@@ -484,43 +488,55 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
     generate_json(suite_report, json_output_path)
     log_report_path(config, "JSON", json_output_path)
 
-    # Generate AI insights if HTML/MD report requested OR summary model specified
+    # Generate AI insights + HTML/MD reports. JSON is already safely written
+    # above, so any failure here is best-effort: log and continue so the
+    # min-pass-rate gate and cleanup below always run.
     summary_model = config.getoption("--aitest-summary-model")
-    insights = None
-    if html_path or md_path or summary_model:
-        insights = generate_structured_insights(
-            config, suite_report, required=bool(html_path or md_path)
+    try:
+        insights = None
+        if html_path or md_path or summary_model:
+            insights = generate_structured_insights(
+                config, suite_report, required=bool(html_path or md_path)
+            )
+
+        # Update JSON with insights if analysis succeeded
+        if insights is not None:
+            generate_json(suite_report, json_output_path, insights=insights)
+
+        # Generate HTML report only when explicitly requested
+        if html_path:
+            html_output_path = Path(html_path)
+            html_output_path.parent.mkdir(parents=True, exist_ok=True)
+
+            if insights is None:
+                insights = generate_structured_insights(config, suite_report, required=True)
+
+            assert insights is not None  # guaranteed by required=True above
+            generate_html(
+                suite_report, html_output_path, insights=insights, min_pass_rate=min_pass_rate
+            )
+            log_report_path(config, "HTML", html_output_path)
+
+        # Generate Markdown report if requested
+        if md_path:
+            md_output_path = Path(md_path)
+            md_output_path.parent.mkdir(parents=True, exist_ok=True)
+
+            if insights is None:
+                insights = generate_structured_insights(config, suite_report, required=True)
+
+            assert insights is not None  # noqa: S101
+            generate_md(
+                suite_report, md_output_path, insights=insights, min_pass_rate=min_pass_rate
+            )
+            log_report_path(config, "Markdown", md_output_path)
+    except Exception:
+        _logger.warning(
+            "Report rendering failed after JSON was written to %s; "
+            "continuing with pass-rate enforcement and cleanup",
+            json_output_path,
+            exc_info=True,
         )
-
-    # Update JSON with insights if analysis succeeded
-    if insights is not None:
-        generate_json(suite_report, json_output_path, insights=insights)
-
-    # Generate HTML report only when explicitly requested
-    if html_path:
-        html_output_path = Path(html_path)
-        html_output_path.parent.mkdir(parents=True, exist_ok=True)
-
-        if insights is None:
-            insights = generate_structured_insights(config, suite_report, required=True)
-
-        assert insights is not None  # guaranteed by required=True above
-        generate_html(
-            suite_report, html_output_path, insights=insights, min_pass_rate=min_pass_rate
-        )
-        log_report_path(config, "HTML", html_output_path)
-
-    # Generate Markdown report if requested
-    if md_path:
-        md_output_path = Path(md_path)
-        md_output_path.parent.mkdir(parents=True, exist_ok=True)
-
-        if insights is None:
-            insights = generate_structured_insights(config, suite_report, required=True)
-
-        assert insights is not None  # noqa: S101
-        generate_md(suite_report, md_output_path, insights=insights, min_pass_rate=min_pass_rate)
-        log_report_path(config, "Markdown", md_output_path)
 
     # Enforce minimum pass rate threshold
     if min_pass_rate is not None:

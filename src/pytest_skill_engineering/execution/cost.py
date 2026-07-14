@@ -5,9 +5,11 @@ pricing for models. Models without pricing return ``0.0``.
 
 ``pricing.toml`` format::
 
-    # Per-million-token pricing.
+    # Per-million-token pricing. ``cache_read`` is optional (defaults to 0.0)
+    # and prices cached-prompt input tokens, which most vendors bill at a
+    # fraction of the normal input rate.
     [models]
-    "claude-sonnet-4" = { input = 3.00, output = 15.00 }
+    "claude-sonnet-4" = { input = 3.00, output = 15.00, cache_read = 0.30 }
     "azure/my-custom-deploy" = { input = 2.00, output = 8.00 }
 """
 
@@ -25,10 +27,11 @@ models_without_pricing: set[str] = set()
 
 # ── User overrides (pricing.toml) ────────────────────────────────────────────
 
-_user_overrides: dict[str, tuple[float, float]] | None = None
+# Each entry is (input_per_million, output_per_million, cache_read_per_million).
+_user_overrides: dict[str, tuple[float, float, float]] | None = None
 
 
-def _load_user_overrides() -> dict[str, tuple[float, float]]:
+def _load_user_overrides() -> dict[str, tuple[float, float, float]]:
     """Load per-million-token overrides from ``pricing.toml``.
 
     Searches upward from cwd for the first ``pricing.toml`` found.
@@ -55,7 +58,8 @@ def _load_user_overrides() -> dict[str, tuple[float, float]]:
             if isinstance(value, dict):
                 input_pm = float(value.get("input", 0))
                 output_pm = float(value.get("output", 0))
-                _user_overrides[key] = (input_pm, output_pm)
+                cache_read_pm = float(value.get("cache_read", 0))
+                _user_overrides[key] = (input_pm, output_pm, cache_read_pm)
         if _user_overrides:
             _logger.info(
                 "Loaded %d pricing override(s) from %s",
@@ -81,20 +85,29 @@ def _find_pricing_toml() -> Path | None:
 # ── Public API ───────────────────────────────────────────────────────────────
 
 
-def estimate_cost(model: str, input_tokens: int, output_tokens: int) -> float:
+def estimate_cost(
+    model: str,
+    input_tokens: int,
+    output_tokens: int,
+    cache_read_tokens: int = 0,
+) -> float:
     """Return estimated USD cost for a single LLM call.
 
-    Checks user overrides (``pricing.toml``).
+    Checks user overrides (``pricing.toml``). ``cache_read_tokens`` are priced
+    at the model's optional ``cache_read`` rate (``0.0`` when unset, so they add
+    nothing unless a rate is configured).
     Returns ``0.0`` and records the model in :data:`models_without_pricing`
     when no pricing is found.
     """
-    if input_tokens == 0 and output_tokens == 0:
+    if input_tokens == 0 and output_tokens == 0 and cache_read_tokens == 0:
         return 0.0
 
     overrides = _load_user_overrides()
     pricing = overrides.get(model)
     if pricing is not None:
-        return (input_tokens * pricing[0] + output_tokens * pricing[1]) / 1_000_000
+        return (
+            input_tokens * pricing[0] + output_tokens * pricing[1] + cache_read_tokens * pricing[2]
+        ) / 1_000_000
 
     # No pricing found
     models_without_pricing.add(model)

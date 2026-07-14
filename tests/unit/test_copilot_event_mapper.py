@@ -7,12 +7,17 @@ They verify that EventMapper correctly maps mock events to CopilotResult.
 from __future__ import annotations
 
 from types import SimpleNamespace
+from typing import Any
 
 from pytest_skill_engineering.copilot.events import EventMapper
 
 
-def _make_event(event_type: str, **data_fields) -> SimpleNamespace:
-    """Create a mock SessionEvent with the given type and data fields."""
+def _make_event(event_type: str, **data_fields) -> Any:
+    """Create a mock SessionEvent with the given type and data fields.
+
+    Returns ``Any`` because the mapper only relies on structural attribute
+    access (duck typing) — a real ``SessionEvent`` is intentionally not built.
+    """
     # Use SimpleNamespace so getattr(data, field, default) returns default
     # for missing fields (unlike MagicMock which auto-creates them).
     data = SimpleNamespace(**data_fields)

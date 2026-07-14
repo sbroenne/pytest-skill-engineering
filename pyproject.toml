@@ -102,7 +102,10 @@ quote-style = "double"
 indent-style = "space"
 
 [tool.pyright]
-include = ["src"]
+include = ["src", "tests"]
+# tests/visual requires the optional 'playwright' dependency, which isn't part
+# of the default dev environment.
+exclude = ["tests/visual"]
 pythonVersion = "3.11"
 typeCheckingMode = "basic"
 
@@ -120,6 +123,7 @@ filterwarnings = [
 # This demonstrates the recommended setup - configure once in pyproject.toml.
 # LLM auth is handled by the GitHub Copilot SDK (gh auth login or GITHUB_TOKEN)
 addopts = """
+--strict-markers
 --aitest-summary-model=copilot/gpt-5.5
 --aitest-html=aitest-reports/report.html
 """

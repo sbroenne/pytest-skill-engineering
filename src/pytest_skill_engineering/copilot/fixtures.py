@@ -93,6 +93,7 @@ def _convert_to_aitest(
             usage.model or result.model_used or "",
             usage.input_tokens,
             usage.output_tokens,
+            usage.cache_read_tokens,
         )
         for usage in result.usage
     )

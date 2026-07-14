@@ -8,7 +8,10 @@
 #   - Keep cost estimates accurate as vendor pricing changes
 #
 # Format:
-#   "model-key" = { input = <dollars_per_million_input_tokens>, output = <dollars_per_million_output_tokens> }
+#   "model-key" = { input = <per_million_input>, output = <per_million_output>, cache_read = <per_million_cache_read> }
+#
+# "cache_read" is optional (defaults to 0.0) and prices cached-prompt input
+# tokens, which vendors typically bill at ~10% of the normal input rate.
 #
 # The model key must match the string passed to CopilotEval(model=...).
 
@@ -16,9 +19,9 @@
 # Frontier flagship models used by tests/integration/copilot (as of 2026-07,
 # vendor list pricing per Anthropic/OpenAI via GitHub Copilot billing docs —
 # verify against your plan before relying on these for real cost decisions).
-"claude-opus-4.8" = { input = 5.00, output = 25.00 }
-"gpt-5.6-sol" = { input = 5.00, output = 30.00 }
+"claude-opus-4.8" = { input = 5.00, output = 25.00, cache_read = 0.50 }
+"gpt-5.6-sol" = { input = 5.00, output = 30.00, cache_read = 0.50 }
 
 # Examples (uncomment and adjust as needed):
 # "azure/my-custom-deploy" = { input = 2.00, output = 8.00 }
-# "claude-sonnet-4" = { input = 3.00, output = 15.00 }
+# "claude-sonnet-4" = { input = 3.00, output = 15.00, cache_read = 0.30 }
