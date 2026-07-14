@@ -8,7 +8,7 @@ import subprocess
 import pytest
 
 # Default model for integration tests
-DEFAULT_MODEL: str | None = "claude-opus-4.8"
+DEFAULT_MODEL: str = "claude-opus-4.8"
 
 # Frontier flagship models for parametrized tests
 MODELS: list[str] = ["claude-opus-4.8", "gpt-5.6-sol"]

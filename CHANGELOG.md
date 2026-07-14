@@ -6,6 +6,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added
+
+- **Cache-read tokens now count toward cost estimates** — `estimate_cost()` accepts a `cache_read_tokens` argument priced via an optional per-model `cache_read` rate in `pricing.toml` (defaults to `0.0`, so cost is unchanged unless a rate is configured). `pricing.toml` documents the new field and sets `cache_read` for the two frontier models.
+- **Type checking now covers `tests/`** — pyright's `include` was widened from `src` to `["src", "tests"]` (excluding `tests/visual`, which needs the optional `playwright` extra), and CI runs `uv run pyright` (config-driven) instead of a hard-coded `src/` path. Fixed the type errors this surfaced in `test_08_scoring.py`, `test_13_plugins.py`, and the event-mapper test helper.
+- **Unit tests for cost estimation** — `tests/unit/test_cost.py` covers the input/output/cache-read arithmetic, unknown-model handling, and the zero-token short-circuit.
+
+### Changed
+
+- **`--strict-markers` is now enforced** — unregistered pytest markers now fail collection instead of silently passing, preventing typo'd markers.
+- **Report generation is more resilient** — in `pytest_sessionfinish`, AI-insight and HTML/Markdown rendering are wrapped so a rendering failure no longer discards the already-written JSON, skips the `--aitest-min-pass-rate` gate, or bypasses session cleanup.
+
+### Removed
+
+- **Squad CI workflows** — removed the 11 `squad-*.yml` / `sync-squad-labels.yml` GitHub Actions workflows and the `.squad/templates/workflows/` copies that could regenerate them.
+
+## [0.6.14] - 2026-07-14
+
 ### Changed
 
 - **Docs now match the shipped behaviour of `max_turns`** — corrected `CopilotEval` docstrings that claimed the runner "enforces turn limits externally". The runner enforces `timeout_s` as the hard wall-clock limit; `max_turns` is advisory for the top-level session (not hard-enforced mid-run) and is used only to cap subagent turns.
