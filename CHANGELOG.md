@@ -6,6 +6,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- **Docs now match the shipped behaviour of `max_turns`** — corrected `CopilotEval` docstrings that claimed the runner "enforces turn limits externally". The runner enforces `timeout_s` as the hard wall-clock limit; `max_turns` is advisory for the top-level session (not hard-enforced mid-run) and is used only to cap subagent turns.
+- **`pyproject.toml` version corrected** — bumped from a stale `0.5.7` to track the real release line, and moved the Trove classifier from `Development Status :: 3 - Alpha` to `4 - Beta`.
+
+### Removed
+
+- **Dead clarification-detection code** — `execution/clarification.py` (`check_clarification`) had zero callers anywhere in the codebase and was never wired into the Copilot execution path, yet the feature was advertised in the README. Removed the unused module and the corresponding README claims to keep docs honest (per the project's no-dead-code policy).
+
+### Fixed
+
+- **`.pytest-execution-servers/` scratch directory** — some server tests created this directory in the repo root; it is now git-ignored.
+
+## [0.6.13] - 2026-07-13
+
 ### Added
 
 - **Agent Skills spec compliance** — Full support for `agentskills.io` compatibility metadata, `allowed-tools`, `scripts`, and `assets` fields in `SKILL.md`

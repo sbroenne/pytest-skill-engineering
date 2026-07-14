@@ -68,8 +68,10 @@ class CopilotEval:
     ``build_session_config()`` maps them to the SDK's actual
     ``system_message`` TypedDict.
 
-    The SDK's ``SessionConfig`` has no ``maxTurns`` field — turn limits
-    are enforced externally by the runner via ``timeout_s``.
+    The SDK's ``SessionConfig`` has no ``maxTurns`` field. The runner
+    enforces a hard wall-clock limit via ``timeout_s``; ``max_turns`` is
+    advisory for the top-level session (it is *not* hard-enforced mid-run)
+    and is used when configuring subagent turn caps.
 
     Example:
         # Minimal
@@ -111,7 +113,9 @@ class CopilotEval:
     allowed_tools: list[str] | None = None  # Allowlist (None = all)
     excluded_tools: list[str] | None = None  # Blocklist
 
-    # Limits — enforced by the runner, NOT part of SDK SessionConfig
+    # Limits — the runner enforces timeout_s (hard wall-clock limit).
+    # max_turns is advisory for the top-level session (not hard-enforced
+    # mid-run) and is used to cap subagent turns.
     max_turns: int = 25
     timeout_s: float = 300.0
 
@@ -168,8 +172,9 @@ class CopilotEval:
             skill_directories → skill_directories
             disabled_skills → disabled_skills
 
-        Note: ``max_turns`` is NOT part of ``SessionConfig`` — the runner
-        enforces turn limits externally.
+        Note: ``max_turns`` is NOT part of ``SessionConfig``. The runner
+        enforces ``timeout_s`` as the hard limit; ``max_turns`` is advisory
+        (not hard-enforced mid-run) and used only to cap subagent turns.
         """
         config: dict[str, Any] = {}
 

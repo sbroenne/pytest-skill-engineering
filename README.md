@@ -34,7 +34,7 @@ pytest-skill-engineering validates the **full skill engineering stack** that shi
 - **MCP Prompt Templates** — Do server-side templates produce the right behavior?
 - **CLI Tools** — Can Copilot use command-line interfaces effectively?
 
-Plus **A/B testing**, **multi-turn sessions**, **clarification detection**, and **AI-powered reports** that tell you exactly what to fix.
+Plus **A/B testing**, **multi-turn sessions**, and **AI-powered reports** that tell you exactly what to fix.
 
 ## How It Works
 
@@ -115,7 +115,6 @@ You can also use Azure OpenAI or other providers if you prefer — see [Configur
 - **A/B Testing** — Compare instructions, skills, custom agent versions, or tool configurations
 - **Eval Leaderboard** — Auto-ranked by pass rate and cost
 - **Multi-Turn Sessions** — Test conversations that build on context
-- **Clarification Detection** — Catch agents that ask questions instead of acting
 - **LLM Assertions** — Semantic checks with `llm_assert`, multi-dimension scoring with `llm_score`, image evaluation with `llm_assert_image`
 - **AI-Powered Reports** — Actionable feedback on tool descriptions, prompts, and costs
 - **Cost Tracking** — Copilot premium request tracking + USD estimation via `pricing.toml`

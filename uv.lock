@@ -1324,7 +1324,7 @@ wheels = [
 
 [[package]]
 name = "pytest-skill-engineering"
-version = "0.5.7"
+version = "0.6.14"
 source = { editable = "." }
 dependencies = [
     { name = "github-copilot-sdk" },

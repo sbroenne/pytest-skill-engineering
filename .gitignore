@@ -69,3 +69,6 @@ site/
 .squad/sessions/
 # Squad: SubSquad activation file (local to this machine)
 .squad-workstream
+
+# pytest-skill-engineering test scratch (some server tests create a cwd dir)
+.pytest-execution-servers/
