@@ -22,10 +22,12 @@ Use `MCPServerProcess.list_prompts()` to discover what templates your server exp
 import pytest
 from pytest_skill_engineering.copilot import CopilotEval
 
+
 @pytest.fixture(scope="module")
 def banking_server():
     # MCP server setup handled by CopilotEval
     pass
+
 
 async def test_prompts_are_discoverable(banking_server):
     """Server exposes the expected prompt templates."""
@@ -73,7 +75,7 @@ async def test_code_review_template_renders(banking_server):
     )
     assert len(messages) > 0
     content = messages[0]["content"]
-    assert "foo" in content          # argument was injected
+    assert "foo" in content  # argument was injected
     assert "python" in content.lower()
 ```
 
@@ -84,6 +86,7 @@ Combine MCP tools with LLM behavioral assertions:
 ```python
 from pytest_skill_engineering.copilot import CopilotEval
 
+
 async def test_code_review_prompt(copilot_eval):
     """The code review slash command produces actionable feedback."""
     agent = CopilotEval(
@@ -91,7 +94,7 @@ async def test_code_review_prompt(copilot_eval):
         instructions="You are a code reviewer. Use MCP tools to read files and provide feedback.",
     )
     result = await copilot_eval(agent, "Review this code: def foo(): pass")
-    
+
     assert result.success
     assert "review" in result.final_response.lower()
 ```

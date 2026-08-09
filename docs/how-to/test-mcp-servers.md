@@ -27,6 +27,7 @@ Launches a local subprocess and communicates via stdin/stdout:
 import pytest
 from pytest_skill_engineering import MCPServer, Wait
 
+
 @pytest.fixture(scope="module")
 def banking_server():
     return MCPServer(
@@ -81,18 +82,18 @@ def authenticated_server():
 # stdio transport
 MCPServer(
     command=["python", "-m", "server"],  # Command to start server
-    args=["--debug"],                     # Additional arguments
-    env={"API_KEY": "xxx"},               # Environment variables
-    cwd="/path/to/server",                # Working directory
-    wait=Wait.for_tools(["tool1"]),       # Wait condition
+    args=["--debug"],  # Additional arguments
+    env={"API_KEY": "xxx"},  # Environment variables
+    cwd="/path/to/server",  # Working directory
+    wait=Wait.for_tools(["tool1"]),  # Wait condition
 )
 
 # Remote transport (SSE or streamable-http)
 MCPServer(
-    transport="streamable-http",          # "sse" or "streamable-http"
-    url="http://localhost:8000/mcp",      # Server URL
+    transport="streamable-http",  # "sse" or "streamable-http"
+    url="http://localhost:8000/mcp",  # Server URL
     headers={"Authorization": "Bearer ${TOKEN}"},  # Optional headers
-    wait=Wait.for_tools(["tool1"]),       # Wait condition
+    wait=Wait.for_tools(["tool1"]),  # Wait condition
 )
 ```
 
@@ -114,25 +115,25 @@ Control how pytest-skill-engineering waits for the server to be ready.
 **Wait.ready()** — Wait briefly for the process to start (default):
 
 ```python
-wait=Wait.ready()
+wait = Wait.ready()
 ```
 
 **Wait.for_tools()** — Wait until specific tools are available (recommended):
 
 ```python
-wait=Wait.for_tools(["get_balance", "set_reminder"])
+wait = Wait.for_tools(["get_balance", "set_reminder"])
 ```
 
 **Wait.for_log()** — Wait for a specific log pattern (regex):
 
 ```python
-wait=Wait.for_log(r"Server started on port \d+")
+wait = Wait.for_log(r"Server started on port \d+")
 ```
 
 All wait strategies accept a timeout:
 
 ```python
-wait=Wait.for_tools(["tool1"], timeout_ms=60000)  # 60 seconds
+wait = Wait.for_tools(["tool1"], timeout_ms=60000)  # 60 seconds
 ```
 
 ### NPX-based Servers
@@ -152,6 +153,7 @@ def filesystem_server():
 ```python
 import os
 
+
 @pytest.fixture(scope="module")
 def api_server():
     return MCPServer(
@@ -170,12 +172,14 @@ import pytest
 from pytest_skill_engineering import MCPServer, Wait
 from pytest_skill_engineering.copilot import CopilotEval
 
+
 @pytest.fixture(scope="module")
 def banking_server():
     return MCPServer(
         command=["python", "-m", "my_banking_mcp"],
         wait=Wait.for_tools(["get_balance", "transfer"]),
     )
+
 
 @pytest.fixture
 def banking_agent():
@@ -184,9 +188,10 @@ def banking_agent():
         instructions="You are a banking assistant.",
     )
 
+
 async def test_balance_query(copilot_eval, banking_agent):
     result = await copilot_eval(banking_agent, "What's my checking balance?")
-    
+
     assert result.success
     assert result.tool_was_called("get_balance")
 ```
@@ -203,12 +208,14 @@ def banking_server():
         wait=Wait.for_tools(["get_balance"]),
     )
 
+
 @pytest.fixture(scope="module")
 def calendar_server():
     return MCPServer(
         command=["python", "-m", "calendar_mcp"],
         wait=Wait.for_tools(["create_event", "list_events"]),
     )
+
 
 @pytest.fixture
 def assistant_agent():
@@ -245,6 +252,7 @@ from pytest_skill_engineering import MCPPrompt, MCPServer
 from pytest_skill_engineering.copilot import CopilotEval
 from pytest_skill_engineering.execution.servers import MCPServerProcess
 
+
 @pytest.fixture(scope="module")
 async def server_process(banking_server):
     """Start the server and expose the raw MCP session."""
@@ -253,11 +261,13 @@ async def server_process(banking_server):
     yield proc
     await proc.stop()
 
+
 async def test_prompts_are_discoverable(server_process):
     """The server exposes the expected prompt templates."""
     prompts = await server_process.list_prompts()
     names = [p.name for p in prompts]
     assert "balance_summary" in names
+
 
 async def test_balance_summary_prompt(copilot_eval, server_process):
     """The balance_summary prompt produces a coherent LLM response."""

@@ -15,6 +15,7 @@ This installs the `github-copilot-sdk` package alongside pytest-skill-engineerin
 ```python
 from pytest_skill_engineering.copilot import CopilotEval
 
+
 @pytest.mark.copilot
 async def test_creates_module(copilot_eval, tmp_path):
     agent = CopilotEval(
@@ -38,16 +39,16 @@ async def test_creates_module(copilot_eval, tmp_path):
 from pytest_skill_engineering.copilot import CopilotEval
 
 agent = CopilotEval(
-    name="my-agent",                    # Required: unique agent name
-    instructions="Your instructions.",   # System prompt for the agent
-    model="gpt-5.5",                     # Optional: model override
-    working_directory=str(tmp_path),     # Working directory for file ops
-    max_turns=25,                        # Max conversation turns
-    timeout_s=300.0,                     # Timeout in seconds
+    name="my-agent",  # Required: unique agent name
+    instructions="Your instructions.",  # System prompt for the agent
+    model="gpt-5.5",  # Optional: model override
+    working_directory=str(tmp_path),  # Working directory for file ops
+    max_turns=25,  # Max conversation turns
+    timeout_s=300.0,  # Timeout in seconds
     excluded_tools=["run_in_terminal"],  # Tools to block
-    skill_directories=["./skills"],      # Skill directories to load
-    reasoning_effort="high",             # Reasoning effort level
-    custom_agents=[                      # Custom subagents
+    skill_directories=["./skills"],  # Skill directories to load
+    reasoning_effort="high",  # Reasoning effort level
+    custom_agents=[  # Custom subagents
         {
             "name": "test-writer",
             "prompt": "Write pytest tests.",
@@ -128,6 +129,7 @@ from pytest_skill_engineering.copilot import CopilotEval
 
 test_writer = load_custom_agent(".github/agents/test-writer.agent.md")
 
+
 @pytest.mark.copilot
 async def test_orchestrator_delegates_test_writing(copilot_eval):
     agent = CopilotEval(
@@ -151,6 +153,7 @@ subagents = load_custom_agents(
     ".github/agents/",
     exclude={"orchestrator"},
 )
+
 
 @pytest.mark.copilot
 async def test_full_agent_team(copilot_eval):
@@ -194,6 +197,7 @@ Skills are domain knowledge packages loaded from a directory containing a `SKILL
 ```python
 from pytest_skill_engineering.copilot import CopilotEval
 
+
 async def test_skill_presents_scenarios(copilot_eval):
     agent = CopilotEval(
         name="with-skill",
@@ -217,7 +221,7 @@ async def test_skill_improves_routing(copilot_eval):
     )
 
     r_without = await copilot_eval(without, "Get the ACR baseline for TPID 12345.")
-    r_with    = await copilot_eval(with_skill, "Get the ACR baseline for TPID 12345.")
+    r_with = await copilot_eval(with_skill, "Get the ACR baseline for TPID 12345.")
 
     # Skill should cause the agent to call the right tool
     assert r_with.tool_was_called("ExecuteQueries")
@@ -286,6 +290,7 @@ This routes calls through the Copilot SDK, authenticated via `gh auth login` or 
 
 ```python
 from pytest_skill_engineering import optimize_instruction
+
 
 async def test_optimize_system_prompt(optimize_instruction):
     result = await optimize_instruction(

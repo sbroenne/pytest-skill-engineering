@@ -43,6 +43,7 @@ Write tests as prompts. Run them with the real GitHub Copilot coding agent. Asse
 ```python
 from pytest_skill_engineering.copilot import CopilotEval
 
+
 async def test_balance_query(copilot_eval):
     agent = CopilotEval(
         skill_directories=["skills/banking-advisor"],

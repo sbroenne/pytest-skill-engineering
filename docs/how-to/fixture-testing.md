@@ -54,6 +54,7 @@ agent = CopilotEval(
     instructions=BANKING_PROMPT,
 )
 
+
 async def test_balance_check(copilot_eval, llm_assert):
     result = await copilot_eval(agent, "What's my checking account balance?")
     assert result.success
@@ -73,6 +74,7 @@ AGENTS = [
     CopilotEval(name="gpt-5.4-mini"),
     CopilotEval(name="gpt-5.5"),
 ]
+
 
 @pytest.mark.parametrize("agent", AGENTS, ids=lambda a: a.name)
 async def test_balance_check(copilot_eval, agent, llm_assert):
@@ -110,6 +112,7 @@ AGENTS = [
     CopilotEval(name="gpt-5.4-mini+skill", skill_directories=["skills/financial"]),
 ]
 
+
 @pytest.mark.parametrize("agent", AGENTS, ids=lambda a: a.name)
 async def test_balance_query(copilot_eval, agent, llm_assert):
     result = await copilot_eval(agent, "What's my checking account balance?")
@@ -130,10 +133,7 @@ Validate response quality using AI judgment:
 assert llm_assert(result.final_response, "mentions account balance with dollar amount")
 
 # Complex criteria
-assert llm_assert(
-    result.final_response,
-    "lists both checking and savings account balances"
-)
+assert llm_assert(result.final_response, "lists both checking and savings account balances")
 ```
 
 ### Tool Call Assertions
@@ -169,8 +169,7 @@ assert result.cost_usd < 0.01  # Under 1 cent
 assert result.duration_ms < 30000  # Under 30 seconds
 
 # Token usage
-total_tokens = (result.token_usage.get("prompt", 0) +
-                result.token_usage.get("completion", 0))
+total_tokens = result.token_usage.get("prompt", 0) + result.token_usage.get("completion", 0)
 assert total_tokens < 5000
 ```
 
@@ -238,10 +237,7 @@ Example:
 async def test_transfer_workflow(self, copilot_eval, llm_assert):
     agent = CopilotEval(name="banking-test", instructions="You are a banking assistant.")
 
-    result = await copilot_eval(
-        agent,
-        "Check my checking balance, then transfer $100 to savings."
-    )
+    result = await copilot_eval(agent, "Check my checking balance, then transfer $100 to savings.")
 
     # Validate execution
     assert result.success, f"Eval failed: {result.error}"
@@ -295,7 +291,7 @@ print(f"Response:\n{result.final_response}")
 
 # Check if criterion is too strict
 assert llm_assert(result.final_response, "mentions balance")  # Too vague
-assert llm_assert(result.final_response, "exact phrase")      # Too narrow
+assert llm_assert(result.final_response, "exact phrase")  # Too narrow
 ```
 
 ## Best Practices

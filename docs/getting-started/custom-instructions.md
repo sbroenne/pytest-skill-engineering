@@ -23,6 +23,7 @@ Use `load_instruction_file()` to load a single file:
 from pytest_skill_engineering.copilot import CopilotEval
 from pytest_skill_engineering import load_instruction_file
 
+
 async def test_follows_naming_conventions(copilot_eval):
     """Agent follows snake_case naming conventions from coding-standards.instructions.md."""
     instr = load_instruction_file(".github/copilot-instructions.md")
@@ -100,6 +101,7 @@ agent = CopilotEval.from_instruction_files(
     name="conventions-test",
 )
 
+
 async def test_naming_conventions(copilot_eval):
     """Agent follows project naming conventions."""
     result = await copilot_eval(agent, "Write a Python function to compute factorial")
@@ -133,6 +135,7 @@ from pytest_skill_engineering.copilot import CopilotEval
 from pytest_skill_engineering import load_instruction_files
 
 INSTRUCTIONS = load_instruction_files(".github/instructions/")
+
 
 @pytest.mark.parametrize("instr", INSTRUCTIONS, ids=lambda i: i["name"])
 async def test_instruction_file(copilot_eval, instr):

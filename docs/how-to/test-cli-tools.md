@@ -11,6 +11,7 @@ Wrap command-line tools as MCP-like servers for testing CLI-based interfaces.
 ```python
 from pytest_skill_engineering import CLIServer
 
+
 @pytest.fixture(scope="module")
 def git_server():
     return CLIServer(
@@ -41,15 +42,15 @@ git_execute(args="log -n 5 --oneline")
 
 ```python
 CLIServer(
-    name="git-cli",             # Server identifier (required)
-    command="git",              # CLI executable (required)
-    tool_prefix="git",          # Tool name prefix (default: command name)
-    shell="bash",               # Shell to use (optional)
-    cwd="/path/to/repo",        # Working directory (optional)
-    env={"KEY": "value"},       # Environment variables (optional)
-    discover_help=False,        # Default: LLM must discover CLI usage itself
-    help_flag="--help",         # Flag to get help text (default: --help)
-    description=None,           # Custom description (overrides help discovery)
+    name="git-cli",  # Server identifier (required)
+    command="git",  # CLI executable (required)
+    tool_prefix="git",  # Tool name prefix (default: command name)
+    shell="bash",  # Shell to use (optional)
+    cwd="/path/to/repo",  # Working directory (optional)
+    env={"KEY": "value"},  # Environment variables (optional)
+    discover_help=False,  # Default: LLM must discover CLI usage itself
+    help_flag="--help",  # Flag to get help text (default: --help)
+    description=None,  # Custom description (overrides help discovery)
 )
 ```
 
@@ -156,6 +157,7 @@ import pytest
 from pytest_skill_engineering import CLIServer
 from pytest_skill_engineering.copilot import CopilotEval
 
+
 @pytest.fixture(scope="module")
 def git_server():
     return CLIServer(
@@ -165,6 +167,7 @@ def git_server():
         cwd="/path/to/repo",
     )
 
+
 @pytest.fixture
 def git_agent():
     return CopilotEval(
@@ -172,15 +175,17 @@ def git_agent():
         instructions="You are a git assistant.",
     )
 
+
 async def test_git_status(copilot_eval, git_agent):
     result = await copilot_eval(git_agent, "What's the repo status?")
-    
+
     assert result.success
     assert result.tool_was_called("git_execute")
 
+
 async def test_git_log(copilot_eval, git_agent):
     result = await copilot_eval(git_agent, "Show me the last 3 commits")
-    
+
     assert result.success
     assert result.tool_was_called("git_execute")
 ```
@@ -195,6 +200,7 @@ def filesystem_server():
         wait=Wait.for_tools(["read_file", "write_file"]),
     )
 
+
 @pytest.fixture(scope="module")
 def grep_server():
     return CLIServer(
@@ -202,6 +208,7 @@ def grep_server():
         command="grep",
         tool_prefix="search",
     )
+
 
 @pytest.fixture
 def hybrid_agent():

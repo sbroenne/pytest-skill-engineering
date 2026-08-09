@@ -18,7 +18,7 @@ from __future__ import annotations
 import argparse
 import json
 
-from mcp.server.fastmcp import FastMCP
+from mcp.server import MCPServer
 
 from pytest_skill_engineering.testing.banking import BankingService
 
@@ -26,7 +26,7 @@ from pytest_skill_engineering.testing.banking import BankingService
 # Server & service
 # ---------------------------------------------------------------------------
 
-mcp = FastMCP("pytest-skill-engineering-banking-server")
+mcp = MCPServer("pytest-skill-engineering-banking-server")
 _service = BankingService()
 
 # ---------------------------------------------------------------------------
@@ -149,17 +149,18 @@ def main() -> None:
     args = parser.parse_args()
 
     # Configure host/port via FastMCP settings
-    mcp.settings.host = args.host
-    mcp.settings.port = args.port
-
     if args.transport == "stdio":
         mcp.run(transport="stdio")
     elif args.transport == "sse":
-        mcp.run(transport="sse")
+        mcp.run(transport="sse", host=args.host, port=args.port)
     elif args.transport == "streamable-http":
-        mcp.settings.stateless_http = True
-        mcp.settings.json_response = True
-        mcp.run(transport="streamable-http")
+        mcp.run(
+            transport="streamable-http",
+            host=args.host,
+            port=args.port,
+            stateless_http=True,
+            json_response=True,
+        )
 
 
 if __name__ == "__main__":

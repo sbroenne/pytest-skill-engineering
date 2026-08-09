@@ -41,9 +41,9 @@ def _write_test_mcp_server(runtime_dir: Path) -> Path:
         """
 from __future__ import annotations
 
-from mcp.server.fastmcp import FastMCP
+from mcp.server import MCPServer
 
-mcp = FastMCP("unit-test-server", log_level="CRITICAL")
+mcp = MCPServer("unit-test-server", log_level="CRITICAL")
 
 
 @mcp.tool(description="Add two integers.")
@@ -285,7 +285,7 @@ class TestMCPServerProcessHelpers:
                                 type="resource",
                                 resource=types.TextResourceContents(
                                     uri=cast(Any, "file:///prompt.txt"),
-                                    mimeType="text/plain",
+                                    mime_type="text/plain",
                                     text="embedded text",
                                 ),
                             ),
@@ -319,7 +319,7 @@ class TestMCPServerProcessHelpers:
                             type="resource",
                             resource=types.TextResourceContents(
                                 uri=cast(Any, "file:///tool.txt"),
-                                mimeType="text/plain",
+                                mime_type="text/plain",
                                 text="ignored",
                             ),
                         ),
@@ -419,7 +419,7 @@ class TestMCPServerProcessHelpers:
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """Streamable HTTP transport creates an httpx client when headers are configured."""
-        import httpx
+        import httpx2
         import mcp.client.streamable_http as mcp_http
 
         captured: dict[str, Any] = {}
@@ -443,7 +443,7 @@ class TestMCPServerProcessHelpers:
             yield ("http-read", "http-write")
 
         monkeypatch.setenv("MCP_TOKEN", "xyz789")
-        monkeypatch.setattr(httpx, "AsyncClient", FakeAsyncClient)
+        monkeypatch.setattr(httpx2, "AsyncClient", FakeAsyncClient)
         monkeypatch.setattr(mcp_http, "streamable_http_client", fake_streamable_http_client)
 
         server = MCPServerProcess(

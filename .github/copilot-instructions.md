@@ -146,6 +146,7 @@ class Wait:
     strategy: WaitStrategy
     timeout_ms: int = 30000
 
+
 # Good - mutable data with slots
 @dataclass(slots=True)
 class EvalResult:
@@ -320,6 +321,7 @@ INSTRUCTIONS = {
     "detailed": "Explain your reasoning step by step.",
 }
 
+
 @pytest.mark.parametrize("instruction_name,instructions", INSTRUCTIONS.items())
 async def test_with_instructions(copilot_eval, instruction_name, instructions):
     agent = CopilotEval(
@@ -492,7 +494,7 @@ Integration tests use centralized constants from `tests/integration/copilot/conf
 
 ```python
 # Models
-DEFAULT_MODEL = "gpt-5.5"              # Default integration model
+DEFAULT_MODEL = "gpt-5.5"  # Default integration model
 MODELS = ["gpt-5.5", "gpt-5.4-mini"]  # For model comparison
 
 # Turn limits
@@ -506,6 +508,7 @@ DEFAULT_MAX_TURNS = 5
 ```python
 from pytest_skill_engineering.copilot.eval import CopilotEval
 from .conftest import MODELS
+
 
 @pytest.mark.parametrize("model", MODELS)
 async def test_create_file(copilot_eval, tmp_path, model):

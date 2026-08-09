@@ -78,11 +78,11 @@ from pytest_skill_engineering import load_plugin
 plugin = load_plugin("path/to/my-plugin")
 
 # Inspect what was discovered
-print(plugin.metadata.name)      # Plugin name from manifest or directory
-print(plugin.instructions)        # Merged instructions from all sources
-print(plugin.agents)              # List of loaded .agent.md definitions
-print(plugin.skills)              # Loaded Skill objects
-print(plugin.mcp_configs)         # MCP server configurations from manifest
+print(plugin.metadata.name)  # Plugin name from manifest or directory
+print(plugin.instructions)  # Merged instructions from all sources
+print(plugin.agents)  # List of loaded .agent.md definitions
+print(plugin.skills)  # Loaded Skill objects
+print(plugin.mcp_configs)  # MCP server configurations from manifest
 ```
 
 `load_plugin()` auto-detects the format based on directory contents and loads all components. Use this for programmatic inspection, or pass the path directly to `CopilotEval.from_plugin()`.
@@ -94,6 +94,7 @@ Use `CopilotEval.from_plugin()` to test plugin behavior:
 ```python
 import pytest
 from pytest_skill_engineering.copilot import CopilotEval
+
 
 async def test_plugin_tool_usage(copilot_eval):
     agent = CopilotEval.from_plugin("path/to/my-plugin")
@@ -128,6 +129,7 @@ Use `CopilotEval.from_plugin()` when testing with the real GitHub Copilot agent 
 ```python
 import pytest
 from pytest_skill_engineering.copilot import CopilotEval
+
 
 @pytest.mark.copilot
 async def test_plugin_with_copilot(copilot_eval, tmp_path):
@@ -167,6 +169,7 @@ Use `CopilotEval.from_claude_config()` to test Claude Code project directories. 
 
 ```python
 from pytest_skill_engineering.copilot import CopilotEval
+
 
 @pytest.mark.copilot
 async def test_claude_project(copilot_eval, tmp_path):
@@ -285,6 +288,7 @@ PLUGIN_DIRS = [
     "plugins/v2-with-skills",
     "plugins/v3-with-agents",
 ]
+
 
 @pytest.mark.parametrize("plugin_path", PLUGIN_DIRS, ids=lambda p: Path(p).name)
 async def test_plugin_versions(copilot_eval, plugin_path):

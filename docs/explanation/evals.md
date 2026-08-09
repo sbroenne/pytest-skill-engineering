@@ -66,6 +66,7 @@ SKILLS = {
     "v2": Skill.from_path("skills/financial-advisor-v2"),
 }
 
+
 @pytest.mark.parametrize("skill_name,skill", SKILLS.items())
 async def test_banking(copilot_eval, skill_name, skill):
     agent = CopilotEval(
@@ -111,6 +112,7 @@ This is for **AI analysis only** — the leaderboard always appears when multipl
 ```python
 MODELS = ["gpt-5.4-mini", "gpt-4.1"]
 
+
 @pytest.mark.parametrize("model", MODELS)
 async def test_with_model(copilot_eval, model):
     agent = CopilotEval(
@@ -135,6 +137,7 @@ AGENT_VERSIONS = {
     for path in Path(".github/agents").glob("reviewer-*.agent.md")
 }
 
+
 @pytest.mark.parametrize("name,agent_def", AGENT_VERSIONS.items())
 async def test_reviewer(copilot_eval, name, agent_def):
     agent = CopilotEval(
@@ -153,6 +156,7 @@ SKILLS = {
     "v1": Skill.from_path("skills/advisor-v1"),
     "v2": Skill.from_path("skills/advisor-v2"),
 }
+
 
 @pytest.mark.parametrize("model", MODELS)
 @pytest.mark.parametrize("skill_name,skill", SKILLS.items())

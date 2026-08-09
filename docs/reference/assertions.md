@@ -146,10 +146,7 @@ Use the built-in `llm_assert` fixture (powered by GitHub Copilot SDK) for meanin
 ```python
 async def test_response_quality(copilot_eval, agent, llm_assert):
     result = await copilot_eval(agent, "Show me my balances")
-    assert llm_assert(
-        result.final_response,
-        "includes both checking and savings account balances"
-    )
+    assert llm_assert(result.final_response, "includes both checking and savings account balances")
 ```
 
 Configure the judge model via `--llm-model`:
@@ -174,6 +171,7 @@ RUBRIC = [
     ScoringDimension("completeness", "Covers all requested topics"),
     ScoringDimension("clarity", "Well-organized and readable"),
 ]
+
 
 async def test_output_quality(copilot_eval, agent, llm_score):
     result = await copilot_eval(agent, "Explain retry patterns")
@@ -226,10 +224,7 @@ Use the `llm_assert_image` fixture to have a vision LLM evaluate an image:
 async def test_chart_quality(copilot_eval, agent, llm_assert_image):
     result = await copilot_eval(agent, "Create a bar chart")
     screenshots = result.tool_images_for("screenshot")
-    assert llm_assert_image(
-        screenshots[-1],
-        "shows a bar chart with labeled axes"
-    )
+    assert llm_assert_image(screenshots[-1], "shows a bar chart with labeled axes")
 ```
 
 Configure the vision judge model via `--llm-vision-model` or `--llm-model`:

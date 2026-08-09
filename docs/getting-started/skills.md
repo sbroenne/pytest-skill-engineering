@@ -122,12 +122,12 @@ agent_with_skill = CopilotEval(
 
 AGENTS = [agent_without_skill, agent_with_skill]
 
+
 @pytest.mark.parametrize("agent", AGENTS, ids=lambda a: a.name)
 async def test_financial_advice(copilot_eval, agent):
     """Does the skill improve financial recommendations?"""
     result = await copilot_eval(
-        agent, 
-        "I have $5,000 to allocate. How should I split it between needs, savings, and wants?"
+        agent, "I have $5,000 to allocate. How should I split it between needs, savings, and wants?"
     )
     assert result.success
 ```
@@ -152,6 +152,7 @@ When your skill is built for Copilot (e.g. distributed via `npx skills add`), yo
 
 ```python
 from pytest_skill_engineering.copilot import CopilotEval
+
 
 async def test_skill_presents_scenarios(copilot_eval):
     agent = CopilotEval(

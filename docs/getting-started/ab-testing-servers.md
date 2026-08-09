@@ -34,6 +34,7 @@ AGENTS = [
     ),
 ]
 
+
 @pytest.mark.parametrize("agent", AGENTS, ids=lambda a: a.name)
 async def test_balance_query(copilot_eval, agent):
     result = await copilot_eval(agent, "What's my checking balance?")
@@ -66,6 +67,7 @@ Test whether a clearer description improves tool usage:
 # v2: Clear description with examples
 # get_balance: "Get current balance for a bank account. Example: get_balance('checking')"
 
+
 @pytest.mark.parametrize("agent", [agent_v1, agent_v2], ids=["vague", "clear"])
 async def test_tool_discovery(copilot_eval, agent):
     result = await copilot_eval(agent, "I need to check how much money I have")
@@ -96,12 +98,24 @@ Verify a database migration doesn't affect LLM interactions:
 ```python
 agent_sqlite = CopilotEval(
     name="banking-sqlite",
-    mcp_servers={"server": {"command": "python", "args": ["server.py"], "env": {"DATABASE_URL": "sqlite:///test.db"}}},
+    mcp_servers={
+        "server": {
+            "command": "python",
+            "args": ["server.py"],
+            "env": {"DATABASE_URL": "sqlite:///test.db"},
+        }
+    },
 )
 
 agent_postgres = CopilotEval(
     name="banking-postgres",
-    mcp_servers={"server": {"command": "python", "args": ["server.py"], "env": {"DATABASE_URL": "postgresql://localhost/test"}}},
+    mcp_servers={
+        "server": {
+            "command": "python",
+            "args": ["server.py"],
+            "env": {"DATABASE_URL": "postgresql://localhost/test"},
+        }
+    },
 )
 ```
 
@@ -112,6 +126,7 @@ Test whether a new input schema is clearer:
 ```python
 # v1: Single "query" parameter
 # v2: Separate "account" and "type" parameters
+
 
 @pytest.mark.parametrize("agent", [agent_v1, agent_v2])
 async def test_ambiguous_query(copilot_eval, agent):

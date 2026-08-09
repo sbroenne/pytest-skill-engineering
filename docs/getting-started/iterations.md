@@ -111,7 +111,7 @@ Use both together for robust testing:
 ```python
 agent = CopilotEval(
     name="banking-test",
-    max_retries=3,      # Retry tool errors within each run
+    max_retries=3,  # Retry tool errors within each run
     max_turns=10,
 )
 

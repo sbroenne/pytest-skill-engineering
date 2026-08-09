@@ -1,5 +1,5 @@
 <!doctype html><html lang="en" class="dark"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>pytest-skill-engineering - Test Report</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&amp;family=Roboto+Mono&amp;display=swap" rel="stylesheet"><script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script><style>/* ============================================================
-   pytest-skill-engineering Report Styles
+   pytest-aitest Report Styles
    Hand-written CSS — replaces Tailwind CSS build pipeline
    Matches mkdocs-material slate/indigo theme
    ============================================================ */
@@ -37,6 +37,7 @@
   /* Semantic colors */
   --color-green: #4ade80;
   --color-yellow: #facc15;
+  --color-amber: #fbbf24;
   --color-red: #f87171;
   --color-blue: #60a5fa;
 
@@ -305,7 +306,9 @@ a:hover {
 .px-3 { padding-left: 0.75rem; padding-right: 0.75rem; }
 .px-5 { padding-left: 1.25rem; padding-right: 1.25rem; }
 .px-6 { padding-left: 1.5rem; padding-right: 1.5rem; }
+.py-0\.5 { padding-top: 0.125rem; padding-bottom: 0.125rem; }
 .py-1 { padding-top: 0.25rem; padding-bottom: 0.25rem; }
+.py-1\.5 { padding-top: 0.375rem; padding-bottom: 0.375rem; }
 .py-3 { padding-top: 0.75rem; padding-bottom: 0.75rem; }
 .py-4 { padding-top: 1rem; padding-bottom: 1rem; }
 .py-8 { padding-top: 2rem; padding-bottom: 2rem; }
@@ -466,6 +469,7 @@ a:hover {
 .hover\:border-white\/20:hover { border-color: rgba(255, 255, 255, 0.2); }
 .hover\:border-primary\/30:hover { border-color: rgba(64, 81, 181, 0.3); }
 .hover\:border-primary\/50:hover { border-color: rgba(64, 81, 181, 0.5); }
+.hover\:bg-primary\/5:hover { background-color: rgba(64, 81, 181, 0.05); }
 .hover\:text-text-light:hover { color: var(--color-text-light); }
 .hover\:text-blue-400:hover { color: var(--color-blue); }
 .hover\:text-accent:hover { color: var(--color-accent); }
@@ -525,6 +529,19 @@ a:hover {
   font-size: 0.875rem;
   line-height: 1.25rem;
   border: 1px solid rgba(239, 68, 68, 0.3);
+}
+.status-warning {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  background-color: rgba(251, 191, 36, 0.15);
+  color: var(--color-amber);
+  font-weight: 500;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  border: 1px solid rgba(251, 191, 36, 0.3);
 }
 
 /* ==================== Cards ==================== */
@@ -894,6 +911,23 @@ a:hover {
 .progress-fill.blue  { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
 .progress-fill.amber { background: linear-gradient(90deg, #d97706, #facc15); }
 .progress-fill.red   { background: linear-gradient(90deg, #dc2626, #f87171); }
+
+/* ── Score dimension bars ── */
+.score-track {
+  width: 100%;
+  background-color: rgba(255, 255, 255, 0.04);
+  border-radius: 4px;
+  height: 8px;
+  overflow: hidden;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+.score-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 600ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.score-dimension { line-height: 1.4; }
+
 .progress-pct {
   width: 42px;
   font-size: 0.8rem;
@@ -959,7 +993,6 @@ a:hover {
 
 /* ==================== Overlay ==================== */
 #overlay.active { display: flex !important; }
-#diagram-hover-popup.active { display: block !important; }
 #overlay-mermaid svg {
   max-width: 100%;
   max-height: 100%;
@@ -967,85 +1000,28 @@ a:hover {
   height: auto;
   min-height: 60vh;
 }
-</style></head><body class="bg-surface text-text min-h-screen"><div class="max-w-6xl mx-auto px-6 py-8"><header class="report-header mb-8"><div class="flex justify-between items-start gap-4 mb-4"><div class="flex-1"><h1 class="text-2xl font-medium mb-1">Skill improvement — baseline vs skilled agent.</h1></div><div class="status-failed"><span>✗</span><span>1 Failed</span></div></div><div class="flex flex-wrap gap-x-6 gap-y-1 py-3 border-t border-white/10 text-sm"><span class="opacity-70">February 07, 2026 at 07:39 PM</span><span>📄 <span class="text-text-light hover:text-blue-400 cursor-pointer" title="tests/fixtures/scenario_07_skill_improvement.py">scenario_07_skill_improvement.py</span></span><span class="tabular-nums">4 tests</span><span class="tabular-nums">72.1s</span><span class="tabular-nums" title="Token range (min-max per test)">1,286–2,169 tok</span><span class="tabular-nums" title="Test execution cost">🧪 $-0.011550</span><span class="tabular-nums" title="AI analysis cost">🤖 $0.0218</span><span class="tabular-nums font-semibold" title="Total cost">💰 $0.0102</span></div></header><section class="mb-8"><div class="ai-insights"><div class="ai-insights-header"><span>🤖</span><span>AI Analysis</span><button class="ml-auto text-text-muted hover:text-text-light text-sm" onclick="this.closest(&#39;.ai-insights&#39;).querySelector(&#39;.card-body&#39;).classList.toggle(&#39;hidden&#39;)">Toggle</button></div><div class="card-body"><div class="markdown-content"><div class="winner-card">
-<div class="winner-title">Recommended for Deploy</div>
-<div class="winner-name">baseline</div>
-<div class="winner-summary">Delivers a perfect pass rate at lower cost while reliably calling account tools when needed. Avoids permission-seeking behavior that caused missed tool usage in the skilled variant.</div>
-<div class="winner-stats">
-<div class="winner-stat"><span class="winner-stat-value green">100%</span><span class="winner-stat-label">Pass Rate</span></div>
-<div class="winner-stat"><span class="winner-stat-value blue">$0.004625</span><span class="winner-stat-label">Total Cost</span></div>
-<div class="winner-stat"><span class="winner-stat-value amber">3,455</span><span class="winner-stat-label">Tokens</span></div>
-</div>
-</div>
-
-<div class="metric-grid">
-<div class="metric-card green">
-<div class="metric-value green">4</div>
-<div class="metric-label">Total Tests</div>
-</div>
-<div class="metric-card red">
-<div class="metric-value red">1</div>
-<div class="metric-label">Failures</div>
-</div>
-<div class="metric-card blue">
-<div class="metric-value blue">2</div>
-<div class="metric-label">Agents</div>
-</div>
-<div class="metric-card amber">
-<div class="metric-value amber">2.2</div>
-<div class="metric-label">Avg Turns</div>
-</div>
-</div>
-
-<h2>Comparative Analysis</h2>
-<h3>Why the winner wins</h3>
-<ul>
-<li>Achieves <strong>100% pass rate</strong> at <strong>~18% lower total cost</strong> than the alternative while handling the same scenarios.</li>
-<li>Correctly <strong>initiates balance lookup tools without asking permission</strong>, satisfying tests that require immediate tool usage.</li>
-<li>Uses fewer tokens overall, indicating more direct task execution rather than extended preambles.</li>
-</ul>
-<h3>Notable patterns</h3>
-<ul>
-<li>Adding the financial skill increased verbosity and introduced <strong>permission-seeking behavior</strong> (“do you want general guidance, or do you want me to look up your balances”) that delayed or prevented tool calls.</li>
-<li>The baseline agent implicitly followed the expected flow: retrieve balances first, then reason about allocation.</li>
-<li>The skill content helped with qualitative advice (emergency fund, prioritization) but conflicted with tests that expect <strong>action-first behavior</strong>.</li>
-</ul>
-<h3>Alternatives</h3>
-<ul>
-<li><strong>with-financial-skill</strong>: Close in cost but failed allocation advice due to not calling tools. The root cause is not missing knowledge, but a <strong>prompt/skill interaction that encourages asking clarifying questions before acting</strong>.</li>
-</ul>
+</style></head><body class="bg-surface text-text min-h-screen"><div class="max-w-6xl mx-auto px-6 py-8"><header class="report-header mb-8"><div class="flex justify-between items-start gap-4 mb-4"><div class="flex-1"><h1 class="text-2xl font-medium mb-1">Skill improvement — baseline vs skilled agent.</h1></div><div class="flex gap-2 items-start"><div class="status-failed"><span>✗</span><span>1 Failed</span></div></div></div><div class="flex flex-wrap gap-x-6 gap-y-1 py-3 border-t border-white/10 text-sm"><span class="opacity-70">February 07, 2026 at 07:39 PM</span><span>📄 <span class="text-text-light hover:text-blue-400 cursor-pointer" title="tests/fixtures/scenario_07_skill_improvement.py">scenario_07_skill_improvement.py</span></span><span class="tabular-nums">4 tests</span><span class="tabular-nums">72.1s</span><span class="tabular-nums" title="Token range (min-max per test)">1,286–2,169 tok</span><span class="tabular-nums" title="Test execution cost">🧪 $0.0102</span><span class="tabular-nums" title="AI analysis cost">🤖 $0.0205</span><span class="tabular-nums font-semibold" title="Total cost">💰 $0.0307</span></div></header><section class="mb-8"><div class="ai-insights"><div class="ai-insights-header"><span>🤖</span><span>AI Analysis</span><button class="ml-auto text-text-muted hover:text-text-light text-sm" onclick="this.closest(&#39;.ai-insights&#39;).querySelector(&#39;.card-body&#39;).classList.toggle(&#39;hidden&#39;)">Toggle</button></div><div class="card-body"><div class="markdown-content"><h2>🎯 Recommendation</h2>
+<p><strong>Deploy: baseline (gpt-5-mini + default system prompt)</strong></p>
+<p>Achieves <strong>100% pass rate</strong> across tested scenarios at <strong>~2% lower cost</strong> than the skilled variant, while correctly invoking banking tools when required.</p>
+<p><strong>Reasoning:</strong><br>
+- <strong>Pass rate:</strong> Baseline passed all tests; the skilled agent failed a required tool-usage assertion.<br>
+- <strong>Cost:</strong> Baseline total cost is lower ($0.002759 vs $0.002804 in the comparable allocation test, ~2% savings).<br>
+- <strong>Behavior:</strong> Baseline reliably calls <code>get_all_balances</code> when asked for allocation advice, satisfying test expectations.</p>
+<p><strong>Alternatives:</strong><br>
+- <strong>with-financial-skill (gpt-5-mini)</strong> — <strong>Disqualified</strong> due to failing the allocation advice test (did not call any balance tool despite the test requiring it).</p>
 <h2>❌ Failure Analysis</h2>
-<h3>Failure Summary</h3>
-<p><strong>with-financial-skill</strong> (1 failure)</p>
-<table>
-<thead>
-<tr>
-<th>Test</th>
-<th>Root Cause</th>
-<th>Fix</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Ask for allocation advice — skilled agent should apply 50/30/20 rule</td>
-<td>Permission-seeking response prevented required tool call</td>
-<td>Instruct agent to fetch balances immediately when allocation is requested</td>
-</tr>
-</tbody>
-</table>
 <h3>Ask for allocation advice — skilled agent should apply 50/30/20 rule (with-financial-skill)</h3>
 <ul>
-<li><strong>Problem:</strong> The agent provided high-level guidance and asked for confirmation instead of retrieving balances.</li>
-<li><strong>Root Cause:</strong> The agent never called <code>get_all_balances</code> or <code>get_balance</code>, violating the test’s expectation of tool usage.</li>
-<li><strong>Behavioral Mechanism:</strong> The skill and system context emphasize phrases like “to give specific transfers I’ll need a little info” and “Quick question first,” which primes the model into a cautious, consultative mode. This shifts behavior from acting to <strong>seeking user permission</strong>, even when sufficient context exists to proceed.</li>
-<li><strong>Fix:</strong> Add an explicit instruction to the system prompt or skill:<blockquote>
-<p>“When a user asks how to allocate money across accounts, immediately retrieve current balances using the appropriate account tools before asking any clarifying questions.”</p>
-</blockquote>
-</li>
+<li><strong>Problem:</strong> The agent provided high-level guidance and asked a clarifying question instead of fetching balances, causing the test assertion to fail.</li>
+<li><strong>Root Cause:</strong> The <strong>system prompt/skill lacks an explicit instruction to proactively call balance tools</strong> when allocation advice is requested. The agent optimized for conversational clarification over tool usage.</li>
+<li><strong>Fix:</strong> Add an explicit directive to the system prompt or skill to always fetch balances for allocation questions.</li>
 </ul>
+<p><strong>Exact text to add to the Financial Advisor Skill (top section):</strong></p>
+<pre><code>When a user asks how to allocate money across accounts, always retrieve current balances first using get_all_balances (or get_balance if only one account is relevant) before giving advice. Do not ask clarifying questions before checking balances.
+</code></pre>
 <h2>🔧 MCP Tool Feedback</h2>
-<h3>accounts_server</h3>
-<p>Overall, tools are simple and discoverable. Failures were not due to tool design but to agent hesitation.</p>
+<h3>pytest_skill_engineering.testing.banking_mcp</h3>
+<p>Overall, tools are clear and functional. The issue observed is <strong>agent hesitation</strong>, not tool failure.</p>
 <table>
 <thead>
 <tr>
@@ -1066,91 +1042,112 @@ a:hover {
 <td>get_balance</td>
 <td>✅</td>
 <td>0</td>
-<td>Not used; no test required it explicitly</td>
+<td>Not used in failures; acceptable</td>
+</tr>
+<tr>
+<td>transfer</td>
+<td>✅</td>
+<td>0</td>
+<td>Not exercised</td>
+</tr>
+<tr>
+<td>deposit</td>
+<td>✅</td>
+<td>0</td>
+<td>Not exercised</td>
+</tr>
+<tr>
+<td>withdraw</td>
+<td>✅</td>
+<td>0</td>
+<td>Not exercised</td>
+</tr>
+<tr>
+<td>get_transactions</td>
+<td>✅</td>
+<td>0</td>
+<td>Not exercised</td>
 </tr>
 </tbody>
 </table>
 <h2>📝 System Prompt Feedback</h2>
-<h3>baseline (effective)</h3>
+<h3>default (effective)</h3>
 <ul>
-<li><strong>Token count:</strong> Low</li>
-<li><strong>Behavioral impact:</strong> Encourages direct action and tool usage without excessive framing.</li>
-<li><strong>Problem:</strong> None observed.</li>
+<li><strong>Token count:</strong> ~14</li>
+<li><strong>Assessment:</strong> Clear, concise, and effective. The prompt implicitly encourages tool use and resulted in correct behavior.</li>
 <li><strong>Suggested change:</strong> None.</li>
 </ul>
-<h3>with-financial-skill prompt (mixed — ineffective with gpt-5-mini in allocation task)</h3>
+<h3>Financial Advisor Skill prompt (mixed)</h3>
 <ul>
-<li><strong>Token count:</strong> Higher due to skill injection</li>
-<li><strong>Behavioral impact:</strong> Language around “guidance,” “priorities,” and “quick questions” encourages explanation before execution.</li>
-<li><strong>Problem:</strong> Lacks a clear directive on <strong>when to act vs. ask</strong>.</li>
-<li><strong>Suggested change:</strong> Append:<blockquote>
-<p>“Default to action: if the user asks for advice that depends on account data, call the relevant tools immediately and explain after.”</p>
-</blockquote>
-</li>
+<li><strong>Token count:</strong> ~350+ (skill content)</li>
+<li><strong>Problem:</strong> Strong financial guidance, but <strong>missing operational instructions</strong> about when to use MCP tools. This caused a direct test failure.</li>
+<li><strong>Suggested change:</strong> Add the explicit tool-usage instruction shown in the Failure Analysis section.</li>
 </ul>
 <h2>📚 Skill Feedback</h2>
-<h3>financial-skill (mixed)</h3>
+<h3>financial-advisor (mixed)</h3>
 <ul>
-<li><strong>Usage rate:</strong> High in advisory responses</li>
-<li><strong>Token cost:</strong> Moderate</li>
-<li><strong>Problem:</strong> Overemphasizes planning and prioritization, which can override test expectations for immediate tool calls.</li>
-<li><strong>Suggested change:</strong> Split skill into two sections:</li>
-<li>“Action rules” (tool-first behaviors)</li>
-<li>“Advisory principles” (50/30/20, emergency fund guidance)</li>
+<li><strong>Usage rate:</strong> High in savings-related responses; partial in allocation advice.</li>
+<li><strong>Token cost:</strong> High relative to baseline.</li>
+<li><strong>Problem:</strong> The skill emphasizes advisory principles but not <strong>tool orchestration</strong>, leading to non-compliant behavior in tool-dependent tests.</li>
+<li><strong>Suggested change:</strong> Add a short “Tool Usage Rules” subsection at the top:</li>
 </ul>
+<pre><code>## Tool Usage Rules
+- For allocation, budgeting, or balance-based advice: always call the relevant balance tool first.
+- Prefer get_all_balances when multiple accounts exist.
+</code></pre>
 <h2>💡 Optimizations</h2>
-<table>
-<thead>
-<tr>
-<th>#</th>
-<th>Optimization</th>
-<th>Priority</th>
-<th>Estimated Savings</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>1</td>
-<td>Enforce tool-first rule for allocation queries</td>
-<td>recommended</td>
-<td>Avoid 100% of similar failures</td>
-</tr>
-<tr>
-<td>2</td>
-<td>Trim advisory preambles in skilled agent</td>
-<td>suggestion</td>
-<td>~10% cost reduction</td>
-</tr>
-</tbody>
-</table>
-<h4>1. Enforce tool-first rule for allocation queries (recommended)</h4>
+<ol>
+<li><strong>Enforce proactive balance retrieval</strong> (recommended)</li>
+<li>Current: Skilled agent asks clarifying questions instead of calling tools.</li>
+<li>Change: Add explicit tool-usage rules to the skill/system prompt.</li>
+<li>
+<p>Impact: <strong>Eliminates test failures</strong> and avoids re-runs, saving ~$0.0028 per failed test execution.</p>
+</li>
+<li>
+<p><strong>Reduce skill verbosity</strong> (suggestion)</p>
+</li>
+<li>Current: Long skill content increases token usage without affecting tool behavior.</li>
+<li>Change: Move “Budget Categories” and “Red Flags” to a secondary section loaded only when explicitly needed.</li>
+<li>Impact: <strong>~20–30% cost reduction</strong> for skilled runs due to fewer prompt tokens.</li>
+</ol>
+<h2>📦 Tool Response Optimization</h2>
+<h3>get_all_balances (from pytest_skill_engineering.testing.banking_mcp)</h3>
 <ul>
-<li>Current: Skilled agent asks clarifying questions before fetching balances.</li>
-<li>Change: Add an explicit system/skill rule to always fetch balances first.</li>
-<li>Impact: Prevents test failures; reduces retries and wasted turns.</li>
+<li><strong>Current response size:</strong> ~55–65 tokens</li>
+<li><strong>Issues found:</strong> Duplicate formatted fields (<code>formatted</code>, <code>total_formatted</code>) are not used by the agent in reasoning.</li>
+<li><strong>Suggested optimization:</strong> Remove formatted strings or make them optional.</li>
 </ul>
-<h4>2. Trim advisory preambles in skilled agent (suggestion)</h4>
+<p><strong>Example current vs optimized:</strong></p>
+<pre><code class="language-json">// Current (~60 tokens)
+{
+  "accounts": {
+    "checking": {"balance": 1500.0, "formatted": "$1,500.00"},
+    "savings": {"balance": 3000.0, "formatted": "$3,000.00"}
+  },
+  "total": 4500.0,
+  "total_formatted": "$4,500.00"
+}
+
+// Optimized (~30 tokens)
+{
+  "accounts": {
+    "checking": 1500.0,
+    "savings": 3000.0
+  },
+  "total": 4500.0
+}
+</code></pre>
 <ul>
-<li>Current: Long high-level explanations precede any action.</li>
-<li>Change: Move explanations after tool results.</li>
-<li>Impact: ~10% cost reduction through fewer tokens and turns.</li>
-</ul></div></div></div></section><section class="mb-8"><h2 class="section-title">🏆 Agent Leaderboard</h2><div class="card overflow-hidden"><table class="leaderboard-table"><thead><tr><th class="w-10"></th><th>Agent</th><th class="text-center">Tests</th><th class="text-center">Pass Rate</th><th class="text-right">Tokens</th><th class="text-right">Cost</th><th class="text-right">Duration</th></tr></thead><tbody><tr class="winner-row"><td class="text-center text-xl">🥇</td><td><div class="font-medium text-text-light"><span>baseline</span></div></td><td class="text-center tabular-nums"><span class="text-green-400">2</span>/<span class="text-text-muted">2</span></td><td class="text-center"><span class="text-green-400 font-semibold tabular-nums">100%</span></td><td class="text-right tabular-nums text-text-muted">3,455</td><td class="text-right tabular-nums text-text-muted">$0.004625</td><td class="text-right tabular-nums text-text-muted">37.7s</td></tr><tr><td class="text-center text-xl">🥈</td><td><div class="font-medium text-text-light"><span>with-financial-skill</span></div></td><td class="text-center tabular-nums"><span class="text-green-400">1</span>/<span class="text-text-muted">2</span></td><td class="text-center"><span class="text-red-400 font-semibold tabular-nums">50%</span></td><td class="text-right tabular-nums text-text-muted">3,975</td><td class="text-right tabular-nums text-text-muted">$0.005622</td><td class="text-right tabular-nums text-text-muted">34.4s</td></tr></tbody></table></div></section><section class="mb-8"><h2 class="section-title">📋 Test Results</h2><div class="mb-4 flex items-center justify-between"><div class="flex gap-2"><button class="filter-btn active" data-filter="all" onclick="filterTests(&#39;all&#39;)">All</button><button class="filter-btn " data-filter="diff" onclick="filterTests(&#39;diff&#39;)">Differences ⚡</button><button class="filter-btn " data-filter="failed" onclick="filterTests(&#39;failed&#39;)">Failed ❌</button></div><div class="text-sm text-text-muted"><span id="visible-count">4</span> / 4 tests</div></div><div class="space-y-4" id="test-groups"><div class="card overflow-hidden test-group" data-group-type="standalone"><div class="group-header px-5 py-3 bg-surface-elevated border-b border-white/10 flex justify-between items-center cursor-pointer" onclick="toggleGroup(this.parentElement)"><div class="flex items-center gap-3"><span class="text-lg">📋</span><span class="font-medium text-text-light">tests/fixtures/scenario_07_skill_improvement.py</span><span class="text-sm text-text-muted">(2 tests)</span></div><div class="flex items-center gap-4"><div class="text-sm text-green-400">2/2</div><div class="text-sm text-red-400">1/2</div><span class="text-text-muted transition-transform duration-200 expand-icon">▼</span></div></div><div class="group-content"><div class="test-row border-b border-white/5" data-test-id="test_fund_allocation_advice" data-has-diff="true" data-has-failed="true"><div class="px-5 py-3 hover:bg-white/[0.02] cursor-pointer transition-colors" onclick="toggleTestDetail(this.parentElement)"><div class="flex items-center justify-between"><div class="flex items-center gap-3 min-w-0 flex-1"><span class="text-green-400">✅</span><span class="text-text-light truncate">Ask for allocation advice — skilled agent should apply 50/30…</span><span class="text-yellow-400" title="Results differ between agents">⚡</span></div><div class="flex items-center gap-4 text-sm text-text-muted"><span class="tabular-nums" title="Total tokens across selected agents">Total 4,152 tok</span><span class="text-text-muted">·</span><span class="tabular-nums" title="Total cost across selected agents">Total $0.005563</span><span class="text-text-muted">·</span><span class="tabular-nums" title="Token difference between selected agents (%difference)">Δ +9%</span><span class="text-text-muted">·</span><span class="tabular-nums" title="Duration difference between selected agents (%difference)">Δ +35%</span><span class="text-text-muted">·</span><span class="tabular-nums" title="Cost difference between selected agents (%difference)">Δ +2%</span></div></div><div class="flex gap-4 mt-2 pl-8"><div class="agent-result-item flex items-center gap-2 text-xs " data-agent-id="bcdf19f2-5315-4124-88f3-36677b59a55c"><span class="text-text-muted">baseline:</span><span class="text-green-400">✅</span><span class="text-text-muted tabular-nums">23.9s</span></div><div class="agent-result-item flex items-center gap-2 text-xs " data-agent-id="51daba5a-035d-48e8-8a71-89d451c61e3e"><span class="text-text-muted">with-financial-skill:</span><span class="text-red-400">❌</span><span class="text-text-muted tabular-nums">17.7s</span></div></div></div><div class="test-detail hidden border-t border-white/10 bg-surface-elevated"><div class="comparison-grid grid gap-4 p-5" style="grid-template-columns: repeat(2, 1fr);"><div class="comparison-column  border-l-[3px] border-green-500" data-agent-id="bcdf19f2-5315-4124-88f3-36677b59a55c"><div class="flex items-center justify-between mb-4"><div class="font-medium text-text-light">baseline</div><span class="px-2 py-0.5 rounded text-xs font-medium bg-green-500/15 text-green-400">passed</span></div><div class="space-y-2 mb-4"><div class="grid grid-cols-4 gap-2 p-3 bg-surface-elevated rounded-material text-center"><div><div class="text-sm font-medium text-text-light tabular-nums">23.87s</div><div class="text-xs text-text-muted">duration</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">3</div><div class="text-xs text-text-muted">turns</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">1</div><div class="text-xs text-text-muted">tools</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">2,169</div><div class="text-xs text-text-muted">tokens</div></div></div><div class="grid grid-cols-4 gap-2 p-3 bg-surface-elevated rounded-material text-center"><div><div class="text-sm font-medium text-text-light tabular-nums">$0.002759</div><div class="text-xs text-text-muted">cost</div></div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>📊</span><span>Sequence</span></div><div class="p-3 bg-surface-code rounded-material border border-white/5 cursor-pointer hover:border-primary/30 transition-colors" onclick="event.stopPropagation(); showDiagram(this.dataset.mermaidCode);" data-mermaid-code="sequenceDiagram
+<li><strong>Estimated savings:</strong> ~30 tokens per call (<strong>~50% reduction</strong>)</li>
+</ul></div></div></div></section><section class="mb-8"><h2 class="section-title">🏆 Eval Leaderboard</h2><div class="card overflow-hidden"><table class="leaderboard-table"><thead><tr><th class="w-10"></th><th>Eval</th><th class="text-center">Tests</th><th class="text-center">Pass Rate</th><th class="text-right">Tokens</th><th class="text-right">Cost</th><th class="text-right">Duration</th></tr></thead><tbody><tr class="winner-row"><td class="text-center text-xl">🥇</td><td><div class="font-medium text-text-light"><span>baseline</span></div></td><td class="text-center tabular-nums"><span class="text-green-400">2</span>/<span class="text-text-muted">2</span></td><td class="text-center"><span class="text-green-400 font-semibold tabular-nums">100%</span></td><td class="text-right tabular-nums text-text-muted">3,455</td><td class="text-right tabular-nums text-text-muted">$0.004625</td><td class="text-right tabular-nums text-text-muted">37.7s</td></tr><tr><td class="text-center text-xl">🥈</td><td><div class="font-medium text-text-light"><span>with-financial-skill</span></div></td><td class="text-center tabular-nums"><span class="text-green-400">1</span>/<span class="text-text-muted">2</span></td><td class="text-center"><span class="text-red-400 font-semibold tabular-nums">50%</span></td><td class="text-right tabular-nums text-text-muted">3,975</td><td class="text-right tabular-nums text-text-muted">$0.005622</td><td class="text-right tabular-nums text-text-muted">34.4s</td></tr></tbody></table></div></section><section class="mb-8"><h2 class="section-title">📋 Test Results</h2><div class="mb-4 flex items-center justify-between"><div class="flex gap-2"><button class="filter-btn active" data-filter="all" onclick="filterTests(&#39;all&#39;)">All</button><button class="filter-btn " data-filter="diff" onclick="filterTests(&#39;diff&#39;)">Differences ⚡</button><button class="filter-btn " data-filter="failed" onclick="filterTests(&#39;failed&#39;)">Failed ❌</button></div><div class="text-sm text-text-muted"><span id="visible-count">4</span> / 4 tests</div></div><div class="space-y-4" id="test-groups"><div class="card overflow-hidden test-group" data-group-type="standalone"><div class="group-header px-5 py-3 bg-surface-elevated border-b border-white/10 flex justify-between items-center cursor-pointer" onclick="toggleGroup(this.parentElement)"><div class="flex items-center gap-3"><span class="text-lg">📋</span><span class="font-medium text-text-light">tests/fixtures/scenario_07_skill_improvement.py</span><span class="text-sm text-text-muted">(2 tests)</span></div><div class="flex items-center gap-4"><div class="text-sm text-green-400">2/2</div><div class="text-sm text-red-400">1/2</div><span class="text-text-muted transition-transform duration-200 expand-icon">▼</span></div></div><div class="group-content"><div class="test-row border-b border-white/5" data-test-id="test_fund_allocation_advice" data-has-diff="true" data-has-failed="true"><div class="px-5 py-3 hover:bg-white/[0.02] cursor-pointer transition-colors" onclick="toggleTestDetail(this.parentElement)"><div class="flex items-center justify-between"><div class="flex items-center gap-3 min-w-0 flex-1"><span class="text-green-400">✅</span><span class="text-text-light truncate">Ask for allocation advice — skilled agent should apply 50/30…</span><span class="text-yellow-400" title="Results differ between agents">⚡</span></div><div class="flex items-center gap-4 text-sm text-text-muted"><span class="tabular-nums" title="Total tokens across selected agents">Total 4,152 tok</span><span class="text-text-muted">·</span><span class="tabular-nums" title="Total cost across selected agents">Total $0.005563</span><span class="text-text-muted">·</span><span class="tabular-nums" title="Token difference between selected agents (%difference)">Δ +9%</span><span class="text-text-muted">·</span><span class="tabular-nums" title="Duration difference between selected agents (%difference)">Δ +35%</span><span class="text-text-muted">·</span><span class="tabular-nums" title="Cost difference between selected agents (%difference)">Δ +2%</span></div></div><div class="flex gap-4 mt-2 pl-8"><div class="agent-result-item flex items-center gap-2 text-xs " data-agent-id="baseline"><span class="text-text-muted">baseline:</span><span class="text-green-400">✅</span><span class="text-text-muted tabular-nums">23.9s</span></div><div class="agent-result-item flex items-center gap-2 text-xs " data-agent-id="with-financial-skill"><span class="text-text-muted">with-financial-skill:</span><span class="text-red-400">❌</span><span class="text-text-muted tabular-nums">17.7s</span></div></div></div><div class="test-detail hidden border-t border-white/10 bg-surface-elevated"><div class="comparison-grid grid gap-4 p-5" style="grid-template-columns: repeat(2, 1fr);"><div class="comparison-column  border-l-[3px] border-green-500" data-agent-id="baseline"><div class="flex items-center justify-between mb-4"><div class="font-medium text-text-light">baseline</div><span class="px-2 py-0.5 rounded text-xs font-medium bg-green-500/15 text-green-400">passed</span></div><div class="space-y-2 mb-4"><div class="grid grid-cols-4 gap-2 p-3 bg-surface-elevated rounded-material text-center"><div><div class="text-sm font-medium text-text-light tabular-nums">23.87s</div><div class="text-xs text-text-muted">duration</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">3</div><div class="text-xs text-text-muted">turns</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">1</div><div class="text-xs text-text-muted">tools</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">2,169</div><div class="text-xs text-text-muted">tokens</div></div></div><div class="grid grid-cols-4 gap-2 p-3 bg-surface-elevated rounded-material text-center"><div><div class="text-sm font-medium text-text-light tabular-nums">$0.002759</div><div class="text-xs text-text-muted">cost</div></div></div></div><div class="mb-4"><button class="inline-flex items-center gap-2 px-3 py-1.5 text-sm bg-surface-code rounded-material border border-white/10 cursor-pointer hover:border-primary/30 hover:bg-primary/5 transition-colors text-text-muted hover:text-text-light" onclick="event.stopPropagation(); showDiagram(this.dataset.mermaidCode);" data-mermaid-code="sequenceDiagram
     participant User
-    participant Agent
+    participant Eval
     participant Tools
 
-    User-&gt;&gt;Agent: &#34;How should I allocate the money across my accounts?&#34;
-    Agent-&gt;&gt;Tools: &#34;get_all_balances({})&#34;
-    Tools--&gt;&gt;Agent: &#34;{&#39;accounts&#39;: {&#39;checking&#39;: {&#39;balance&#39;: 1500.0, &#39;formatted&#39;: &#39;&#34;
-    Agent-&gt;&gt;User: &#34;Right now you have $4,500 total: $1,500 in checking and $3,000 in savings. How y&#34;"><div class="mermaid text-xs">sequenceDiagram
-    participant User
-    participant Agent
-    participant Tools
-
-    User->>Agent: "How should I allocate the money across my accounts?"
-    Agent->>Tools: "get_all_balances({})"
-    Tools-->>Agent: "{'accounts': {'checking': {'balance': 1500.0, 'formatted': '"
-    Agent->>User: "Right now you have $4,500 total: $1,500 in checking and $3,000 in savings. How y"</div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>🔧</span><span>Tool Calls</span></div><div class="space-y-1"><div class="flex items-center gap-2 text-sm p-2 rounded bg-green-500/5"><span class="text-green-400">✅</span><code class="tool-name">get_all_balances</code></div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>✓</span><span>Assertions</span></div><div class="space-y-2"><div class="flex items-center gap-2 text-sm p-2 rounded bg-green-500/5"><span class="text-green-400">✅</span><code class="text-text-muted">llm</code><span class="text-text">provides financial advice about fund allocation</span></div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>💬</span><span>Response</span></div><div style="padding: 1rem; background-color: var(--color-surface-elevated); border-radius: 0.5rem; color: var(--color-text); white-space: pre-wrap; word-wrap: break-word; line-height: 1.625;">Right now you have $4,500 total: $1,500 in checking and $3,000 in savings. How you should split it depends on your goals and monthly cash flow. A few quick questions that will let me give a specific plan:
+    User-&gt;&gt;Eval: &#34;How should I allocate the money across my accounts?&#34;
+    Eval-&gt;&gt;Tools: &#34;get_all_balances({})&#34;
+    Tools--&gt;&gt;Eval: &#34;{&#39;accounts&#39;: {&#39;checking&#39;: {&#39;balance&#39;: 1500.0, &#39;formatted&#39;: &#39;&#34;
+    Eval-&gt;&gt;User: &#34;Right now you have $4,500 total: $1,500 in checking and $3,000 in savings. How y&#34;"><span>📊</span><span>View Sequence Diagram</span></button></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>🔧</span><span>Tool Calls</span></div><div class="space-y-1"><div class="flex items-center gap-2 text-sm p-2 rounded bg-green-500/5"><span class="text-green-400">✅</span><code class="tool-name">get_all_balances</code></div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>✓</span><span>Assertions</span></div><div class="space-y-2"><div class="flex items-center gap-2 text-sm p-2 rounded bg-green-500/5"><span class="text-green-400">✅</span><code class="text-text-muted">llm</code><span class="text-text">provides financial advice about fund allocation</span></div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>💬</span><span>Response</span></div><div style="padding: 1rem; background-color: var(--color-surface-elevated); border-radius: 0.5rem; color: var(--color-text); white-space: pre-wrap; word-wrap: break-word; line-height: 1.625;">Right now you have $4,500 total: $1,500 in checking and $3,000 in savings. How you should split it depends on your goals and monthly cash flow. A few quick questions that will let me give a specific plan:
 - How much are your typical monthly living expenses (rent/mortgage, bills, food, transport)?
 - Any upcoming large expenses in the next 6–12 months (car repair, vacation, tuition, down payment)?
 - Do you have high‑interest debt (credit cards) you’re paying down?
@@ -1187,19 +1184,13 @@ Practical next steps I recommend
 - Set up automation: a weekly/biweekly/ monthly transfer into savings right after paydays.
 - Consider a separate savings sub-account or high-yield savings for goals to keep money organized and earning more interest.
 
-If you want a specific suggestion now, tell me whether your priority is (A) build emergency fund, (B) save for a short-term goal, (C) pay down debt/invest — and I’ll propose one exact transfer (and I can execute it if you’d like).</div></div></div><div class="comparison-column  border-l-[3px] border-red-500" data-agent-id="51daba5a-035d-48e8-8a71-89d451c61e3e"><div class="flex items-center justify-between mb-4"><div class="font-medium text-text-light">with-financial-skill</div><span class="px-2 py-0.5 rounded text-xs font-medium bg-red-500/15 text-red-400">failed</span></div><div class="space-y-2 mb-4"><div class="grid grid-cols-4 gap-2 p-3 bg-surface-elevated rounded-material text-center"><div><div class="text-sm font-medium text-text-light tabular-nums">17.71s</div><div class="text-xs text-text-muted">duration</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">2</div><div class="text-xs text-text-muted">turns</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">0</div><div class="text-xs text-text-muted">tools</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">1,983</div><div class="text-xs text-text-muted">tokens</div></div></div><div class="grid grid-cols-4 gap-2 p-3 bg-surface-elevated rounded-material text-center"><div><div class="text-sm font-medium text-text-light tabular-nums">$0.002804</div><div class="text-xs text-text-muted">cost</div></div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>📊</span><span>Sequence</span></div><div class="p-3 bg-surface-code rounded-material border border-white/5 cursor-pointer hover:border-primary/30 transition-colors" onclick="event.stopPropagation(); showDiagram(this.dataset.mermaidCode);" data-mermaid-code="sequenceDiagram
+If you want a specific suggestion now, tell me whether your priority is (A) build emergency fund, (B) save for a short-term goal, (C) pay down debt/invest — and I’ll propose one exact transfer (and I can execute it if you’d like).</div></div></div><div class="comparison-column  border-l-[3px] border-red-500" data-agent-id="with-financial-skill"><div class="flex items-center justify-between mb-4"><div class="font-medium text-text-light">with-financial-skill</div><span class="px-2 py-0.5 rounded text-xs font-medium bg-red-500/15 text-red-400">failed</span></div><div class="space-y-2 mb-4"><div class="grid grid-cols-4 gap-2 p-3 bg-surface-elevated rounded-material text-center"><div><div class="text-sm font-medium text-text-light tabular-nums">17.71s</div><div class="text-xs text-text-muted">duration</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">2</div><div class="text-xs text-text-muted">turns</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">0</div><div class="text-xs text-text-muted">tools</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">1,983</div><div class="text-xs text-text-muted">tokens</div></div></div><div class="grid grid-cols-4 gap-2 p-3 bg-surface-elevated rounded-material text-center"><div><div class="text-sm font-medium text-text-light tabular-nums">$0.002804</div><div class="text-xs text-text-muted">cost</div></div></div></div><div class="mb-4"><button class="inline-flex items-center gap-2 px-3 py-1.5 text-sm bg-surface-code rounded-material border border-white/10 cursor-pointer hover:border-primary/30 hover:bg-primary/5 transition-colors text-text-muted hover:text-text-light" onclick="event.stopPropagation(); showDiagram(this.dataset.mermaidCode);" data-mermaid-code="sequenceDiagram
     participant User
-    participant Agent
+    participant Eval
     participant Tools
 
-    User-&gt;&gt;Agent: &#34;How should I allocate the money across my accounts?&#34;
-    Agent-&gt;&gt;User: &#34;I can help — to give specific transfers I’ll need a little info. Quick question &#34;"><div class="mermaid text-xs">sequenceDiagram
-    participant User
-    participant Agent
-    participant Tools
-
-    User->>Agent: "How should I allocate the money across my accounts?"
-    Agent->>User: "I can help — to give specific transfers I’ll need a little info. Quick question "</div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>💬</span><span>Response</span></div><div style="padding: 1rem; background-color: var(--color-surface-elevated); border-radius: 0.5rem; color: var(--color-text); white-space: pre-wrap; word-wrap: break-word; line-height: 1.625;">I can help — to give specific transfers I’ll need a little info. Quick question first: do you want general guidance, or do you want me to look up your current balances and suggest exact transfers now?
+    User-&gt;&gt;Eval: &#34;How should I allocate the money across my accounts?&#34;
+    Eval-&gt;&gt;User: &#34;I can help — to give specific transfers I’ll need a little info. Quick question &#34;"><span>📊</span><span>View Sequence Diagram</span></button></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>💬</span><span>Response</span></div><div style="padding: 1rem; background-color: var(--color-surface-elevated); border-radius: 0.5rem; color: var(--color-text); white-space: pre-wrap; word-wrap: break-word; line-height: 1.625;">I can help — to give specific transfers I’ll need a little info. Quick question first: do you want general guidance, or do you want me to look up your current balances and suggest exact transfers now?
 
 Below is a short, practical plan you can use right away plus what I’ll do if you want me to check your accounts.
 
@@ -1250,19 +1241,13 @@ Which would you like me to do?</div></div><div><div class="text-sm font-medium t
        +  and   False = tool_was_called(&#39;get_balance&#39;)
        +    where tool_was_called = AgentResult(SUCCESS)\n  T
 
-... (error truncated, see full logs for details)</div></div></div></div></div></div><div class="test-row border-b border-white/5" data-test-id="test_savings_recommendation" data-has-diff="false" data-has-failed="false"><div class="px-5 py-3 hover:bg-white/[0.02] cursor-pointer transition-colors" onclick="toggleTestDetail(this.parentElement)"><div class="flex items-center justify-between"><div class="flex items-center gap-3 min-w-0 flex-1"><span class="text-green-400">✅</span><span class="text-text-light truncate">Ask about savings — skilled agent should mention emergency f…</span></div><div class="flex items-center gap-4 text-sm text-text-muted"><span class="tabular-nums" title="Total tokens across selected agents">Total 3,278 tok</span><span class="text-text-muted">·</span><span class="tabular-nums" title="Total cost across selected agents">Total $0.004684</span><span class="text-text-muted">·</span><span class="tabular-nums" title="Token difference between selected agents (%difference)">Δ +55%</span><span class="text-text-muted">·</span><span class="tabular-nums" title="Duration difference between selected agents (%difference)">Δ +20%</span><span class="text-text-muted">·</span><span class="tabular-nums" title="Cost difference between selected agents (%difference)">Δ +51%</span></div></div><div class="flex gap-4 mt-2 pl-8"><div class="agent-result-item flex items-center gap-2 text-xs " data-agent-id="bcdf19f2-5315-4124-88f3-36677b59a55c"><span class="text-text-muted">baseline:</span><span class="text-green-400">✅</span><span class="text-text-muted tabular-nums">13.8s</span></div><div class="agent-result-item flex items-center gap-2 text-xs " data-agent-id="51daba5a-035d-48e8-8a71-89d451c61e3e"><span class="text-text-muted">with-financial-skill:</span><span class="text-green-400">✅</span><span class="text-text-muted tabular-nums">16.7s</span></div></div></div><div class="test-detail hidden border-t border-white/10 bg-surface-elevated"><div class="comparison-grid grid gap-4 p-5" style="grid-template-columns: repeat(2, 1fr);"><div class="comparison-column  border-l-[3px] border-green-500" data-agent-id="bcdf19f2-5315-4124-88f3-36677b59a55c"><div class="flex items-center justify-between mb-4"><div class="font-medium text-text-light">baseline</div><span class="px-2 py-0.5 rounded text-xs font-medium bg-green-500/15 text-green-400">passed</span></div><div class="space-y-2 mb-4"><div class="grid grid-cols-4 gap-2 p-3 bg-surface-elevated rounded-material text-center"><div><div class="text-sm font-medium text-text-light tabular-nums">13.83s</div><div class="text-xs text-text-muted">duration</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">2</div><div class="text-xs text-text-muted">turns</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">0</div><div class="text-xs text-text-muted">tools</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">1,286</div><div class="text-xs text-text-muted">tokens</div></div></div><div class="grid grid-cols-4 gap-2 p-3 bg-surface-elevated rounded-material text-center"><div><div class="text-sm font-medium text-text-light tabular-nums">$0.001865</div><div class="text-xs text-text-muted">cost</div></div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>📊</span><span>Sequence</span></div><div class="p-3 bg-surface-code rounded-material border border-white/5 cursor-pointer hover:border-primary/30 transition-colors" onclick="event.stopPropagation(); showDiagram(this.dataset.mermaidCode);" data-mermaid-code="sequenceDiagram
+... (error truncated, see full logs for details)</div></div></div></div></div></div><div class="test-row border-b border-white/5" data-test-id="test_savings_recommendation" data-has-diff="false" data-has-failed="false"><div class="px-5 py-3 hover:bg-white/[0.02] cursor-pointer transition-colors" onclick="toggleTestDetail(this.parentElement)"><div class="flex items-center justify-between"><div class="flex items-center gap-3 min-w-0 flex-1"><span class="text-green-400">✅</span><span class="text-text-light truncate">Ask about savings — skilled agent should mention emergency f…</span></div><div class="flex items-center gap-4 text-sm text-text-muted"><span class="tabular-nums" title="Total tokens across selected agents">Total 3,278 tok</span><span class="text-text-muted">·</span><span class="tabular-nums" title="Total cost across selected agents">Total $0.004684</span><span class="text-text-muted">·</span><span class="tabular-nums" title="Token difference between selected agents (%difference)">Δ +55%</span><span class="text-text-muted">·</span><span class="tabular-nums" title="Duration difference between selected agents (%difference)">Δ +20%</span><span class="text-text-muted">·</span><span class="tabular-nums" title="Cost difference between selected agents (%difference)">Δ +51%</span></div></div><div class="flex gap-4 mt-2 pl-8"><div class="agent-result-item flex items-center gap-2 text-xs " data-agent-id="baseline"><span class="text-text-muted">baseline:</span><span class="text-green-400">✅</span><span class="text-text-muted tabular-nums">13.8s</span></div><div class="agent-result-item flex items-center gap-2 text-xs " data-agent-id="with-financial-skill"><span class="text-text-muted">with-financial-skill:</span><span class="text-green-400">✅</span><span class="text-text-muted tabular-nums">16.7s</span></div></div></div><div class="test-detail hidden border-t border-white/10 bg-surface-elevated"><div class="comparison-grid grid gap-4 p-5" style="grid-template-columns: repeat(2, 1fr);"><div class="comparison-column  border-l-[3px] border-green-500" data-agent-id="baseline"><div class="flex items-center justify-between mb-4"><div class="font-medium text-text-light">baseline</div><span class="px-2 py-0.5 rounded text-xs font-medium bg-green-500/15 text-green-400">passed</span></div><div class="space-y-2 mb-4"><div class="grid grid-cols-4 gap-2 p-3 bg-surface-elevated rounded-material text-center"><div><div class="text-sm font-medium text-text-light tabular-nums">13.83s</div><div class="text-xs text-text-muted">duration</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">2</div><div class="text-xs text-text-muted">turns</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">0</div><div class="text-xs text-text-muted">tools</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">1,286</div><div class="text-xs text-text-muted">tokens</div></div></div><div class="grid grid-cols-4 gap-2 p-3 bg-surface-elevated rounded-material text-center"><div><div class="text-sm font-medium text-text-light tabular-nums">$0.001865</div><div class="text-xs text-text-muted">cost</div></div></div></div><div class="mb-4"><button class="inline-flex items-center gap-2 px-3 py-1.5 text-sm bg-surface-code rounded-material border border-white/10 cursor-pointer hover:border-primary/30 hover:bg-primary/5 transition-colors text-text-muted hover:text-text-light" onclick="event.stopPropagation(); showDiagram(this.dataset.mermaidCode);" data-mermaid-code="sequenceDiagram
     participant User
-    participant Agent
+    participant Eval
     participant Tools
 
-    User-&gt;&gt;Agent: &#34;I want to save more money. What do you recommend?&#34;
-    Agent-&gt;&gt;User: &#34;Great — here are practical, high-impact ways to save more, plus a couple quick o&#34;"><div class="mermaid text-xs">sequenceDiagram
-    participant User
-    participant Agent
-    participant Tools
-
-    User->>Agent: "I want to save more money. What do you recommend?"
-    Agent->>User: "Great — here are practical, high-impact ways to save more, plus a couple quick o"</div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>✓</span><span>Assertions</span></div><div class="space-y-2"><div class="flex items-center gap-2 text-sm p-2 rounded bg-green-500/5"><span class="text-green-400">✅</span><code class="text-text-muted">llm</code><span class="text-text">provides savings recommendations</span></div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>💬</span><span>Response</span></div><div style="padding: 1rem; background-color: var(--color-surface-elevated); border-radius: 0.5rem; color: var(--color-text); white-space: pre-wrap; word-wrap: break-word; line-height: 1.625;">Great — here are practical, high-impact ways to save more, plus a couple quick options I can help with right away.
+    User-&gt;&gt;Eval: &#34;I want to save more money. What do you recommend?&#34;
+    Eval-&gt;&gt;User: &#34;Great — here are practical, high-impact ways to save more, plus a couple quick o&#34;"><span>📊</span><span>View Sequence Diagram</span></button></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>✓</span><span>Assertions</span></div><div class="space-y-2"><div class="flex items-center gap-2 text-sm p-2 rounded bg-green-500/5"><span class="text-green-400">✅</span><code class="text-text-muted">llm</code><span class="text-text">provides savings recommendations</span></div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>💬</span><span>Response</span></div><div style="padding: 1rem; background-color: var(--color-surface-elevated); border-radius: 0.5rem; color: var(--color-text); white-space: pre-wrap; word-wrap: break-word; line-height: 1.625;">Great — here are practical, high-impact ways to save more, plus a couple quick options I can help with right away.
 
 High-level principles
 - Automate it: set up automatic transfers to savings right after payday so you “pay yourself first.”
@@ -1297,19 +1282,13 @@ Small strategies that scale
 - Keep savings liquid for the emergency fund, then move longer-term goals into investments/retirement accounts.
 
 Would you like help putting a plan into numbers?
-- I can check your current balances and recent transactions, suggest a monthly transfer amount based on them, or set up an automatic transfer for you. Tell me which you&#39;d like to do.</div></div></div><div class="comparison-column  border-l-[3px] border-green-500" data-agent-id="51daba5a-035d-48e8-8a71-89d451c61e3e"><div class="flex items-center justify-between mb-4"><div class="font-medium text-text-light">with-financial-skill</div><span class="px-2 py-0.5 rounded text-xs font-medium bg-green-500/15 text-green-400">passed</span></div><div class="space-y-2 mb-4"><div class="grid grid-cols-4 gap-2 p-3 bg-surface-elevated rounded-material text-center"><div><div class="text-sm font-medium text-text-light tabular-nums">16.67s</div><div class="text-xs text-text-muted">duration</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">2</div><div class="text-xs text-text-muted">turns</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">0</div><div class="text-xs text-text-muted">tools</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">1,992</div><div class="text-xs text-text-muted">tokens</div></div></div><div class="grid grid-cols-4 gap-2 p-3 bg-surface-elevated rounded-material text-center"><div><div class="text-sm font-medium text-text-light tabular-nums">$0.002818</div><div class="text-xs text-text-muted">cost</div></div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>📊</span><span>Sequence</span></div><div class="p-3 bg-surface-code rounded-material border border-white/5 cursor-pointer hover:border-primary/30 transition-colors" onclick="event.stopPropagation(); showDiagram(this.dataset.mermaidCode);" data-mermaid-code="sequenceDiagram
+- I can check your current balances and recent transactions, suggest a monthly transfer amount based on them, or set up an automatic transfer for you. Tell me which you&#39;d like to do.</div></div></div><div class="comparison-column  border-l-[3px] border-green-500" data-agent-id="with-financial-skill"><div class="flex items-center justify-between mb-4"><div class="font-medium text-text-light">with-financial-skill</div><span class="px-2 py-0.5 rounded text-xs font-medium bg-green-500/15 text-green-400">passed</span></div><div class="space-y-2 mb-4"><div class="grid grid-cols-4 gap-2 p-3 bg-surface-elevated rounded-material text-center"><div><div class="text-sm font-medium text-text-light tabular-nums">16.67s</div><div class="text-xs text-text-muted">duration</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">2</div><div class="text-xs text-text-muted">turns</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">0</div><div class="text-xs text-text-muted">tools</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">1,992</div><div class="text-xs text-text-muted">tokens</div></div></div><div class="grid grid-cols-4 gap-2 p-3 bg-surface-elevated rounded-material text-center"><div><div class="text-sm font-medium text-text-light tabular-nums">$0.002818</div><div class="text-xs text-text-muted">cost</div></div></div></div><div class="mb-4"><button class="inline-flex items-center gap-2 px-3 py-1.5 text-sm bg-surface-code rounded-material border border-white/10 cursor-pointer hover:border-primary/30 hover:bg-primary/5 transition-colors text-text-muted hover:text-text-light" onclick="event.stopPropagation(); showDiagram(this.dataset.mermaidCode);" data-mermaid-code="sequenceDiagram
     participant User
-    participant Agent
+    participant Eval
     participant Tools
 
-    User-&gt;&gt;Agent: &#34;I want to save more money. What do you recommend?&#34;
-    Agent-&gt;&gt;User: &#34;Great — want practical, doable steps. Here’s a short, actionable plan you can st&#34;"><div class="mermaid text-xs">sequenceDiagram
-    participant User
-    participant Agent
-    participant Tools
-
-    User->>Agent: "I want to save more money. What do you recommend?"
-    Agent->>User: "Great — want practical, doable steps. Here’s a short, actionable plan you can st"</div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>✓</span><span>Assertions</span></div><div class="space-y-2"><div class="flex items-center gap-2 text-sm p-2 rounded bg-green-500/5"><span class="text-green-400">✅</span><code class="text-text-muted">llm</code><span class="text-text">provides savings recommendations</span></div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>💬</span><span>Response</span></div><div style="padding: 1rem; background-color: var(--color-surface-elevated); border-radius: 0.5rem; color: var(--color-text); white-space: pre-wrap; word-wrap: break-word; line-height: 1.625;">Great — want practical, doable steps. Here’s a short, actionable plan you can start today plus specific tactics to speed up saving.
+    User-&gt;&gt;Eval: &#34;I want to save more money. What do you recommend?&#34;
+    Eval-&gt;&gt;User: &#34;Great — want practical, doable steps. Here’s a short, actionable plan you can st&#34;"><span>📊</span><span>View Sequence Diagram</span></button></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>✓</span><span>Assertions</span></div><div class="space-y-2"><div class="flex items-center gap-2 text-sm p-2 rounded bg-green-500/5"><span class="text-green-400">✅</span><code class="text-text-muted">llm</code><span class="text-text">provides savings recommendations</span></div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>💬</span><span>Response</span></div><div style="padding: 1rem; background-color: var(--color-surface-elevated); border-radius: 0.5rem; color: var(--color-text); white-space: pre-wrap; word-wrap: break-word; line-height: 1.625;">Great — want practical, doable steps. Here’s a short, actionable plan you can start today plus specific tactics to speed up saving.
 
 Top priorities (in order)
 1. Build an emergency fund equal to 3–6 months of your essential monthly expenses. This comes first.
@@ -1362,39 +1341,14 @@ Would you like help with any of the following?
 - I can review your accounts and recent transactions to give tailored recommendations (I’ll need your permission to fetch balances/transactions).
 - Or tell me your monthly take‑home pay and rough monthly expenses and I’ll make a 3–6 month plan with numbers.
 
-Which would you like to do next?</div></div></div></div></div></div></div></div></div><style>
-.test-group.collapsed .group-content {
-    display: none;
-}
-.test-group.collapsed .expand-icon {
-    transform: rotate(-90deg);
-}
-.test-row.hidden {
-    display: none;
-}
-.test-detail.hidden {
-    display: none;
-}
-</style></section></div><div id="overlay" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center p-8" onclick="hideOverlay()"><button class="absolute top-4 right-4 w-10 h-10 flex items-center justify-center text-2xl text-text-muted hover:text-text-light bg-surface-card rounded-full border border-white/10 transition-colors" onclick="hideOverlay()">✕</button><div class="w-[90vw] h-[85vh] overflow-auto bg-surface-card rounded-lg p-6 shadow-material-lg flex items-center justify-center" onclick="event.stopPropagation()"><div class="mermaid w-full h-full" id="overlay-mermaid"></div></div></div><div id="diagram-hover-popup" class="fixed z-40 bg-surface-card rounded-lg shadow-material-lg border border-white/10 p-4 hidden max-w-xl" onmouseenter="keepDiagramHover()" onmouseleave="hideDiagramHover()" onclick="hideOverlay(); this.classList.add(&#39;hidden&#39;); showDiagram(document.getElementById(&#39;hover-mermaid&#39;).innerHTML);"><div class="mermaid" id="hover-mermaid"></div></div><style>
-#overlay.active { display: flex !important; }
-#diagram-hover-popup.active { display: block !important; }
-
-/* Scale the mermaid SVG in overlay to fill available space */
-#overlay-mermaid svg {
-    max-width: 100%;
-    max-height: 100%;
-    width: auto;
-    height: auto;
-    min-height: 60vh;
-}
-</style><script>
-// pytest-skill-engineering Report Scripts
+Which would you like to do next?</div></div></div></div></div></div></div></div></div></section></div><div id="overlay" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center p-8" onclick="hideOverlay()"><button class="absolute top-4 right-4 w-10 h-10 flex items-center justify-center text-2xl text-text-muted hover:text-text-light bg-surface-card rounded-full border border-white/10 transition-colors" onclick="hideOverlay()">✕</button><div class="w-[90vw] h-[85vh] overflow-auto bg-surface-card rounded-lg p-6 shadow-material-lg flex items-center justify-center" onclick="event.stopPropagation()"><div class="mermaid w-full h-full" id="overlay-mermaid"></div></div></div><script>
+// pytest-aitest Report Scripts
 
 // Initialize Mermaid with dark theme
 mermaid.initialize({ 
     startOnLoad: true,
     theme: 'dark',
-    securityLevel: 'loose',
+    securityLevel: 'strict',
     themeVariables: {
         primaryColor: '#4051b5',
         primaryTextColor: '#c9d1d9',
@@ -1463,27 +1417,6 @@ document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') hideOverlay();
 });
 
-// Hover popup for side-by-side diagrams
-let hoverTimeout = null;
-function showDiagramHover(element, mermaidCode) {
-    clearTimeout(hoverTimeout);
-    const popup = document.getElementById('diagram-hover-popup');
-    const content = document.getElementById('hover-mermaid');
-    content.innerHTML = mermaidCode;
-    popup.classList.add('active');
-    mermaid.run({ nodes: [content] });
-}
-
-function hideDiagramHover() {
-    hoverTimeout = setTimeout(() => {
-        document.getElementById('diagram-hover-popup').classList.remove('active');
-    }, 100);
-}
-
-function keepDiagramHover() {
-    clearTimeout(hoverTimeout);
-}
-
 // Side-by-side test selector
 function showSideBySideTest(testId) {
     // Hide all groups
@@ -1501,13 +1434,13 @@ function showSideBySideTest(testId) {
 
 
 // All agent data for client-side filtering
-const allAgents = [{"id": "bcdf19f2-5315-4124-88f3-36677b59a55c", "name": "baseline", "pass_rate": 100.0}, {"id": "51daba5a-035d-48e8-8a71-89d451c61e3e", "name": "with-financial-skill", "pass_rate": 50.0}];
-const allAgentsById = {"bcdf19f2-5315-4124-88f3-36677b59a55c": {"id": "bcdf19f2-5315-4124-88f3-36677b59a55c", "name": "baseline"}, "51daba5a-035d-48e8-8a71-89d451c61e3e": {"id": "51daba5a-035d-48e8-8a71-89d451c61e3e", "name": "with-financial-skill"}};
+const allAgents = [{"id": "baseline", "name": "baseline", "pass_rate": 100.0}, {"id": "with-financial-skill", "name": "with-financial-skill", "pass_rate": 50.0}];
+const allAgentsById = {"baseline": {"id": "baseline", "name": "baseline"}, "with-financial-skill": {"id": "with-financial-skill", "name": "with-financial-skill"}};
 
 // Track selected agents (exactly 2)
-let selectedAgentIds = ["bcdf19f2-5315-4124-88f3-36677b59a55c", "51daba5a-035d-48e8-8a71-89d451c61e3e"];
+let selectedAgentIds = ["baseline", "with-financial-skill"];
 
-// Agent comparison logic - always keep exactly 2 selected
+// Eval comparison logic - always keep exactly 2 selected
 function updateAgentComparison(clickedAgentId) {
     const checkboxes = document.querySelectorAll('input[name="compare-agent"]');
     

@@ -40,6 +40,7 @@ Stateful task management for testing CRUD operations.
 import sys
 from pytest_skill_engineering.copilot import CopilotEval
 
+
 @pytest.fixture
 def todo_agent():
     return CopilotEval(
@@ -48,17 +49,12 @@ def todo_agent():
         instructions="You are a task management assistant.",
     )
 
+
 async def test_add_and_complete(copilot_eval, todo_agent):
-    result = await copilot_eval(
-        todo_agent,
-        "Add a task: Buy groceries"
-    )
+    result = await copilot_eval(todo_agent, "Add a task: Buy groceries")
     assert result.tool_was_called("add_task")
 
-    result = await copilot_eval(
-        todo_agent,
-        "Mark the groceries task as done"
-    )
+    result = await copilot_eval(todo_agent, "Mark the groceries task as done")
     assert result.tool_was_called("complete_task")
 ```
 
@@ -113,6 +109,7 @@ Stateful banking service for multi-turn session testing.
 ```python
 from pytest_skill_engineering.copilot import CopilotEval
 
+
 async def test_check_balance(copilot_eval):
     agent = CopilotEval(
         name="banking",
@@ -123,6 +120,7 @@ async def test_check_balance(copilot_eval):
     result = await copilot_eval(agent, "What's my checking balance?")
     assert result.tool_was_called("get_balance")
 
+
 async def test_transfer_funds(copilot_eval):
     agent = CopilotEval(
         name="banking",
@@ -130,10 +128,7 @@ async def test_transfer_funds(copilot_eval):
         instructions="You are a banking assistant.",
     )
 
-    result = await copilot_eval(
-        agent,
-        "Transfer $500 from checking to savings"
-    )
+    result = await copilot_eval(agent, "Transfer $500 from checking to savings")
     assert result.tool_was_called("transfer")
 ```
 
@@ -162,6 +157,7 @@ print(result.value["total_formatted"])  # "$4,500.00"
 from dataclasses import dataclass
 from pytest_skill_engineering.testing.types import ToolResult
 
+
 @dataclass
 class MyStore:
     state: dict = None
@@ -182,6 +178,7 @@ class MyStore:
 ```python
 from mcp.server import Server
 from mcp.types import Tool, TextContent
+
 
 def create_my_server(store: MyStore | None = None):
     store = store or MyStore()
@@ -219,6 +216,7 @@ def create_my_server(store: MyStore | None = None):
 @pytest.fixture(scope="module")
 def my_server():
     return create_my_server()
+
 
 async def test_my_tool(copilot_eval, agent_with_my_server):
     result = await copilot_eval(agent_with_my_server, "Use my tool")

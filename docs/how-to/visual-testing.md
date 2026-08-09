@@ -50,11 +50,13 @@ Each visual test file has test classes organized by feature:
 class TestSingleAgentHeader:
     def test_header_exists(self, page, single_agent_report):
         """Header section should exist."""
-        
+
+
 class TestSingleAgentAIAnalysis:
     def test_ai_analysis_exists(self, page, single_agent_report):
         """AI analysis section should exist."""
-        
+
+
 class TestSingleAgentTestGrid:
     def test_test_rows_exist(self, page, single_agent_report):
         """Test rows should exist."""
@@ -142,6 +144,7 @@ def single_agent_report() -> Path:
     """HTML report from 01_single_agent.json (1 agent, no comparison UI)."""
     return _ensure_html_report("01_single_agent")
 
+
 @pytest.fixture(scope="module")
 def multi_agent_report() -> Path:
     """HTML report from 02_multi_agent.json (2 agents, leaderboard, no selector)."""
@@ -159,6 +162,7 @@ Visual tests configure pytest-asyncio in strict mode (manual, not auto):
 def pytest_configure(config: pytest.Config) -> None:
     """Disable asyncio for visual tests."""
     config._inicache["asyncio_mode"] = "strict"
+
 
 # Override async cleanup fixture
 @pytest.fixture(autouse=True)

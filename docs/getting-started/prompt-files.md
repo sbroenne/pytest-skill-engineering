@@ -16,6 +16,7 @@ from pytest_skill_engineering.copilot import CopilotEval
 
 agent = CopilotEval(name="prompt-test")
 
+
 async def test_review_command(copilot_eval):
     """The /review slash command produces actionable feedback."""
     prompt = load_prompt_file(".github/prompts/review.prompt.md")
@@ -68,6 +69,7 @@ PROMPTS = load_prompt_files(".github/prompts/")
 
 agent = CopilotEval(name="prompt-test")
 
+
 @pytest.mark.parametrize("prompt", PROMPTS, ids=lambda p: p["name"])
 async def test_prompt_files(copilot_eval, prompt):
     """All slash commands produce a successful response."""
@@ -108,12 +110,13 @@ Prompt files often reference tools. Test them with the appropriate MCP servers:
 from pytest_skill_engineering import load_prompt_file
 from pytest_skill_engineering.copilot import CopilotEval
 
+
 async def test_explain_command(copilot_eval):
     """The /explain command reads the file before explaining."""
     prompt = load_prompt_file(".github/prompts/explain.prompt.md")
     agent = CopilotEval(name="explain-test")
     result = await copilot_eval(agent, prompt["body"], prompt_name="explain")
-    
+
     assert result.success
     assert result.tool_was_called("read_file")
     assert result.prompt_name == "explain"

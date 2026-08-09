@@ -310,7 +310,7 @@ Both MCP servers return JSON on success but plain string on error:
 ```python
 if result.success:
     return json.dumps(result.value)  # JSON
-return f"Error: {result.error}"      # Plain string
+return f"Error: {result.error}"  # Plain string
 ```
 
 This mixed-type response could confuse LLMs. A consistent JSON envelope (`{"error": "..."}`) would be cleaner.

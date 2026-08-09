@@ -40,6 +40,7 @@ agent_v2 = CopilotEval(
 
 AGENTS = [agent_baseline, agent_with_skill, agent_v1, agent_v2]
 
+
 @pytest.mark.parametrize("agent", AGENTS, ids=lambda a: a.name)
 async def test_balance_query(copilot_eval, agent):
     """Which configuration handles balance queries best?"""
@@ -74,6 +75,7 @@ AGENTS = [
     for model in MODELS
     for skill_name in SKILL_VERSIONS
 ]
+
 
 @pytest.mark.parametrize("agent", AGENTS, ids=lambda a: a.name)
 async def test_balance_query(copilot_eval, agent):

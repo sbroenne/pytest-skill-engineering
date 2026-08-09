@@ -1,5 +1,5 @@
 <!doctype html><html lang="en" class="dark"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>pytest-skill-engineering - Test Report</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&amp;family=Roboto+Mono&amp;display=swap" rel="stylesheet"><script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script><style>/* ============================================================
-   pytest-skill-engineering Report Styles
+   pytest-aitest Report Styles
    Hand-written CSS — replaces Tailwind CSS build pipeline
    Matches mkdocs-material slate/indigo theme
    ============================================================ */
@@ -37,6 +37,7 @@
   /* Semantic colors */
   --color-green: #4ade80;
   --color-yellow: #facc15;
+  --color-amber: #fbbf24;
   --color-red: #f87171;
   --color-blue: #60a5fa;
 
@@ -305,7 +306,9 @@ a:hover {
 .px-3 { padding-left: 0.75rem; padding-right: 0.75rem; }
 .px-5 { padding-left: 1.25rem; padding-right: 1.25rem; }
 .px-6 { padding-left: 1.5rem; padding-right: 1.5rem; }
+.py-0\.5 { padding-top: 0.125rem; padding-bottom: 0.125rem; }
 .py-1 { padding-top: 0.25rem; padding-bottom: 0.25rem; }
+.py-1\.5 { padding-top: 0.375rem; padding-bottom: 0.375rem; }
 .py-3 { padding-top: 0.75rem; padding-bottom: 0.75rem; }
 .py-4 { padding-top: 1rem; padding-bottom: 1rem; }
 .py-8 { padding-top: 2rem; padding-bottom: 2rem; }
@@ -466,6 +469,7 @@ a:hover {
 .hover\:border-white\/20:hover { border-color: rgba(255, 255, 255, 0.2); }
 .hover\:border-primary\/30:hover { border-color: rgba(64, 81, 181, 0.3); }
 .hover\:border-primary\/50:hover { border-color: rgba(64, 81, 181, 0.5); }
+.hover\:bg-primary\/5:hover { background-color: rgba(64, 81, 181, 0.05); }
 .hover\:text-text-light:hover { color: var(--color-text-light); }
 .hover\:text-blue-400:hover { color: var(--color-blue); }
 .hover\:text-accent:hover { color: var(--color-accent); }
@@ -525,6 +529,19 @@ a:hover {
   font-size: 0.875rem;
   line-height: 1.25rem;
   border: 1px solid rgba(239, 68, 68, 0.3);
+}
+.status-warning {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  background-color: rgba(251, 191, 36, 0.15);
+  color: var(--color-amber);
+  font-weight: 500;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  border: 1px solid rgba(251, 191, 36, 0.3);
 }
 
 /* ==================== Cards ==================== */
@@ -894,6 +911,23 @@ a:hover {
 .progress-fill.blue  { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
 .progress-fill.amber { background: linear-gradient(90deg, #d97706, #facc15); }
 .progress-fill.red   { background: linear-gradient(90deg, #dc2626, #f87171); }
+
+/* ── Score dimension bars ── */
+.score-track {
+  width: 100%;
+  background-color: rgba(255, 255, 255, 0.04);
+  border-radius: 4px;
+  height: 8px;
+  overflow: hidden;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+.score-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 600ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.score-dimension { line-height: 1.4; }
+
 .progress-pct {
   width: 42px;
   font-size: 0.8rem;
@@ -959,7 +993,6 @@ a:hover {
 
 /* ==================== Overlay ==================== */
 #overlay.active { display: flex !important; }
-#diagram-hover-popup.active { display: block !important; }
 #overlay-mermaid svg {
   max-width: 100%;
   max-height: 100%;
@@ -967,65 +1000,27 @@ a:hover {
   height: auto;
   min-height: 60vh;
 }
-</style></head><body class="bg-surface text-text min-h-screen"><div class="max-w-6xl mx-auto px-6 py-8"><header class="report-header mb-8"><div class="flex justify-between items-start gap-4 mb-4"><div class="flex-1"><h1 class="text-2xl font-medium mb-1">Single agent tests - basic report without comparison UI.</h1></div><div class="status-failed"><span>✗</span><span>1 Failed</span></div></div><div class="flex flex-wrap gap-x-6 gap-y-1 py-3 border-t border-white/10 text-sm"><span class="opacity-70">February 07, 2026 at 07:19 PM</span><span>📄 <span class="text-text-light hover:text-blue-400 cursor-pointer" title="tests/fixtures/scenario_01_single_agent.py">scenario_01_single_agent.py</span></span><span class="tabular-nums">4 tests</span><span class="tabular-nums">37.2s</span><span class="tabular-nums" title="Token range (min-max per test)">509–1,322 tok</span><span class="tabular-nums" title="Test execution cost">🧪 $-0.016434</span><span class="tabular-nums" title="AI analysis cost">🤖 $0.0186</span><span class="tabular-nums font-semibold" title="Total cost">💰 $0.002150</span></div></header><section class="mb-8"><div class="ai-insights"><div class="ai-insights-header"><span>🤖</span><span>AI Analysis</span><button class="ml-auto text-text-muted hover:text-text-light text-sm" onclick="this.closest(&#39;.ai-insights&#39;).querySelector(&#39;.card-body&#39;).classList.toggle(&#39;hidden&#39;)">Toggle</button></div><div class="card-body"><div class="markdown-content"><div class="winner-card">
-<div class="winner-title">Recommended for Deploy</div>
-<div class="winner-name">banking-agent</div>
-<div class="winner-summary">Reliable single-agent setup that passes core banking workflows with correct tool usage at very low cost. One failure is attributable to an artificially strict turn limit, not tool or prompt correctness.</div>
-<div class="winner-stats">
-<div class="winner-stat"><span class="winner-stat-value amber">75%</span><span class="winner-stat-label">Pass Rate</span></div>
-<div class="winner-stat"><span class="winner-stat-value blue">$0.002150</span><span class="winner-stat-label">Total Cost</span></div>
-<div class="winner-stat"><span class="winner-stat-value amber">3,786</span><span class="winner-stat-label">Tokens</span></div>
-</div>
-</div>
-
-<div class="metric-grid">
-<div class="metric-card green">
-<div class="metric-value green">4</div>
-<div class="metric-label">Total Tests</div>
-</div>
-<div class="metric-card red">
-<div class="metric-value red">1</div>
-<div class="metric-label">Failures</div>
-</div>
-<div class="metric-card blue">
-<div class="metric-value blue">1</div>
-<div class="metric-label">Agents</div>
-</div>
-<div class="metric-card amber">
-<div class="metric-value amber">2.8</div>
-<div class="metric-label">Avg Turns</div>
-</div>
-</div>
-
+</style></head><body class="bg-surface text-text min-h-screen"><div class="max-w-6xl mx-auto px-6 py-8"><header class="report-header mb-8"><div class="flex justify-between items-start gap-4 mb-4"><div class="flex-1"><h1 class="text-2xl font-medium mb-1">Single agent tests - basic report without comparison UI.</h1></div><div class="flex gap-2 items-start"><div class="status-failed"><span>✗</span><span>1 Failed</span></div></div></div><div class="flex flex-wrap gap-x-6 gap-y-1 py-3 border-t border-white/10 text-sm"><span class="opacity-70">February 07, 2026 at 07:19 PM</span><span>📄 <span class="text-text-light hover:text-blue-400 cursor-pointer" title="tests/fixtures/scenario_01_single_agent.py">scenario_01_single_agent.py</span></span><span class="tabular-nums">4 tests</span><span class="tabular-nums">37.2s</span><span class="tabular-nums" title="Token range (min-max per test)">509–1,322 tok</span><span class="tabular-nums" title="Test execution cost">🧪 $0.002150</span><span class="tabular-nums" title="AI analysis cost">🤖 $0.0235</span><span class="tabular-nums font-semibold" title="Total cost">💰 $0.0256</span></div></header><section class="mb-8"><div class="ai-insights"><div class="ai-insights-header"><span>🤖</span><span>AI Analysis</span><button class="ml-auto text-text-muted hover:text-text-light text-sm" onclick="this.closest(&#39;.ai-insights&#39;).querySelector(&#39;.card-body&#39;).classList.toggle(&#39;hidden&#39;)">Toggle</button></div><div class="card-body"><div class="markdown-content"><h2>🎯 Recommendation</h2>
+<p><strong>Deploy: banking-agent (gpt-5-mini, default prompt)</strong></p>
+<p><strong>Reasoning:</strong> Achieves a 75% pass rate (3/4) at very low cost ($0.002151 total across all tests). All core single-step banking actions (balance, transfer, transactions) pass reliably and use tools correctly. The only failure is due to a configured turn limit, not tool misuse or model behavior.</p>
+<p><strong>Alternatives:</strong> None — only one configuration tested.</p>
 <h2>❌ Failure Analysis</h2>
-<h3>Failure Summary</h3>
-<p><strong>banking-agent</strong> (1 failure)</p>
-<table>
-<thead>
-<tr>
-<th>Test</th>
-<th>Root Cause</th>
-<th>Fix</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Test that fails due to turn limit — for report variety.</td>
-<td>max_turns=1 prevents multi-step execution</td>
-<td>Increase turn limit or allow tool chaining in one turn</td>
-</tr>
-</tbody>
-</table>
 <h3>Test that fails due to turn limit — for report variety. (banking-agent)</h3>
 <ul>
-<li><strong>Problem:</strong> The user requested a compound workflow: check balances, transfer funds, then show updated balances and transaction history.</li>
-<li><strong>Root Cause:</strong> The test enforces <code>max_turns=1</code>, but the workflow inherently requires multiple tool calls and at least one follow-up response. The agent correctly initiated the first step (<code>get_all_balances</code>) but was cut off before completing the sequence.</li>
-<li><strong>Behavioral Mechanism:</strong> Not prompt-induced. The failure is caused by the test harness constraint, not by hesitation or permission-seeking language in the system prompt.</li>
-<li><strong>Fix:</strong> Increase the test configuration to <code>max_turns &gt;= 3</code>, or refactor the test to assert partial progress when <code>max_turns=1</code>.</li>
+<li><strong>Problem:</strong> The agent could not complete a multi-step request (check balances → transfer → show updated balances → show transactions) because the test enforces <code>max_turns=1</code>.</li>
+<li><strong>Root Cause:</strong> Test configuration limits the session to a single turn, but the user request explicitly requires multiple tool calls and responses. The agent correctly initiated the first step (<code>get_all_balances</code>) but was blocked before completing the sequence.</li>
+<li><strong>Fix:</strong> Increase allowed turns for this test.</li>
+<li><strong>Exact change:</strong> Set <code>max_turns</code> from <code>1</code> to <code>4</code> (or higher) for this test case.</li>
+<li><strong>Alternative fix (if max_turns must remain 1):</strong> Split into separate tests:<ol>
+<li>“Check all balances — should pass”</li>
+<li>“Transfer $500 from checking to savings — should pass”</li>
+<li>“Show updated balances and transaction history — should pass”</li>
+</ol>
+</li>
 </ul>
 <h2>🔧 MCP Tool Feedback</h2>
-<h3>banking-mcp</h3>
-<p>Overall, tools are clearly named and correctly invoked. The agent consistently selects the right tool without confusion.</p>
+<h3>pytest_skill_engineering.testing.banking_mcp</h3>
+<p>Overall, tools are discoverable and used correctly. Naming is clear and aligned with user intents.</p>
 <table>
 <thead>
 <tr>
@@ -1056,133 +1051,136 @@ a:hover {
 </tr>
 <tr>
 <td>get_all_balances</td>
+<td>⚠️</td>
+<td>1</td>
+<td>Tool works, but multi-step usage blocked by test turn limit</td>
+</tr>
+<tr>
+<td>deposit</td>
 <td>✅</td>
-<td>1</td>
-<td>Working well</td>
+<td>0</td>
+<td>Not exercised in tests</td>
+</tr>
+<tr>
+<td>withdraw</td>
+<td>✅</td>
+<td>0</td>
+<td>Not exercised in tests</td>
 </tr>
 </tbody>
 </table>
+<h2>📝 System Prompt Feedback</h2>
+<h3>default (mixed)</h3>
+<ul>
+<li><strong>Token count:</strong> ~24 tokens</li>
+<li><strong>Problem:</strong> The prompt does not address multi-step planning or constraints like turn limits. In multi-action requests, the agent attempts to proceed sequentially, which conflicts with tests that cap turns.</li>
+<li><strong>Suggested change:</strong> Add an explicit instruction to batch tool usage when possible.</li>
+<li><strong>Exact text to append:</strong>
+    <code>If a user request requires multiple actions and turn limits may apply, plan all required tool calls up front and execute them in the minimum number of turns.</code></li>
+</ul>
 <h2>💡 Optimizations</h2>
-<table>
-<thead>
-<tr>
-<th>#</th>
-<th>Optimization</th>
-<th>Priority</th>
-<th>Estimated Savings</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>1</td>
-<td>Increase turn limit for compound tasks</td>
-<td>recommended</td>
-<td>Prevents 25% test failure rate</td>
-</tr>
-<tr>
-<td>2</td>
-<td>Trim verbose assistant follow-ups</td>
-<td>suggestion</td>
-<td>~10–15% token reduction</td>
-</tr>
-</tbody>
-</table>
-<h4>1. Increase turn limit for compound tasks (recommended)</h4>
-<ul>
-<li>Current: Complex requests are tested with <code>max_turns=1</code>, causing premature failure.</li>
-<li>Change: Set <code>max_turns</code> to at least 3 for workflows involving multiple tool calls.</li>
-<li>Impact: Eliminates the only observed failure without increasing per-test cost.</li>
-</ul>
-<h4>2. Trim verbose assistant follow-ups (suggestion)</h4>
-<ul>
-<li>Current: After successful tool calls, the assistant offers multiple optional next steps, adding tokens.</li>
-<li>Change: Replace multi-option follow-ups with a single concise question, e.g., “Anything else I can help with?”</li>
-<li>Impact: ~10–15% cost reduction through fewer output tokens.</li>
-</ul>
+<ol>
+<li><strong>Align test turn limits with realistic user tasks</strong> (recommended)</li>
+<li>Current: Complex, multi-action requests are tested with <code>max_turns=1</code>.</li>
+<li>Change: Allow 3–4 turns for composite banking workflows or decompose them into atomic tests.</li>
+<li>
+<p>Impact: Prevents false negatives; improves effective pass rate from 75% to 100% with no additional model cost.</p>
+</li>
+<li>
+<p><strong>Reduce verbose assistant follow-ups</strong> (suggestion)</p>
+</li>
+<li>Current: Assistant frequently asks multiple follow-up questions after completing tasks.</li>
+<li>Change: Add instruction to ask at most one follow-up question or offer a concise menu.</li>
+<li>Impact: Minor cost reduction (~5–10% fewer tokens per test).</li>
+</ol>
 <h2>📦 Tool Response Optimization</h2>
-<h3>transfer (from banking-mcp)</h3>
+<h3>get_balance (from pytest_skill_engineering.testing.banking_mcp)</h3>
 <ul>
-<li><strong>Current response size:</strong> ~70–80 tokens</li>
-<li><strong>Issues found:</strong> Includes redundant formatted fields and a human-readable message that the assistant restates anyway.</li>
-<li><strong>Suggested optimization:</strong> Remove <code>message</code> and pre-formatted fields when not required by tests.</li>
-<li><strong>Estimated savings:</strong> ~25 tokens per call (~30% reduction)</li>
+<li><strong>Current response size:</strong> ~18 tokens</li>
+<li><strong>Issues found:</strong> Redundant formatted string duplicates numeric balance.</li>
+<li><strong>Suggested optimization:</strong> Omit <code>formatted</code> and let the assistant format.</li>
+<li><strong>Estimated savings:</strong> ~6 tokens per call (~33% reduction)</li>
 </ul>
 <p><strong>Example current vs optimized:</strong></p>
-<pre><code class="language-json">// Current (~75 tokens)
+<pre><code class="language-json">// Current (~18 tokens)
+{"account":"checking","balance":1500.0,"formatted":"$1,500.00"}
+
+// Optimized (~12 tokens)
+{"account":"checking","balance":1500.0}
+</code></pre>
+<h3>transfer (from pytest_skill_engineering.testing.banking_mcp)</h3>
+<ul>
+<li><strong>Current response size:</strong> ~45 tokens</li>
+<li><strong>Issues found:</strong> Both <code>message</code> and formatted fields duplicate information already present in structured fields.</li>
+<li><strong>Suggested optimization:</strong> Remove <code>message</code> and <code>amount_formatted</code>.</li>
+<li><strong>Estimated savings:</strong> ~15 tokens per call (~33% reduction)</li>
+</ul>
+<p><strong>Example current vs optimized:</strong></p>
+<pre><code class="language-json">// Current (~45 tokens)
 {
-  &quot;transaction_id&quot;: &quot;TX0001&quot;,
-  &quot;type&quot;: &quot;transfer&quot;,
-  &quot;from_account&quot;: &quot;checking&quot;,
-  &quot;to_account&quot;: &quot;savings&quot;,
-  &quot;amount&quot;: 200,
-  &quot;amount_formatted&quot;: &quot;$200.00&quot;,
-  &quot;new_balance_from&quot;: 1300.0,
-  &quot;new_balance_to&quot;: 3200.0,
-  &quot;message&quot;: &quot;Successfully transferred $200.00 from checking to savings.&quot;
+  "transaction_id":"TX0001",
+  "type":"transfer",
+  "from_account":"checking",
+  "to_account":"savings",
+  "amount":200,
+  "amount_formatted":"$200.00",
+  "new_balance_from":1300.0,
+  "new_balance_to":3200.0,
+  "message":"Successfully transferred $200.00 from checking to savings."
 }
 
-// Optimized (~50 tokens)
+// Optimized (~30 tokens)
 {
-  &quot;transaction_id&quot;: &quot;TX0001&quot;,
-  &quot;from_account&quot;: &quot;checking&quot;,
-  &quot;to_account&quot;: &quot;savings&quot;,
-  &quot;amount&quot;: 200,
-  &quot;new_balance_from&quot;: 1300.0,
-  &quot;new_balance_to&quot;: 3200.0
+  "transaction_id":"TX0001",
+  "from_account":"checking",
+  "to_account":"savings",
+  "amount":200,
+  "new_balance_from":1300.0,
+  "new_balance_to":3200.0
 }
-</code></pre></div></div></div></section><section class="mb-8"><h2 class="section-title">📋 Test Results</h2><div class="mb-4 flex items-center justify-between"><div class="flex gap-2"><button class="filter-btn active" data-filter="all" onclick="filterTests(&#39;all&#39;)">All</button><button class="filter-btn " data-filter="failed" onclick="filterTests(&#39;failed&#39;)">Failed ❌</button></div><div class="text-sm text-text-muted"><span id="visible-count">4</span> / 4 tests</div></div><div class="space-y-4" id="test-groups"><div class="card overflow-hidden test-group" data-group-type="standalone"><div class="group-header px-5 py-3 bg-surface-elevated border-b border-white/10 flex justify-between items-center cursor-pointer" onclick="toggleGroup(this.parentElement)"><div class="flex items-center gap-3"><span class="text-lg">📋</span><span class="font-medium text-text-light">tests/fixtures/scenario_01_single_agent.py</span><span class="text-sm text-text-muted">(4 tests)</span></div><div class="flex items-center gap-4"><span class="text-text-muted transition-transform duration-200 expand-icon">▼</span></div></div><div class="group-content"><div class="test-row border-b border-white/5" data-test-id="test_check_balance" data-has-diff="false" data-has-failed="false"><div class="px-5 py-3 hover:bg-white/[0.02] cursor-pointer transition-colors" onclick="toggleTestDetail(this.parentElement)"><div class="flex items-center justify-between"><div class="flex items-center gap-3 min-w-0 flex-1"><span class="text-green-400">✅</span><span class="text-text-light truncate">Basic balance check — should pass.</span></div><div class="flex items-center gap-4 text-sm text-text-muted"><span class="tabular-nums">13.7s</span><span class="text-text-muted">·</span><span class="tabular-nums">1🔧</span><span class="text-text-muted">·</span><span class="tabular-nums">931 tok</span><span class="text-text-muted">·</span><span class="tabular-nums">$0.000338</span></div></div></div><div class="test-detail hidden border-t border-white/10 bg-surface-elevated"><div class="comparison-grid grid gap-4 p-5" style="grid-template-columns: repeat(1, 1fr);"><div class="comparison-column  border-l-[3px] border-green-500" data-agent-id="8fa82e98-35c0-4a0d-b3c3-8f81e3669c46"><div class="flex items-center justify-between mb-4"><div class="font-medium text-text-light">banking-agent</div><span class="px-2 py-0.5 rounded text-xs font-medium bg-green-500/15 text-green-400">passed</span></div><div class="space-y-2 mb-4"><div class="grid grid-cols-4 gap-2 p-3 bg-surface-elevated rounded-material text-center"><div><div class="text-sm font-medium text-text-light tabular-nums">13.73s</div><div class="text-xs text-text-muted">duration</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">3</div><div class="text-xs text-text-muted">turns</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">1</div><div class="text-xs text-text-muted">tools</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">931</div><div class="text-xs text-text-muted">tokens</div></div></div><div class="grid grid-cols-4 gap-2 p-3 bg-surface-elevated rounded-material text-center"><div><div class="text-sm font-medium text-text-light tabular-nums">$0.000338</div><div class="text-xs text-text-muted">cost</div></div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>📊</span><span>Sequence</span></div><div class="p-3 bg-surface-code rounded-material border border-white/5 cursor-pointer hover:border-primary/30 transition-colors" onclick="event.stopPropagation(); showDiagram(this.dataset.mermaidCode);" data-mermaid-code="sequenceDiagram
+</code></pre>
+<h3>get_transactions (from pytest_skill_engineering.testing.banking_mcp)</h3>
+<ul>
+<li><strong>Current response size:</strong> ~14 tokens</li>
+<li><strong>Issues found:</strong> Includes <code>filter: null</code>, which is unused.</li>
+<li><strong>Suggested optimization:</strong> Omit null fields.</li>
+<li><strong>Estimated savings:</strong> ~2 tokens per call (~14% reduction)</li>
+</ul>
+<p><strong>Example current vs optimized:</strong></p>
+<pre><code class="language-json">// Current (~14 tokens)
+{"transactions":[],"count":0,"filter":null}
+
+// Optimized (~12 tokens)
+{"transactions":[],"count":0}
+</code></pre></div></div></div></section><section class="mb-8"><h2 class="section-title">📋 Test Results</h2><div class="mb-4 flex items-center justify-between"><div class="flex gap-2"><button class="filter-btn active" data-filter="all" onclick="filterTests(&#39;all&#39;)">All</button><button class="filter-btn " data-filter="failed" onclick="filterTests(&#39;failed&#39;)">Failed ❌</button></div><div class="text-sm text-text-muted"><span id="visible-count">4</span> / 4 tests</div></div><div class="space-y-4" id="test-groups"><div class="card overflow-hidden test-group" data-group-type="standalone"><div class="group-header px-5 py-3 bg-surface-elevated border-b border-white/10 flex justify-between items-center cursor-pointer" onclick="toggleGroup(this.parentElement)"><div class="flex items-center gap-3"><span class="text-lg">📋</span><span class="font-medium text-text-light">tests/fixtures/scenario_01_single_agent.py</span><span class="text-sm text-text-muted">(4 tests)</span></div><div class="flex items-center gap-4"><span class="text-text-muted transition-transform duration-200 expand-icon">▼</span></div></div><div class="group-content"><div class="test-row border-b border-white/5" data-test-id="test_check_balance" data-has-diff="false" data-has-failed="false"><div class="px-5 py-3 hover:bg-white/[0.02] cursor-pointer transition-colors" onclick="toggleTestDetail(this.parentElement)"><div class="flex items-center justify-between"><div class="flex items-center gap-3 min-w-0 flex-1"><span class="text-green-400">✅</span><span class="text-text-light truncate">Basic balance check — should pass.</span></div><div class="flex items-center gap-4 text-sm text-text-muted"><span class="tabular-nums">13.7s</span><span class="text-text-muted">·</span><span class="tabular-nums">1🔧</span><span class="text-text-muted">·</span><span class="tabular-nums">931 tok</span><span class="text-text-muted">·</span><span class="tabular-nums">$0.000338</span></div></div></div><div class="test-detail hidden border-t border-white/10 bg-surface-elevated"><div class="comparison-grid grid gap-4 p-5" style="grid-template-columns: repeat(1, 1fr);"><div class="comparison-column  border-l-[3px] border-green-500" data-agent-id="banking-agent"><div class="flex items-center justify-between mb-4"><div class="font-medium text-text-light">banking-agent</div><span class="px-2 py-0.5 rounded text-xs font-medium bg-green-500/15 text-green-400">passed</span></div><div class="space-y-2 mb-4"><div class="grid grid-cols-4 gap-2 p-3 bg-surface-elevated rounded-material text-center"><div><div class="text-sm font-medium text-text-light tabular-nums">13.73s</div><div class="text-xs text-text-muted">duration</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">3</div><div class="text-xs text-text-muted">turns</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">1</div><div class="text-xs text-text-muted">tools</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">931</div><div class="text-xs text-text-muted">tokens</div></div></div><div class="grid grid-cols-4 gap-2 p-3 bg-surface-elevated rounded-material text-center"><div><div class="text-sm font-medium text-text-light tabular-nums">$0.000338</div><div class="text-xs text-text-muted">cost</div></div></div></div><div class="mb-4"><button class="inline-flex items-center gap-2 px-3 py-1.5 text-sm bg-surface-code rounded-material border border-white/10 cursor-pointer hover:border-primary/30 hover:bg-primary/5 transition-colors text-text-muted hover:text-text-light" onclick="event.stopPropagation(); showDiagram(this.dataset.mermaidCode);" data-mermaid-code="sequenceDiagram
     participant User
-    participant Agent
+    participant Eval
     participant Tools
 
-    User-&gt;&gt;Agent: &#34;What&#39;s my checking account balance?&#34;
-    Agent-&gt;&gt;Tools: &#34;get_balance({&#39;account&#39;: &#39;checking&#39;})&#34;
-    Tools--&gt;&gt;Agent: &#34;{&#39;account&#39;: &#39;checking&#39;, &#39;balance&#39;: 1500.0, &#39;formatted&#39;: &#39;$1,&#34;
-    Agent-&gt;&gt;User: &#34;Your checking account balance is $1,500.00. Would you like to do anything else w&#34;"><div class="mermaid text-xs">sequenceDiagram
+    User-&gt;&gt;Eval: &#34;What&#39;s my checking account balance?&#34;
+    Eval-&gt;&gt;Tools: &#34;get_balance({&#39;account&#39;: &#39;checking&#39;})&#34;
+    Tools--&gt;&gt;Eval: &#34;{&#39;account&#39;: &#39;checking&#39;, &#39;balance&#39;: 1500.0, &#39;formatted&#39;: &#39;$1,&#34;
+    Eval-&gt;&gt;User: &#34;Your checking account balance is $1,500.00. Would you like to do anything else w&#34;"><span>📊</span><span>View Sequence Diagram</span></button></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>🔧</span><span>Tool Calls</span></div><div class="space-y-1"><div class="flex items-center gap-2 text-sm p-2 rounded bg-green-500/5"><span class="text-green-400">✅</span><code class="tool-name">get_balance</code></div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>✓</span><span>Assertions</span></div><div class="space-y-2"><div class="flex items-center gap-2 text-sm p-2 rounded bg-green-500/5"><span class="text-green-400">✅</span><code class="text-text-muted">llm</code><span class="text-text">mentions the checking account balance amount</span></div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>💬</span><span>Response</span></div><div style="padding: 1rem; background-color: var(--color-surface-elevated); border-radius: 0.5rem; color: var(--color-text); white-space: pre-wrap; word-wrap: break-word; line-height: 1.625;">Your checking account balance is $1,500.00. Would you like to do anything else with your accounts (transfer, withdraw, deposit, see transactions)?</div></div></div></div></div></div><div class="test-row border-b border-white/5" data-test-id="test_transfer_between_accounts" data-has-diff="false" data-has-failed="false"><div class="px-5 py-3 hover:bg-white/[0.02] cursor-pointer transition-colors" onclick="toggleTestDetail(this.parentElement)"><div class="flex items-center justify-between"><div class="flex items-center gap-3 min-w-0 flex-1"><span class="text-green-400">✅</span><span class="text-text-light truncate">Transfer money — tests the transfer tool.</span></div><div class="flex items-center gap-4 text-sm text-text-muted"><span class="tabular-nums">7.1s</span><span class="text-text-muted">·</span><span class="tabular-nums">1🔧</span><span class="text-text-muted">·</span><span class="tabular-nums">1,024 tok</span><span class="text-text-muted">·</span><span class="tabular-nums">$0.000401</span></div></div></div><div class="test-detail hidden border-t border-white/10 bg-surface-elevated"><div class="comparison-grid grid gap-4 p-5" style="grid-template-columns: repeat(1, 1fr);"><div class="comparison-column  border-l-[3px] border-green-500" data-agent-id="banking-agent"><div class="flex items-center justify-between mb-4"><div class="font-medium text-text-light">banking-agent</div><span class="px-2 py-0.5 rounded text-xs font-medium bg-green-500/15 text-green-400">passed</span></div><div class="space-y-2 mb-4"><div class="grid grid-cols-4 gap-2 p-3 bg-surface-elevated rounded-material text-center"><div><div class="text-sm font-medium text-text-light tabular-nums">7.06s</div><div class="text-xs text-text-muted">duration</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">3</div><div class="text-xs text-text-muted">turns</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">1</div><div class="text-xs text-text-muted">tools</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">1,024</div><div class="text-xs text-text-muted">tokens</div></div></div><div class="grid grid-cols-4 gap-2 p-3 bg-surface-elevated rounded-material text-center"><div><div class="text-sm font-medium text-text-light tabular-nums">$0.000401</div><div class="text-xs text-text-muted">cost</div></div></div></div><div class="mb-4"><button class="inline-flex items-center gap-2 px-3 py-1.5 text-sm bg-surface-code rounded-material border border-white/10 cursor-pointer hover:border-primary/30 hover:bg-primary/5 transition-colors text-text-muted hover:text-text-light" onclick="event.stopPropagation(); showDiagram(this.dataset.mermaidCode);" data-mermaid-code="sequenceDiagram
     participant User
-    participant Agent
+    participant Eval
     participant Tools
 
-    User->>Agent: "What's my checking account balance?"
-    Agent->>Tools: "get_balance({'account': 'checking'})"
-    Tools-->>Agent: "{'account': 'checking', 'balance': 1500.0, 'formatted': '$1,"
-    Agent->>User: "Your checking account balance is $1,500.00. Would you like to do anything else w"</div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>🔧</span><span>Tool Calls</span></div><div class="space-y-1"><div class="flex items-center gap-2 text-sm p-2 rounded bg-green-500/5"><span class="text-green-400">✅</span><code class="tool-name">get_balance</code></div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>✓</span><span>Assertions</span></div><div class="space-y-2"><div class="flex items-center gap-2 text-sm p-2 rounded bg-green-500/5"><span class="text-green-400">✅</span><code class="text-text-muted">llm</code><span class="text-text">mentions the checking account balance amount</span></div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>💬</span><span>Response</span></div><div style="padding: 1rem; background-color: var(--color-surface-elevated); border-radius: 0.5rem; color: var(--color-text); white-space: pre-wrap; word-wrap: break-word; line-height: 1.625;">Your checking account balance is $1,500.00. Would you like to do anything else with your accounts (transfer, withdraw, deposit, see transactions)?</div></div></div></div></div></div><div class="test-row border-b border-white/5" data-test-id="test_transfer_between_accounts" data-has-diff="false" data-has-failed="false"><div class="px-5 py-3 hover:bg-white/[0.02] cursor-pointer transition-colors" onclick="toggleTestDetail(this.parentElement)"><div class="flex items-center justify-between"><div class="flex items-center gap-3 min-w-0 flex-1"><span class="text-green-400">✅</span><span class="text-text-light truncate">Transfer money — tests the transfer tool.</span></div><div class="flex items-center gap-4 text-sm text-text-muted"><span class="tabular-nums">7.1s</span><span class="text-text-muted">·</span><span class="tabular-nums">1🔧</span><span class="text-text-muted">·</span><span class="tabular-nums">1,024 tok</span><span class="text-text-muted">·</span><span class="tabular-nums">$0.000401</span></div></div></div><div class="test-detail hidden border-t border-white/10 bg-surface-elevated"><div class="comparison-grid grid gap-4 p-5" style="grid-template-columns: repeat(1, 1fr);"><div class="comparison-column  border-l-[3px] border-green-500" data-agent-id="8fa82e98-35c0-4a0d-b3c3-8f81e3669c46"><div class="flex items-center justify-between mb-4"><div class="font-medium text-text-light">banking-agent</div><span class="px-2 py-0.5 rounded text-xs font-medium bg-green-500/15 text-green-400">passed</span></div><div class="space-y-2 mb-4"><div class="grid grid-cols-4 gap-2 p-3 bg-surface-elevated rounded-material text-center"><div><div class="text-sm font-medium text-text-light tabular-nums">7.06s</div><div class="text-xs text-text-muted">duration</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">3</div><div class="text-xs text-text-muted">turns</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">1</div><div class="text-xs text-text-muted">tools</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">1,024</div><div class="text-xs text-text-muted">tokens</div></div></div><div class="grid grid-cols-4 gap-2 p-3 bg-surface-elevated rounded-material text-center"><div><div class="text-sm font-medium text-text-light tabular-nums">$0.000401</div><div class="text-xs text-text-muted">cost</div></div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>📊</span><span>Sequence</span></div><div class="p-3 bg-surface-code rounded-material border border-white/5 cursor-pointer hover:border-primary/30 transition-colors" onclick="event.stopPropagation(); showDiagram(this.dataset.mermaidCode);" data-mermaid-code="sequenceDiagram
-    participant User
-    participant Agent
-    participant Tools
-
-    User-&gt;&gt;Agent: &#34;Transfer $200 from checking to savings&#34;
-    Agent-&gt;&gt;Tools: &#34;transfer({&#39;from_account&#39;: &#39;checking&#39;, &#39;to_account&#39;: &#39;savings&#39;, &#39;amoun)&#34;
-    Tools--&gt;&gt;Agent: &#34;{&#39;transaction_id&#39;: &#39;TX0001&#39;, &#39;type&#39;: &#39;transfer&#39;, &#39;from_accou&#34;
-    Agent-&gt;&gt;User: &#34;Done — I transferred $200 from your checking to savings. Your new balances: - Ch&#34;"><div class="mermaid text-xs">sequenceDiagram
-    participant User
-    participant Agent
-    participant Tools
-
-    User->>Agent: "Transfer $200 from checking to savings"
-    Agent->>Tools: "transfer({'from_account': 'checking', 'to_account': 'savings', 'amoun)"
-    Tools-->>Agent: "{'transaction_id': 'TX0001', 'type': 'transfer', 'from_accou"
-    Agent->>User: "Done — I transferred $200 from your checking to savings. Your new balances: - Ch"</div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>🔧</span><span>Tool Calls</span></div><div class="space-y-1"><div class="flex items-center gap-2 text-sm p-2 rounded bg-green-500/5"><span class="text-green-400">✅</span><code class="tool-name">transfer</code></div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>✓</span><span>Assertions</span></div><div class="space-y-2"><div class="flex items-center gap-2 text-sm p-2 rounded bg-green-500/5"><span class="text-green-400">✅</span><code class="text-text-muted">llm</code><span class="text-text">confirms the transfer was completed</span></div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>💬</span><span>Response</span></div><div style="padding: 1rem; background-color: var(--color-surface-elevated); border-radius: 0.5rem; color: var(--color-text); white-space: pre-wrap; word-wrap: break-word; line-height: 1.625;">Done — I transferred $200 from your checking to savings. Your new balances:
+    User-&gt;&gt;Eval: &#34;Transfer $200 from checking to savings&#34;
+    Eval-&gt;&gt;Tools: &#34;transfer({&#39;from_account&#39;: &#39;checking&#39;, &#39;to_account&#39;: &#39;savings&#39;, &#39;amoun)&#34;
+    Tools--&gt;&gt;Eval: &#34;{&#39;transaction_id&#39;: &#39;TX0001&#39;, &#39;type&#39;: &#39;transfer&#39;, &#39;from_accou&#34;
+    Eval-&gt;&gt;User: &#34;Done — I transferred $200 from your checking to savings. Your new balances: - Ch&#34;"><span>📊</span><span>View Sequence Diagram</span></button></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>🔧</span><span>Tool Calls</span></div><div class="space-y-1"><div class="flex items-center gap-2 text-sm p-2 rounded bg-green-500/5"><span class="text-green-400">✅</span><code class="tool-name">transfer</code></div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>✓</span><span>Assertions</span></div><div class="space-y-2"><div class="flex items-center gap-2 text-sm p-2 rounded bg-green-500/5"><span class="text-green-400">✅</span><code class="text-text-muted">llm</code><span class="text-text">confirms the transfer was completed</span></div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>💬</span><span>Response</span></div><div style="padding: 1rem; background-color: var(--color-surface-elevated); border-radius: 0.5rem; color: var(--color-text); white-space: pre-wrap; word-wrap: break-word; line-height: 1.625;">Done — I transferred $200 from your checking to savings. Your new balances:
 - Checking: $1,300.00
 - Savings: $3,200.00
 
-Would you like a receipt or anything else?</div></div></div></div></div></div><div class="test-row border-b border-white/5" data-test-id="test_transaction_history" data-has-diff="false" data-has-failed="false"><div class="px-5 py-3 hover:bg-white/[0.02] cursor-pointer transition-colors" onclick="toggleTestDetail(this.parentElement)"><div class="flex items-center justify-between"><div class="flex items-center gap-3 min-w-0 flex-1"><span class="text-green-400">✅</span><span class="text-text-light truncate">View transactions — multiple tool calls possible.</span></div><div class="flex items-center gap-4 text-sm text-text-muted"><span class="tabular-nums">11.9s</span><span class="text-text-muted">·</span><span class="tabular-nums">1🔧</span><span class="text-text-muted">·</span><span class="tabular-nums">1,322 tok</span><span class="text-text-muted">·</span><span class="tabular-nums">$0.001134</span></div></div></div><div class="test-detail hidden border-t border-white/10 bg-surface-elevated"><div class="comparison-grid grid gap-4 p-5" style="grid-template-columns: repeat(1, 1fr);"><div class="comparison-column  border-l-[3px] border-green-500" data-agent-id="8fa82e98-35c0-4a0d-b3c3-8f81e3669c46"><div class="flex items-center justify-between mb-4"><div class="font-medium text-text-light">banking-agent</div><span class="px-2 py-0.5 rounded text-xs font-medium bg-green-500/15 text-green-400">passed</span></div><div class="space-y-2 mb-4"><div class="grid grid-cols-4 gap-2 p-3 bg-surface-elevated rounded-material text-center"><div><div class="text-sm font-medium text-text-light tabular-nums">11.86s</div><div class="text-xs text-text-muted">duration</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">3</div><div class="text-xs text-text-muted">turns</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">1</div><div class="text-xs text-text-muted">tools</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">1,322</div><div class="text-xs text-text-muted">tokens</div></div></div><div class="grid grid-cols-4 gap-2 p-3 bg-surface-elevated rounded-material text-center"><div><div class="text-sm font-medium text-text-light tabular-nums">$0.001134</div><div class="text-xs text-text-muted">cost</div></div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>📊</span><span>Sequence</span></div><div class="p-3 bg-surface-code rounded-material border border-white/5 cursor-pointer hover:border-primary/30 transition-colors" onclick="event.stopPropagation(); showDiagram(this.dataset.mermaidCode);" data-mermaid-code="sequenceDiagram
+Would you like a receipt or anything else?</div></div></div></div></div></div><div class="test-row border-b border-white/5" data-test-id="test_transaction_history" data-has-diff="false" data-has-failed="false"><div class="px-5 py-3 hover:bg-white/[0.02] cursor-pointer transition-colors" onclick="toggleTestDetail(this.parentElement)"><div class="flex items-center justify-between"><div class="flex items-center gap-3 min-w-0 flex-1"><span class="text-green-400">✅</span><span class="text-text-light truncate">View transactions — multiple tool calls possible.</span></div><div class="flex items-center gap-4 text-sm text-text-muted"><span class="tabular-nums">11.9s</span><span class="text-text-muted">·</span><span class="tabular-nums">1🔧</span><span class="text-text-muted">·</span><span class="tabular-nums">1,322 tok</span><span class="text-text-muted">·</span><span class="tabular-nums">$0.001134</span></div></div></div><div class="test-detail hidden border-t border-white/10 bg-surface-elevated"><div class="comparison-grid grid gap-4 p-5" style="grid-template-columns: repeat(1, 1fr);"><div class="comparison-column  border-l-[3px] border-green-500" data-agent-id="banking-agent"><div class="flex items-center justify-between mb-4"><div class="font-medium text-text-light">banking-agent</div><span class="px-2 py-0.5 rounded text-xs font-medium bg-green-500/15 text-green-400">passed</span></div><div class="space-y-2 mb-4"><div class="grid grid-cols-4 gap-2 p-3 bg-surface-elevated rounded-material text-center"><div><div class="text-sm font-medium text-text-light tabular-nums">11.86s</div><div class="text-xs text-text-muted">duration</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">3</div><div class="text-xs text-text-muted">turns</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">1</div><div class="text-xs text-text-muted">tools</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">1,322</div><div class="text-xs text-text-muted">tokens</div></div></div><div class="grid grid-cols-4 gap-2 p-3 bg-surface-elevated rounded-material text-center"><div><div class="text-sm font-medium text-text-light tabular-nums">$0.001134</div><div class="text-xs text-text-muted">cost</div></div></div></div><div class="mb-4"><button class="inline-flex items-center gap-2 px-3 py-1.5 text-sm bg-surface-code rounded-material border border-white/10 cursor-pointer hover:border-primary/30 hover:bg-primary/5 transition-colors text-text-muted hover:text-text-light" onclick="event.stopPropagation(); showDiagram(this.dataset.mermaidCode);" data-mermaid-code="sequenceDiagram
     participant User
-    participant Agent
+    participant Eval
     participant Tools
 
-    User-&gt;&gt;Agent: &#34;Show me recent transactions for all accounts&#34;
-    Agent-&gt;&gt;Tools: &#34;get_transactions({&#39;limit&#39;: 20})&#34;
-    Tools--&gt;&gt;Agent: &#34;{&#39;transactions&#39;: [], &#39;count&#39;: 0, &#39;filter&#39;: null}&#34;
-    Agent-&gt;&gt;User: &#34;I checked your recent transactions (up to 20) across all accounts and found none&#34;"><div class="mermaid text-xs">sequenceDiagram
-    participant User
-    participant Agent
-    participant Tools
-
-    User->>Agent: "Show me recent transactions for all accounts"
-    Agent->>Tools: "get_transactions({'limit': 20})"
-    Tools-->>Agent: "{'transactions': [], 'count': 0, 'filter': null}"
-    Agent->>User: "I checked your recent transactions (up to 20) across all accounts and found none"</div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>🔧</span><span>Tool Calls</span></div><div class="space-y-1"><div class="flex items-center gap-2 text-sm p-2 rounded bg-green-500/5"><span class="text-green-400">✅</span><code class="tool-name">get_transactions</code></div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>✓</span><span>Assertions</span></div><div class="space-y-2"><div class="flex items-center gap-2 text-sm p-2 rounded bg-green-500/5"><span class="text-green-400">✅</span><code class="text-text-muted">llm</code><span class="text-text">shows transaction or balance information</span></div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>💬</span><span>Response</span></div><div style="padding: 1rem; background-color: var(--color-surface-elevated); border-radius: 0.5rem; color: var(--color-text); white-space: pre-wrap; word-wrap: break-word; line-height: 1.625;">I checked your recent transactions (up to 20) across all accounts and found none. That means there are no posted transactions in the timeframe queried.
+    User-&gt;&gt;Eval: &#34;Show me recent transactions for all accounts&#34;
+    Eval-&gt;&gt;Tools: &#34;get_transactions({&#39;limit&#39;: 20})&#34;
+    Tools--&gt;&gt;Eval: &#34;{&#39;transactions&#39;: [], &#39;count&#39;: 0, &#39;filter&#39;: null}&#34;
+    Eval-&gt;&gt;User: &#34;I checked your recent transactions (up to 20) across all accounts and found none&#34;"><span>📊</span><span>View Sequence Diagram</span></button></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>🔧</span><span>Tool Calls</span></div><div class="space-y-1"><div class="flex items-center gap-2 text-sm p-2 rounded bg-green-500/5"><span class="text-green-400">✅</span><code class="tool-name">get_transactions</code></div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>✓</span><span>Assertions</span></div><div class="space-y-2"><div class="flex items-center gap-2 text-sm p-2 rounded bg-green-500/5"><span class="text-green-400">✅</span><code class="text-text-muted">llm</code><span class="text-text">shows transaction or balance information</span></div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>💬</span><span>Response</span></div><div style="padding: 1rem; background-color: var(--color-surface-elevated); border-radius: 0.5rem; color: var(--color-text); white-space: pre-wrap; word-wrap: break-word; line-height: 1.625;">I checked your recent transactions (up to 20) across all accounts and found none. That means there are no posted transactions in the timeframe queried.
 
 Would you like to:
 - Show current balances for all accounts?
@@ -1190,53 +1188,21 @@ Would you like to:
 - Look for pending transactions?
 - Make a deposit, withdrawal, or transfer?
 
-Tell me which option and any details (account, amount, or how many transactions to retrieve) and I’ll take care of it.</div></div></div></div></div></div><div class="test-row border-b border-white/5" data-test-id="test_expected_failure" data-has-diff="false" data-has-failed="true"><div class="px-5 py-3 hover:bg-white/[0.02] cursor-pointer transition-colors" onclick="toggleTestDetail(this.parentElement)"><div class="flex items-center justify-between"><div class="flex items-center gap-3 min-w-0 flex-1"><span class="text-red-400">❌</span><span class="text-text-light truncate">Test that fails due to turn limit — for report variety.</span></div><div class="flex items-center gap-4 text-sm text-text-muted"><span class="tabular-nums">4.5s</span><span class="text-text-muted">·</span><span class="tabular-nums">1🔧</span><span class="text-text-muted">·</span><span class="tabular-nums">509 tok</span><span class="text-text-muted">·</span><span class="tabular-nums">$0.000278</span></div></div></div><div class="test-detail hidden border-t border-white/10 bg-surface-elevated"><div class="comparison-grid grid gap-4 p-5" style="grid-template-columns: repeat(1, 1fr);"><div class="comparison-column  border-l-[3px] border-red-500" data-agent-id="8fa82e98-35c0-4a0d-b3c3-8f81e3669c46"><div class="flex items-center justify-between mb-4"><div class="font-medium text-text-light">banking-agent</div><span class="px-2 py-0.5 rounded text-xs font-medium bg-red-500/15 text-red-400">failed</span></div><div class="space-y-2 mb-4"><div class="grid grid-cols-4 gap-2 p-3 bg-surface-elevated rounded-material text-center"><div><div class="text-sm font-medium text-text-light tabular-nums">4.51s</div><div class="text-xs text-text-muted">duration</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">2</div><div class="text-xs text-text-muted">turns</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">1</div><div class="text-xs text-text-muted">tools</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">509</div><div class="text-xs text-text-muted">tokens</div></div></div><div class="grid grid-cols-4 gap-2 p-3 bg-surface-elevated rounded-material text-center"><div><div class="text-sm font-medium text-text-light tabular-nums">$0.000278</div><div class="text-xs text-text-muted">cost</div></div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>📊</span><span>Sequence</span></div><div class="p-3 bg-surface-code rounded-material border border-white/5 cursor-pointer hover:border-primary/30 transition-colors" onclick="event.stopPropagation(); showDiagram(this.dataset.mermaidCode);" data-mermaid-code="sequenceDiagram
+Tell me which option and any details (account, amount, or how many transactions to retrieve) and I’ll take care of it.</div></div></div></div></div></div><div class="test-row border-b border-white/5" data-test-id="test_expected_failure" data-has-diff="false" data-has-failed="true"><div class="px-5 py-3 hover:bg-white/[0.02] cursor-pointer transition-colors" onclick="toggleTestDetail(this.parentElement)"><div class="flex items-center justify-between"><div class="flex items-center gap-3 min-w-0 flex-1"><span class="text-red-400">❌</span><span class="text-text-light truncate">Test that fails due to turn limit — for report variety.</span></div><div class="flex items-center gap-4 text-sm text-text-muted"><span class="tabular-nums">4.5s</span><span class="text-text-muted">·</span><span class="tabular-nums">1🔧</span><span class="text-text-muted">·</span><span class="tabular-nums">509 tok</span><span class="text-text-muted">·</span><span class="tabular-nums">$0.000278</span></div></div></div><div class="test-detail hidden border-t border-white/10 bg-surface-elevated"><div class="comparison-grid grid gap-4 p-5" style="grid-template-columns: repeat(1, 1fr);"><div class="comparison-column  border-l-[3px] border-red-500" data-agent-id="banking-agent"><div class="flex items-center justify-between mb-4"><div class="font-medium text-text-light">banking-agent</div><span class="px-2 py-0.5 rounded text-xs font-medium bg-red-500/15 text-red-400">failed</span></div><div class="space-y-2 mb-4"><div class="grid grid-cols-4 gap-2 p-3 bg-surface-elevated rounded-material text-center"><div><div class="text-sm font-medium text-text-light tabular-nums">4.51s</div><div class="text-xs text-text-muted">duration</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">2</div><div class="text-xs text-text-muted">turns</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">1</div><div class="text-xs text-text-muted">tools</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">509</div><div class="text-xs text-text-muted">tokens</div></div></div><div class="grid grid-cols-4 gap-2 p-3 bg-surface-elevated rounded-material text-center"><div><div class="text-sm font-medium text-text-light tabular-nums">$0.000278</div><div class="text-xs text-text-muted">cost</div></div></div></div><div class="mb-4"><button class="inline-flex items-center gap-2 px-3 py-1.5 text-sm bg-surface-code rounded-material border border-white/10 cursor-pointer hover:border-primary/30 hover:bg-primary/5 transition-colors text-text-muted hover:text-text-light" onclick="event.stopPropagation(); showDiagram(this.dataset.mermaidCode);" data-mermaid-code="sequenceDiagram
     participant User
-    participant Agent
+    participant Eval
     participant Tools
 
-    User-&gt;&gt;Agent: &#34;Check all balances, transfer $500 from checking to savings, then show me updated&#34;
-    Agent-&gt;&gt;Tools: &#34;get_all_balances({})&#34;
-    Tools--&gt;&gt;Agent: &#34;{&#39;accounts&#39;: {&#39;checking&#39;: {&#39;balance&#39;: 1500.0, &#39;formatted&#39;: &#39;&#34;"><div class="mermaid text-xs">sequenceDiagram
-    participant User
-    participant Agent
-    participant Tools
-
-    User->>Agent: "Check all balances, transfer $500 from checking to savings, then show me updated"
-    Agent->>Tools: "get_all_balances({})"
-    Tools-->>Agent: "{'accounts': {'checking': {'balance': 1500.0, 'formatted': '"</div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>🔧</span><span>Tool Calls</span></div><div class="space-y-1"><div class="flex items-center gap-2 text-sm p-2 rounded bg-green-500/5"><span class="text-green-400">✅</span><code class="tool-name">get_all_balances</code></div></div></div><div><div class="text-sm font-medium text-red-400 mb-3 flex items-center gap-2"><span>❌</span><span>Error</span></div><div style="padding: 0.75rem; background-color: rgb(127, 29, 29); border: 1px solid rgb(153, 27, 27); border-radius: 0.5rem; color: rgb(254, 202, 202); font-size: 0.875rem; white-space: pre-wrap; word-wrap: break-word; max-height: 200px; overflow-y: auto;">      AssertionError: Agent exceeded turn limit - unable to process multi-step request (max_turns=1)</div></div></div></div></div></div></div></div></div><style>
-.test-group.collapsed .group-content {
-    display: none;
-}
-.test-group.collapsed .expand-icon {
-    transform: rotate(-90deg);
-}
-.test-row.hidden {
-    display: none;
-}
-.test-detail.hidden {
-    display: none;
-}
-</style></section></div><div id="overlay" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center p-8" onclick="hideOverlay()"><button class="absolute top-4 right-4 w-10 h-10 flex items-center justify-center text-2xl text-text-muted hover:text-text-light bg-surface-card rounded-full border border-white/10 transition-colors" onclick="hideOverlay()">✕</button><div class="w-[90vw] h-[85vh] overflow-auto bg-surface-card rounded-lg p-6 shadow-material-lg flex items-center justify-center" onclick="event.stopPropagation()"><div class="mermaid w-full h-full" id="overlay-mermaid"></div></div></div><div id="diagram-hover-popup" class="fixed z-40 bg-surface-card rounded-lg shadow-material-lg border border-white/10 p-4 hidden max-w-xl" onmouseenter="keepDiagramHover()" onmouseleave="hideDiagramHover()" onclick="hideOverlay(); this.classList.add(&#39;hidden&#39;); showDiagram(document.getElementById(&#39;hover-mermaid&#39;).innerHTML);"><div class="mermaid" id="hover-mermaid"></div></div><style>
-#overlay.active { display: flex !important; }
-#diagram-hover-popup.active { display: block !important; }
-
-/* Scale the mermaid SVG in overlay to fill available space */
-#overlay-mermaid svg {
-    max-width: 100%;
-    max-height: 100%;
-    width: auto;
-    height: auto;
-    min-height: 60vh;
-}
-</style><script>
-// pytest-skill-engineering Report Scripts
+    User-&gt;&gt;Eval: &#34;Check all balances, transfer $500 from checking to savings, then show me updated&#34;
+    Eval-&gt;&gt;Tools: &#34;get_all_balances({})&#34;
+    Tools--&gt;&gt;Eval: &#34;{&#39;accounts&#39;: {&#39;checking&#39;: {&#39;balance&#39;: 1500.0, &#39;formatted&#39;: &#39;&#34;"><span>📊</span><span>View Sequence Diagram</span></button></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>🔧</span><span>Tool Calls</span></div><div class="space-y-1"><div class="flex items-center gap-2 text-sm p-2 rounded bg-green-500/5"><span class="text-green-400">✅</span><code class="tool-name">get_all_balances</code></div></div></div><div><div class="text-sm font-medium text-red-400 mb-3 flex items-center gap-2"><span>❌</span><span>Error</span></div><div style="padding: 0.75rem; background-color: rgb(127, 29, 29); border: 1px solid rgb(153, 27, 27); border-radius: 0.5rem; color: rgb(254, 202, 202); font-size: 0.875rem; white-space: pre-wrap; word-wrap: break-word; max-height: 200px; overflow-y: auto;">      AssertionError: Agent exceeded turn limit - unable to process multi-step request (max_turns=1)</div></div></div></div></div></div></div></div></div></section></div><div id="overlay" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center p-8" onclick="hideOverlay()"><button class="absolute top-4 right-4 w-10 h-10 flex items-center justify-center text-2xl text-text-muted hover:text-text-light bg-surface-card rounded-full border border-white/10 transition-colors" onclick="hideOverlay()">✕</button><div class="w-[90vw] h-[85vh] overflow-auto bg-surface-card rounded-lg p-6 shadow-material-lg flex items-center justify-center" onclick="event.stopPropagation()"><div class="mermaid w-full h-full" id="overlay-mermaid"></div></div></div><script>
+// pytest-aitest Report Scripts
 
 // Initialize Mermaid with dark theme
 mermaid.initialize({ 
     startOnLoad: true,
     theme: 'dark',
-    securityLevel: 'loose',
+    securityLevel: 'strict',
     themeVariables: {
         primaryColor: '#4051b5',
         primaryTextColor: '#c9d1d9',
@@ -1305,27 +1271,6 @@ document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') hideOverlay();
 });
 
-// Hover popup for side-by-side diagrams
-let hoverTimeout = null;
-function showDiagramHover(element, mermaidCode) {
-    clearTimeout(hoverTimeout);
-    const popup = document.getElementById('diagram-hover-popup');
-    const content = document.getElementById('hover-mermaid');
-    content.innerHTML = mermaidCode;
-    popup.classList.add('active');
-    mermaid.run({ nodes: [content] });
-}
-
-function hideDiagramHover() {
-    hoverTimeout = setTimeout(() => {
-        document.getElementById('diagram-hover-popup').classList.remove('active');
-    }, 100);
-}
-
-function keepDiagramHover() {
-    clearTimeout(hoverTimeout);
-}
-
 // Side-by-side test selector
 function showSideBySideTest(testId) {
     // Hide all groups
@@ -1343,13 +1288,13 @@ function showSideBySideTest(testId) {
 
 
 // All agent data for client-side filtering
-const allAgents = [{"id": "8fa82e98-35c0-4a0d-b3c3-8f81e3669c46", "name": "banking-agent", "pass_rate": 75.0}];
-const allAgentsById = {"8fa82e98-35c0-4a0d-b3c3-8f81e3669c46": {"id": "8fa82e98-35c0-4a0d-b3c3-8f81e3669c46", "name": "banking-agent"}};
+const allAgents = [{"id": "banking-agent", "name": "banking-agent", "pass_rate": 75.0}];
+const allAgentsById = {"banking-agent": {"id": "banking-agent", "name": "banking-agent"}};
 
 // Track selected agents (exactly 2)
-let selectedAgentIds = ["8fa82e98-35c0-4a0d-b3c3-8f81e3669c46"];
+let selectedAgentIds = ["banking-agent"];
 
-// Agent comparison logic - always keep exactly 2 selected
+// Eval comparison logic - always keep exactly 2 selected
 function updateAgentComparison(clickedAgentId) {
     const checkboxes = document.querySelectorAll('input[name="compare-agent"]');
     
