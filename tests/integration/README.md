@@ -1,121 +1,77 @@
-# Integration Tests
+# Copilot Integration Tests
 
-These tests verify pytest-skill-engineering works with real LLM providers. Tests are split into two harnesses — **pydantic** (Eval + eval_run, BYOM) and **copilot** (CopilotEval + copilot_eval, GitHub Copilot SDK).
+These tests validate pytest-skill-engineering with real GitHub Copilot models and tools. They use `CopilotEval` with the `copilot_eval` fixture; no mocked LLM execution is used.
 
 ## Structure
 
 ```text
 tests/integration/
-├── conftest.py           # Shared constants and server fixtures
-├── agents/               # .agent.md test fixtures
-│   ├── banking-advisor.agent.md
-│   ├── todo-manager.agent.md
-│   └── minimal.agent.md
-├── pydantic/             # Eval + eval_run tests (Azure/OpenAI, BYOM)
-│   ├── conftest.py
-│   ├── test_01_basic.py          # Single eval, basic MCP tool calls
-│   ├── test_02_models.py         # Model comparison (parametrize)
-│   ├── test_03_prompts.py        # System prompt comparison
-│   ├── test_04_matrix.py         # Model × prompt 2×2 grid
-│   ├── test_05_skills.py         # Skill loading + skill-enhanced behavior
-│   ├── test_06_sessions.py       # Multi-turn sessions
-│   ├── test_07_clarification.py  # ClarificationDetection feature
-│   ├── test_08_scoring.py        # llm_score + ScoringDimension
-│   ├── test_09_cli.py            # CLIServer wrapping shell commands
-│   ├── test_10_ab_servers.py     # A/B server comparison
-│   ├── test_11_iterations.py     # --aitest-iterations=N reliability
-│   └── test_12_custom_agents.py  # Eval.from_agent_file + load_custom_agent
-├── copilot/              # CopilotEval + copilot_eval tests (GitHub Copilot SDK)
-│   ├── conftest.py
-│   ├── test_events.py            # SDK event capture
-│   ├── test_01_basic.py          # File create + refactor
-│   ├── test_02_models.py         # Model comparison
-│   ├── test_03_instructions.py   # Instruction differentiation + excluded_tools
-│   ├── test_05_skills.py         # Skill A/B comparison
-│   └── test_12_custom_agents.py  # Custom agents + forced subagent dispatch
-└── prompts/              # Plain .md system prompt files
-└── skills/               # Test skill directories
+├── conftest.py                  # Shared system prompts and constants
+├── agents/                      # Custom agent test fixtures
+├── prompts/                     # System prompt test fixtures
+├── skills/                      # Skill test fixtures
+└── copilot/
+    ├── conftest.py              # Copilot models, authentication, and limits
+    ├── test_events.py           # SDK event capture
+    ├── test_01_basic.py         # Basic file creation and refactoring
+    ├── test_02_models.py        # Model comparison
+    ├── test_03_instructions.py  # System prompt and tool filtering
+    ├── test_05_skills.py        # Skill A/B comparison
+    ├── test_06_sessions.py      # Multi-turn sessions
+    ├── test_07_clarification.py # Clarification detection
+    ├── test_08_scoring.py       # LLM scoring
+    ├── test_09_cli.py           # CLI workflows
+    ├── test_10_ab_servers.py    # Configuration A/B comparison
+    ├── test_11_iterations.py    # Iteration reliability
+    ├── test_12_custom_agents.py # Custom agent dispatch
+    ├── test_13_plugins.py       # Plugin discovery and loading
+    ├── test_14_skill_evals.py   # Skill eval execution
+    ├── test_15_skill_refinement.py # Skill refinement
+    ├── test_16_skill_benchmark.py  # Skill benchmarking
+    └── test_17_plugin_skill_workflow.py # End-to-end plugin skill workflow
 ```
 
 ## Quick Start
 
-### Pydantic harness (Azure OpenAI)
-
 ```bash
-# Prerequisites
-az login
-export AZURE_API_BASE=https://your-resource.cognitiveservices.azure.com
-# Run all pydantic tests
-uv run python -m pytest tests/integration/pydantic/ -v
+# Authenticate once
+gh auth login
+
+# Run all Copilot integration tests
+uv run python -m pytest tests/integration/copilot/ -v
 
 # Run a specific file
-uv run python -m pytest tests/integration/pydantic/test_01_basic.py -v
+uv run python -m pytest tests/integration/copilot/test_01_basic.py -v
 
 # Run a specific test
-uv run python -m pytest tests/integration/pydantic/test_01_basic.py::TestBankingBasic::test_balance_check_and_transfer -v
+uv run python -m pytest \
+  tests/integration/copilot/test_01_basic.py::TestBasicFileCreation::test_create_python_file -v
 ```
-
-### Copilot harness (GitHub Copilot SDK)
-
-```bash
-# Prerequisites
-uv sync --extra copilot
-gh auth login
-# Run all copilot tests
-uv run python -m pytest tests/integration/copilot/ -v
-```
-
-> **CRITICAL:** Never mix harnesses in one session. The plugin raises `pytest.UsageError` if both `eval_run` and `copilot_eval` are collected together.
 
 ## Prerequisites
 
-1. **Azure login** (Entra ID auth — no API keys needed):
+1. GitHub Copilot authentication through `gh auth login` or `GITHUB_TOKEN`.
+2. A model available through the GitHub Copilot SDK.
+3. Dependencies installed with `uv sync --all-groups`.
 
-   ```bash
-   az login
-   export AZURE_API_BASE=https://your-resource.cognitiveservices.azure.com
-   ```
+## Adding Tests
 
-1. **Models available** (checked 2026-02-23):
-
-   - `gpt-5.4-mini` — cheapest, use for most tests
-   - `gpt-5.5` — primary summary/default model
-   - `gpt-4.1` — alternative provider-backed model
-
-1. **For Copilot tests only:**
-
-   ```bash
-   uv sync --extra copilot
-   gh auth login  # or set GITHUB_TOKEN
-   ```
-
-## MCP Test Servers
-
-Built-in test servers in `src/pytest_skill_engineering/testing/`:
-
-- `banking_mcp.py`: `get_balance`, `get_all_balances`, `transfer`, `deposit`, `withdraw`, `get_transactions` for financial workflows.
-- `todo_mcp.py`: `add_task`, `complete_task`, `list_tasks`, `delete_task`, `get_task`, `update_task` for CRUD operations.
-
-## Adding New Tests
-
-Create evals inline using constants from `conftest.py`:
+Create evals inline and use the shared constants from `copilot/conftest.py`:
 
 ```python
-from pytest_skill_engineering import Eval, Provider
-from ..conftest import DEFAULT_MODEL, DEFAULT_RPM, DEFAULT_TPM, DEFAULT_MAX_TURNS
+from pytest_skill_engineering.copilot import CopilotEval
 
 
-async def test_my_feature(eval_run, banking_server):
-    agent = Eval.from_instructions(
-        "my-agent",
-        "You are a banking assistant.",
-        provider=Provider(model=f"azure/{DEFAULT_MODEL}", rpm=DEFAULT_RPM, tpm=DEFAULT_TPM),
-        mcp_servers=[banking_server],
-        max_turns=DEFAULT_MAX_TURNS,
+async def test_my_feature(copilot_eval, tmp_path):
+    agent = CopilotEval(
+        name="my-feature",
+        model="gpt-5.4-mini",
+        instructions="Create files as requested.",
+        working_directory=str(tmp_path),
     )
 
-    result = await eval_run(agent, "What's my checking balance?")
+    result = await copilot_eval(agent, "Create hello.py that prints 'hello'.")
 
     assert result.success
-    assert result.tool_was_called("get_balance")
+    assert (tmp_path / "hello.py").exists()
 ```

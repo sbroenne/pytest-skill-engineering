@@ -140,7 +140,7 @@ The report shows whether the skill improves performance.
 - [Multi-Turn Sessions](sessions.md) — Conversations with context
 
 > 📁 **Real Examples:**
-> - [pydantic/test_05_skills.py](https://github.com/sbroenne/pytest-skill-engineering/blob/main/tests/integration/pydantic/test_05_skills.py) — Skill loading, metadata, and before/after comparisons
+> - [copilot/test_05_skills.py](https://github.com/sbroenne/pytest-skill-engineering/blob/main/tests/integration/copilot/test_05_skills.py) — Skill loading and A/B comparisons
 
 ## Copilot Skills
 
