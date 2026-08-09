@@ -1,5 +1,5 @@
 <!doctype html><html lang="en" class="dark"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>pytest-skill-engineering - Test Report</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&amp;family=Roboto+Mono&amp;display=swap" rel="stylesheet"><script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script><style>/* ============================================================
-   pytest-skill-engineering Report Styles
+   pytest-aitest Report Styles
    Hand-written CSS — replaces Tailwind CSS build pipeline
    Matches mkdocs-material slate/indigo theme
    ============================================================ */
@@ -37,6 +37,7 @@
   /* Semantic colors */
   --color-green: #4ade80;
   --color-yellow: #facc15;
+  --color-amber: #fbbf24;
   --color-red: #f87171;
   --color-blue: #60a5fa;
 
@@ -305,7 +306,9 @@ a:hover {
 .px-3 { padding-left: 0.75rem; padding-right: 0.75rem; }
 .px-5 { padding-left: 1.25rem; padding-right: 1.25rem; }
 .px-6 { padding-left: 1.5rem; padding-right: 1.5rem; }
+.py-0\.5 { padding-top: 0.125rem; padding-bottom: 0.125rem; }
 .py-1 { padding-top: 0.25rem; padding-bottom: 0.25rem; }
+.py-1\.5 { padding-top: 0.375rem; padding-bottom: 0.375rem; }
 .py-3 { padding-top: 0.75rem; padding-bottom: 0.75rem; }
 .py-4 { padding-top: 1rem; padding-bottom: 1rem; }
 .py-8 { padding-top: 2rem; padding-bottom: 2rem; }
@@ -466,6 +469,7 @@ a:hover {
 .hover\:border-white\/20:hover { border-color: rgba(255, 255, 255, 0.2); }
 .hover\:border-primary\/30:hover { border-color: rgba(64, 81, 181, 0.3); }
 .hover\:border-primary\/50:hover { border-color: rgba(64, 81, 181, 0.5); }
+.hover\:bg-primary\/5:hover { background-color: rgba(64, 81, 181, 0.05); }
 .hover\:text-text-light:hover { color: var(--color-text-light); }
 .hover\:text-blue-400:hover { color: var(--color-blue); }
 .hover\:text-accent:hover { color: var(--color-accent); }
@@ -525,6 +529,19 @@ a:hover {
   font-size: 0.875rem;
   line-height: 1.25rem;
   border: 1px solid rgba(239, 68, 68, 0.3);
+}
+.status-warning {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  background-color: rgba(251, 191, 36, 0.15);
+  color: var(--color-amber);
+  font-weight: 500;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  border: 1px solid rgba(251, 191, 36, 0.3);
 }
 
 /* ==================== Cards ==================== */
@@ -894,6 +911,23 @@ a:hover {
 .progress-fill.blue  { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
 .progress-fill.amber { background: linear-gradient(90deg, #d97706, #facc15); }
 .progress-fill.red   { background: linear-gradient(90deg, #dc2626, #f87171); }
+
+/* ── Score dimension bars ── */
+.score-track {
+  width: 100%;
+  background-color: rgba(255, 255, 255, 0.04);
+  border-radius: 4px;
+  height: 8px;
+  overflow: hidden;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+.score-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 600ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.score-dimension { line-height: 1.4; }
+
 .progress-pct {
   width: 42px;
   font-size: 0.8rem;
@@ -959,7 +993,6 @@ a:hover {
 
 /* ==================== Overlay ==================== */
 #overlay.active { display: flex !important; }
-#diagram-hover-popup.active { display: block !important; }
 #overlay-mermaid svg {
   max-width: 100%;
   max-height: 100%;
@@ -967,57 +1000,20 @@ a:hover {
   height: auto;
   min-height: 60vh;
 }
-</style></head><body class="bg-surface text-text min-h-screen"><div class="max-w-6xl mx-auto px-6 py-8"><header class="report-header mb-8"><div class="flex justify-between items-start gap-4 mb-4"><div class="flex-1"><h1 class="text-2xl font-medium mb-1">Prompt comparison — same model, different system prompts.</h1></div><div class="status-passed"><span>✓</span><span>All Passed</span></div></div><div class="flex flex-wrap gap-x-6 gap-y-1 py-3 border-t border-white/10 text-sm"><span class="opacity-70">February 07, 2026 at 07:36 PM</span><span>📄 <span class="text-text-light hover:text-blue-400 cursor-pointer" title="tests/fixtures/scenario_05_prompt_comparison.py">scenario_05_prompt_comparison.py</span></span><span class="tabular-nums">6 tests</span><span class="tabular-nums">67.9s</span><span class="tabular-nums" title="Token range (min-max per test)">910–3,452 tok</span><span class="tabular-nums" title="Test execution cost">🧪 $-0.016375</span><span class="tabular-nums" title="AI analysis cost">🤖 $0.0230</span><span class="tabular-nums font-semibold" title="Total cost">💰 $0.006595</span></div></header><section class="mb-8"><div class="ai-insights"><div class="ai-insights-header"><span>🤖</span><span>AI Analysis</span><button class="ml-auto text-text-muted hover:text-text-light text-sm" onclick="this.closest(&#39;.ai-insights&#39;).querySelector(&#39;.card-body&#39;).classList.toggle(&#39;hidden&#39;)">Toggle</button></div><div class="card-body"><div class="markdown-content"><div class="winner-card">
-<div class="winner-title">Recommended for Deploy</div>
-<div class="winner-name">gpt-5-mini + concise</div>
-<div class="winner-summary">Delivers a 100% pass rate at the lowest cost, producing clear, direct responses with minimal tool calls and no unnecessary verbosity.</div>
-<div class="winner-stats">
-<div class="winner-stat"><span class="winner-stat-value green">100%</span><span class="winner-stat-label">Pass Rate</span></div>
-<div class="winner-stat"><span class="winner-stat-value blue">$0.000727</span><span class="winner-stat-label">Total Cost</span></div>
-<div class="winner-stat"><span class="winner-stat-value amber">1,956</span><span class="winner-stat-label">Tokens</span></div>
-</div>
-</div>
-
-<div class="metric-grid">
-<div class="metric-card green">
-<div class="metric-value green">6</div>
-<div class="metric-label">Total Tests</div>
-</div>
-<div class="metric-card red">
-<div class="metric-value red">0</div>
-<div class="metric-label">Failures</div>
-</div>
-<div class="metric-card blue">
-<div class="metric-value blue">3</div>
-<div class="metric-label">Agents</div>
-</div>
-<div class="metric-card amber">
-<div class="metric-value amber">3.3</div>
-<div class="metric-label">Avg Turns</div>
-</div>
-</div>
-
-<h3>Comparative Analysis</h3>
-<h4>Why the winner wins</h4>
-<ul>
-<li>Achieves the same 100% pass rate as all other configurations at <strong>~74% lower total cost</strong> than the next cheapest alternative.</li>
-<li>Uses only the <strong>minimum required tool calls</strong>, avoiding redundant balance checks before and after transfers.</li>
-<li>Produces concise explanations that satisfy test requirements without inflating token usage.</li>
-</ul>
-<h4>Notable patterns</h4>
-<ul>
-<li>Prompt verbosity directly correlates with cost: <strong>concise &lt; structured &lt; detailed</strong> in both tokens and dollars, despite identical correctness.</li>
-<li>The detailed prompt consistently triggers <strong>extra exploratory tool calls</strong> (e.g., pre/post <code>get_all_balances</code>) even when not required by the test.</li>
-<li>Structured formatting improves readability but adds moderate overhead without improving outcomes.</li>
-</ul>
-<h4>Alternatives</h4>
-<ul>
-<li><strong>gpt-5-mini + structured</strong>: Same pass rate with clearer visual formatting, but ~3.8× higher cost due to longer responses.</li>
-<li><strong>gpt-5-mini + detailed</strong>: Most explanatory, but highest cost and longest runtimes; suitable only if verbose audit-style explanations are explicitly required.</li>
-</ul>
+</style></head><body class="bg-surface text-text min-h-screen"><div class="max-w-6xl mx-auto px-6 py-8"><header class="report-header mb-8"><div class="flex justify-between items-start gap-4 mb-4"><div class="flex-1"><h1 class="text-2xl font-medium mb-1">Prompt comparison — same model, different system prompts.</h1></div><div class="flex gap-2 items-start"><div class="status-passed"><span>✓</span><span>All Passed</span></div></div></div><div class="flex flex-wrap gap-x-6 gap-y-1 py-3 border-t border-white/10 text-sm"><span class="opacity-70">February 07, 2026 at 07:36 PM</span><span>📄 <span class="text-text-light hover:text-blue-400 cursor-pointer" title="tests/fixtures/scenario_05_prompt_comparison.py">scenario_05_prompt_comparison.py</span></span><span class="tabular-nums">6 tests</span><span class="tabular-nums">67.9s</span><span class="tabular-nums" title="Token range (min-max per test)">910–3,452 tok</span><span class="tabular-nums" title="Test execution cost">🧪 $0.006595</span><span class="tabular-nums" title="AI analysis cost">🤖 $0.0249</span><span class="tabular-nums font-semibold" title="Total cost">💰 $0.0315</span></div></header><section class="mb-8"><div class="ai-insights"><div class="ai-insights-header"><span>🤖</span><span>AI Analysis</span><button class="ml-auto text-text-muted hover:text-text-light text-sm" onclick="this.closest(&#39;.ai-insights&#39;).querySelector(&#39;.card-body&#39;).classList.toggle(&#39;hidden&#39;)">Toggle</button></div><div class="card-body"><div class="markdown-content"><h2>🎯 Recommendation</h2>
+<p><strong>Deploy: gpt-5-mini + concise</strong></p>
+<p>Achieves <strong>100% pass rate at the lowest cost</strong>, with <strong>~82% lower cost</strong> than the next closest alternative while still using tools correctly.</p>
+<p><strong>Reasoning:</strong><br>
+All three prompt variants passed all tests, so pass rate is tied at 100%. Cost is the decisive factor. The <strong>concise</strong> prompt consistently produced correct tool usage and compliant answers at a fraction of the cost:
+- Balance query: $0.000296 vs $0.000472–$0.000485 (≈40% cheaper)
+- Transfer with explanation: $0.000431 vs $0.002281–$0.002631 (<strong>81–84% cheaper</strong>)</p>
+<p>Response quality met test requirements without unnecessary tool calls or verbosity.</p>
+<p><strong>Alternatives:</strong><br>
+- <strong>structured:</strong> Same pass rate, clearer formatting, but <strong>~5× higher cost</strong> on transfers. Consider only if strict response formatting is required downstream.<br>
+- <strong>detailed:</strong> Same pass rate, but <strong>~6× higher cost</strong> due to extra tool calls and verbose explanations. Not cost-effective for production.</p>
 <h2>🔧 MCP Tool Feedback</h2>
-<h3>banking_server</h3>
-<p>Overall, tools are discoverable and used correctly. The agent consistently selected the correct action without confusion between balance and transfer operations.</p>
+<h3>pytest_skill_engineering.testing.banking_mcp</h3>
+<p>Overall, tools are discoverable and correctly used. The concise and structured prompts select the minimal required tools, while the detailed prompt triggers unnecessary calls.</p>
 <table>
 <thead>
 <tr>
@@ -1035,202 +1031,171 @@ a:hover {
 <td>Working well</td>
 </tr>
 <tr>
+<td>get_all_balances</td>
+<td>⚠️</td>
+<td>2</td>
+<td>Overused by detailed prompt for a simple transfer</td>
+</tr>
+<tr>
 <td>transfer</td>
 <td>✅</td>
 <td>3</td>
 <td>Working well</td>
 </tr>
 <tr>
-<td>get_all_balances</td>
-<td>⚠️</td>
-<td>2</td>
-<td>Called unnecessarily by detailed prompt</td>
+<td>deposit</td>
+<td>✅</td>
+<td>0</td>
+<td>Not exercised in tests</td>
+</tr>
+<tr>
+<td>withdraw</td>
+<td>✅</td>
+<td>0</td>
+<td>Not exercised in tests</td>
+</tr>
+<tr>
+<td>get_transactions</td>
+<td>✅</td>
+<td>0</td>
+<td>Not exercised in tests</td>
 </tr>
 </tbody>
 </table>
 <p><strong>Suggested rewrite for <code>get_all_balances</code>:</strong></p>
 <blockquote>
-<p>Returns balances for all accounts. Use only when a user explicitly asks for an overview of multiple accounts or total balances; not required for single-account queries or transfers unless requested.</p>
+<p>Get balances for all accounts <strong>only when a total or multi-account summary is explicitly required</strong>. For single-account checks, prefer <code>get_balance</code>.</p>
 </blockquote>
+<p>This clarification would discourage unnecessary pre/post calls in prompts like <strong>detailed</strong>.</p>
 <h2>📝 System Prompt Feedback</h2>
 <h3>concise (effective)</h3>
 <ul>
-<li><strong>Token count:</strong> Low</li>
-<li><strong>Behavioral impact:</strong> Language such as “respond directly” and absence of words like “thorough” or “step-by-step” primes the model to act immediately and avoid exploratory reasoning.</li>
-<li><strong>Problem:</strong> None observed.</li>
-<li><strong>Suggested change:</strong> None.</li>
+<li><strong>Token count:</strong> ~25</li>
+<li><strong>Assessment:</strong> Clear, minimal, and aligned with test expectations. No changes recommended.</li>
 </ul>
-<h3>structured (effective)</h3>
+<h3>structured (mixed)</h3>
 <ul>
-<li><strong>Token count:</strong> Moderate</li>
-<li><strong>Behavioral impact:</strong> Encourages formatted summaries without encouraging extra reasoning or tool calls.</li>
-<li><strong>Problem:</strong> Slight verbosity for simple queries.</li>
-<li><strong>Suggested change:</strong> Remove optional status emojis for single-step actions to save tokens.</li>
+<li><strong>Token count:</strong> ~45</li>
+<li><strong>Problem:</strong> Forces structured output even when not required, increasing token usage and response length.</li>
+<li><strong>Suggested change (replace last line):</strong>
+  <code>Use tools for all account operations. Never guess balances — always check.</code>
+  ⟶
+  <code>Use tools for all account operations. Never guess balances — always check. Use the format only when it adds clarity.</code></li>
 </ul>
-<h3>detailed (mixed: effective but inefficient)</h3>
+<h3>detailed (ineffective for cost)</h3>
 <ul>
-<li><strong>Token count:</strong> High</li>
-<li><strong>Behavioral impact:</strong> Terms like “explain in detail” and “show what happened” push the model into an audit-style workflow, causing redundant balance checks.</li>
-<li><strong>Problem:</strong> Over-fetching data not required by the tests.</li>
-<li><strong>Suggested change:</strong> Replace “explain what happened in detail” with “briefly explain the result after completing the action.”</li>
+<li><strong>Token count:</strong> ~90+</li>
+<li><strong>Problem:</strong> Mandates balance checks before and after every operation, causing redundant <code>get_all_balances</code> calls and extreme cost inflation.</li>
+<li><strong>Suggested change (replace bullet list intro):</strong>
+  <code>For every operation:</code>
+  ⟶
+  <code>For operations where balances change or totals are requested:</code></li>
 </ul>
 <h2>💡 Optimizations</h2>
-<table>
-<thead>
-<tr>
-<th>#</th>
-<th>Optimization</th>
-<th>Priority</th>
-<th>Estimated Savings</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>1</td>
-<td>Prefer concise prompt for production</td>
-<td>recommended</td>
-<td>~70% cost reduction</td>
-</tr>
-<tr>
-<td>2</td>
-<td>Constrain balance lookups</td>
-<td>suggestion</td>
-<td>~15% fewer tokens</td>
-</tr>
-</tbody>
-</table>
-<h4>1. Prefer concise prompt for production (recommended)</h4>
-<ul>
-<li>Current: Multiple prompt styles used with identical correctness.</li>
-<li>Change: Standardize on the concise system prompt for default runs.</li>
-<li>Impact: ~70% cost reduction with no loss in pass rate.</li>
-</ul>
-<h4>2. Constrain balance lookups (suggestion)</h4>
-<ul>
-<li>Current: Detailed prompt triggers <code>get_all_balances</code> before and after transfers.</li>
-<li>Change: Add explicit instruction: “Do not fetch balances unless the user asks.”</li>
-<li>Impact: ~15% fewer tokens and faster execution.</li>
-</ul>
+<ol>
+<li><strong>Avoid redundant balance aggregation</strong> (recommended)</li>
+<li>Current: The detailed prompt triggers <code>get_all_balances</code> before and after transfers even when the transfer tool already returns new balances.</li>
+<li>Change: Update the prompt to trust <code>transfer.new_balance_from</code> and <code>transfer.new_balance_to</code> unless totals are explicitly requested.</li>
+<li>
+<p>Impact: <strong>~80% cost reduction</strong> on transfer tests (eliminates 2 tool calls and long summaries).</p>
+</li>
+<li>
+<p><strong>Prefer concise prompt for default agent</strong> (recommended)</p>
+</li>
+<li>Current: Multiple prompt variants tested equally.</li>
+<li>Change: Set <strong>concise</strong> as the production default; keep others only for specialized UX needs.</li>
+<li>Impact: <strong>70–85% lower cost per test</strong> with no loss in pass rate.</li>
+</ol>
 <h2>📦 Tool Response Optimization</h2>
-<h3>transfer (from banking_server)</h3>
+<h3>transfer (from pytest_skill_engineering.testing.banking_mcp)</h3>
 <ul>
-<li><strong>Current response size:</strong> Verbose, includes formatted strings and message text.</li>
-<li><strong>Issues found:</strong> Fields like <code>message</code> and both raw and formatted amounts are redundant for most tests.</li>
-<li><strong>Suggested optimization:</strong> Return numeric values only; let the agent format for display.</li>
-<li><strong>Estimated savings:</strong> ~20–25 tokens per call (≈10% reduction)</li>
+<li><strong>Current response size:</strong> ~110 tokens</li>
+<li><strong>Issues found:</strong> Includes verbose fields (<code>type</code>, <code>message</code>, duplicated formatted and raw amounts) not required by the agent.</li>
+<li><strong>Suggested optimization:</strong> Remove redundant fields and rely on numeric values only; let the agent format currency.</li>
 </ul>
 <p><strong>Example current vs optimized:</strong></p>
-<pre><code class="language-json">// Current
+<pre><code class="language-json">// Current (~110 tokens)
 {
-  &quot;transaction_id&quot;: &quot;TX0001&quot;,
-  &quot;type&quot;: &quot;transfer&quot;,
-  &quot;from_account&quot;: &quot;checking&quot;,
-  &quot;to_account&quot;: &quot;savings&quot;,
-  &quot;amount&quot;: 300,
-  &quot;amount_formatted&quot;: &quot;$300.00&quot;,
-  &quot;new_balance_from&quot;: 1200.0,
-  &quot;new_balance_to&quot;: 3300.0,
-  &quot;message&quot;: &quot;Successfully transferred $300.00 from checking to savings.&quot;
+  "transaction_id": "TX0001",
+  "type": "transfer",
+  "from_account": "checking",
+  "to_account": "savings",
+  "amount": 300,
+  "amount_formatted": "$300.00",
+  "new_balance_from": 1200.0,
+  "new_balance_to": 3300.0,
+  "message": "Successfully transferred $300.00 from checking to savings."
 }
 
-// Optimized
+// Optimized (~55 tokens)
 {
-  &quot;transaction_id&quot;: &quot;TX0001&quot;,
-  &quot;from&quot;: &quot;checking&quot;,
-  &quot;to&quot;: &quot;savings&quot;,
-  &quot;amount&quot;: 300,
-  &quot;balance_from&quot;: 1200.0,
-  &quot;balance_to&quot;: 3300.0
+  "id": "TX0001",
+  "from": "checking",
+  "to": "savings",
+  "amount": 300,
+  "balance_from": 1200.0,
+  "balance_to": 3300.0
 }
-</code></pre></div></div></div></section><section class="mb-8"><h2 class="section-title">🏆 Agent Leaderboard</h2><div class="card overflow-hidden"><table class="leaderboard-table"><thead><tr><th class="w-10"></th><th>Agent</th><th class="text-center">Tests</th><th class="text-center">Pass Rate</th><th class="text-right">Tokens</th><th class="text-right">Cost</th><th class="text-right">Duration</th></tr></thead><tbody><tr class="winner-row"><td class="text-center text-xl">🥇</td><td><div class="font-medium text-text-light"><span>gpt-5-mini + concise</span></div></td><td class="text-center tabular-nums"><span class="text-green-400">2</span>/<span class="text-text-muted">2</span></td><td class="text-center"><span class="text-green-400 font-semibold tabular-nums">100%</span></td><td class="text-right tabular-nums text-text-muted">1,956</td><td class="text-right tabular-nums text-text-muted">$0.000727</td><td class="text-right tabular-nums text-text-muted">19.3s</td></tr><tr><td class="text-center text-xl">🥈</td><td><div class="font-medium text-text-light"><span>gpt-5-mini + structured</span></div></td><td class="text-center tabular-nums"><span class="text-green-400">2</span>/<span class="text-text-muted">2</span></td><td class="text-center"><span class="text-green-400 font-semibold tabular-nums">100%</span></td><td class="text-right tabular-nums text-text-muted">3,067</td><td class="text-right tabular-nums text-text-muted">$0.002753</td><td class="text-right tabular-nums text-text-muted">23.4s</td></tr><tr><td class="text-center text-xl">🥉</td><td><div class="font-medium text-text-light"><span>gpt-5-mini + detailed</span></div></td><td class="text-center tabular-nums"><span class="text-green-400">2</span>/<span class="text-text-muted">2</span></td><td class="text-center"><span class="text-green-400 font-semibold tabular-nums">100%</span></td><td class="text-right tabular-nums text-text-muted">4,523</td><td class="text-right tabular-nums text-text-muted">$0.003115</td><td class="text-right tabular-nums text-text-muted">25.2s</td></tr></tbody></table></div></section><section class="mb-8"><div class="card p-4"><div class="flex items-center gap-3 mb-3"><span class="text-sm text-text-muted">Compare:</span><span class="text-xs text-text-muted opacity-70">(Click to swap agents)</span></div><div class="flex flex-wrap gap-2"><label class="agent-chip selected"><input type="checkbox" name="compare-agent" value="a5486ae2-d9b1-416f-b712-55ad7244c3fa" checked="checked" class="sr-only" onchange="updateAgentComparison(&#39;a5486ae2-d9b1-416f-b712-55ad7244c3fa&#39;)"><span class="truncate">gpt-5-mini + concise</span><span class="text-xs text-text-muted tabular-nums">100%</span></label><label class="agent-chip selected"><input type="checkbox" name="compare-agent" value="59fa6919-449c-477c-a8e8-5e085d95ea33" checked="checked" class="sr-only" onchange="updateAgentComparison(&#39;59fa6919-449c-477c-a8e8-5e085d95ea33&#39;)"><span class="truncate">gpt-5-mini + structured</span><span class="text-xs text-text-muted tabular-nums">100%</span></label><label class="agent-chip "><input type="checkbox" name="compare-agent" value="5726d007-c023-4209-8381-ef8eb020e5d0" class="sr-only" onchange="updateAgentComparison(&#39;5726d007-c023-4209-8381-ef8eb020e5d0&#39;)"><span class="truncate">gpt-5-mini + detailed</span><span class="text-xs text-text-muted tabular-nums">100%</span></label></div></div></section><section class="mb-8"><h2 class="section-title">📋 Test Results</h2><div class="mb-4 flex items-center justify-between"><div class="flex gap-2"><button class="filter-btn active" data-filter="all" onclick="filterTests(&#39;all&#39;)">All</button><button class="filter-btn " data-filter="diff" onclick="filterTests(&#39;diff&#39;)">Differences ⚡</button><button class="filter-btn " data-filter="failed" onclick="filterTests(&#39;failed&#39;)">Failed ❌</button></div><div class="text-sm text-text-muted"><span id="visible-count">6</span> / 6 tests</div></div><div class="space-y-4" id="test-groups"><div class="card overflow-hidden test-group" data-group-type="standalone"><div class="group-header px-5 py-3 bg-surface-elevated border-b border-white/10 flex justify-between items-center cursor-pointer" onclick="toggleGroup(this.parentElement)"><div class="flex items-center gap-3"><span class="text-lg">📋</span><span class="font-medium text-text-light">tests/fixtures/scenario_05_prompt_comparison.py</span><span class="text-sm text-text-muted">(2 tests)</span></div><div class="flex items-center gap-4"><div class="text-sm text-green-400">2/2</div><div class="text-sm text-green-400">2/2</div><span class="text-text-muted transition-transform duration-200 expand-icon">▼</span></div></div><div class="group-content"><div class="test-row border-b border-white/5" data-test-id="test_balance_check" data-has-diff="false" data-has-failed="false"><div class="px-5 py-3 hover:bg-white/[0.02] cursor-pointer transition-colors" onclick="toggleTestDetail(this.parentElement)"><div class="flex items-center justify-between"><div class="flex items-center gap-3 min-w-0 flex-1"><span class="text-green-400">✅</span><span class="text-text-light truncate">Balance query — tests how prompt style affects response form…</span></div><div class="flex items-center gap-4 text-sm text-text-muted"><span class="tabular-nums" title="Total tokens across selected agents">Total 1,957 tok</span><span class="text-text-muted">·</span><span class="tabular-nums" title="Total cost across selected agents">Total $0.000767</span><span class="text-text-muted">·</span><span class="tabular-nums" title="Token difference between selected agents (%difference)">Δ +15%</span><span class="text-text-muted">·</span><span class="tabular-nums" title="Duration difference between selected agents (%difference)">Δ +71%</span><span class="text-text-muted">·</span><span class="tabular-nums" title="Cost difference between selected agents (%difference)">Δ +60%</span></div></div><div class="flex gap-4 mt-2 pl-8"><div class="agent-result-item flex items-center gap-2 text-xs " data-agent-id="a5486ae2-d9b1-416f-b712-55ad7244c3fa"><span class="text-text-muted">gpt-5-mini + concise:</span><span class="text-green-400">✅</span><span class="text-text-muted tabular-nums">11.8s</span></div><div class="agent-result-item flex items-center gap-2 text-xs " data-agent-id="59fa6919-449c-477c-a8e8-5e085d95ea33"><span class="text-text-muted">gpt-5-mini + structured:</span><span class="text-green-400">✅</span><span class="text-text-muted tabular-nums">6.9s</span></div><div class="agent-result-item flex items-center gap-2 text-xs hidden" data-agent-id="5726d007-c023-4209-8381-ef8eb020e5d0"><span class="text-text-muted">gpt-5-mini + detailed:</span><span class="text-green-400">✅</span><span class="text-text-muted tabular-nums">7.7s</span></div></div></div><div class="test-detail hidden border-t border-white/10 bg-surface-elevated"><div class="comparison-grid grid gap-4 p-5" style="grid-template-columns: repeat(2, 1fr);"><div class="comparison-column  border-l-[3px] border-green-500" data-agent-id="a5486ae2-d9b1-416f-b712-55ad7244c3fa"><div class="flex items-center justify-between mb-4"><div class="font-medium text-text-light">gpt-5-mini + concise</div><span class="px-2 py-0.5 rounded text-xs font-medium bg-green-500/15 text-green-400">passed</span></div><div class="space-y-2 mb-4"><div class="grid grid-cols-4 gap-2 p-3 bg-surface-elevated rounded-material text-center"><div><div class="text-sm font-medium text-text-light tabular-nums">11.76s</div><div class="text-xs text-text-muted">duration</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">3</div><div class="text-xs text-text-muted">turns</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">1</div><div class="text-xs text-text-muted">tools</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">910</div><div class="text-xs text-text-muted">tokens</div></div></div><div class="grid grid-cols-4 gap-2 p-3 bg-surface-elevated rounded-material text-center"><div><div class="text-sm font-medium text-text-light tabular-nums">$0.000296</div><div class="text-xs text-text-muted">cost</div></div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>📊</span><span>Sequence</span></div><div class="p-3 bg-surface-code rounded-material border border-white/5 cursor-pointer hover:border-primary/30 transition-colors" onclick="event.stopPropagation(); showDiagram(this.dataset.mermaidCode);" data-mermaid-code="sequenceDiagram
+</code></pre>
+<ul>
+<li><strong>Estimated savings:</strong> ~50 tokens per call (<strong>~45% reduction</strong>)</li>
+</ul>
+<h3>get_balance (from pytest_skill_engineering.testing.banking_mcp)</h3>
+<ul>
+<li><strong>Current response size:</strong> ~40 tokens</li>
+<li><strong>Issues found:</strong> Duplicate numeric and formatted values.</li>
+<li><strong>Suggested optimization:</strong> Return only the numeric balance.</li>
+<li><strong>Estimated savings:</strong> ~15 tokens per call (~35% reduction)</li>
+</ul>
+<p>These changes further amplify the cost advantage of the <strong>concise</strong> prompt without affecting correctness.</p></div></div></div></section><section class="mb-8"><h2 class="section-title">🏆 Eval Leaderboard</h2><div class="card overflow-hidden"><table class="leaderboard-table"><thead><tr><th class="w-10"></th><th>Eval</th><th class="text-center">Tests</th><th class="text-center">Pass Rate</th><th class="text-right">Tokens</th><th class="text-right">Cost</th><th class="text-right">Duration</th></tr></thead><tbody><tr class="winner-row"><td class="text-center text-xl">🥇</td><td><div class="font-medium text-text-light"><span>gpt-5-mini + concise</span></div></td><td class="text-center tabular-nums"><span class="text-green-400">2</span>/<span class="text-text-muted">2</span></td><td class="text-center"><span class="text-green-400 font-semibold tabular-nums">100%</span></td><td class="text-right tabular-nums text-text-muted">1,956</td><td class="text-right tabular-nums text-text-muted">$0.000727</td><td class="text-right tabular-nums text-text-muted">19.3s</td></tr><tr><td class="text-center text-xl">🥈</td><td><div class="font-medium text-text-light"><span>gpt-5-mini + structured</span></div></td><td class="text-center tabular-nums"><span class="text-green-400">2</span>/<span class="text-text-muted">2</span></td><td class="text-center"><span class="text-green-400 font-semibold tabular-nums">100%</span></td><td class="text-right tabular-nums text-text-muted">3,067</td><td class="text-right tabular-nums text-text-muted">$0.002753</td><td class="text-right tabular-nums text-text-muted">23.4s</td></tr><tr><td class="text-center text-xl">🥉</td><td><div class="font-medium text-text-light"><span>gpt-5-mini + detailed</span></div></td><td class="text-center tabular-nums"><span class="text-green-400">2</span>/<span class="text-text-muted">2</span></td><td class="text-center"><span class="text-green-400 font-semibold tabular-nums">100%</span></td><td class="text-right tabular-nums text-text-muted">4,523</td><td class="text-right tabular-nums text-text-muted">$0.003115</td><td class="text-right tabular-nums text-text-muted">25.2s</td></tr></tbody></table></div></section><section class="mb-8"><div class="card p-4"><div class="flex items-center gap-3 mb-3"><span class="text-sm text-text-muted">Compare:</span><span class="text-xs text-text-muted opacity-70">(Click to swap agents)</span></div><div class="flex flex-wrap gap-2"><label class="agent-chip selected"><input type="checkbox" name="compare-agent" value="gpt-5-mini + concise" checked="checked" class="sr-only" onchange="updateAgentComparison(&#39;gpt-5-mini + concise&#39;)"><span class="truncate">gpt-5-mini + concise</span><span class="text-xs text-text-muted tabular-nums">100%</span></label><label class="agent-chip selected"><input type="checkbox" name="compare-agent" value="gpt-5-mini + structured" checked="checked" class="sr-only" onchange="updateAgentComparison(&#39;gpt-5-mini + structured&#39;)"><span class="truncate">gpt-5-mini + structured</span><span class="text-xs text-text-muted tabular-nums">100%</span></label><label class="agent-chip "><input type="checkbox" name="compare-agent" value="gpt-5-mini + detailed" class="sr-only" onchange="updateAgentComparison(&#39;gpt-5-mini + detailed&#39;)"><span class="truncate">gpt-5-mini + detailed</span><span class="text-xs text-text-muted tabular-nums">100%</span></label></div></div></section><section class="mb-8"><h2 class="section-title">📋 Test Results</h2><div class="mb-4 flex items-center justify-between"><div class="flex gap-2"><button class="filter-btn active" data-filter="all" onclick="filterTests(&#39;all&#39;)">All</button><button class="filter-btn " data-filter="diff" onclick="filterTests(&#39;diff&#39;)">Differences ⚡</button><button class="filter-btn " data-filter="failed" onclick="filterTests(&#39;failed&#39;)">Failed ❌</button></div><div class="text-sm text-text-muted"><span id="visible-count">6</span> / 6 tests</div></div><div class="space-y-4" id="test-groups"><div class="card overflow-hidden test-group" data-group-type="standalone"><div class="group-header px-5 py-3 bg-surface-elevated border-b border-white/10 flex justify-between items-center cursor-pointer" onclick="toggleGroup(this.parentElement)"><div class="flex items-center gap-3"><span class="text-lg">📋</span><span class="font-medium text-text-light">tests/fixtures/scenario_05_prompt_comparison.py</span><span class="text-sm text-text-muted">(2 tests)</span></div><div class="flex items-center gap-4"><div class="text-sm text-green-400">2/2</div><div class="text-sm text-green-400">2/2</div><span class="text-text-muted transition-transform duration-200 expand-icon">▼</span></div></div><div class="group-content"><div class="test-row border-b border-white/5" data-test-id="test_balance_check" data-has-diff="false" data-has-failed="false"><div class="px-5 py-3 hover:bg-white/[0.02] cursor-pointer transition-colors" onclick="toggleTestDetail(this.parentElement)"><div class="flex items-center justify-between"><div class="flex items-center gap-3 min-w-0 flex-1"><span class="text-green-400">✅</span><span class="text-text-light truncate">Balance query — tests how prompt style affects response form…</span></div><div class="flex items-center gap-4 text-sm text-text-muted"><span class="tabular-nums" title="Total tokens across selected agents">Total 1,957 tok</span><span class="text-text-muted">·</span><span class="tabular-nums" title="Total cost across selected agents">Total $0.000767</span><span class="text-text-muted">·</span><span class="tabular-nums" title="Token difference between selected agents (%difference)">Δ +15%</span><span class="text-text-muted">·</span><span class="tabular-nums" title="Duration difference between selected agents (%difference)">Δ +71%</span><span class="text-text-muted">·</span><span class="tabular-nums" title="Cost difference between selected agents (%difference)">Δ +60%</span></div></div><div class="flex gap-4 mt-2 pl-8"><div class="agent-result-item flex items-center gap-2 text-xs " data-agent-id="gpt-5-mini + concise"><span class="text-text-muted">gpt-5-mini + concise:</span><span class="text-green-400">✅</span><span class="text-text-muted tabular-nums">11.8s</span></div><div class="agent-result-item flex items-center gap-2 text-xs " data-agent-id="gpt-5-mini + structured"><span class="text-text-muted">gpt-5-mini + structured:</span><span class="text-green-400">✅</span><span class="text-text-muted tabular-nums">6.9s</span></div><div class="agent-result-item flex items-center gap-2 text-xs hidden" data-agent-id="gpt-5-mini + detailed"><span class="text-text-muted">gpt-5-mini + detailed:</span><span class="text-green-400">✅</span><span class="text-text-muted tabular-nums">7.7s</span></div></div></div><div class="test-detail hidden border-t border-white/10 bg-surface-elevated"><div class="comparison-grid grid gap-4 p-5" style="grid-template-columns: repeat(2, 1fr);"><div class="comparison-column  border-l-[3px] border-green-500" data-agent-id="gpt-5-mini + concise"><div class="flex items-center justify-between mb-4"><div class="font-medium text-text-light">gpt-5-mini + concise</div><span class="px-2 py-0.5 rounded text-xs font-medium bg-green-500/15 text-green-400">passed</span></div><div class="space-y-2 mb-4"><div class="grid grid-cols-4 gap-2 p-3 bg-surface-elevated rounded-material text-center"><div><div class="text-sm font-medium text-text-light tabular-nums">11.76s</div><div class="text-xs text-text-muted">duration</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">3</div><div class="text-xs text-text-muted">turns</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">1</div><div class="text-xs text-text-muted">tools</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">910</div><div class="text-xs text-text-muted">tokens</div></div></div><div class="grid grid-cols-4 gap-2 p-3 bg-surface-elevated rounded-material text-center"><div><div class="text-sm font-medium text-text-light tabular-nums">$0.000296</div><div class="text-xs text-text-muted">cost</div></div></div></div><div class="mb-4"><button class="inline-flex items-center gap-2 px-3 py-1.5 text-sm bg-surface-code rounded-material border border-white/10 cursor-pointer hover:border-primary/30 hover:bg-primary/5 transition-colors text-text-muted hover:text-text-light" onclick="event.stopPropagation(); showDiagram(this.dataset.mermaidCode);" data-mermaid-code="sequenceDiagram
     participant User
-    participant Agent
+    participant Eval
     participant Tools
 
-    User-&gt;&gt;Agent: &#34;What&#39;s my checking account balance?&#34;
-    Agent-&gt;&gt;Tools: &#34;get_balance({&#39;account&#39;: &#39;checking&#39;})&#34;
-    Tools--&gt;&gt;Agent: &#34;{&#39;account&#39;: &#39;checking&#39;, &#39;balance&#39;: 1500.0, &#39;formatted&#39;: &#39;$1,&#34;
-    Agent-&gt;&gt;User: &#34;Your checking balance: $1,500.00.&#34;"><div class="mermaid text-xs">sequenceDiagram
+    User-&gt;&gt;Eval: &#34;What&#39;s my checking account balance?&#34;
+    Eval-&gt;&gt;Tools: &#34;get_balance({&#39;account&#39;: &#39;checking&#39;})&#34;
+    Tools--&gt;&gt;Eval: &#34;{&#39;account&#39;: &#39;checking&#39;, &#39;balance&#39;: 1500.0, &#39;formatted&#39;: &#39;$1,&#34;
+    Eval-&gt;&gt;User: &#34;Your checking balance: $1,500.00.&#34;"><span>📊</span><span>View Sequence Diagram</span></button></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>🔧</span><span>Tool Calls</span></div><div class="space-y-1"><div class="flex items-center gap-2 text-sm p-2 rounded bg-green-500/5"><span class="text-green-400">✅</span><code class="tool-name">get_balance</code></div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>✓</span><span>Assertions</span></div><div class="space-y-2"><div class="flex items-center gap-2 text-sm p-2 rounded bg-green-500/5"><span class="text-green-400">✅</span><code class="text-text-muted">llm</code><span class="text-text">states the checking account balance</span></div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>💬</span><span>Response</span></div><div style="padding: 1rem; background-color: var(--color-surface-elevated); border-radius: 0.5rem; color: var(--color-text); white-space: pre-wrap; word-wrap: break-word; line-height: 1.625;">Your checking balance: $1,500.00.</div></div></div><div class="comparison-column  border-l-[3px] border-green-500" data-agent-id="gpt-5-mini + structured"><div class="flex items-center justify-between mb-4"><div class="font-medium text-text-light">gpt-5-mini + structured</div><span class="px-2 py-0.5 rounded text-xs font-medium bg-green-500/15 text-green-400">passed</span></div><div class="space-y-2 mb-4"><div class="grid grid-cols-4 gap-2 p-3 bg-surface-elevated rounded-material text-center"><div><div class="text-sm font-medium text-text-light tabular-nums">6.88s</div><div class="text-xs text-text-muted">duration</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">3</div><div class="text-xs text-text-muted">turns</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">1</div><div class="text-xs text-text-muted">tools</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">1,047</div><div class="text-xs text-text-muted">tokens</div></div></div><div class="grid grid-cols-4 gap-2 p-3 bg-surface-elevated rounded-material text-center"><div><div class="text-sm font-medium text-text-light tabular-nums">$0.000472</div><div class="text-xs text-text-muted">cost</div></div></div></div><div class="mb-4"><button class="inline-flex items-center gap-2 px-3 py-1.5 text-sm bg-surface-code rounded-material border border-white/10 cursor-pointer hover:border-primary/30 hover:bg-primary/5 transition-colors text-text-muted hover:text-text-light" onclick="event.stopPropagation(); showDiagram(this.dataset.mermaidCode);" data-mermaid-code="sequenceDiagram
     participant User
-    participant Agent
+    participant Eval
     participant Tools
 
-    User->>Agent: "What's my checking account balance?"
-    Agent->>Tools: "get_balance({'account': 'checking'})"
-    Tools-->>Agent: "{'account': 'checking', 'balance': 1500.0, 'formatted': '$1,"
-    Agent->>User: "Your checking balance: $1,500.00."</div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>🔧</span><span>Tool Calls</span></div><div class="space-y-1"><div class="flex items-center gap-2 text-sm p-2 rounded bg-green-500/5"><span class="text-green-400">✅</span><code class="tool-name">get_balance</code></div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>✓</span><span>Assertions</span></div><div class="space-y-2"><div class="flex items-center gap-2 text-sm p-2 rounded bg-green-500/5"><span class="text-green-400">✅</span><code class="text-text-muted">llm</code><span class="text-text">states the checking account balance</span></div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>💬</span><span>Response</span></div><div style="padding: 1rem; background-color: var(--color-surface-elevated); border-radius: 0.5rem; color: var(--color-text); white-space: pre-wrap; word-wrap: break-word; line-height: 1.625;">Your checking balance: $1,500.00.</div></div></div><div class="comparison-column  border-l-[3px] border-green-500" data-agent-id="59fa6919-449c-477c-a8e8-5e085d95ea33"><div class="flex items-center justify-between mb-4"><div class="font-medium text-text-light">gpt-5-mini + structured</div><span class="px-2 py-0.5 rounded text-xs font-medium bg-green-500/15 text-green-400">passed</span></div><div class="space-y-2 mb-4"><div class="grid grid-cols-4 gap-2 p-3 bg-surface-elevated rounded-material text-center"><div><div class="text-sm font-medium text-text-light tabular-nums">6.88s</div><div class="text-xs text-text-muted">duration</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">3</div><div class="text-xs text-text-muted">turns</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">1</div><div class="text-xs text-text-muted">tools</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">1,047</div><div class="text-xs text-text-muted">tokens</div></div></div><div class="grid grid-cols-4 gap-2 p-3 bg-surface-elevated rounded-material text-center"><div><div class="text-sm font-medium text-text-light tabular-nums">$0.000472</div><div class="text-xs text-text-muted">cost</div></div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>📊</span><span>Sequence</span></div><div class="p-3 bg-surface-code rounded-material border border-white/5 cursor-pointer hover:border-primary/30 transition-colors" onclick="event.stopPropagation(); showDiagram(this.dataset.mermaidCode);" data-mermaid-code="sequenceDiagram
-    participant User
-    participant Agent
-    participant Tools
-
-    User-&gt;&gt;Agent: &#34;What&#39;s my checking account balance?&#34;
-    Agent-&gt;&gt;Tools: &#34;get_balance({&#39;account&#39;: &#39;checking&#39;})&#34;
-    Tools--&gt;&gt;Agent: &#34;{&#39;account&#39;: &#39;checking&#39;, &#39;balance&#39;: 1500.0, &#39;formatted&#39;: &#39;$1,&#34;
-    Agent-&gt;&gt;User: &#34;💰 Account: checking 📊 Balance: $1,500.00 📋 Action: Retrieved balance ✅ Status: s&#34;"><div class="mermaid text-xs">sequenceDiagram
-    participant User
-    participant Agent
-    participant Tools
-
-    User->>Agent: "What's my checking account balance?"
-    Agent->>Tools: "get_balance({'account': 'checking'})"
-    Tools-->>Agent: "{'account': 'checking', 'balance': 1500.0, 'formatted': '$1,"
-    Agent->>User: "💰 Account: checking 📊 Balance: $1,500.00 📋 Action: Retrieved balance ✅ Status: s"</div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>🔧</span><span>Tool Calls</span></div><div class="space-y-1"><div class="flex items-center gap-2 text-sm p-2 rounded bg-green-500/5"><span class="text-green-400">✅</span><code class="tool-name">get_balance</code></div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>✓</span><span>Assertions</span></div><div class="space-y-2"><div class="flex items-center gap-2 text-sm p-2 rounded bg-green-500/5"><span class="text-green-400">✅</span><code class="text-text-muted">llm</code><span class="text-text">states the checking account balance</span></div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>💬</span><span>Response</span></div><div style="padding: 1rem; background-color: var(--color-surface-elevated); border-radius: 0.5rem; color: var(--color-text); white-space: pre-wrap; word-wrap: break-word; line-height: 1.625;">💰 Account: checking
+    User-&gt;&gt;Eval: &#34;What&#39;s my checking account balance?&#34;
+    Eval-&gt;&gt;Tools: &#34;get_balance({&#39;account&#39;: &#39;checking&#39;})&#34;
+    Tools--&gt;&gt;Eval: &#34;{&#39;account&#39;: &#39;checking&#39;, &#39;balance&#39;: 1500.0, &#39;formatted&#39;: &#39;$1,&#34;
+    Eval-&gt;&gt;User: &#34;💰 Account: checking 📊 Balance: $1,500.00 📋 Action: Retrieved balance ✅ Status: s&#34;"><span>📊</span><span>View Sequence Diagram</span></button></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>🔧</span><span>Tool Calls</span></div><div class="space-y-1"><div class="flex items-center gap-2 text-sm p-2 rounded bg-green-500/5"><span class="text-green-400">✅</span><code class="tool-name">get_balance</code></div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>✓</span><span>Assertions</span></div><div class="space-y-2"><div class="flex items-center gap-2 text-sm p-2 rounded bg-green-500/5"><span class="text-green-400">✅</span><code class="text-text-muted">llm</code><span class="text-text">states the checking account balance</span></div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>💬</span><span>Response</span></div><div style="padding: 1rem; background-color: var(--color-surface-elevated); border-radius: 0.5rem; color: var(--color-text); white-space: pre-wrap; word-wrap: break-word; line-height: 1.625;">💰 Account: checking
 📊 Balance: $1,500.00
 📋 Action: Retrieved balance
-✅ Status: success</div></div></div><div class="comparison-column hidden border-l-[3px] border-green-500" data-agent-id="5726d007-c023-4209-8381-ef8eb020e5d0"><div class="flex items-center justify-between mb-4"><div class="font-medium text-text-light">gpt-5-mini + detailed</div><span class="px-2 py-0.5 rounded text-xs font-medium bg-green-500/15 text-green-400">passed</span></div><div class="space-y-2 mb-4"><div class="grid grid-cols-4 gap-2 p-3 bg-surface-elevated rounded-material text-center"><div><div class="text-sm font-medium text-text-light tabular-nums">7.73s</div><div class="text-xs text-text-muted">duration</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">3</div><div class="text-xs text-text-muted">turns</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">1</div><div class="text-xs text-text-muted">tools</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">1,071</div><div class="text-xs text-text-muted">tokens</div></div></div><div class="grid grid-cols-4 gap-2 p-3 bg-surface-elevated rounded-material text-center"><div><div class="text-sm font-medium text-text-light tabular-nums">$0.000485</div><div class="text-xs text-text-muted">cost</div></div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>📊</span><span>Sequence</span></div><div class="p-3 bg-surface-code rounded-material border border-white/5 cursor-pointer hover:border-primary/30 transition-colors" onclick="event.stopPropagation(); showDiagram(this.dataset.mermaidCode);" data-mermaid-code="sequenceDiagram
+✅ Status: success</div></div></div><div class="comparison-column hidden border-l-[3px] border-green-500" data-agent-id="gpt-5-mini + detailed"><div class="flex items-center justify-between mb-4"><div class="font-medium text-text-light">gpt-5-mini + detailed</div><span class="px-2 py-0.5 rounded text-xs font-medium bg-green-500/15 text-green-400">passed</span></div><div class="space-y-2 mb-4"><div class="grid grid-cols-4 gap-2 p-3 bg-surface-elevated rounded-material text-center"><div><div class="text-sm font-medium text-text-light tabular-nums">7.73s</div><div class="text-xs text-text-muted">duration</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">3</div><div class="text-xs text-text-muted">turns</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">1</div><div class="text-xs text-text-muted">tools</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">1,071</div><div class="text-xs text-text-muted">tokens</div></div></div><div class="grid grid-cols-4 gap-2 p-3 bg-surface-elevated rounded-material text-center"><div><div class="text-sm font-medium text-text-light tabular-nums">$0.000485</div><div class="text-xs text-text-muted">cost</div></div></div></div><div class="mb-4"><button class="inline-flex items-center gap-2 px-3 py-1.5 text-sm bg-surface-code rounded-material border border-white/10 cursor-pointer hover:border-primary/30 hover:bg-primary/5 transition-colors text-text-muted hover:text-text-light" onclick="event.stopPropagation(); showDiagram(this.dataset.mermaidCode);" data-mermaid-code="sequenceDiagram
     participant User
-    participant Agent
+    participant Eval
     participant Tools
 
-    User-&gt;&gt;Agent: &#34;What&#39;s my checking account balance?&#34;
-    Agent-&gt;&gt;Tools: &#34;get_balance({&#39;account&#39;: &#39;checking&#39;})&#34;
-    Tools--&gt;&gt;Agent: &#34;{&#39;account&#39;: &#39;checking&#39;, &#39;balance&#39;: 1500.0, &#39;formatted&#39;: &#39;$1,&#34;
-    Agent-&gt;&gt;User: &#34;Your checking account balance is $1,500.00. Would you like to do anything with t&#34;"><div class="mermaid text-xs">sequenceDiagram
+    User-&gt;&gt;Eval: &#34;What&#39;s my checking account balance?&#34;
+    Eval-&gt;&gt;Tools: &#34;get_balance({&#39;account&#39;: &#39;checking&#39;})&#34;
+    Tools--&gt;&gt;Eval: &#34;{&#39;account&#39;: &#39;checking&#39;, &#39;balance&#39;: 1500.0, &#39;formatted&#39;: &#39;$1,&#34;
+    Eval-&gt;&gt;User: &#34;Your checking account balance is $1,500.00. Would you like to do anything with t&#34;"><span>📊</span><span>View Sequence Diagram</span></button></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>🔧</span><span>Tool Calls</span></div><div class="space-y-1"><div class="flex items-center gap-2 text-sm p-2 rounded bg-green-500/5"><span class="text-green-400">✅</span><code class="tool-name">get_balance</code></div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>✓</span><span>Assertions</span></div><div class="space-y-2"><div class="flex items-center gap-2 text-sm p-2 rounded bg-green-500/5"><span class="text-green-400">✅</span><code class="text-text-muted">llm</code><span class="text-text">states the checking account balance</span></div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>💬</span><span>Response</span></div><div style="padding: 1rem; background-color: var(--color-surface-elevated); border-radius: 0.5rem; color: var(--color-text); white-space: pre-wrap; word-wrap: break-word; line-height: 1.625;">Your checking account balance is $1,500.00. Would you like to do anything with that account (transfer, withdraw, view transactions, etc.)?</div></div></div></div></div></div><div class="test-row border-b border-white/5" data-test-id="test_transfer_with_explanation" data-has-diff="false" data-has-failed="false"><div class="px-5 py-3 hover:bg-white/[0.02] cursor-pointer transition-colors" onclick="toggleTestDetail(this.parentElement)"><div class="flex items-center justify-between"><div class="flex items-center gap-3 min-w-0 flex-1"><span class="text-green-400">✅</span><span class="text-text-light truncate">Transfer with explanation — tests prompt impact on response …</span></div><div class="flex items-center gap-4 text-sm text-text-muted"><span class="tabular-nums" title="Total tokens across selected agents">Total 3,066 tok</span><span class="text-text-muted">·</span><span class="tabular-nums" title="Total cost across selected agents">Total $0.002712</span><span class="text-text-muted">·</span><span class="tabular-nums" title="Token difference between selected agents (%difference)">Δ +93%</span><span class="text-text-muted">·</span><span class="tabular-nums" title="Duration difference between selected agents (%difference)">Δ +118%</span><span class="text-text-muted">·</span><span class="tabular-nums" title="Cost difference between selected agents (%difference)">Δ +429%</span></div></div><div class="flex gap-4 mt-2 pl-8"><div class="agent-result-item flex items-center gap-2 text-xs " data-agent-id="gpt-5-mini + concise"><span class="text-text-muted">gpt-5-mini + concise:</span><span class="text-green-400">✅</span><span class="text-text-muted tabular-nums">7.6s</span></div><div class="agent-result-item flex items-center gap-2 text-xs " data-agent-id="gpt-5-mini + structured"><span class="text-text-muted">gpt-5-mini + structured:</span><span class="text-green-400">✅</span><span class="text-text-muted tabular-nums">16.5s</span></div><div class="agent-result-item flex items-center gap-2 text-xs hidden" data-agent-id="gpt-5-mini + detailed"><span class="text-text-muted">gpt-5-mini + detailed:</span><span class="text-green-400">✅</span><span class="text-text-muted tabular-nums">17.5s</span></div></div></div><div class="test-detail hidden border-t border-white/10 bg-surface-elevated"><div class="comparison-grid grid gap-4 p-5" style="grid-template-columns: repeat(2, 1fr);"><div class="comparison-column  border-l-[3px] border-green-500" data-agent-id="gpt-5-mini + concise"><div class="flex items-center justify-between mb-4"><div class="font-medium text-text-light">gpt-5-mini + concise</div><span class="px-2 py-0.5 rounded text-xs font-medium bg-green-500/15 text-green-400">passed</span></div><div class="space-y-2 mb-4"><div class="grid grid-cols-4 gap-2 p-3 bg-surface-elevated rounded-material text-center"><div><div class="text-sm font-medium text-text-light tabular-nums">7.55s</div><div class="text-xs text-text-muted">duration</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">3</div><div class="text-xs text-text-muted">turns</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">1</div><div class="text-xs text-text-muted">tools</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">1,046</div><div class="text-xs text-text-muted">tokens</div></div></div><div class="grid grid-cols-4 gap-2 p-3 bg-surface-elevated rounded-material text-center"><div><div class="text-sm font-medium text-text-light tabular-nums">$0.000431</div><div class="text-xs text-text-muted">cost</div></div></div></div><div class="mb-4"><button class="inline-flex items-center gap-2 px-3 py-1.5 text-sm bg-surface-code rounded-material border border-white/10 cursor-pointer hover:border-primary/30 hover:bg-primary/5 transition-colors text-text-muted hover:text-text-light" onclick="event.stopPropagation(); showDiagram(this.dataset.mermaidCode);" data-mermaid-code="sequenceDiagram
     participant User
-    participant Agent
+    participant Eval
     participant Tools
 
-    User->>Agent: "What's my checking account balance?"
-    Agent->>Tools: "get_balance({'account': 'checking'})"
-    Tools-->>Agent: "{'account': 'checking', 'balance': 1500.0, 'formatted': '$1,"
-    Agent->>User: "Your checking account balance is $1,500.00. Would you like to do anything with t"</div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>🔧</span><span>Tool Calls</span></div><div class="space-y-1"><div class="flex items-center gap-2 text-sm p-2 rounded bg-green-500/5"><span class="text-green-400">✅</span><code class="tool-name">get_balance</code></div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>✓</span><span>Assertions</span></div><div class="space-y-2"><div class="flex items-center gap-2 text-sm p-2 rounded bg-green-500/5"><span class="text-green-400">✅</span><code class="text-text-muted">llm</code><span class="text-text">states the checking account balance</span></div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>💬</span><span>Response</span></div><div style="padding: 1rem; background-color: var(--color-surface-elevated); border-radius: 0.5rem; color: var(--color-text); white-space: pre-wrap; word-wrap: break-word; line-height: 1.625;">Your checking account balance is $1,500.00. Would you like to do anything with that account (transfer, withdraw, view transactions, etc.)?</div></div></div></div></div></div><div class="test-row border-b border-white/5" data-test-id="test_transfer_with_explanation" data-has-diff="false" data-has-failed="false"><div class="px-5 py-3 hover:bg-white/[0.02] cursor-pointer transition-colors" onclick="toggleTestDetail(this.parentElement)"><div class="flex items-center justify-between"><div class="flex items-center gap-3 min-w-0 flex-1"><span class="text-green-400">✅</span><span class="text-text-light truncate">Transfer with explanation — tests prompt impact on response …</span></div><div class="flex items-center gap-4 text-sm text-text-muted"><span class="tabular-nums" title="Total tokens across selected agents">Total 3,066 tok</span><span class="text-text-muted">·</span><span class="tabular-nums" title="Total cost across selected agents">Total $0.002712</span><span class="text-text-muted">·</span><span class="tabular-nums" title="Token difference between selected agents (%difference)">Δ +93%</span><span class="text-text-muted">·</span><span class="tabular-nums" title="Duration difference between selected agents (%difference)">Δ +118%</span><span class="text-text-muted">·</span><span class="tabular-nums" title="Cost difference between selected agents (%difference)">Δ +429%</span></div></div><div class="flex gap-4 mt-2 pl-8"><div class="agent-result-item flex items-center gap-2 text-xs " data-agent-id="a5486ae2-d9b1-416f-b712-55ad7244c3fa"><span class="text-text-muted">gpt-5-mini + concise:</span><span class="text-green-400">✅</span><span class="text-text-muted tabular-nums">7.6s</span></div><div class="agent-result-item flex items-center gap-2 text-xs " data-agent-id="59fa6919-449c-477c-a8e8-5e085d95ea33"><span class="text-text-muted">gpt-5-mini + structured:</span><span class="text-green-400">✅</span><span class="text-text-muted tabular-nums">16.5s</span></div><div class="agent-result-item flex items-center gap-2 text-xs hidden" data-agent-id="5726d007-c023-4209-8381-ef8eb020e5d0"><span class="text-text-muted">gpt-5-mini + detailed:</span><span class="text-green-400">✅</span><span class="text-text-muted tabular-nums">17.5s</span></div></div></div><div class="test-detail hidden border-t border-white/10 bg-surface-elevated"><div class="comparison-grid grid gap-4 p-5" style="grid-template-columns: repeat(2, 1fr);"><div class="comparison-column  border-l-[3px] border-green-500" data-agent-id="a5486ae2-d9b1-416f-b712-55ad7244c3fa"><div class="flex items-center justify-between mb-4"><div class="font-medium text-text-light">gpt-5-mini + concise</div><span class="px-2 py-0.5 rounded text-xs font-medium bg-green-500/15 text-green-400">passed</span></div><div class="space-y-2 mb-4"><div class="grid grid-cols-4 gap-2 p-3 bg-surface-elevated rounded-material text-center"><div><div class="text-sm font-medium text-text-light tabular-nums">7.55s</div><div class="text-xs text-text-muted">duration</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">3</div><div class="text-xs text-text-muted">turns</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">1</div><div class="text-xs text-text-muted">tools</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">1,046</div><div class="text-xs text-text-muted">tokens</div></div></div><div class="grid grid-cols-4 gap-2 p-3 bg-surface-elevated rounded-material text-center"><div><div class="text-sm font-medium text-text-light tabular-nums">$0.000431</div><div class="text-xs text-text-muted">cost</div></div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>📊</span><span>Sequence</span></div><div class="p-3 bg-surface-code rounded-material border border-white/5 cursor-pointer hover:border-primary/30 transition-colors" onclick="event.stopPropagation(); showDiagram(this.dataset.mermaidCode);" data-mermaid-code="sequenceDiagram
-    participant User
-    participant Agent
-    participant Tools
-
-    User-&gt;&gt;Agent: &#34;Transfer $300 from checking to savings and explain what happened&#34;
-    Agent-&gt;&gt;Tools: &#34;transfer({&#39;from_account&#39;: &#39;checking&#39;, &#39;to_account&#39;: &#39;savings&#39;, &#39;amoun)&#34;
-    Tools--&gt;&gt;Agent: &#34;{&#39;transaction_id&#39;: &#39;TX0001&#39;, &#39;type&#39;: &#39;transfer&#39;, &#39;from_accou&#34;
-    Agent-&gt;&gt;User: &#34;Done — transferred $300.00 from checking to savings. Checking new balance: $1,20&#34;"><div class="mermaid text-xs">sequenceDiagram
-    participant User
-    participant Agent
-    participant Tools
-
-    User->>Agent: "Transfer $300 from checking to savings and explain what happened"
-    Agent->>Tools: "transfer({'from_account': 'checking', 'to_account': 'savings', 'amoun)"
-    Tools-->>Agent: "{'transaction_id': 'TX0001', 'type': 'transfer', 'from_accou"
-    Agent->>User: "Done — transferred $300.00 from checking to savings. Checking new balance: $1,20"</div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>🔧</span><span>Tool Calls</span></div><div class="space-y-1"><div class="flex items-center gap-2 text-sm p-2 rounded bg-green-500/5"><span class="text-green-400">✅</span><code class="tool-name">transfer</code></div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>✓</span><span>Assertions</span></div><div class="space-y-2"><div class="flex items-center gap-2 text-sm p-2 rounded bg-green-500/5"><span class="text-green-400">✅</span><code class="text-text-muted">llm</code><span class="text-text">confirms the transfer was completed</span></div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>💬</span><span>Response</span></div><div style="padding: 1rem; background-color: var(--color-surface-elevated); border-radius: 0.5rem; color: var(--color-text); white-space: pre-wrap; word-wrap: break-word; line-height: 1.625;">Done — transferred $300.00 from checking to savings.
+    User-&gt;&gt;Eval: &#34;Transfer $300 from checking to savings and explain what happened&#34;
+    Eval-&gt;&gt;Tools: &#34;transfer({&#39;from_account&#39;: &#39;checking&#39;, &#39;to_account&#39;: &#39;savings&#39;, &#39;amoun)&#34;
+    Tools--&gt;&gt;Eval: &#34;{&#39;transaction_id&#39;: &#39;TX0001&#39;, &#39;type&#39;: &#39;transfer&#39;, &#39;from_accou&#34;
+    Eval-&gt;&gt;User: &#34;Done — transferred $300.00 from checking to savings. Checking new balance: $1,20&#34;"><span>📊</span><span>View Sequence Diagram</span></button></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>🔧</span><span>Tool Calls</span></div><div class="space-y-1"><div class="flex items-center gap-2 text-sm p-2 rounded bg-green-500/5"><span class="text-green-400">✅</span><code class="tool-name">transfer</code></div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>✓</span><span>Assertions</span></div><div class="space-y-2"><div class="flex items-center gap-2 text-sm p-2 rounded bg-green-500/5"><span class="text-green-400">✅</span><code class="text-text-muted">llm</code><span class="text-text">confirms the transfer was completed</span></div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>💬</span><span>Response</span></div><div style="padding: 1rem; background-color: var(--color-surface-elevated); border-radius: 0.5rem; color: var(--color-text); white-space: pre-wrap; word-wrap: break-word; line-height: 1.625;">Done — transferred $300.00 from checking to savings.
 
 Checking new balance: $1,200.00
 Savings new balance: $3,300.00
 
-What happened: $300.00 was debited from your checking and credited to your savings. Transaction ID TX0001.</div></div></div><div class="comparison-column  border-l-[3px] border-green-500" data-agent-id="59fa6919-449c-477c-a8e8-5e085d95ea33"><div class="flex items-center justify-between mb-4"><div class="font-medium text-text-light">gpt-5-mini + structured</div><span class="px-2 py-0.5 rounded text-xs font-medium bg-green-500/15 text-green-400">passed</span></div><div class="space-y-2 mb-4"><div class="grid grid-cols-4 gap-2 p-3 bg-surface-elevated rounded-material text-center"><div><div class="text-sm font-medium text-text-light tabular-nums">16.48s</div><div class="text-xs text-text-muted">duration</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">3</div><div class="text-xs text-text-muted">turns</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">1</div><div class="text-xs text-text-muted">tools</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">2,020</div><div class="text-xs text-text-muted">tokens</div></div></div><div class="grid grid-cols-4 gap-2 p-3 bg-surface-elevated rounded-material text-center"><div><div class="text-sm font-medium text-text-light tabular-nums">$0.002281</div><div class="text-xs text-text-muted">cost</div></div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>📊</span><span>Sequence</span></div><div class="p-3 bg-surface-code rounded-material border border-white/5 cursor-pointer hover:border-primary/30 transition-colors" onclick="event.stopPropagation(); showDiagram(this.dataset.mermaidCode);" data-mermaid-code="sequenceDiagram
+What happened: $300.00 was debited from your checking and credited to your savings. Transaction ID TX0001.</div></div></div><div class="comparison-column  border-l-[3px] border-green-500" data-agent-id="gpt-5-mini + structured"><div class="flex items-center justify-between mb-4"><div class="font-medium text-text-light">gpt-5-mini + structured</div><span class="px-2 py-0.5 rounded text-xs font-medium bg-green-500/15 text-green-400">passed</span></div><div class="space-y-2 mb-4"><div class="grid grid-cols-4 gap-2 p-3 bg-surface-elevated rounded-material text-center"><div><div class="text-sm font-medium text-text-light tabular-nums">16.48s</div><div class="text-xs text-text-muted">duration</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">3</div><div class="text-xs text-text-muted">turns</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">1</div><div class="text-xs text-text-muted">tools</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">2,020</div><div class="text-xs text-text-muted">tokens</div></div></div><div class="grid grid-cols-4 gap-2 p-3 bg-surface-elevated rounded-material text-center"><div><div class="text-sm font-medium text-text-light tabular-nums">$0.002281</div><div class="text-xs text-text-muted">cost</div></div></div></div><div class="mb-4"><button class="inline-flex items-center gap-2 px-3 py-1.5 text-sm bg-surface-code rounded-material border border-white/10 cursor-pointer hover:border-primary/30 hover:bg-primary/5 transition-colors text-text-muted hover:text-text-light" onclick="event.stopPropagation(); showDiagram(this.dataset.mermaidCode);" data-mermaid-code="sequenceDiagram
     participant User
-    participant Agent
+    participant Eval
     participant Tools
 
-    User-&gt;&gt;Agent: &#34;Transfer $300 from checking to savings and explain what happened&#34;
-    Agent-&gt;&gt;Tools: &#34;transfer({&#39;from_account&#39;: &#39;checking&#39;, &#39;to_account&#39;: &#39;savings&#39;, &#39;amoun)&#34;
-    Tools--&gt;&gt;Agent: &#34;{&#39;transaction_id&#39;: &#39;TX0001&#39;, &#39;type&#39;: &#39;transfer&#39;, &#39;from_accou&#34;
-    Agent-&gt;&gt;User: &#34;💰 Account: checking 📊 Balance: $1,200.00 📋 Action: Transferred $300.00 out to sa&#34;"><div class="mermaid text-xs">sequenceDiagram
-    participant User
-    participant Agent
-    participant Tools
-
-    User->>Agent: "Transfer $300 from checking to savings and explain what happened"
-    Agent->>Tools: "transfer({'from_account': 'checking', 'to_account': 'savings', 'amoun)"
-    Tools-->>Agent: "{'transaction_id': 'TX0001', 'type': 'transfer', 'from_accou"
-    Agent->>User: "💰 Account: checking 📊 Balance: $1,200.00 📋 Action: Transferred $300.00 out to sa"</div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>🔧</span><span>Tool Calls</span></div><div class="space-y-1"><div class="flex items-center gap-2 text-sm p-2 rounded bg-green-500/5"><span class="text-green-400">✅</span><code class="tool-name">transfer</code></div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>✓</span><span>Assertions</span></div><div class="space-y-2"><div class="flex items-center gap-2 text-sm p-2 rounded bg-green-500/5"><span class="text-green-400">✅</span><code class="text-text-muted">llm</code><span class="text-text">confirms the transfer was completed</span></div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>💬</span><span>Response</span></div><div style="padding: 1rem; background-color: var(--color-surface-elevated); border-radius: 0.5rem; color: var(--color-text); white-space: pre-wrap; word-wrap: break-word; line-height: 1.625;">💰 Account: checking
+    User-&gt;&gt;Eval: &#34;Transfer $300 from checking to savings and explain what happened&#34;
+    Eval-&gt;&gt;Tools: &#34;transfer({&#39;from_account&#39;: &#39;checking&#39;, &#39;to_account&#39;: &#39;savings&#39;, &#39;amoun)&#34;
+    Tools--&gt;&gt;Eval: &#34;{&#39;transaction_id&#39;: &#39;TX0001&#39;, &#39;type&#39;: &#39;transfer&#39;, &#39;from_accou&#34;
+    Eval-&gt;&gt;User: &#34;💰 Account: checking 📊 Balance: $1,200.00 📋 Action: Transferred $300.00 out to sa&#34;"><span>📊</span><span>View Sequence Diagram</span></button></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>🔧</span><span>Tool Calls</span></div><div class="space-y-1"><div class="flex items-center gap-2 text-sm p-2 rounded bg-green-500/5"><span class="text-green-400">✅</span><code class="tool-name">transfer</code></div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>✓</span><span>Assertions</span></div><div class="space-y-2"><div class="flex items-center gap-2 text-sm p-2 rounded bg-green-500/5"><span class="text-green-400">✅</span><code class="text-text-muted">llm</code><span class="text-text">confirms the transfer was completed</span></div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>💬</span><span>Response</span></div><div style="padding: 1rem; background-color: var(--color-surface-elevated); border-radius: 0.5rem; color: var(--color-text); white-space: pre-wrap; word-wrap: break-word; line-height: 1.625;">💰 Account: checking
 📊 Balance: $1,200.00
 📋 Action: Transferred $300.00 out to savings (TX0001)
 ✅ Status: success
@@ -1240,31 +1205,19 @@ What happened: $300.00 was debited from your checking and credited to your savin
 📋 Action: Received $300.00 transfer from checking (TX0001)
 ✅ Status: success
 
-What happened: I moved $300.00 from your checking account into your savings account. The transfer debited checking and credited savings immediately, resulting in the balances shown above. Transaction ID TX0001 confirms the successful transfer. If you’d like, I can show recent transactions or send a receipt.</div></div></div><div class="comparison-column hidden border-l-[3px] border-green-500" data-agent-id="5726d007-c023-4209-8381-ef8eb020e5d0"><div class="flex items-center justify-between mb-4"><div class="font-medium text-text-light">gpt-5-mini + detailed</div><span class="px-2 py-0.5 rounded text-xs font-medium bg-green-500/15 text-green-400">passed</span></div><div class="space-y-2 mb-4"><div class="grid grid-cols-4 gap-2 p-3 bg-surface-elevated rounded-material text-center"><div><div class="text-sm font-medium text-text-light tabular-nums">17.46s</div><div class="text-xs text-text-muted">duration</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">5</div><div class="text-xs text-text-muted">turns</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">3</div><div class="text-xs text-text-muted">tools</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">3,452</div><div class="text-xs text-text-muted">tokens</div></div></div><div class="grid grid-cols-4 gap-2 p-3 bg-surface-elevated rounded-material text-center"><div><div class="text-sm font-medium text-text-light tabular-nums">$0.002631</div><div class="text-xs text-text-muted">cost</div></div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>📊</span><span>Sequence</span></div><div class="p-3 bg-surface-code rounded-material border border-white/5 cursor-pointer hover:border-primary/30 transition-colors" onclick="event.stopPropagation(); showDiagram(this.dataset.mermaidCode);" data-mermaid-code="sequenceDiagram
+What happened: I moved $300.00 from your checking account into your savings account. The transfer debited checking and credited savings immediately, resulting in the balances shown above. Transaction ID TX0001 confirms the successful transfer. If you’d like, I can show recent transactions or send a receipt.</div></div></div><div class="comparison-column hidden border-l-[3px] border-green-500" data-agent-id="gpt-5-mini + detailed"><div class="flex items-center justify-between mb-4"><div class="font-medium text-text-light">gpt-5-mini + detailed</div><span class="px-2 py-0.5 rounded text-xs font-medium bg-green-500/15 text-green-400">passed</span></div><div class="space-y-2 mb-4"><div class="grid grid-cols-4 gap-2 p-3 bg-surface-elevated rounded-material text-center"><div><div class="text-sm font-medium text-text-light tabular-nums">17.46s</div><div class="text-xs text-text-muted">duration</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">5</div><div class="text-xs text-text-muted">turns</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">3</div><div class="text-xs text-text-muted">tools</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">3,452</div><div class="text-xs text-text-muted">tokens</div></div></div><div class="grid grid-cols-4 gap-2 p-3 bg-surface-elevated rounded-material text-center"><div><div class="text-sm font-medium text-text-light tabular-nums">$0.002631</div><div class="text-xs text-text-muted">cost</div></div></div></div><div class="mb-4"><button class="inline-flex items-center gap-2 px-3 py-1.5 text-sm bg-surface-code rounded-material border border-white/10 cursor-pointer hover:border-primary/30 hover:bg-primary/5 transition-colors text-text-muted hover:text-text-light" onclick="event.stopPropagation(); showDiagram(this.dataset.mermaidCode);" data-mermaid-code="sequenceDiagram
     participant User
-    participant Agent
+    participant Eval
     participant Tools
 
-    User-&gt;&gt;Agent: &#34;Transfer $300 from checking to savings and explain what happened&#34;
-    Agent-&gt;&gt;Tools: &#34;get_all_balances({})&#34;
-    Tools--&gt;&gt;Agent: &#34;{&#39;accounts&#39;: {&#39;checking&#39;: {&#39;balance&#39;: 1500.0, &#39;formatted&#39;: &#39;&#34;
-    Agent-&gt;&gt;Tools: &#34;transfer({&#39;from_account&#39;: &#39;checking&#39;, &#39;to_account&#39;: &#39;savings&#39;, &#39;amoun)&#34;
-    Tools--&gt;&gt;Agent: &#34;{&#39;transaction_id&#39;: &#39;TX0001&#39;, &#39;type&#39;: &#39;transfer&#39;, &#39;from_accou&#34;
-    Agent-&gt;&gt;Tools: &#34;get_all_balances({})&#34;
-    Tools--&gt;&gt;Agent: &#34;{&#39;accounts&#39;: {&#39;checking&#39;: {&#39;balance&#39;: 1200.0, &#39;formatted&#39;: &#39;&#34;
-    Agent-&gt;&gt;User: &#34;Here’s what I did and what happened. Current balances (before the transfer) - Ch&#34;"><div class="mermaid text-xs">sequenceDiagram
-    participant User
-    participant Agent
-    participant Tools
-
-    User->>Agent: "Transfer $300 from checking to savings and explain what happened"
-    Agent->>Tools: "get_all_balances({})"
-    Tools-->>Agent: "{'accounts': {'checking': {'balance': 1500.0, 'formatted': '"
-    Agent->>Tools: "transfer({'from_account': 'checking', 'to_account': 'savings', 'amoun)"
-    Tools-->>Agent: "{'transaction_id': 'TX0001', 'type': 'transfer', 'from_accou"
-    Agent->>Tools: "get_all_balances({})"
-    Tools-->>Agent: "{'accounts': {'checking': {'balance': 1200.0, 'formatted': '"
-    Agent->>User: "Here’s what I did and what happened. Current balances (before the transfer) - Ch"</div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>🔧</span><span>Tool Calls</span></div><div class="space-y-1"><div class="flex items-center gap-2 text-sm p-2 rounded bg-green-500/5"><span class="text-green-400">✅</span><code class="tool-name">get_all_balances</code></div><div class="flex items-center gap-2 text-sm p-2 rounded bg-green-500/5"><span class="text-green-400">✅</span><code class="tool-name">transfer</code></div><div class="flex items-center gap-2 text-sm p-2 rounded bg-green-500/5"><span class="text-green-400">✅</span><code class="tool-name">get_all_balances</code></div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>✓</span><span>Assertions</span></div><div class="space-y-2"><div class="flex items-center gap-2 text-sm p-2 rounded bg-green-500/5"><span class="text-green-400">✅</span><code class="text-text-muted">llm</code><span class="text-text">confirms the transfer was completed</span></div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>💬</span><span>Response</span></div><div style="padding: 1rem; background-color: var(--color-surface-elevated); border-radius: 0.5rem; color: var(--color-text); white-space: pre-wrap; word-wrap: break-word; line-height: 1.625;">Here’s what I did and what happened.
+    User-&gt;&gt;Eval: &#34;Transfer $300 from checking to savings and explain what happened&#34;
+    Eval-&gt;&gt;Tools: &#34;get_all_balances({})&#34;
+    Tools--&gt;&gt;Eval: &#34;{&#39;accounts&#39;: {&#39;checking&#39;: {&#39;balance&#39;: 1500.0, &#39;formatted&#39;: &#39;&#34;
+    Eval-&gt;&gt;Tools: &#34;transfer({&#39;from_account&#39;: &#39;checking&#39;, &#39;to_account&#39;: &#39;savings&#39;, &#39;amoun)&#34;
+    Tools--&gt;&gt;Eval: &#34;{&#39;transaction_id&#39;: &#39;TX0001&#39;, &#39;type&#39;: &#39;transfer&#39;, &#39;from_accou&#34;
+    Eval-&gt;&gt;Tools: &#34;get_all_balances({})&#34;
+    Tools--&gt;&gt;Eval: &#34;{&#39;accounts&#39;: {&#39;checking&#39;: {&#39;balance&#39;: 1200.0, &#39;formatted&#39;: &#39;&#34;
+    Eval-&gt;&gt;User: &#34;Here’s what I did and what happened. Current balances (before the transfer) - Ch&#34;"><span>📊</span><span>View Sequence Diagram</span></button></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>🔧</span><span>Tool Calls</span></div><div class="space-y-1"><div class="flex items-center gap-2 text-sm p-2 rounded bg-green-500/5"><span class="text-green-400">✅</span><code class="tool-name">get_all_balances</code></div><div class="flex items-center gap-2 text-sm p-2 rounded bg-green-500/5"><span class="text-green-400">✅</span><code class="tool-name">transfer</code></div><div class="flex items-center gap-2 text-sm p-2 rounded bg-green-500/5"><span class="text-green-400">✅</span><code class="tool-name">get_all_balances</code></div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>✓</span><span>Assertions</span></div><div class="space-y-2"><div class="flex items-center gap-2 text-sm p-2 rounded bg-green-500/5"><span class="text-green-400">✅</span><code class="text-text-muted">llm</code><span class="text-text">confirms the transfer was completed</span></div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>💬</span><span>Response</span></div><div style="padding: 1rem; background-color: var(--color-surface-elevated); border-radius: 0.5rem; color: var(--color-text); white-space: pre-wrap; word-wrap: break-word; line-height: 1.625;">Here’s what I did and what happened.
 
 Current balances (before the transfer)
 - Checking: $1,500.00
@@ -1300,39 +1253,14 @@ Suggested next steps
 - If you need help checking whether either account has minimum-balance rules or would like to set up a recurring transfer, I can do that for you.
 - If you want to withdraw or transfer more money, tell me the amount and target account and I’ll perform and verify it.
 
-Would you like me to set up a recurring transfer, check account rules/fees, or do anything else now?</div></div></div></div></div></div></div></div></div><style>
-.test-group.collapsed .group-content {
-    display: none;
-}
-.test-group.collapsed .expand-icon {
-    transform: rotate(-90deg);
-}
-.test-row.hidden {
-    display: none;
-}
-.test-detail.hidden {
-    display: none;
-}
-</style></section></div><div id="overlay" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center p-8" onclick="hideOverlay()"><button class="absolute top-4 right-4 w-10 h-10 flex items-center justify-center text-2xl text-text-muted hover:text-text-light bg-surface-card rounded-full border border-white/10 transition-colors" onclick="hideOverlay()">✕</button><div class="w-[90vw] h-[85vh] overflow-auto bg-surface-card rounded-lg p-6 shadow-material-lg flex items-center justify-center" onclick="event.stopPropagation()"><div class="mermaid w-full h-full" id="overlay-mermaid"></div></div></div><div id="diagram-hover-popup" class="fixed z-40 bg-surface-card rounded-lg shadow-material-lg border border-white/10 p-4 hidden max-w-xl" onmouseenter="keepDiagramHover()" onmouseleave="hideDiagramHover()" onclick="hideOverlay(); this.classList.add(&#39;hidden&#39;); showDiagram(document.getElementById(&#39;hover-mermaid&#39;).innerHTML);"><div class="mermaid" id="hover-mermaid"></div></div><style>
-#overlay.active { display: flex !important; }
-#diagram-hover-popup.active { display: block !important; }
-
-/* Scale the mermaid SVG in overlay to fill available space */
-#overlay-mermaid svg {
-    max-width: 100%;
-    max-height: 100%;
-    width: auto;
-    height: auto;
-    min-height: 60vh;
-}
-</style><script>
-// pytest-skill-engineering Report Scripts
+Would you like me to set up a recurring transfer, check account rules/fees, or do anything else now?</div></div></div></div></div></div></div></div></div></section></div><div id="overlay" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center p-8" onclick="hideOverlay()"><button class="absolute top-4 right-4 w-10 h-10 flex items-center justify-center text-2xl text-text-muted hover:text-text-light bg-surface-card rounded-full border border-white/10 transition-colors" onclick="hideOverlay()">✕</button><div class="w-[90vw] h-[85vh] overflow-auto bg-surface-card rounded-lg p-6 shadow-material-lg flex items-center justify-center" onclick="event.stopPropagation()"><div class="mermaid w-full h-full" id="overlay-mermaid"></div></div></div><script>
+// pytest-aitest Report Scripts
 
 // Initialize Mermaid with dark theme
 mermaid.initialize({ 
     startOnLoad: true,
     theme: 'dark',
-    securityLevel: 'loose',
+    securityLevel: 'strict',
     themeVariables: {
         primaryColor: '#4051b5',
         primaryTextColor: '#c9d1d9',
@@ -1401,27 +1329,6 @@ document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') hideOverlay();
 });
 
-// Hover popup for side-by-side diagrams
-let hoverTimeout = null;
-function showDiagramHover(element, mermaidCode) {
-    clearTimeout(hoverTimeout);
-    const popup = document.getElementById('diagram-hover-popup');
-    const content = document.getElementById('hover-mermaid');
-    content.innerHTML = mermaidCode;
-    popup.classList.add('active');
-    mermaid.run({ nodes: [content] });
-}
-
-function hideDiagramHover() {
-    hoverTimeout = setTimeout(() => {
-        document.getElementById('diagram-hover-popup').classList.remove('active');
-    }, 100);
-}
-
-function keepDiagramHover() {
-    clearTimeout(hoverTimeout);
-}
-
 // Side-by-side test selector
 function showSideBySideTest(testId) {
     // Hide all groups
@@ -1439,13 +1346,13 @@ function showSideBySideTest(testId) {
 
 
 // All agent data for client-side filtering
-const allAgents = [{"id": "a5486ae2-d9b1-416f-b712-55ad7244c3fa", "name": "gpt-5-mini + concise", "pass_rate": 100.0}, {"id": "59fa6919-449c-477c-a8e8-5e085d95ea33", "name": "gpt-5-mini + structured", "pass_rate": 100.0}, {"id": "5726d007-c023-4209-8381-ef8eb020e5d0", "name": "gpt-5-mini + detailed", "pass_rate": 100.0}];
-const allAgentsById = {"a5486ae2-d9b1-416f-b712-55ad7244c3fa": {"id": "a5486ae2-d9b1-416f-b712-55ad7244c3fa", "name": "gpt-5-mini + concise"}, "59fa6919-449c-477c-a8e8-5e085d95ea33": {"id": "59fa6919-449c-477c-a8e8-5e085d95ea33", "name": "gpt-5-mini + structured"}, "5726d007-c023-4209-8381-ef8eb020e5d0": {"id": "5726d007-c023-4209-8381-ef8eb020e5d0", "name": "gpt-5-mini + detailed"}};
+const allAgents = [{"id": "gpt-5-mini + concise", "name": "gpt-5-mini + concise", "pass_rate": 100.0}, {"id": "gpt-5-mini + structured", "name": "gpt-5-mini + structured", "pass_rate": 100.0}, {"id": "gpt-5-mini + detailed", "name": "gpt-5-mini + detailed", "pass_rate": 100.0}];
+const allAgentsById = {"gpt-5-mini + concise": {"id": "gpt-5-mini + concise", "name": "gpt-5-mini + concise"}, "gpt-5-mini + structured": {"id": "gpt-5-mini + structured", "name": "gpt-5-mini + structured"}, "gpt-5-mini + detailed": {"id": "gpt-5-mini + detailed", "name": "gpt-5-mini + detailed"}};
 
 // Track selected agents (exactly 2)
-let selectedAgentIds = ["a5486ae2-d9b1-416f-b712-55ad7244c3fa", "59fa6919-449c-477c-a8e8-5e085d95ea33"];
+let selectedAgentIds = ["gpt-5-mini + concise", "gpt-5-mini + structured"];
 
-// Agent comparison logic - always keep exactly 2 selected
+// Eval comparison logic - always keep exactly 2 selected
 function updateAgentComparison(clickedAgentId) {
     const checkboxes = document.querySelectorAll('input[name="compare-agent"]');
     

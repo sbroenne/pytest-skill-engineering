@@ -2,7 +2,7 @@
 # pytest-skill-engineering
 
 > **4** tests | **4** passed | **0** failed | **100%** pass rate  
-> Duration: 23.6s | Cost: 🧪 $-0.019520 · 🤖 $0.0208 · 💰 $0.001297 | Tokens: 706–913  
+> Duration: 23.6s | Cost: 🧪 $0.001297 · 🤖 $0.0142 · 💰 $0.0155 | Tokens: 706–913  
 > February 07, 2026 at 08:34 PM
 
 *2×2 matrix proving dimension auto-detection.*
@@ -22,119 +22,86 @@
 
 ## AI Analysis
 
-<div class="winner-card">
-<div class="winner-title">Recommended for Deploy</div>
-<div class="winner-name">gpt-5-mini + concise</div>
-<div class="winner-summary">Delivers a 100% pass rate at the lowest realized cost, with direct tool usage and minimal conversational overhead.</div>
-<div class="winner-stats">
-<div class="winner-stat"><span class="winner-stat-value green">100%</span><span class="winner-stat-label">Pass Rate</span></div>
-<div class="winner-stat"><span class="winner-stat-value blue">$0.000297</span><span class="winner-stat-label">Total Cost</span></div>
-<div class="winner-stat"><span class="winner-stat-value amber">893</span><span class="winner-stat-label">Tokens</span></div>
-</div>
-</div>
+## 🎯 Recommendation
 
-<div class="metric-grid">
-<div class="metric-card green">
-<div class="metric-value green">4</div>
-<div class="metric-label">Total Tests</div>
-</div>
-<div class="metric-card red">
-<div class="metric-value red">0</div>
-<div class="metric-label">Failures</div>
-</div>
-<div class="metric-card blue">
-<div class="metric-value blue">4</div>
-<div class="metric-label">Agents</div>
-</div>
-<div class="metric-card amber">
-<div class="metric-value amber">3.0</div>
-<div class="metric-label">Avg Turns</div>
-</div>
-</div>
+**Deploy: gpt-5-mini + concise**
 
-## Comparative Analysis
+Achieves **100% pass rate at the lowest cost** among all configurations.
 
-#### Why the winner wins
-- **Lowest cost at identical pass rate:** gpt-5-mini + concise achieves the same 100% pass rate as all alternatives at the **lowest total cost ($0.000297)**.
-- **Direct tool execution:** The concise prompt consistently triggers an immediate `get_balance` call without extra framing or follow-up questions.
-- **Controlled verbosity:** Produces a short, task-complete response, avoiding optional suggestions that add tokens without improving correctness.
+**Reasoning:**  
+All four configurations passed. Cost is the differentiator:
+- **gpt-5-mini + concise:** $0.000297 (baseline, lowest cost)
+- gpt-4.1-mini + concise: $0.000317 (**~7% higher cost**)
+- gpt-4.1-mini + detailed: $0.000340 (**~14% higher cost**)
+- gpt-5-mini + detailed: $0.000344 (**~16% higher cost**)
 
-#### Notable patterns
-- **Prompt verbosity impacts cost more than model choice:** Across both models, the **concise** prompt is cheaper than **detailed**, even when tokens are similar.
-- **Cheaper model isn’t always fewer tokens:** gpt-5-mini + concise uses more tokens than gpt-4.1-mini + concise, yet still costs less overall—reinforcing that **realized cost**, not token count, should drive selection.
-- **No tool confusion across the matrix:** All agents correctly identified and called `get_balance`, validating MCP tool discoverability.
+Response quality is equivalent for this test (correct tool use, correct balance, appropriate short reply). The concise prompt reduces cost without harming correctness, and gpt-5-mini edges out gpt-4.1-mini on price.
 
-#### Alternatives
-- **gpt-4.1-mini + concise:** Slightly higher cost with marginally fewer tokens; acceptable if standardizing on the 4.1 family.
-- **Detailed prompts (both models):** Functionally correct but add conversational padding (follow-up offers), increasing cost without test benefit.
+**Alternatives:**  
+- **gpt-4.1-mini + concise:** Slightly higher cost (~7%) with no quality benefit in this scenario.  
+- **Detailed prompt variants:** Both models incur ~14–16% higher cost with no added value for a simple balance query.
 
 ## 🔧 MCP Tool Feedback
 
-### banking-server
-The tool is easy to discover and consistently called correctly across all agents.
+### pytest_skill_engineering.testing.banking_mcp
+Overall, tools are clearly described and correctly selected. The agent consistently chose `get_balance` for a single-account query.
 
 | Tool | Status | Calls | Issues |
 |------|--------|-------|--------|
 | get_balance | ✅ | 4 | Working well |
+| get_all_balances | ✅ | 0 | Not needed for this test |
+| transfer | ✅ | 0 | Not needed for this test |
+| deposit | ✅ | 0 | Not needed for this test |
+| withdraw | ✅ | 0 | Not needed for this test |
+| get_transactions | ✅ | 0 | Not needed for this test |
 
-**Suggested rewrite for `get_balance`:**  
-> *Optional optimization* — clarify minimal return fields for balance-only queries:  
-> “Returns the numeric balance for the specified account. Include formatted strings only if explicitly requested.”
+No description changes are required based on this test.
 
 ## 📝 System Prompt Feedback
 
-### concise (effective with gpt-5-mini, gpt-4.1-mini)
-- **Token count:** Low
-- **Behavioral impact:** Language such as “answer directly” and absence of “explain” or “offer options” primes immediate tool use and brief completion.
-- **Problem:** None observed.
-- **Suggested change:** None.
-
-### detailed (mixed — effective but costlier with both models)
-- **Token count:** Higher
-- **Behavioral impact:** Words like “helpful” and implied completeness encourage follow-up suggestions (“Would you like to…”) after the tool result.
-- **Problem:** Adds unnecessary conversational turns and tokens for simple retrieval tasks.
+### detailed (mixed)
+- **Token count:** Low, but encourages extra verbosity
+- **Problem:** The instruction “Explain your reasoning” is unnecessary for a simple balance query and risks longer outputs in more complex tests.
 - **Suggested change:**  
-  Replace any closing guidance with:  
-  > “After completing the request, stop unless the user asks for next steps.”
+  Replace:
+  ```
+  Explain your reasoning.
+  ```
+  With:
+  ```
+  Explain your reasoning only when the user asks for an explanation.
+  ```
+
+### concise (effective)
+- **Token count:** Minimal
+- **Problem:** None observed
+- **Suggested change:** None
 
 ## 💡 Optimizations
 
-| # | Optimization | Priority | Estimated Savings |
-|---|-------------|----------|-------------------|
-| 1 | Trim post-answer suggestions | recommended | ~10–15% cost reduction |
-| 2 | Minimize tool response fields | suggestion | ~5–10% token reduction per call |
-
-#### 1. Trim post-answer suggestions (recommended)
-- Current: Detailed prompts elicit follow-up offers after returning the balance.
-- Change: Instruct the agent to stop after fulfilling the user’s request unless prompted.
-- Impact: ~10–15% cost reduction from shorter final messages.
-
-#### 2. Minimize tool response fields (suggestion)
-- Current: Tool returns both `balance` and `formatted`, but the agent only needs one.
-- Change: Default to returning a single numeric field unless formatting is requested.
-- Impact: ~5–10% token reduction per call.
+1. **Default to concise prompt for read-only queries** (recommended)
+   - Current: Both detailed and concise prompts tested equally.
+   - Change: Use the concise prompt as the default for balance and other simple read-only operations.
+   - Impact: **~15% cost reduction** per request compared to the detailed prompt, with identical correctness.
 
 ## 📦 Tool Response Optimization
 
-### get_balance (from banking-server)
-- **Current response size:** Includes redundant fields for this test.
-- **Issues found:** Both numeric and formatted values returned; the agent uses only one.
-- **Suggested optimization:** Return a minimal schema by default.
+### get_balance (from pytest_skill_engineering.testing.banking_mcp)
+- **Current response size:** ~20 tokens
+- **Issues found:** Redundant fields for LLM consumption (`balance` and `formatted` convey the same value).
+- **Suggested optimization:** Return only one representation, preferably a preformatted string for direct user output.
+- **Estimated savings:** ~5–7 tokens per call (~25–35% reduction)
 
 **Example current vs optimized:**
 ```json
-// Current
+// Current (~20 tokens)
 {"account":"checking","balance":1500.0,"formatted":"$1,500.00"}
 
-// Optimized
-{"balance":1500.0}
+// Optimized (~13 tokens)
+{"account":"checking","formatted":"$1,500.00"}
 ```
 
-- **Estimated savings:** ~8–12 tokens per call (≈10% reduction)
-
----
-
-**Bottom line:** Deploy **gpt-5-mini + concise**. It matches perfect correctness at the lowest observed cost, with clean tool usage and no behavioral risk.
+This optimization is safe for the tested scenario, as the agent never used the raw numeric value.
 
 
 ## Test Results

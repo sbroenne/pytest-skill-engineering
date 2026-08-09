@@ -1,5 +1,5 @@
 <!doctype html><html lang="en" class="dark"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>pytest-skill-engineering - Test Report</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&amp;family=Roboto+Mono&amp;display=swap" rel="stylesheet"><script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script><style>/* ============================================================
-   pytest-skill-engineering Report Styles
+   pytest-aitest Report Styles
    Hand-written CSS — replaces Tailwind CSS build pipeline
    Matches mkdocs-material slate/indigo theme
    ============================================================ */
@@ -37,6 +37,7 @@
   /* Semantic colors */
   --color-green: #4ade80;
   --color-yellow: #facc15;
+  --color-amber: #fbbf24;
   --color-red: #f87171;
   --color-blue: #60a5fa;
 
@@ -305,7 +306,9 @@ a:hover {
 .px-3 { padding-left: 0.75rem; padding-right: 0.75rem; }
 .px-5 { padding-left: 1.25rem; padding-right: 1.25rem; }
 .px-6 { padding-left: 1.5rem; padding-right: 1.5rem; }
+.py-0\.5 { padding-top: 0.125rem; padding-bottom: 0.125rem; }
 .py-1 { padding-top: 0.25rem; padding-bottom: 0.25rem; }
+.py-1\.5 { padding-top: 0.375rem; padding-bottom: 0.375rem; }
 .py-3 { padding-top: 0.75rem; padding-bottom: 0.75rem; }
 .py-4 { padding-top: 1rem; padding-bottom: 1rem; }
 .py-8 { padding-top: 2rem; padding-bottom: 2rem; }
@@ -466,6 +469,7 @@ a:hover {
 .hover\:border-white\/20:hover { border-color: rgba(255, 255, 255, 0.2); }
 .hover\:border-primary\/30:hover { border-color: rgba(64, 81, 181, 0.3); }
 .hover\:border-primary\/50:hover { border-color: rgba(64, 81, 181, 0.5); }
+.hover\:bg-primary\/5:hover { background-color: rgba(64, 81, 181, 0.05); }
 .hover\:text-text-light:hover { color: var(--color-text-light); }
 .hover\:text-blue-400:hover { color: var(--color-blue); }
 .hover\:text-accent:hover { color: var(--color-accent); }
@@ -525,6 +529,19 @@ a:hover {
   font-size: 0.875rem;
   line-height: 1.25rem;
   border: 1px solid rgba(239, 68, 68, 0.3);
+}
+.status-warning {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  background-color: rgba(251, 191, 36, 0.15);
+  color: var(--color-amber);
+  font-weight: 500;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  border: 1px solid rgba(251, 191, 36, 0.3);
 }
 
 /* ==================== Cards ==================== */
@@ -894,6 +911,23 @@ a:hover {
 .progress-fill.blue  { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
 .progress-fill.amber { background: linear-gradient(90deg, #d97706, #facc15); }
 .progress-fill.red   { background: linear-gradient(90deg, #dc2626, #f87171); }
+
+/* ── Score dimension bars ── */
+.score-track {
+  width: 100%;
+  background-color: rgba(255, 255, 255, 0.04);
+  border-radius: 4px;
+  height: 8px;
+  overflow: hidden;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+.score-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 600ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.score-dimension { line-height: 1.4; }
+
 .progress-pct {
   width: 42px;
   font-size: 0.8rem;
@@ -959,7 +993,6 @@ a:hover {
 
 /* ==================== Overlay ==================== */
 #overlay.active { display: flex !important; }
-#diagram-hover-popup.active { display: block !important; }
 #overlay-mermaid svg {
   max-width: 100%;
   max-height: 100%;
@@ -967,46 +1000,14 @@ a:hover {
   height: auto;
   min-height: 60vh;
 }
-</style></head><body class="bg-surface text-text min-h-screen"><div class="max-w-6xl mx-auto px-6 py-8"><header class="report-header mb-8"><div class="flex justify-between items-start gap-4 mb-4"><div class="flex-1"><h1 class="text-2xl font-medium mb-1">CLI server tests — demonstrates CLIServer usage.</h1></div><div class="status-passed"><span>✓</span><span>All Passed</span></div></div><div class="flex flex-wrap gap-x-6 gap-y-1 py-3 border-t border-white/10 text-sm"><span class="opacity-70">February 07, 2026 at 08:33 PM</span><span>📄 <span class="text-text-light hover:text-blue-400 cursor-pointer" title="tests/fixtures/scenario_08_cli_server.py">scenario_08_cli_server.py</span></span><span class="tabular-nums">2 tests</span><span class="tabular-nums">15.8s</span><span class="tabular-nums" title="Token range (min-max per test)">473–1,106 tok</span><span class="tabular-nums" title="Test execution cost">🧪 $-0.012878</span><span class="tabular-nums" title="AI analysis cost">🤖 $0.0147</span><span class="tabular-nums font-semibold" title="Total cost">💰 $0.001814</span></div></header><section class="mb-8"><div class="ai-insights"><div class="ai-insights-header"><span>🤖</span><span>AI Analysis</span><button class="ml-auto text-text-muted hover:text-text-light text-sm" onclick="this.closest(&#39;.ai-insights&#39;).querySelector(&#39;.card-body&#39;).classList.toggle(&#39;hidden&#39;)">Toggle</button></div><div class="card-body"><div class="markdown-content"><div class="winner-card">
-<div class="winner-title">Recommended for Deploy</div>
-<div class="winner-name">cli-agent</div>
-<div class="winner-summary">Achieves a 100% pass rate at extremely low cost with reliable CLI tool usage and clean, deterministic outputs.</div>
-<div class="winner-stats">
-<div class="winner-stat"><span class="winner-stat-value green">100%</span><span class="winner-stat-label">Pass Rate</span></div>
-<div class="winner-stat"><span class="winner-stat-value blue">$0.001814</span><span class="winner-stat-label">Total Cost</span></div>
-<div class="winner-stat"><span class="winner-stat-value amber">1,579</span><span class="winner-stat-label">Tokens</span></div>
-</div>
-</div>
-
-<div class="metric-grid">
-<div class="metric-card green">
-<div class="metric-value green">2</div>
-<div class="metric-label">Total Tests</div>
-</div>
-<div class="metric-card red">
-<div class="metric-value red">0</div>
-<div class="metric-label">Failures</div>
-</div>
-<div class="metric-card blue">
-<div class="metric-value blue">1</div>
-<div class="metric-label">Agents</div>
-</div>
-<div class="metric-card amber">
-<div class="metric-value amber">3.0</div>
-<div class="metric-label">Avg Turns</div>
-</div>
-</div>
-
-<h2>✅ Overall Assessment</h2>
-<p>This is a <strong>clean single-agent run</strong> with full coverage of the intended behavior. The agent consistently:
-- Correctly selected and invoked the CLI tool without hesitation
-- Interpreted tool output accurately
-- Confirmed success using concrete signals (stdout + exit code)
-- Stayed concise while still explaining results when asked</p>
-<p>Given the <strong>100% pass rate at a total cost of $0.001814</strong>, this configuration is safe to deploy as-is for basic CLI command validation and confirmation tasks.</p>
+</style></head><body class="bg-surface text-text min-h-screen"><div class="max-w-6xl mx-auto px-6 py-8"><header class="report-header mb-8"><div class="flex justify-between items-start gap-4 mb-4"><div class="flex-1"><h1 class="text-2xl font-medium mb-1">CLI server tests — demonstrates CLIServer usage.</h1></div><div class="flex gap-2 items-start"><div class="status-passed"><span>✓</span><span>All Passed</span></div></div></div><div class="flex flex-wrap gap-x-6 gap-y-1 py-3 border-t border-white/10 text-sm"><span class="opacity-70">February 07, 2026 at 08:33 PM</span><span>📄 <span class="text-text-light hover:text-blue-400 cursor-pointer" title="tests/fixtures/scenario_08_cli_server.py">scenario_08_cli_server.py</span></span><span class="tabular-nums">2 tests</span><span class="tabular-nums">15.8s</span><span class="tabular-nums" title="Token range (min-max per test)">473–1,106 tok</span><span class="tabular-nums" title="Test execution cost">🧪 $0.001814</span><span class="tabular-nums" title="AI analysis cost">🤖 $0.006544</span><span class="tabular-nums font-semibold" title="Total cost">💰 $0.008358</span></div></header><section class="mb-8"><div class="ai-insights"><div class="ai-insights-header"><span>🤖</span><span>AI Analysis</span><button class="ml-auto text-text-muted hover:text-text-light text-sm" onclick="this.closest(&#39;.ai-insights&#39;).querySelector(&#39;.card-body&#39;).classList.toggle(&#39;hidden&#39;)">Toggle</button></div><div class="card-body"><div class="markdown-content"><h2>🎯 Recommendation</h2>
+<p><strong>Deploy: cli-agent (gpt-5-mini + default prompt)</strong></p>
+<p>Achieves <strong>100% pass rate</strong> across all tests at <strong>$0.00181 total cost</strong>, with correct tool usage and clear confirmations.</p>
+<p><strong>Reasoning:</strong> All tests passed with no retries or errors. Cost is minimal and response quality meets expectations for both direct CLI usage and explanatory output. No alternative configurations were tested.</p>
+<p><strong>Alternatives:</strong> None — only one configuration tested.</p>
 <h2>🔧 MCP Tool Feedback</h2>
-<h3>cli (echo_execute)</h3>
-<p>The tool is easy to discover and was invoked correctly in all tests. The agent showed no confusion and used the tool exactly when required.</p>
+<h3>echo-cli</h3>
+<p>The tool is easy to discover and was used correctly in every test. The agent consistently chose the correct tool and interpreted results properly.</p>
 <table>
 <thead>
 <tr>
@@ -1026,129 +1027,53 @@ a:hover {
 </tbody>
 </table>
 <h2>📦 Tool Response Optimization</h2>
-<h3>echo_execute (from cli)</h3>
+<h3>echo_execute (from echo-cli)</h3>
 <ul>
-<li><strong>Current response size:</strong> ~25–30 tokens per call</li>
-<li><strong>Issues found:</strong></li>
-<li><code>stdout</code> includes line breaks between words (<code>\r\n</code>), which increases token count</li>
-<li>Output formatting is not ideal for LLM consumption when the command intent is a single string</li>
-<li><strong>Suggested optimization:</strong> Normalize <code>stdout</code> to preserve spaces instead of inserting line breaks for each tokenized word</li>
-<li><strong>Estimated savings:</strong> ~10–15 tokens per call (40–50% reduction for this tool)</li>
+<li><strong>Current response size:</strong> ~30 tokens per call</li>
+<li><strong>Issues found:</strong>  </li>
+<li><code>stdout</code> includes embedded newlines (<code>\r\n</code>) that are faithfully echoed by the assistant, inflating tokens in both tool output and final response.</li>
+<li><code>stderr</code> is always an empty string in observed calls.</li>
+<li><strong>Suggested optimization:</strong>  </li>
+<li>Normalize <code>stdout</code> to a single line when possible and omit <code>stderr</code> when empty.</li>
+<li><strong>Estimated savings:</strong> ~10 tokens per call (~33% reduction)</li>
 </ul>
 <p><strong>Example current vs optimized:</strong></p>
-<pre><code class="language-json">// Current (~28 tokens)
-{
-  &quot;exit_code&quot;: 0,
-  &quot;stdout&quot;: &quot;pytest-skill-engineering\r\nworks\r\n&quot;,
-  &quot;stderr&quot;: &quot;&quot;
-}
+<pre><code class="language-json">// Current (~30 tokens)
+{"exit_code":0,"stdout":"Hello\r\nfrom\r\nCLI\r\n","stderr":""}
 
-// Optimized (~14 tokens)
-{
-  &quot;exit_code&quot;: 0,
-  &quot;stdout&quot;: &quot;pytest-skill-engineering works&quot;,
-  &quot;stderr&quot;: &quot;&quot;
-}
+// Optimized (~20 tokens)
+{"exit_code":0,"stdout":"Hello from CLI"}
 </code></pre>
-<p>This change would not affect correctness but would meaningfully reduce token usage across large test suites.</p>
-<h2>💡 Optimizations</h2>
-<table>
-<thead>
-<tr>
-<th>#</th>
-<th>Optimization</th>
-<th>Priority</th>
-<th>Estimated Savings</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>1</td>
-<td>Normalize CLI stdout formatting</td>
-<td>recommended</td>
-<td>~40–50% fewer tool-response tokens</td>
-</tr>
-</tbody>
-</table>
-<h4>1. Normalize CLI stdout formatting (recommended)</h4>
-<ul>
-<li>Current: <code>echo_execute</code> returns line-broken output that inflates token count and requires interpretation</li>
-<li>Change: Return space-preserved strings for simple echo-style commands</li>
-<li>Impact: Small per-call savings, but compounds across large test matrices; improves readability and reduces parsing ambiguity</li>
-</ul>
-<hr />
-<p><strong>Deployment recommendation:</strong> ✅ <strong>Deploy <code>cli-agent</code> unchanged.</strong><br />
-Optional tool-response optimization can further reduce costs but is not required for correctness.</p></div></div></div></section><section class="mb-8"><h2 class="section-title">📋 Test Results</h2><div class="mb-4 flex items-center justify-between"><div class="flex gap-2"><button class="filter-btn active" data-filter="all" onclick="filterTests(&#39;all&#39;)">All</button><button class="filter-btn " data-filter="failed" onclick="filterTests(&#39;failed&#39;)">Failed ❌</button></div><div class="text-sm text-text-muted"><span id="visible-count">2</span> / 2 tests</div></div><div class="space-y-4" id="test-groups"><div class="card overflow-hidden test-group" data-group-type="standalone"><div class="group-header px-5 py-3 bg-surface-elevated border-b border-white/10 flex justify-between items-center cursor-pointer" onclick="toggleGroup(this.parentElement)"><div class="flex items-center gap-3"><span class="text-lg">📋</span><span class="font-medium text-text-light">tests/fixtures/scenario_08_cli_server.py</span><span class="text-sm text-text-muted">(2 tests)</span></div><div class="flex items-center gap-4"><span class="text-text-muted transition-transform duration-200 expand-icon">▼</span></div></div><div class="group-content"><div class="test-row border-b border-white/5" data-test-id="test_cli_echo_basic" data-has-diff="false" data-has-failed="false"><div class="px-5 py-3 hover:bg-white/[0.02] cursor-pointer transition-colors" onclick="toggleTestDetail(this.parentElement)"><div class="flex items-center justify-between"><div class="flex items-center gap-3 min-w-0 flex-1"><span class="text-green-400">✅</span><span class="text-text-light truncate">Basic CLI tool usage — echo a message.</span></div><div class="flex items-center gap-4 text-sm text-text-muted"><span class="tabular-nums">5.4s</span><span class="text-text-muted">·</span><span class="tabular-nums">1🔧</span><span class="text-text-muted">·</span><span class="tabular-nums">473 tok</span><span class="text-text-muted">·</span><span class="tabular-nums">$0.000291</span></div></div></div><div class="test-detail hidden border-t border-white/10 bg-surface-elevated"><div class="comparison-grid grid gap-4 p-5" style="grid-template-columns: repeat(1, 1fr);"><div class="comparison-column  border-l-[3px] border-green-500" data-agent-id="1f3d37ce-7075-4639-bdec-b8377d380fa3"><div class="flex items-center justify-between mb-4"><div class="font-medium text-text-light">cli-agent</div><span class="px-2 py-0.5 rounded text-xs font-medium bg-green-500/15 text-green-400">passed</span></div><div class="space-y-2 mb-4"><div class="grid grid-cols-4 gap-2 p-3 bg-surface-elevated rounded-material text-center"><div><div class="text-sm font-medium text-text-light tabular-nums">5.35s</div><div class="text-xs text-text-muted">duration</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">3</div><div class="text-xs text-text-muted">turns</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">1</div><div class="text-xs text-text-muted">tools</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">473</div><div class="text-xs text-text-muted">tokens</div></div></div><div class="grid grid-cols-4 gap-2 p-3 bg-surface-elevated rounded-material text-center"><div><div class="text-sm font-medium text-text-light tabular-nums">$0.000291</div><div class="text-xs text-text-muted">cost</div></div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>📊</span><span>Sequence</span></div><div class="p-3 bg-surface-code rounded-material border border-white/5 cursor-pointer hover:border-primary/30 transition-colors" onclick="event.stopPropagation(); showDiagram(this.dataset.mermaidCode);" data-mermaid-code="sequenceDiagram
+<p>This change preserves semantic meaning for tests while reducing token usage in both tool responses and assistant outputs.</p></div></div></div></section><section class="mb-8"><h2 class="section-title">📋 Test Results</h2><div class="mb-4 flex items-center justify-between"><div class="flex gap-2"><button class="filter-btn active" data-filter="all" onclick="filterTests(&#39;all&#39;)">All</button><button class="filter-btn " data-filter="failed" onclick="filterTests(&#39;failed&#39;)">Failed ❌</button></div><div class="text-sm text-text-muted"><span id="visible-count">2</span> / 2 tests</div></div><div class="space-y-4" id="test-groups"><div class="card overflow-hidden test-group" data-group-type="standalone"><div class="group-header px-5 py-3 bg-surface-elevated border-b border-white/10 flex justify-between items-center cursor-pointer" onclick="toggleGroup(this.parentElement)"><div class="flex items-center gap-3"><span class="text-lg">📋</span><span class="font-medium text-text-light">tests/fixtures/scenario_08_cli_server.py</span><span class="text-sm text-text-muted">(2 tests)</span></div><div class="flex items-center gap-4"><span class="text-text-muted transition-transform duration-200 expand-icon">▼</span></div></div><div class="group-content"><div class="test-row border-b border-white/5" data-test-id="test_cli_echo_basic" data-has-diff="false" data-has-failed="false"><div class="px-5 py-3 hover:bg-white/[0.02] cursor-pointer transition-colors" onclick="toggleTestDetail(this.parentElement)"><div class="flex items-center justify-between"><div class="flex items-center gap-3 min-w-0 flex-1"><span class="text-green-400">✅</span><span class="text-text-light truncate">Basic CLI tool usage — echo a message.</span></div><div class="flex items-center gap-4 text-sm text-text-muted"><span class="tabular-nums">5.4s</span><span class="text-text-muted">·</span><span class="tabular-nums">1🔧</span><span class="text-text-muted">·</span><span class="tabular-nums">473 tok</span><span class="text-text-muted">·</span><span class="tabular-nums">$0.000291</span></div></div></div><div class="test-detail hidden border-t border-white/10 bg-surface-elevated"><div class="comparison-grid grid gap-4 p-5" style="grid-template-columns: repeat(1, 1fr);"><div class="comparison-column  border-l-[3px] border-green-500" data-agent-id="cli-agent"><div class="flex items-center justify-between mb-4"><div class="font-medium text-text-light">cli-agent</div><span class="px-2 py-0.5 rounded text-xs font-medium bg-green-500/15 text-green-400">passed</span></div><div class="space-y-2 mb-4"><div class="grid grid-cols-4 gap-2 p-3 bg-surface-elevated rounded-material text-center"><div><div class="text-sm font-medium text-text-light tabular-nums">5.35s</div><div class="text-xs text-text-muted">duration</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">3</div><div class="text-xs text-text-muted">turns</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">1</div><div class="text-xs text-text-muted">tools</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">473</div><div class="text-xs text-text-muted">tokens</div></div></div><div class="grid grid-cols-4 gap-2 p-3 bg-surface-elevated rounded-material text-center"><div><div class="text-sm font-medium text-text-light tabular-nums">$0.000291</div><div class="text-xs text-text-muted">cost</div></div></div></div><div class="mb-4"><button class="inline-flex items-center gap-2 px-3 py-1.5 text-sm bg-surface-code rounded-material border border-white/10 cursor-pointer hover:border-primary/30 hover:bg-primary/5 transition-colors text-text-muted hover:text-text-light" onclick="event.stopPropagation(); showDiagram(this.dataset.mermaidCode);" data-mermaid-code="sequenceDiagram
     participant User
-    participant Agent
+    participant Eval
     participant Tools
 
-    User-&gt;&gt;Agent: &#34;Echo the message &#39;Hello from CLI&#39;&#34;
-    Agent-&gt;&gt;Tools: &#34;echo_execute({&#39;args&#39;: &#39;Hello from CLI&#39;})&#34;
-    Tools--&gt;&gt;Agent: &#34;{&#39;exit_code&#39;: 0, &#39;stdout&#39;: &#39;Hello\r\nfrom\r\nCLI\r\n&#39;, &#39;stde&#34;
-    Agent-&gt;&gt;User: &#34;Hello from CLI&#34;"><div class="mermaid text-xs">sequenceDiagram
-    participant User
-    participant Agent
-    participant Tools
-
-    User->>Agent: "Echo the message 'Hello from CLI'"
-    Agent->>Tools: "echo_execute({'args': 'Hello from CLI'})"
-    Tools-->>Agent: "{'exit_code': 0, 'stdout': 'Hello\r\nfrom\r\nCLI\r\n', 'stde"
-    Agent->>User: "Hello from CLI"</div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>🔧</span><span>Tool Calls</span></div><div class="space-y-1"><div class="flex items-center gap-2 text-sm p-2 rounded bg-green-500/5"><span class="text-green-400">✅</span><code class="tool-name">echo_execute</code></div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>💬</span><span>Response</span></div><div style="padding: 1rem; background-color: var(--color-surface-elevated); border-radius: 0.5rem; color: var(--color-text); white-space: pre-wrap; word-wrap: break-word; line-height: 1.625;">Hello
+    User-&gt;&gt;Eval: &#34;Echo the message &#39;Hello from CLI&#39;&#34;
+    Eval-&gt;&gt;Tools: &#34;echo_execute({&#39;args&#39;: &#39;Hello from CLI&#39;})&#34;
+    Tools--&gt;&gt;Eval: &#34;{&#39;exit_code&#39;: 0, &#39;stdout&#39;: &#39;Hello\r\nfrom\r\nCLI\r\n&#39;, &#39;stde&#34;
+    Eval-&gt;&gt;User: &#34;Hello from CLI&#34;"><span>📊</span><span>View Sequence Diagram</span></button></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>🔧</span><span>Tool Calls</span></div><div class="space-y-1"><div class="flex items-center gap-2 text-sm p-2 rounded bg-green-500/5"><span class="text-green-400">✅</span><code class="tool-name">echo_execute</code></div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>💬</span><span>Response</span></div><div style="padding: 1rem; background-color: var(--color-surface-elevated); border-radius: 0.5rem; color: var(--color-text); white-space: pre-wrap; word-wrap: break-word; line-height: 1.625;">Hello
 from
-CLI</div></div></div></div></div></div><div class="test-row border-b border-white/5" data-test-id="test_cli_echo_with_reasoning" data-has-diff="false" data-has-failed="false"><div class="px-5 py-3 hover:bg-white/[0.02] cursor-pointer transition-colors" onclick="toggleTestDetail(this.parentElement)"><div class="flex items-center justify-between"><div class="flex items-center gap-3 min-w-0 flex-1"><span class="text-green-400">✅</span><span class="text-text-light truncate">CLI tool with reasoning — echo and explain.</span></div><div class="flex items-center gap-4 text-sm text-text-muted"><span class="tabular-nums">10.4s</span><span class="text-text-muted">·</span><span class="tabular-nums">1🔧</span><span class="text-text-muted">·</span><span class="tabular-nums">1,106 tok</span><span class="text-text-muted">·</span><span class="tabular-nums">$0.001522</span></div></div></div><div class="test-detail hidden border-t border-white/10 bg-surface-elevated"><div class="comparison-grid grid gap-4 p-5" style="grid-template-columns: repeat(1, 1fr);"><div class="comparison-column  border-l-[3px] border-green-500" data-agent-id="1f3d37ce-7075-4639-bdec-b8377d380fa3"><div class="flex items-center justify-between mb-4"><div class="font-medium text-text-light">cli-agent</div><span class="px-2 py-0.5 rounded text-xs font-medium bg-green-500/15 text-green-400">passed</span></div><div class="space-y-2 mb-4"><div class="grid grid-cols-4 gap-2 p-3 bg-surface-elevated rounded-material text-center"><div><div class="text-sm font-medium text-text-light tabular-nums">10.45s</div><div class="text-xs text-text-muted">duration</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">3</div><div class="text-xs text-text-muted">turns</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">1</div><div class="text-xs text-text-muted">tools</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">1,106</div><div class="text-xs text-text-muted">tokens</div></div></div><div class="grid grid-cols-4 gap-2 p-3 bg-surface-elevated rounded-material text-center"><div><div class="text-sm font-medium text-text-light tabular-nums">$0.001522</div><div class="text-xs text-text-muted">cost</div></div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>📊</span><span>Sequence</span></div><div class="p-3 bg-surface-code rounded-material border border-white/5 cursor-pointer hover:border-primary/30 transition-colors" onclick="event.stopPropagation(); showDiagram(this.dataset.mermaidCode);" data-mermaid-code="sequenceDiagram
+CLI</div></div></div></div></div></div><div class="test-row border-b border-white/5" data-test-id="test_cli_echo_with_reasoning" data-has-diff="false" data-has-failed="false"><div class="px-5 py-3 hover:bg-white/[0.02] cursor-pointer transition-colors" onclick="toggleTestDetail(this.parentElement)"><div class="flex items-center justify-between"><div class="flex items-center gap-3 min-w-0 flex-1"><span class="text-green-400">✅</span><span class="text-text-light truncate">CLI tool with reasoning — echo and explain.</span></div><div class="flex items-center gap-4 text-sm text-text-muted"><span class="tabular-nums">10.4s</span><span class="text-text-muted">·</span><span class="tabular-nums">1🔧</span><span class="text-text-muted">·</span><span class="tabular-nums">1,106 tok</span><span class="text-text-muted">·</span><span class="tabular-nums">$0.001522</span></div></div></div><div class="test-detail hidden border-t border-white/10 bg-surface-elevated"><div class="comparison-grid grid gap-4 p-5" style="grid-template-columns: repeat(1, 1fr);"><div class="comparison-column  border-l-[3px] border-green-500" data-agent-id="cli-agent"><div class="flex items-center justify-between mb-4"><div class="font-medium text-text-light">cli-agent</div><span class="px-2 py-0.5 rounded text-xs font-medium bg-green-500/15 text-green-400">passed</span></div><div class="space-y-2 mb-4"><div class="grid grid-cols-4 gap-2 p-3 bg-surface-elevated rounded-material text-center"><div><div class="text-sm font-medium text-text-light tabular-nums">10.45s</div><div class="text-xs text-text-muted">duration</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">3</div><div class="text-xs text-text-muted">turns</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">1</div><div class="text-xs text-text-muted">tools</div></div><div><div class="text-sm font-medium text-text-light tabular-nums">1,106</div><div class="text-xs text-text-muted">tokens</div></div></div><div class="grid grid-cols-4 gap-2 p-3 bg-surface-elevated rounded-material text-center"><div><div class="text-sm font-medium text-text-light tabular-nums">$0.001522</div><div class="text-xs text-text-muted">cost</div></div></div></div><div class="mb-4"><button class="inline-flex items-center gap-2 px-3 py-1.5 text-sm bg-surface-code rounded-material border border-white/10 cursor-pointer hover:border-primary/30 hover:bg-primary/5 transition-colors text-text-muted hover:text-text-light" onclick="event.stopPropagation(); showDiagram(this.dataset.mermaidCode);" data-mermaid-code="sequenceDiagram
     participant User
-    participant Agent
+    participant Eval
     participant Tools
 
-    User-&gt;&gt;Agent: &#34;Use the echo command to say &#39;pytest-skill-engineering works&#39; and confirm it worked&#34;
-    Agent-&gt;&gt;Tools: &#34;echo_execute({&#39;args&#39;: &#39;pytest-skill-engineering works&#39;})&#34;
-    Tools--&gt;&gt;Agent: &#34;{&#39;exit_code&#39;: 0, &#39;stdout&#39;: &#39;pytest-skill-engineering\r\nworks\r\n&#39;, &#39;st&#34;
-    Agent-&gt;&gt;User: &#34;I ran the echo command with &#39;pytest-skill-engineering works&#39;. Output (stdout): pytest-aites&#34;"><div class="mermaid text-xs">sequenceDiagram
-    participant User
-    participant Agent
-    participant Tools
-
-    User->>Agent: "Use the echo command to say 'pytest-skill-engineering works' and confirm it worked"
-    Agent->>Tools: "echo_execute({'args': 'pytest-skill-engineering works'})"
-    Tools-->>Agent: "{'exit_code': 0, 'stdout': 'pytest-skill-engineering\r\nworks\r\n', 'st"
-    Agent->>User: "I ran the echo command with 'pytest-skill-engineering works'. Output (stdout): pytest-aites"</div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>🔧</span><span>Tool Calls</span></div><div class="space-y-1"><div class="flex items-center gap-2 text-sm p-2 rounded bg-green-500/5"><span class="text-green-400">✅</span><code class="tool-name">echo_execute</code></div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>✓</span><span>Assertions</span></div><div class="space-y-2"><div class="flex items-center gap-2 text-sm p-2 rounded bg-green-500/5"><span class="text-green-400">✅</span><code class="text-text-muted">llm</code><span class="text-text">confirms the echo command executed successfully</span></div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>💬</span><span>Response</span></div><div style="padding: 1rem; background-color: var(--color-surface-elevated); border-radius: 0.5rem; color: var(--color-text); white-space: pre-wrap; word-wrap: break-word; line-height: 1.625;">I ran the echo command with &#34;pytest-skill-engineering works&#34;. Output (stdout):
+    User-&gt;&gt;Eval: &#34;Use the echo command to say &#39;pytest-skill-engineering works&#39; and confirm it work&#34;
+    Eval-&gt;&gt;Tools: &#34;echo_execute({&#39;args&#39;: &#39;pytest-skill-engineering works&#39;})&#34;
+    Tools--&gt;&gt;Eval: &#34;{&#39;exit_code&#39;: 0, &#39;stdout&#39;: &#39;pytest-skill-engineering\r\nwork&#34;
+    Eval-&gt;&gt;User: &#34;I ran the echo command with &#39;pytest-skill-engineering works&#39;. Output (stdout): p&#34;"><span>📊</span><span>View Sequence Diagram</span></button></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>🔧</span><span>Tool Calls</span></div><div class="space-y-1"><div class="flex items-center gap-2 text-sm p-2 rounded bg-green-500/5"><span class="text-green-400">✅</span><code class="tool-name">echo_execute</code></div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>✓</span><span>Assertions</span></div><div class="space-y-2"><div class="flex items-center gap-2 text-sm p-2 rounded bg-green-500/5"><span class="text-green-400">✅</span><code class="text-text-muted">llm</code><span class="text-text">confirms the echo command executed successfully</span></div></div></div><div class="mb-4"><div class="text-sm font-medium text-text-light mb-3 flex items-center gap-2"><span>💬</span><span>Response</span></div><div style="padding: 1rem; background-color: var(--color-surface-elevated); border-radius: 0.5rem; color: var(--color-text); white-space: pre-wrap; word-wrap: break-word; line-height: 1.625;">I ran the echo command with &#34;pytest-skill-engineering works&#34;. Output (stdout):
 pytest-skill-engineering
 works
 
-Exit code: 0 — so it worked.</div></div></div></div></div></div></div></div></div><style>
-.test-group.collapsed .group-content {
-    display: none;
-}
-.test-group.collapsed .expand-icon {
-    transform: rotate(-90deg);
-}
-.test-row.hidden {
-    display: none;
-}
-.test-detail.hidden {
-    display: none;
-}
-</style></section></div><div id="overlay" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center p-8" onclick="hideOverlay()"><button class="absolute top-4 right-4 w-10 h-10 flex items-center justify-center text-2xl text-text-muted hover:text-text-light bg-surface-card rounded-full border border-white/10 transition-colors" onclick="hideOverlay()">✕</button><div class="w-[90vw] h-[85vh] overflow-auto bg-surface-card rounded-lg p-6 shadow-material-lg flex items-center justify-center" onclick="event.stopPropagation()"><div class="mermaid w-full h-full" id="overlay-mermaid"></div></div></div><div id="diagram-hover-popup" class="fixed z-40 bg-surface-card rounded-lg shadow-material-lg border border-white/10 p-4 hidden max-w-xl" onmouseenter="keepDiagramHover()" onmouseleave="hideDiagramHover()" onclick="hideOverlay(); this.classList.add(&#39;hidden&#39;); showDiagram(document.getElementById(&#39;hover-mermaid&#39;).innerHTML);"><div class="mermaid" id="hover-mermaid"></div></div><style>
-#overlay.active { display: flex !important; }
-#diagram-hover-popup.active { display: block !important; }
-
-/* Scale the mermaid SVG in overlay to fill available space */
-#overlay-mermaid svg {
-    max-width: 100%;
-    max-height: 100%;
-    width: auto;
-    height: auto;
-    min-height: 60vh;
-}
-</style><script>
-// pytest-skill-engineering Report Scripts
+Exit code: 0 — so it worked.</div></div></div></div></div></div></div></div></div></section></div><div id="overlay" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center p-8" onclick="hideOverlay()"><button class="absolute top-4 right-4 w-10 h-10 flex items-center justify-center text-2xl text-text-muted hover:text-text-light bg-surface-card rounded-full border border-white/10 transition-colors" onclick="hideOverlay()">✕</button><div class="w-[90vw] h-[85vh] overflow-auto bg-surface-card rounded-lg p-6 shadow-material-lg flex items-center justify-center" onclick="event.stopPropagation()"><div class="mermaid w-full h-full" id="overlay-mermaid"></div></div></div><script>
+// pytest-aitest Report Scripts
 
 // Initialize Mermaid with dark theme
 mermaid.initialize({ 
     startOnLoad: true,
     theme: 'dark',
-    securityLevel: 'loose',
+    securityLevel: 'strict',
     themeVariables: {
         primaryColor: '#4051b5',
         primaryTextColor: '#c9d1d9',
@@ -1217,27 +1142,6 @@ document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') hideOverlay();
 });
 
-// Hover popup for side-by-side diagrams
-let hoverTimeout = null;
-function showDiagramHover(element, mermaidCode) {
-    clearTimeout(hoverTimeout);
-    const popup = document.getElementById('diagram-hover-popup');
-    const content = document.getElementById('hover-mermaid');
-    content.innerHTML = mermaidCode;
-    popup.classList.add('active');
-    mermaid.run({ nodes: [content] });
-}
-
-function hideDiagramHover() {
-    hoverTimeout = setTimeout(() => {
-        document.getElementById('diagram-hover-popup').classList.remove('active');
-    }, 100);
-}
-
-function keepDiagramHover() {
-    clearTimeout(hoverTimeout);
-}
-
 // Side-by-side test selector
 function showSideBySideTest(testId) {
     // Hide all groups
@@ -1255,13 +1159,13 @@ function showSideBySideTest(testId) {
 
 
 // All agent data for client-side filtering
-const allAgents = [{"id": "1f3d37ce-7075-4639-bdec-b8377d380fa3", "name": "cli-agent", "pass_rate": 100.0}];
-const allAgentsById = {"1f3d37ce-7075-4639-bdec-b8377d380fa3": {"id": "1f3d37ce-7075-4639-bdec-b8377d380fa3", "name": "cli-agent"}};
+const allAgents = [{"id": "cli-agent", "name": "cli-agent", "pass_rate": 100.0}];
+const allAgentsById = {"cli-agent": {"id": "cli-agent", "name": "cli-agent"}};
 
 // Track selected agents (exactly 2)
-let selectedAgentIds = ["1f3d37ce-7075-4639-bdec-b8377d380fa3"];
+let selectedAgentIds = ["cli-agent"];
 
-// Agent comparison logic - always keep exactly 2 selected
+// Eval comparison logic - always keep exactly 2 selected
 function updateAgentComparison(clickedAgentId) {
     const checkboxes = document.querySelectorAll('input[name="compare-agent"]');
     
