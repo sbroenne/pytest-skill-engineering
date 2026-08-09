@@ -23,6 +23,7 @@ A plugin is a directory containing instructions, skills, custom agents, and MCP 
 ```python
 from pytest_skill_engineering.copilot import CopilotEval
 
+
 async def test_my_plugin(copilot_eval, tmp_path):
     agent = CopilotEval.from_plugin(
         "path/to/my-plugin",

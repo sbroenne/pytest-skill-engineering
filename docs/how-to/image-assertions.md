@@ -59,7 +59,7 @@ async def test_dashboard_layout(copilot_eval, agent, llm_assert_image):
     # Vision LLM judges the screenshot
     assert llm_assert_image(
         screenshots[-1],
-        "Shows 4 charts arranged without overlapping, each with a descriptive title"
+        "Shows 4 charts arranged without overlapping, each with a descriptive title",
     )
 ```
 
@@ -160,6 +160,7 @@ EXPERIMENT = CopilotEval(
     allowed_tools=["file", "worksheet", "range", "table", "chart", "screenshot"],
 )
 
+
 @pytest.mark.parametrize("agent", [CONTROL, EXPERIMENT], ids=lambda a: a.name)
 async def test_dashboard(copilot_eval, agent, llm_assert_image):
     result = await copilot_eval(agent, "Create a dashboard with 4 charts")
@@ -172,10 +173,7 @@ async def test_dashboard(copilot_eval, agent, llm_assert_image):
     if agent.name == "with-screenshot":
         screenshots = result.tool_images_for("screenshot")
         if screenshots:
-            assert llm_assert_image(
-                screenshots[-1],
-                "Shows 4 charts with no overlapping elements"
-            )
+            assert llm_assert_image(screenshots[-1], "Shows 4 charts with no overlapping elements")
 ```
 
 ## HTML Reports

@@ -174,7 +174,7 @@ class MCPServerProcess:
                 self._tools[tool.name] = {
                     "name": tool.name,
                     "description": tool.description or "",
-                    "inputSchema": tool.inputSchema,
+                    "inputSchema": tool.input_schema,
                 }
 
             # Discover prompts (if server supports them)
@@ -249,17 +249,17 @@ class MCPServerProcess:
                 return streams[0], streams[1]
 
             case "streamable-http":
-                import httpx
+                import httpx2
                 from mcp.client.streamable_http import streamable_http_client
 
                 url = self.config.url
                 assert url is not None  # noqa: S101 — validated in MCPServer.__post_init__
 
-                http_client: httpx.AsyncClient | None = None
+                http_client: httpx2.AsyncClient | None = None
                 if self.config.headers:
                     headers = {k: _expand_env(v) for k, v in self.config.headers.items()}
                     http_client = await self._exit_stack.enter_async_context(
-                        httpx.AsyncClient(headers=headers)
+                        httpx2.AsyncClient(headers=headers)
                     )
 
                 streams = await self._exit_stack.enter_async_context(

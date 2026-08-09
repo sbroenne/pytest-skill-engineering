@@ -26,6 +26,7 @@ RUBRIC = [
     ScoringDimension("clarity", "Easy to understand"),
 ]
 
+
 async def test_plan_quality(copilot_eval, agent, llm_score):
     result = await copilot_eval(agent, "Create an implementation plan")
 
@@ -56,8 +57,7 @@ from pytest_skill_engineering import ScoringDimension
 RUBRIC = [
     ScoringDimension(
         "phase_structure",
-        "Plan has clearly numbered, ordered implementation phases "
-        "with specific actionable steps.",
+        "Plan has clearly numbered, ordered implementation phases with specific actionable steps.",
     ),
     ScoringDimension(
         "file_references",
@@ -67,7 +67,7 @@ RUBRIC = [
         "validation_phase",
         "Includes a final validation phase with lint, build, and test steps.",
         max_score=10,  # Custom scale
-        weight=2.0,    # Double importance in composite score
+        weight=2.0,  # Double importance in composite score
     ),
 ]
 ```
@@ -123,7 +123,7 @@ async def test_output_quality(llm_score):
 result = llm_score(content, RUBRIC)
 
 # Access individual scores
-print(result.scores["accuracy"])      # e.g. 4
+print(result.scores["accuracy"])  # e.g. 4
 print(result.scores["completeness"])  # e.g. 3
 
 # Totals
@@ -209,13 +209,13 @@ AGENTS = [
     CopilotEval(name="improved", instructions="You are a detailed task planner."),
 ]
 
+
 @pytest.mark.parametrize("agent", AGENTS, ids=lambda a: a.name)
 async def test_plan_quality(copilot_eval, agent, llm_score):
     result = await copilot_eval(agent, "Create an implementation plan")
     scores = llm_score(result.final_response, RUBRIC)
 
-    print(f"{agent.name}: {scores.total}/{scores.max_total} "
-          f"({scores.weighted_score:.0%})")
+    print(f"{agent.name}: {scores.total}/{scores.max_total} ({scores.weighted_score:.0%})")
     for dim, val in scores.scores.items():
         print(f"  {dim}: {val}")
 
@@ -256,8 +256,7 @@ from pytest_skill_engineering import ScoringDimension, assert_score
 RUBRIC = [
     ScoringDimension(
         "phase_structure",
-        "Plan has clearly numbered, ordered implementation phases "
-        "with specific actionable steps.",
+        "Plan has clearly numbered, ordered implementation phases with specific actionable steps.",
     ),
     ScoringDimension(
         "file_references",
@@ -265,13 +264,11 @@ RUBRIC = [
     ),
     ScoringDimension(
         "parallelization",
-        "Phases are annotated for parallelizability. Dependencies "
-        "between phases are explicit.",
+        "Phases are annotated for parallelizability. Dependencies between phases are explicit.",
     ),
     ScoringDimension(
         "validation_phase",
-        "Plan includes a final validation phase with lint, build, "
-        "and test steps.",
+        "Plan includes a final validation phase with lint, build, and test steps.",
     ),
     ScoringDimension(
         "success_criteria",
@@ -310,8 +307,7 @@ ADHERENCE_RUBRIC = [
     ),
     ScoringDimension(
         "rule_accuracy",
-        "For rules followed, how correctly are they applied? "
-        "5 = perfectly, 1 = incorrectly.",
+        "For rules followed, how correctly are they applied? 5 = perfectly, 1 = incorrectly.",
     ),
     ScoringDimension(
         "contamination_resistance",
@@ -320,8 +316,7 @@ ADHERENCE_RUBRIC = [
     ),
     ScoringDimension(
         "completeness",
-        "Is the output complete and functional? "
-        "5 = fully complete, 1 = empty/stub.",
+        "Is the output complete and functional? 5 = fully complete, 1 = empty/stub.",
     ),
 ]
 

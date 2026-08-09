@@ -62,6 +62,7 @@ from pytest_skill_engineering.core.evals import load_custom_agent
 
 reviewer = load_custom_agent(".github/agents/reviewer.agent.md")
 
+
 async def test_reviewer_reads_files(copilot_eval):
     """Reviewer should read files before giving feedback."""
     agent = CopilotEval(
@@ -93,6 +94,7 @@ from pytest_skill_engineering.copilot import CopilotEval
 # Single agent
 reviewer = load_custom_agent(".github/agents/reviewer.agent.md")
 
+
 @pytest.mark.copilot
 async def test_orchestrator_dispatches_to_reviewer(copilot_eval):
     agent = CopilotEval(
@@ -115,6 +117,7 @@ agents = load_custom_agents(
     ".github/agents/",
     exclude={"orchestrator"},  # don't load the orchestrator as a sub-agent
 )
+
 
 @pytest.mark.copilot
 async def test_orchestrator_with_all_subagents(copilot_eval):
@@ -155,6 +158,7 @@ from pytest_skill_engineering.copilot import CopilotEval
 
 reviewer = load_custom_agent(".github/agents/reviewer.agent.md")
 
+
 @pytest.mark.copilot
 async def test_reviewer_improves_feedback_quality(copilot_eval):
     without = CopilotEval(
@@ -168,7 +172,7 @@ async def test_reviewer_improves_feedback_quality(copilot_eval):
     )
 
     r_without = await copilot_eval(without, "Review src/auth.py for security issues.")
-    r_with    = await copilot_eval(with_reviewer, "Review src/auth.py for security issues.")
+    r_with = await copilot_eval(with_reviewer, "Review src/auth.py for security issues.")
 
     # Specialist agent should produce more specific findings
     assert r_with.success
@@ -210,6 +214,7 @@ agent = CopilotEval(
     instructions="You are a code assistant.",
 )
 
+
 async def test_review_prompt(copilot_eval):
     """The /review slash command produces actionable feedback."""
     prompt = load_prompt_file(".github/prompts/review.prompt.md")
@@ -224,6 +229,7 @@ import pytest
 from pytest_skill_engineering import load_prompt_files
 
 PROMPTS = load_prompt_files(".github/prompts/")
+
 
 @pytest.mark.parametrize("prompt", PROMPTS, ids=lambda p: p["name"])
 async def test_prompt_files(copilot_eval, agent, prompt):
@@ -272,10 +278,8 @@ from pathlib import Path
 from pytest_skill_engineering.copilot import CopilotEval
 from pytest_skill_engineering.core.evals import load_custom_agent
 
-AGENT_VERSIONS = {
-    path.stem: path
-    for path in Path(".github/agents").glob("reviewer-*.agent.md")
-}
+AGENT_VERSIONS = {path.stem: path for path in Path(".github/agents").glob("reviewer-*.agent.md")}
+
 
 @pytest.mark.parametrize("name,path", AGENT_VERSIONS.items())
 async def test_reviewer_finds_security_issue(copilot_eval, name, path):

@@ -35,8 +35,8 @@ agent = CopilotEval(
     name="my-agent",
     clarification_detection=ClarificationDetection(
         enabled=True,
-        level=ClarificationLevel.ERROR,       # INFO, WARNING, or ERROR
-        judge_model="gpt-5.4-mini",             # None = use agent's model
+        level=ClarificationLevel.ERROR,  # INFO, WARNING, or ERROR
+        judge_model="gpt-5.4-mini",  # None = use agent's model
     ),
 )
 ```
@@ -244,10 +244,7 @@ async def test_correct_tool_selection(copilot_eval, agent):
 
 ```python
 async def test_trip_planning(copilot_eval, agent):
-    result = await copilot_eval(
-        agent,
-        "Show me both my checking and savings balances"
-    )
+    result = await copilot_eval(agent, "Show me both my checking and savings balances")
 
     assert result.success
     assert result.tool_call_count("get_balance") >= 2 or result.tool_was_called("get_all_balances")

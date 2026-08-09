@@ -175,6 +175,7 @@ async def test_with_prompt(copilot_eval, agent_data):
 async def test_banking(aitest_run):
     result = await aitest_run(agent, "What's my balance?")
 
+
 # New
 async def test_banking(copilot_eval):
     result = await copilot_eval(agent, "What's my balance?")
@@ -184,6 +185,7 @@ async def test_banking(copilot_eval):
 # Old (Copilot)
 async def test_copilot(copilot_run):
     result = await copilot_run(copilot_agent, "Write math.py")
+
 
 # New
 async def test_copilot(copilot_eval):

@@ -62,6 +62,7 @@ Improve the thing the LLM actually sees — your tool description, schema, or sk
 def get_balance(account_id: str) -> str:
     """Get balance."""  # Too vague
 
+
 # After: clear name, clear description, clear parameter
 @mcp.tool()
 def get_balance(account: str) -> str:

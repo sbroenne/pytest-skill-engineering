@@ -113,13 +113,13 @@ agent = CopilotEval(
 from pytest_skill_engineering.copilot import CopilotEval
 
 agent = CopilotEval(
-    name="my-agent",                         # Identifier for reports
-    instructions="You are...",               # Agent instructions
-    model="gpt-5.4-mini",                      # Model selection (optional)
-    skill_directories=["skills/my-skill"],   # Skill directories (optional)
-    custom_agents=[agent_def],               # Custom agent definitions (optional)
-    excluded_tools=["tool3"],                # Filter out tools (optional)
-    reasoning_effort="medium",               # Reasoning effort (optional)
+    name="my-agent",  # Identifier for reports
+    instructions="You are...",  # Agent instructions
+    model="gpt-5.4-mini",  # Model selection (optional)
+    skill_directories=["skills/my-skill"],  # Skill directories (optional)
+    custom_agents=[agent_def],  # Custom agent definitions (optional)
+    excluded_tools=["tool3"],  # Filter out tools (optional)
+    reasoning_effort="medium",  # Reasoning effort (optional)
 )
 ```
 

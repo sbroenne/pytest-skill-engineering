@@ -89,10 +89,10 @@ Every turn is recorded in the `EvalResult`:
 ```python
 result = await copilot_eval(agent, "What's my checking balance?")
 
-result.turns          # List of all conversation turns
-result.all_tool_calls # All tool calls made
-result.final_response # The LLM's final text response
-result.success        # True if completed without errors
+result.turns  # List of all conversation turns
+result.all_tool_calls  # All tool calls made
+result.final_response  # The LLM's final text response
+result.success  # True if completed without errors
 ```
 
 ## MCP vs CLI Servers

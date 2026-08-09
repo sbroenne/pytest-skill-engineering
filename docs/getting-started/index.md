@@ -39,6 +39,7 @@ The simplest case: verify GitHub Copilot can use your MCP server correctly.
 ```python
 from pytest_skill_engineering.copilot import CopilotEval
 
+
 async def test_balance_query(copilot_eval):
     """Verify Copilot can use get_balance correctly."""
     agent = CopilotEval(

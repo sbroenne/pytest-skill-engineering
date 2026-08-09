@@ -33,6 +33,7 @@ banking_agent = CopilotEval(
     instructions="You are a banking assistant.",
 )
 
+
 class TestBankingConversation:
     """Each test embeds the prior turns' context directly in its prompt."""
 

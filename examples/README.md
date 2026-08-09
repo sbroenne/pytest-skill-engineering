@@ -49,6 +49,7 @@ def banking_server():
         wait=Wait.for_tools(["get_balance", "transfer"]),
     )
 
+
 # Test: "What's my checking balance?"
 ```
 
@@ -60,6 +61,7 @@ def todo_server():
         command=["python", "-m", "pytest_skill_engineering.testing.todo_mcp"],
         wait=Wait.for_tools(["add_task", "list_tasks"]),
     )
+
 
 # Test: "Add buy milk to my shopping list"
 ```

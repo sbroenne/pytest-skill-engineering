@@ -148,6 +148,7 @@ Compare how different LLMs perform on the same task.
 ```python
 BENCHMARK_MODELS = ["gpt-5.5", "gpt-5.4-mini"]
 
+
 class TestModelComparison:
     """Compare how different models handle complex financial advice."""
 
@@ -229,6 +230,7 @@ from pytest_skill_engineering.core.evals import load_custom_agent
 
 AGENT_PATHS = list((Path(__file__).parent / "agents").glob("*.agent.md"))
 
+
 class TestPromptComparison:
     """Compare how different agent instruction styles affect financial advice."""
 
@@ -290,9 +292,7 @@ Then use it in tests:
 class TestSkillEnhancement:
     """Test how skills improve financial advice quality."""
 
-    async def test_with_financial_skill(
-        self, copilot_eval, llm_assert, financial_advisor_skill
-    ):
+    async def test_with_financial_skill(self, copilot_eval, llm_assert, financial_advisor_skill):
         """Eval with financial advisor skill should give better advice."""
         agent = CopilotEval(
             name="banking-v1",
@@ -329,7 +329,9 @@ class TestErrorHandling:
 
     async def test_insufficient_funds_recovery(self, copilot_eval, llm_assert):
         """Eval should handle insufficient funds gracefully."""
-        instructions = BANKING_PROMPT_BASE + " If an operation fails, explain why and suggest alternatives."
+        instructions = (
+            BANKING_PROMPT_BASE + " If an operation fails, explain why and suggest alternatives."
+        )
         agent = CopilotEval(
             name="banking-v1",
             instructions=instructions,

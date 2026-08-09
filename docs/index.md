@@ -28,10 +28,11 @@ Write tests as natural language prompts. A **CopilotEval** is your test harness 
 ```python
 from pytest_skill_engineering.copilot import CopilotEval
 
+
 async def test_balance_and_transfer(copilot_eval):
     agent = CopilotEval(
         name="banking-test",
-        skill_directories=["skills/financial"],         # Eval Skill (optional)
+        skill_directories=["skills/financial"],  # Eval Skill (optional)
     )
 
     result = await copilot_eval(
@@ -85,6 +86,7 @@ Test what your users actually experience — zero model setup:
 ```python
 from pytest_skill_engineering.copilot import CopilotEval
 
+
 async def test_skill(copilot_eval):
     agent = CopilotEval(skill_directories=["skills/my-skill"])
     result = await copilot_eval(agent, "What can you help me with?")
@@ -99,6 +101,7 @@ Full control over model selection and cost tracking:
 
 ```python
 from pytest_skill_engineering.copilot import CopilotEval
+
 
 async def test_balance_check(copilot_eval):
     agent = CopilotEval(

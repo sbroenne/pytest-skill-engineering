@@ -104,6 +104,7 @@ Create evals inline using constants from `conftest.py`:
 from pytest_skill_engineering import Eval, Provider
 from ..conftest import DEFAULT_MODEL, DEFAULT_RPM, DEFAULT_TPM, DEFAULT_MAX_TURNS
 
+
 async def test_my_feature(eval_run, banking_server):
     agent = Eval.from_instructions(
         "my-agent",

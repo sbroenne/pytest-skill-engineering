@@ -174,6 +174,7 @@ class Provider:
     model: str
     rpm: int = 10
 
+
 # Mutable data
 @dataclass(slots=True)
 class EvalResult:

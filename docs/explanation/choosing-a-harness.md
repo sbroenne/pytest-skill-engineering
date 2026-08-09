@@ -13,6 +13,7 @@ pytest-skill-engineering uses the **GitHub Copilot coding agent** as its test ha
 ```python
 from pytest_skill_engineering.copilot import CopilotEval
 
+
 async def test_skill_integration(copilot_eval):
     agent = CopilotEval(
         name="banking-test",
