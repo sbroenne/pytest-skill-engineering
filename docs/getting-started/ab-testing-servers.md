@@ -193,4 +193,4 @@ Description is clear and well-targeted.
 - [Comparing Configurations](comparing.md) — More comparison patterns
 - [Generate Reports](../how-to/generate-reports.md) — Get AI insights on your comparison
 
-> 📁 **Real Example:** [pydantic/test_10_ab_servers.py](https://github.com/sbroenne/pytest-skill-engineering/blob/main/tests/integration/pydantic/test_10_ab_servers.py) — Server version comparison and tool description impact testing
+> 📁 **Real Example:** [copilot/test_10_ab_servers.py](https://github.com/sbroenne/pytest-skill-engineering/blob/main/tests/integration/copilot/test_10_ab_servers.py) — Configuration A/B comparison

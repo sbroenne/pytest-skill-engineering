@@ -268,4 +268,4 @@ CLIServer(
 )
 ```
 
-> 📁 **Real Example:** [pydantic/test_09_cli.py](https://github.com/sbroenne/pytest-skill-engineering/blob/main/tests/integration/pydantic/test_09_cli.py) — CLI server testing with ls and cat commands
+> 📁 **Real Example:** [copilot/test_09_cli.py](https://github.com/sbroenne/pytest-skill-engineering/blob/main/tests/integration/copilot/test_09_cli.py) — CLI workflow testing

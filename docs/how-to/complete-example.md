@@ -7,7 +7,7 @@ description: "Complete end-to-end example demonstrating all pytest-skill-enginee
 This guide walks through the **hero test suite** — a comprehensive example demonstrating all pytest-skill-engineering capabilities in a single, cohesive banking scenario.
 
 !!! tip "Generate the Report"
-    Run `pytest tests/showcase/ -v --aitest-html=report.html` to generate the hero report.
+    Run `uv run python -m pytest tests/showcase/ -v --aitest-html=report.html` to generate the hero report.
 
 ## The Scenario: Personal Finance Assistant
 
@@ -24,25 +24,23 @@ This realistic scenario lets us test how well an LLM can understand and coordina
 tests/showcase/
 ├── test_hero.py           # The comprehensive test suite
 ├── conftest.py            # Shared fixtures
-├── agents/                # Agent instruction files for comparison
-│   ├── concise.agent.md
-│   ├── detailed.agent.md
-│   └── friendly.agent.md
+├── instructions/          # System prompt files for comparison
+│   ├── concise.md
+│   ├── detailed.md
+│   └── friendly.md
 └── skills/
     └── financial-advisor/ # Domain knowledge skill
-        ├── SKILL.md
-        └── references/
-            └── budgeting-guide.md
+        └── SKILL.md
 ```
 
 ## Running the Hero Tests
 
 ```bash
 # Run all showcase tests with HTML report
-pytest tests/showcase/ -v --aitest-html=docs/demo/hero-report.html
+uv run python -m pytest tests/showcase/ -v --aitest-html=docs/demo/hero-report.html
 
 # Run a specific test class
-pytest tests/showcase/test_hero.py::TestModelComparison -v
+uv run python -m pytest tests/showcase/test_hero.py::TestModelComparison -v
 ```
 
 ## 1. Basic Tool Usage
@@ -187,36 +185,26 @@ The report automatically generates a **model comparison table** showing:
 - Token usage and costs
 - AI-generated recommendations
 
-## 5. Agent Instruction Comparison
+## 5. System Prompt Comparison
 
 Compare how different agent instruction styles affect behavior.
 
-Store each style as an `.agent.md` file:
+Store each system prompt style as a Markdown file:
 
 ```
 tests/showcase/
-└── agents/
-    ├── concise.agent.md
-    ├── detailed.agent.md
-    └── friendly.agent.md
+└── instructions/
+    ├── concise.md
+    ├── detailed.md
+    └── friendly.md
 ```
 
-```markdown title="agents/concise.agent.md"
----
-name: AGENT_CONCISE
-description: Brief, to-the-point financial advice
----
-
+```markdown title="instructions/concise.md"
 You are a personal finance assistant. Be concise and direct.
 Give specific numbers and actionable advice in 2-3 sentences.
 ```
 
-```markdown title="agents/detailed.agent.md"
----
-name: AGENT_DETAILED
-description: Thorough financial analysis with explanations
----
-
+```markdown title="instructions/detailed.md"
 You are a personal finance assistant. Provide comprehensive analysis.
 Explain your reasoning, show calculations, and consider multiple scenarios.
 ```
@@ -226,20 +214,19 @@ Then parametrize tests over them:
 ```python
 from pathlib import Path
 from pytest_skill_engineering.copilot import CopilotEval
-from pytest_skill_engineering.core.evals import load_custom_agent
 
-AGENT_PATHS = list((Path(__file__).parent / "agents").glob("*.agent.md"))
+INSTRUCTION_PATHS = list((Path(__file__).parent / "instructions").glob("*.md"))
 
 
-class TestPromptComparison:
-    """Compare how different agent instruction styles affect financial advice."""
+class TestSystemPromptComparison:
+    """Compare how different system prompts affect financial advice."""
 
-    @pytest.mark.parametrize("agent_path", AGENT_PATHS, ids=lambda p: p.stem.replace(".agent", ""))
-    async def test_advice_style_comparison(self, copilot_eval, llm_assert, agent_path):
+    @pytest.mark.parametrize("instruction_path", INSTRUCTION_PATHS, ids=lambda p: p.stem)
+    async def test_advice_style_comparison(self, copilot_eval, instruction_path):
         """Compare concise vs detailed vs friendly advisory styles."""
         agent = CopilotEval(
-            name=agent_path.stem,
-            custom_agents=[load_custom_agent(agent_path)],
+            name=instruction_path.stem,
+            instructions=instruction_path.read_text(),
         )
 
         result = await copilot_eval(
