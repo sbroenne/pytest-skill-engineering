@@ -1,187 +1,66 @@
 ---
-description: "Internal architecture of pytest-skill-engineering: test execution pipeline, tool dispatch, server lifecycle, and reporting system."
+description: "Current contributor architecture: CopilotClient sessions, event mapping, result collection, pytest hooks, and report generation."
 ---
 
 # Architecture
 
-How pytest-skill-engineering executes tests and dispatches tools.
+pytest-skill-engineering is built around the real GitHub Copilot runtime.
 
-## Overview
+## End-to-end flow
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                     pytest-skill-engineering                        │
-├─────────────────────────────────────────────────────────┤
-│  Test: "What's my checking balance?"                      │
-│                         │                                │
-│                         ▼                                │
-│  ┌─────────────────────────────────────────────────┐    │
-│  │              EvalEngine                         │    │
-│  │  ┌──────────┐   ┌─────────┐    ┌─────────────┐  │    │
-│  │  │PydanticAI│◄──►│  Tool   │◄──►│ MCP/CLI     │  │    │
-│  │  │  (LLM)   │   │Dispatch │    │ Servers     │  │    │
-│  │  └──────────┘   └─────────┘    └─────────────┘  │    │
-│  └─────────────────────────────────────────────────┘    │
-│                         │                                │
-│                         ▼                                │
-│  EvalResult { turns, tool_calls, final_response }      │
-└─────────────────────────────────────────────────────────┘
+```text
+CopilotEval
+  -> CopilotClient
+  -> session creation
+  -> streaming SDK events
+  -> EventMapper
+  -> CopilotResult
+  -> pytest plugin collection
+  -> SuiteReport
+  -> JSON / Markdown / HTML report generation
+  -> optional AI insights
 ```
 
-## The Eval Execution Loop
+## Main components
 
-When you call `await copilot_eval(agent, "prompt")`, here's what happens:
+### 1. Copilot execution
 
-### 1. Server Startup
+`src/pytest_skill_engineering/copilot/`
 
-All MCP and CLI servers defined in the agent are started as subprocesses:
+- `eval.py` — `CopilotEval` configuration
+- `runner.py` — session lifecycle, retries, and event streaming
+- `events.py` — contains EventMapper, which converts SDK events into normalized result data
+- `result.py` — `CopilotResult`
+- `judge.py` — semantic judging helpers such as `llm_assert`
 
-```python
-agent = CopilotEval(
-    name="banking-test",
-    instructions="You are a banking assistant.",
-)
-```
+`max_retries` defaults to `2` for transient runtime failures.
 
-Servers remain running for the duration of the test session.
+### 2. pytest integration
 
-### 2. Tool Discovery
+`src/pytest_skill_engineering/plugin.py`
 
-The engine queries each server for its available tools:
+The plugin captures completed results, attaches stable eval identity, preserves genuine pytest parameter IDs, and writes normalized JSON for report generation.
 
-- **MCP servers**: Uses the MCP protocol's `tools/list` method
-- **CLI servers**: Reads the tool definitions from the server wrapper
+### 3. Reporting pipeline
 
-Tools are exposed to PydanticAI via native MCP toolsets.
+`src/pytest_skill_engineering/reporting/`
 
-### 3. LLM Loop
+- `collector.py` builds `SuiteReport`
+- `generator.py` renders HTML, Markdown, and JSON
+- `insights.py` generates cached AI analysis
+- `components/` contains the htpy UI
 
-The engine enters a turn-based loop:
+Reports key comparisons by stable agent identity and display human-readable labels separately.
 
-```
-Turn 1: Send prompt + tool definitions to LLM
-        LLM responds: "I'll check the balance" + tool_call(get_balance, account="checking")
-        
-Turn 2: Execute tool, send result to LLM
-        LLM responds: "Your checking balance is $1,500.00"
-        
-Done: No more tool calls, return final response
-```
+### 4. Serialization boundary
 
-The loop continues until:
-- The LLM responds without requesting tool calls (success)
-- Maximum turns reached (configurable via `max_turns`)
-- An error occurs
+`src/pytest_skill_engineering/core/serialization.py`
 
-### 4. Tool Dispatch
+Serialization is strict. The current report loader expects the current schema exactly and does not silently accept legacy field aliases.
 
-When the LLM requests a tool call:
+## Development guidance
 
-1. Engine finds which server owns the tool
-2. Sends the call to that server (MCP protocol or CLI execution)
-3. Captures the result
-4. Returns it to the LLM in the next turn
-
-### 5. Result Collection
-
-Every turn is recorded in the `EvalResult`:
-
-```python
-result = await copilot_eval(agent, "What's my checking balance?")
-
-result.turns  # List of all conversation turns
-result.all_tool_calls  # All tool calls made
-result.final_response  # The LLM's final text response
-result.success  # True if completed without errors
-```
-
-## MCP vs CLI Servers
-
-Both server types provide tools, but work differently:
-
-### MCP Servers
-
-Native MCP protocol over stdio:
-
-```python
-from pytest_skill_engineering import MCPServer
-
-MCPServer(
-    command=["python", "my_server.py"],
-)
-```
-
-- Tools defined via `@server.tool()` decorator
-- Full MCP protocol support
-- Bidirectional communication
-
-### CLI Servers
-
-Command-line tools wrapped as callable tools:
-
-```python
-from pytest_skill_engineering import CLIServer
-
-CLIServer(
-    command="git",
-    tool_prefix="git",  # Creates "git_execute" tool
-)
-```
-
-The LLM calls it like: `git_execute(args="status --porcelain")`
-
-- Stdout captured as tool result
-- Simple wrapper for existing CLIs
-
-## Skill Injection
-
-When an agent has a skill, it's injected into the system prompt:
-
-```python
-agent = CopilotEval(
-    name="assistant",
-    instructions="You are a helpful assistant.",
-    skill_directories=["skills/financial-advisor"],
-)
-```
-
-The skill content is prepended to the agent's instructions, giving the LLM domain knowledge before it sees the user's request.
-
-## Rate Limiting & Retries
-
-PydanticAI handles transient failures automatically via its built-in retry mechanism:
-
-* **429 Too Many Requests**: Automatic retry with backoff
-* **Connection errors**: Automatic retry
-* **API errors**: Automatic retry for transient failures
-
-The `retries` field (default: `1`) controls the maximum number of retries
-PydanticAI attempts when a tool call returns an error. Increase this value for
-agents that interact with unreliable tools or external services:
-
-```python
-CopilotEval(
-    name="resilient-agent",
-    instructions="You are a helpful assistant.",
-    retries=3,  # Allow up to 3 retries on tool errors
-)
-```
-
-## Test Iterations
-
-LLM responses are non-deterministic. Running a test once tells you whether it
-passed *that time*, not whether the configuration is reliable. The
-`--aitest-iterations=N` CLI option reruns each test N times and aggregates the
-results.
-
-Under the hood, `pytest_generate_tests` parametrizes every `copilot_eval` test
-with `_aitest_iteration` values `1..N`. The report generator groups iterations
-by agent + test and computes an iteration pass rate.
-
-```bash
-pytest tests/ --aitest-iterations=5
-```
-
-Reports show per-test iteration breakdowns including pass count, pass rate,
-total duration, total tokens, and total cost.
-
+- change typed report contracts before changing components
+- regenerate reports from saved JSON for template work
+- use deterministic checks for report source changes
+- use real Copilot integration tests for runtime changes

@@ -19,7 +19,7 @@ For AI tool testing, this is useless. A test might fail because your tool descri
 pytest-skill-engineering **requires** an AI model to generate reports:
 
 ```bash
-pytest tests/ --aitest-html=report.html --aitest-summary-model=copilot/gpt-5.5
+uv run python -m pytest tests/ --aitest-html=report.html --aitest-summary-model=copilot/gpt-5.4-mini
 ```
 
 Without `--aitest-summary-model`, report generation will error. See [How to Generate Reports](../how-to/generate-reports.md) for full configuration options.
@@ -56,9 +56,9 @@ The summary model analyzes your test results, which are relatively small:
 
 | Tests | Approx. Input Tokens | Cost (gpt-5.5) |
 |-------|----------------------|---------------------|
-| 10    | ~2,000               | $0.01               |
-| 50    | ~8,000               | $0.04               |
-| 200   | ~30,000              | $0.15               |
+| 10    | ~2,000               | economical with `copilot/gpt-5.4-mini` |
+| 50    | ~8,000               | still routine for `copilot/gpt-5.4-mini` |
+| 200   | ~30,000              | consider compact mode before larger models |
 
 ## Sample Reports
 

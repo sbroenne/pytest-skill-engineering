@@ -114,8 +114,8 @@ def generate_structured_insights(
                 raise pytest.UsageError(
                     "AI analysis is required for report generation.\n"
                     "Please specify --aitest-summary-model with a capable model.\n"
-                    "Example: --aitest-summary-model=azure/gpt-4.1\n"
-                    "         --aitest-summary-model=openai/gpt-4o"
+                    "Economical default: --aitest-summary-model=copilot/gpt-5.4-mini\n"
+                    "Higher-quality option: --aitest-summary-model=copilot/gpt-5.5"
                 )
             return None
 
@@ -236,12 +236,12 @@ def generate_structured_insights(
 
 
 def shutdown_copilot_model_client() -> None:
-    """Shut down the shared CopilotClient if it was started.
+    """Shut down any shared Copilot model client state.
 
-    This function is kept for backwards compatibility but no longer does anything
-    since CopilotModel was removed with the PydanticAI dependency.
+    The current Copilot-only runtime does not keep a shared client here, so
+    shutdown is a no-op.
     """
-    pass
+    return None
 
 
 # ── Coding agent analysis prompt ──

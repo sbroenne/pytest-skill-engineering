@@ -268,6 +268,50 @@ class TestCliAnalysisPromptArg:
 class TestCompactSummaryOption:
     """Tests for compact AI summary option forwarding."""
 
+    def test_required_summary_model_error_is_copilot_only(self) -> None:
+        """Required report guidance uses current Copilot-only model examples."""
+        from pytest_skill_engineering.plugin import (
+            generate_structured_insights as _generate_structured_insights,
+        )
+        from pytest_skill_engineering.reporting.collector import SuiteReport
+
+        config = mock.MagicMock()
+
+        options = {
+            "--aitest-summary-model": None,
+            "--aitest-min-pass-rate": None,
+            "--aitest-analysis-prompt": None,
+            "--aitest-summary-compact": False,
+        }
+
+        def getoption(name: str, default: Any = None) -> Any:
+            return options.get(name, default)
+
+        config.getoption.side_effect = getoption
+        config.pluginmanager.get_plugin.return_value = None
+        config.pluginmanager.hook.pytest_skill_engineering_analysis_prompt.return_value = None
+
+        report = SuiteReport(
+            name="suite",
+            timestamp="2026-02-18T00:00:00",
+            duration_ms=0.0,
+            tests=[],
+            passed=0,
+            failed=0,
+            skipped=0,
+        )
+
+        with pytest.raises(pytest.UsageError) as exc_info:
+            _generate_structured_insights(config, report, required=True)
+
+        message = str(exc_info.value)
+        assert "copilot/gpt-5.4-mini" in message
+        assert "copilot/gpt-5.5" in message
+        assert "azure/" not in message
+        assert "openai/" not in message
+        assert "anthropic/" not in message
+        assert "google/" not in message
+
     def test_pytest_compact_option_forwarded_to_generate_insights(self) -> None:
         """_generate_structured_insights passes compact flag through to insights."""
         from pytest_skill_engineering.plugin import (

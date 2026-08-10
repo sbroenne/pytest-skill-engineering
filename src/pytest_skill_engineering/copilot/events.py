@@ -58,15 +58,18 @@ from __future__ import annotations
 
 import logging
 import time
+from collections import deque
+from datetime import timedelta
 from typing import TYPE_CHECKING, Any
 
+from pytest_skill_engineering.copilot.contracts import SubagentStatus
 from pytest_skill_engineering.copilot.result import (
     CopilotResult,
+    SubagentInvocation,
     ToolCall,
     Turn,
     UsageInfo,
 )
-from pytest_skill_engineering.core.result import SubagentInvocation
 
 if TYPE_CHECKING:
     from copilot.generated.session_events import SessionEvent
@@ -95,12 +98,16 @@ class EventMapper:
         self._reasoning_traces: list[str] = []
         self._reasoning_buffer: list[str] = []
         self._subagents: list[SubagentInvocation] = []
+        self._subagents_by_invocation_id: dict[str, SubagentInvocation] = {}
+        self._pending_selected_subagents: dict[str, deque[SubagentInvocation]] = {}
+        self._open_subagent_invocations: dict[str, deque[str]] = {}
         self._subagent_start_times: dict[str, float] = {}
         self._tool_subagent_call_ids: dict[str, str] = {}  # call_id → agent_name
         self._permissions: list[dict[str, Any]] = []
         self._permission_requested: bool = False
         self._model_used: str | None = None
         self._error: str | None = None
+        self._contract_errors: list[str] = []
         self._raw_events: list[Any] = []
         self._start_time: float = time.monotonic()
         self._total_premium_requests: float = 0.0
@@ -121,6 +128,19 @@ class EventMapper:
         # Flush any pending assistant content
         self._flush_assistant_turn()
 
+        resolved_subagents = [subagent for subagent in self._subagents if subagent.invocation_id]
+        unresolved_subagents = [
+            subagent.name for subagent in self._subagents if not subagent.invocation_id
+        ]
+        if unresolved_subagents:
+            self._record_contract_error(
+                "Subagent selected event was not correlated to a tool_call_id: "
+                + ", ".join(unresolved_subagents)
+            )
+
+        if self._contract_errors and self._error is None:
+            self._error = "; ".join(self._contract_errors)
+
         duration_ms = (time.monotonic() - self._start_time) * 1000
         has_error = self._error is not None
 
@@ -131,7 +151,7 @@ class EventMapper:
             duration_ms=duration_ms,
             usage=self._usage,
             reasoning_traces=self._reasoning_traces,
-            subagent_invocations=self._subagents,
+            subagent_invocations=resolved_subagents,
             permission_requested=self._permission_requested,
             permissions=self._permissions,
             model_used=self._model_used,
@@ -275,12 +295,16 @@ class EventMapper:
         # The SDK may or may not emit separate subagent.* events, so we
         # also track invocations here as a fallback.
         if name in self._SUBAGENT_TOOL_NAMES:
-            args = arguments or {}
-            agent_name = args.get("agentSlug") or args.get("agent_name") or "unknown"
-            self._tool_subagent_call_ids[call_id] = agent_name
-            # Only add if not already tracked by subagent.* events
-            if not any(sa.name == agent_name for sa in self._subagents):
-                self.record_subagent_start(agent_name)
+            agent_name = _resolve_tool_subagent_name(arguments)
+            if not call_id:
+                self._record_contract_error(f"{name} dispatch is missing tool_call_id")
+            elif agent_name is None:
+                self._record_contract_error(
+                    f"{name} dispatch {call_id} is missing required agentSlug"
+                )
+            else:
+                self._tool_subagent_call_ids[call_id] = agent_name
+                self.record_subagent_start(invocation_id=call_id, name=agent_name)
 
     def _handle_tool_execution_complete(self, event: SessionEvent) -> None:
         """Handle tool execution completed."""
@@ -302,15 +326,16 @@ class EventMapper:
             if start is not None:
                 tc.duration_ms = (time.monotonic() - start) * 1000
 
+            if not _get_data_field(event, "success", True):
+                tc.error = _stringify_tool_error(_get_data_field(event, "error", None))
+
         # Complete subagent tracking from tool call
         agent_name = self._tool_subagent_call_ids.pop(call_id, None)
         if agent_name:
-            # Only complete if still in "started" status (not already
-            # completed by a subagent.completed event)
-            for sa in self._subagents:
-                if sa.name == agent_name and sa.status == "started":
-                    sa.status = "completed"
-                    break
+            if _get_data_field(event, "success", True):
+                self.record_subagent_complete(invocation_id=call_id, name=agent_name)
+            else:
+                self.record_subagent_failed(invocation_id=call_id, name=agent_name)
 
         # Add a tool turn for reporting
         tool_name = _get_data_field(event, "tool_name", tc.name if tc else "unknown")
@@ -319,69 +344,98 @@ class EventMapper:
 
     # ── Subagent recording (used by runSubagent tool handler) ──
 
-    def record_subagent_start(self, name: str) -> None:
-        """Record a subagent invocation dispatched via the runSubagent tool."""
-        self._subagent_start_times[name] = time.monotonic()
-        self._subagents.append(SubagentInvocation(name=name, status="started"))
+    def record_subagent_start(self, *, invocation_id: str, name: str) -> None:
+        """Record a subagent invocation dispatched via a tool call."""
+        invocation = self._ensure_subagent_invocation(invocation_id=invocation_id, name=name)
+        self._enqueue_open_subagent(name=name, invocation_id=invocation_id)
+        self._subagent_start_times.setdefault(invocation_id, time.monotonic())
+        self._advance_subagent_status(invocation, "started")
 
-    def record_subagent_complete(self, name: str) -> None:
+    def record_subagent_complete(self, *, invocation_id: str, name: str) -> None:
         """Mark a previously started subagent invocation as completed."""
-        start = self._subagent_start_times.pop(name, None)
-        duration = (time.monotonic() - start) * 1000 if start else None
-        for sa in self._subagents:
-            if sa.name == name and sa.status == "started":
-                sa.status = "completed"
-                sa.duration_ms = duration
-                return
+        invocation = self._ensure_subagent_invocation(invocation_id=invocation_id, name=name)
+        duration = self._resolve_subagent_duration_ms(invocation_id=invocation_id)
+        self._dequeue_open_subagent(name=name, invocation_id=invocation_id)
+        self._advance_subagent_status(invocation, "completed", duration_ms=duration)
 
-    def record_subagent_failed(self, name: str) -> None:
+    def record_subagent_failed(self, *, invocation_id: str, name: str) -> None:
         """Mark a previously started subagent invocation as failed."""
-        self._subagent_start_times.pop(name, None)
-        for sa in self._subagents:
-            if sa.name == name and sa.status == "started":
-                sa.status = "failed"
-                return
+        invocation = self._ensure_subagent_invocation(invocation_id=invocation_id, name=name)
+        duration = self._resolve_subagent_duration_ms(invocation_id=invocation_id)
+        self._dequeue_open_subagent(name=name, invocation_id=invocation_id)
+        self._advance_subagent_status(invocation, "failed", duration_ms=duration)
 
     # ── Subagent events ──
 
     def _handle_subagent_selected(self, event: SessionEvent) -> None:
         """Handle subagent selection."""
-        name = _resolve_subagent_name(event)
-        self._subagents.append(SubagentInvocation(name=name, status="selected"))
+        name = _require_subagent_name(event)
+        if name is None:
+            event_type = event.type.value if hasattr(event.type, "value") else str(event.type)
+            self._record_contract_error(f"{event_type} is missing required agent_name")
+            return
+
+        invocation_id = self._peek_open_subagent(name)
+        if invocation_id is None:
+            pending = SubagentInvocation(invocation_id="", name=name, status="selected")
+            self._subagents.append(pending)
+            self._pending_selected_subagents.setdefault(name, deque()).append(pending)
+            return
+
+        invocation = self._ensure_subagent_invocation(invocation_id=invocation_id, name=name)
+        self._advance_subagent_status(invocation, "selected")
 
     def _handle_subagent_started(self, event: SessionEvent) -> None:
         """Handle subagent execution start."""
-        name = _resolve_subagent_name(event)
-        self._subagent_start_times[name] = time.monotonic()
-        # Update existing or add new
-        for sa in self._subagents:
-            if sa.name == name and sa.status == "selected":
-                sa.status = "started"
-                return
-        self._subagents.append(SubagentInvocation(name=name, status="started"))
+        name = _require_subagent_name(event)
+        invocation_id = _require_invocation_id(event)
+        if name is None or invocation_id is None:
+            event_type = event.type.value if hasattr(event.type, "value") else str(event.type)
+            self._record_contract_error(
+                f"{event_type} is missing required subagent correlation fields"
+            )
+            return
+
+        invocation = self._ensure_subagent_invocation(invocation_id=invocation_id, name=name)
+        self._enqueue_open_subagent(name=name, invocation_id=invocation_id)
+        self._subagent_start_times.setdefault(invocation_id, time.monotonic())
+        self._advance_subagent_status(invocation, "started")
 
     def _handle_subagent_completed(self, event: SessionEvent) -> None:
         """Handle subagent execution completion."""
-        name = _resolve_subagent_name(event)
-        start = self._subagent_start_times.pop(name, None)
-        duration = (time.monotonic() - start) * 1000 if start else None
-        for sa in self._subagents:
-            if sa.name == name and sa.status in ("selected", "started"):
-                sa.status = "completed"
-                sa.duration_ms = duration
-                return
-        self._subagents.append(
-            SubagentInvocation(name=name, status="completed", duration_ms=duration)
-        )
+        name = _require_subagent_name(event)
+        invocation_id = _require_invocation_id(event)
+        if name is None or invocation_id is None:
+            event_type = event.type.value if hasattr(event.type, "value") else str(event.type)
+            self._record_contract_error(
+                f"{event_type} is missing required subagent correlation fields"
+            )
+            return
+
+        invocation = self._ensure_subagent_invocation(invocation_id=invocation_id, name=name)
+        self._dequeue_open_subagent(name=name, invocation_id=invocation_id)
+        duration = _duration_to_ms(_get_data_field(event, "duration", None))
+        if duration is None:
+            duration = self._resolve_subagent_duration_ms(invocation_id=invocation_id)
+        self._advance_subagent_status(invocation, "completed", duration_ms=duration)
 
     def _handle_subagent_failed(self, event: SessionEvent) -> None:
         """Handle subagent execution failure."""
-        name = _resolve_subagent_name(event)
-        for sa in self._subagents:
-            if sa.name == name and sa.status in ("selected", "started"):
-                sa.status = "failed"
-                return
-        self._subagents.append(SubagentInvocation(name=name, status="failed"))
+        name = _require_subagent_name(event)
+        invocation_id = _require_invocation_id(event)
+        if name is None or invocation_id is None:
+            event_type = event.type.value if hasattr(event.type, "value") else str(event.type)
+            self._record_contract_error(
+                f"{event_type} is missing required subagent correlation fields"
+            )
+            return
+
+        invocation = self._ensure_subagent_invocation(invocation_id=invocation_id, name=name)
+        self._dequeue_open_subagent(name=name, invocation_id=invocation_id)
+        duration = _duration_to_ms(_get_data_field(event, "duration", None))
+        if duration is None:
+            duration = self._resolve_subagent_duration_ms(invocation_id=invocation_id)
+        self._advance_subagent_status(invocation, "failed", duration_ms=duration)
 
     # ── Session events ──
 
@@ -403,7 +457,7 @@ class EventMapper:
     def _handle_session_shutdown(self, event: SessionEvent) -> None:
         """Handle session shutdown — capture the total premium request count.
 
-        KNOWN GAP (SDK 1.0.6): ``_total_premium_requests`` exists on
+        KNOWN GAP (SDK 1.0.9): ``_total_premium_requests`` exists on
         ``SessionShutdownData`` per the generated schema, but empirically
         ``session.shutdown`` is never delivered to ``session.on()`` listeners
         via the ``client.stop()`` teardown path this runner uses — verified
@@ -463,20 +517,144 @@ class EventMapper:
             self._current_tool_calls.clear()
             self._current_tool_call_ids.clear()
 
+    def _ensure_subagent_invocation(
+        self,
+        *,
+        invocation_id: str,
+        name: str,
+    ) -> SubagentInvocation:
+        """Get or create a subagent invocation keyed by invocation ID."""
+        existing = self._subagents_by_invocation_id.get(invocation_id)
+        if existing is not None:
+            if existing.name != name:
+                self._record_contract_error(
+                    "Subagent invocation "
+                    f"{invocation_id} changed name from {existing.name} to {name}"
+                )
+            return existing
+
+        pending = self._consume_pending_selected(name=name)
+        if pending is not None:
+            pending.invocation_id = invocation_id
+            self._subagents_by_invocation_id[invocation_id] = pending
+            return pending
+
+        invocation = SubagentInvocation(invocation_id=invocation_id, name=name, status="started")
+        self._subagents.append(invocation)
+        self._subagents_by_invocation_id[invocation_id] = invocation
+        return invocation
+
+    def _consume_pending_selected(self, *, name: str) -> SubagentInvocation | None:
+        pending = self._pending_selected_subagents.get(name)
+        if not pending:
+            return None
+        invocation = pending.popleft()
+        if not pending:
+            self._pending_selected_subagents.pop(name, None)
+        return invocation
+
+    def _enqueue_open_subagent(self, *, name: str, invocation_id: str) -> None:
+        queue = self._open_subagent_invocations.setdefault(name, deque())
+        if invocation_id not in queue:
+            queue.append(invocation_id)
+
+    def _peek_open_subagent(self, name: str) -> str | None:
+        queue = self._open_subagent_invocations.get(name)
+        if not queue:
+            return None
+        return queue[0]
+
+    def _dequeue_open_subagent(self, *, name: str, invocation_id: str) -> None:
+        queue = self._open_subagent_invocations.get(name)
+        if not queue:
+            return
+        try:
+            queue.remove(invocation_id)
+        except ValueError:
+            return
+        if not queue:
+            self._open_subagent_invocations.pop(name, None)
+
+    def _advance_subagent_status(
+        self,
+        invocation: SubagentInvocation,
+        status: SubagentStatus,
+        *,
+        duration_ms: float | None = None,
+    ) -> None:
+        status_order = {"selected": 0, "started": 1, "completed": 2, "failed": 2}
+        if status_order[status] < status_order[invocation.status]:
+            return
+        if invocation.status in {"completed", "failed"} and invocation.status != status:
+            self._record_contract_error(
+                "Subagent invocation "
+                f"{invocation.invocation_id} ended twice with conflicting states"
+            )
+            return
+        invocation.status = status
+        if duration_ms is not None:
+            invocation.duration_ms = duration_ms
+
+    def _resolve_subagent_duration_ms(self, *, invocation_id: str) -> float | None:
+        start = self._subagent_start_times.pop(invocation_id, None)
+        if start is None:
+            return None
+        return (time.monotonic() - start) * 1000
+
+    def _record_contract_error(self, message: str) -> None:
+        if message not in self._contract_errors:
+            self._contract_errors.append(message)
+
 
 def _get_data_field(event: SessionEvent, field: str, default: Any = None) -> Any:
     """Safely get a field from event.data (which has ~90 optional fields)."""
     return getattr(event.data, field, default)
 
 
-def _resolve_subagent_name(event: SessionEvent) -> str:
-    """Extract the subagent name from an event, trying SDK 0.2.0+ fields first."""
-    return (
-        _get_data_field(event, "agent_name", None)
-        or _get_data_field(event, "eval_name", None)
-        or _get_data_field(event, "name", None)
-        or "unknown"
-    )
+def _require_subagent_name(event: SessionEvent) -> str | None:
+    """Extract the current SDK subagent name field."""
+    name = _get_data_field(event, "agent_name", None)
+    if isinstance(name, str) and name:
+        return name
+    return None
+
+
+def _require_invocation_id(event: SessionEvent) -> str | None:
+    """Extract the current SDK subagent invocation correlation field."""
+    invocation_id = _get_data_field(event, "tool_call_id", None)
+    if isinstance(invocation_id, str) and invocation_id:
+        return invocation_id
+    return None
+
+
+def _resolve_tool_subagent_name(arguments: Any) -> str | None:
+    """Extract the current dispatch tool key for the target custom agent."""
+    if not isinstance(arguments, dict):
+        return None
+    for key in ("agentSlug", "agent_type", "name"):
+        agent_slug = arguments.get(key)
+        if isinstance(agent_slug, str) and agent_slug:
+            return agent_slug
+    return None
+
+
+def _duration_to_ms(value: Any) -> float | None:
+    """Convert current SDK duration values to milliseconds."""
+    if isinstance(value, timedelta):
+        return value.total_seconds() * 1000
+    if isinstance(value, (float, int)):
+        return float(value)
+    return None
+
+
+def _stringify_tool_error(error: Any) -> str | None:
+    """Extract a readable tool error message."""
+    if error is None:
+        return None
+    message = getattr(error, "message", None)
+    if isinstance(message, str) and message:
+        return message
+    return str(error)
 
 
 # ── Event type → handler dispatch table ──

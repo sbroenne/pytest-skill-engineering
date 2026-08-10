@@ -22,7 +22,7 @@ Add `--aitest-iterations=N` to your pytest command:
 
 ```bash
 # Run each test 3 times
-pytest tests/ --aitest-iterations=3 --aitest-html=report.html --aitest-summary-model=copilot/gpt-5.5
+uv run python -m pytest tests/ --aitest-iterations=3 --aitest-html=report.html --aitest-summary-model=copilot/gpt-5.4-mini
 ```
 
 No code changes needed. Every test automatically runs N times.
@@ -54,7 +54,7 @@ A test that passes 2 out of 3 times shows:
 
 ```bash
 # Default: 1 (no iteration)
-pytest tests/ --aitest-iterations=5
+uv run python -m pytest tests/ --aitest-iterations=5
 ```
 
 ### pyproject.toml
@@ -63,7 +63,7 @@ pytest tests/ --aitest-iterations=5
 [tool.pytest.ini_options]
 addopts = """
 --aitest-iterations=3
---aitest-summary-model=copilot/gpt-5.5
+--aitest-summary-model=copilot/gpt-5.4-mini
 --aitest-html=aitest-reports/report.html
 """
 ```
@@ -92,19 +92,19 @@ Iterations work seamlessly with all other pytest-skill-engineering features:
 
 ```bash
 # Compare models with 3 iterations each
-pytest tests/ --aitest-iterations=3
+uv run python -m pytest tests/ --aitest-iterations=3
 ```
 
 Each model runs each test 3 times. The leaderboard uses aggregated pass rates.
 
 ### With Eval Retries
 
-Iterations are different from `Eval.retries`:
+Iterations are different from `CopilotEval(max_retries=...)`:
 
 | Feature | Purpose | Scope |
 |---------|---------|-------|
 | `--aitest-iterations=N` | Statistical reliability | Re-runs the entire test N times |
-| `CopilotEval(max_retries=3)` | Error recovery | Retries failed tool calls within a single run |
+| `CopilotEval(max_retries=3)` | Error recovery | Retries a failed Copilot run within a single test execution |
 
 Use both together for robust testing:
 
@@ -116,7 +116,7 @@ agent = CopilotEval(
 )
 
 # Run each test 5 times for statistical confidence
-# pytest tests/ --aitest-iterations=5
+# uv run python -m pytest tests/ --aitest-iterations=5
 ```
 
 ### With Sessions
@@ -132,7 +132,7 @@ Each iteration runs the full session independently. Session state is not shared 
 
 ```bash
 # Fail if overall pass rate drops below 80%
-pytest tests/ --aitest-iterations=3 --aitest-min-pass-rate=80
+uv run python -m pytest tests/ --aitest-iterations=3 --aitest-min-pass-rate=80
 ```
 
 ## Next Steps

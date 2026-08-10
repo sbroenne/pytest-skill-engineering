@@ -2,43 +2,31 @@ name: Release
 
 on:
   workflow_dispatch:
-    inputs:
-      version_bump:
-        description: 'Version bump type'
-        required: true
-        type: choice
-        default: 'patch'
-        options:
-          - major
-          - minor
-          - patch
-      custom_version:
-        description: 'Custom version (e.g., 1.2.3, overrides version_bump)'
-        required: false
-        type: string
 
 permissions:
   contents: read
 
 jobs:
-  version:
-    name: Calculate Version
+  validate-release:
+    name: Validate release source
     runs-on: ubuntu-latest
     outputs:
-      version: ${{ steps.calculate_version.outputs.version }}
-      tag: ${{ steps.calculate_version.outputs.tag }}
-      tag_exists: ${{ steps.calculate_version.outputs.tag_exists }}
-      pypi_exists: ${{ steps.calculate_version.outputs.pypi_exists }}
+      version: ${{ steps.validate.outputs.version }}
+      tag: ${{ steps.validate.outputs.tag }}
+      tag_exists: ${{ steps.validate.outputs.tag_exists }}
+      pypi_exists: ${{ steps.validate.outputs.pypi_exists }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
-          fetch-depth: 0  # Fetch all history and tags
+          fetch-depth: 0
 
-      - name: Calculate version
-        id: calculate_version
-        env:
-          VERSION_BUMP: ${{ inputs.version_bump }}
-          CUSTOM_VERSION: ${{ inputs.custom_version }}
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.13"
+
+      - name: Validate source version and provenance
+        id: validate
         run: |
           python <<'PY'
           from __future__ import annotations
@@ -54,12 +42,10 @@ jobs:
           def parse_semver(version: str) -> tuple[int, int, int]:
               parts = version.strip().split(".")
               if len(parts) != 3 or any(not part.isdigit() for part in parts):
-                  msg = (
-                      "release.yml only supports plain semver X.Y.Z for automatic "
-                      f"version calculation, got {version!r}. Use custom_version for "
-                      "pre-releases or other custom versions."
+                  raise SystemExit(
+                      "release.yml requires the checked-in project.version to be plain semver X.Y.Z; "
+                      f"got {version!r}"
                   )
-                  raise SystemExit(msg)
               return tuple(int(part) for part in parts)
 
 
@@ -85,86 +71,59 @@ jobs:
                   raise SystemExit(f"Unable to query PyPI for {package} {version}: {exc}") from exc
 
 
-          custom_version = os.environ.get("CUSTOM_VERSION", "").strip()
-          head_sha = git("rev-parse", "HEAD")
-          head_tag_versions = [
-              tag.removeprefix("v")
-              for tag in git("tag", "--points-at", "HEAD", "--list", "v*").splitlines()
-              if tag.strip()
-          ]
-
-          if custom_version:
-              version = custom_version
-              print(f"Using custom version: {version}")
-          elif head_tag_versions:
-              version = max(head_tag_versions, key=parse_semver)
-              print(
-                  "HEAD already has a semver tag; rerun detected. "
-                  f"Reusing existing version {version}."
-              )
-          else:
-              pyproject = tomllib.loads(Path("pyproject.toml").read_text(encoding="utf-8"))
-              pyproject_version = str(pyproject["project"]["version"])
-              tag_versions = [
-                  tag.removeprefix("v")
-                  for tag in git("tag", "--list", "v*").splitlines()
-                  if tag.strip()
-              ]
-              if tag_versions:
-                  tag_version = max(tag_versions, key=parse_semver)
-                  latest_tag = f"v{tag_version}"
-              else:
-                  latest_tag = "v0.0.0"
-                  tag_version = "0.0.0"
-
-              print(f"Latest tag: {latest_tag}")
-              print(f"pyproject.toml version: {pyproject_version}")
-
-              tag_semver = parse_semver(tag_version)
-              pyproject_semver = parse_semver(pyproject_version)
-              bump = os.environ["VERSION_BUMP"]
-
-              if pyproject_semver > tag_semver:
-                  version = pyproject_version
-                  print(
-                      "pyproject.toml is ahead of the latest tag; "
-                      f"releasing {version} as-is."
-                  )
-              else:
-                  major, minor, patch = tag_semver
-                  if bump == "major":
-                      version = f"{major + 1}.0.0"
-                  elif bump == "minor":
-                      version = f"{major}.{minor + 1}.0"
-                  elif bump == "patch":
-                      version = f"{major}.{minor}.{patch + 1}"
-                  else:
-                      raise SystemExit(f"Unsupported version bump: {bump}")
-
-                  print(f"Calculated new version from tag: {version}")
-
+          pyproject = tomllib.loads(Path("pyproject.toml").read_text(encoding="utf-8"))
+          version = str(pyproject["project"]["version"])
+          parse_semver(version)
           tag = f"v{version}"
+          head_sha = git("rev-parse", "HEAD")
+
+          latest_versions = [
+              raw.removeprefix("v")
+              for raw in git("tag", "--list", "v*").splitlines()
+              if raw.strip()
+          ]
+          if latest_versions:
+              latest_version = max(latest_versions, key=parse_semver)
+              if parse_semver(version) < parse_semver(latest_version):
+                  raise SystemExit(
+                      f"Checked-in project.version {version} is behind latest tag {latest_version}. "
+                      "Release sources must move forward before publishing."
+                  )
+
+          head_tags = {
+              raw.removeprefix("v")
+              for raw in git("tag", "--points-at", "HEAD", "--list", "v*").splitlines()
+              if raw.strip()
+          }
+          if head_tags and version not in head_tags:
+              raise SystemExit(
+                  f"HEAD is already tagged with {sorted(head_tags)!r}, but project.version is {version}. "
+                  "Tag and source must agree."
+              )
+
           tag_exists = subprocess.run(
               ["git", "rev-parse", "--verify", f"refs/tags/{tag}"],
               check=False,
               capture_output=True,
               text=True,
           ).returncode == 0
-
           if tag_exists:
               tag_sha = git("rev-list", "-n", "1", tag)
-              print(f"Tag {tag} already exists on commit {tag_sha}")
               if tag_sha != head_sha:
                   raise SystemExit(
-                      f"Target tag {tag} already exists on commit {tag_sha}, "
-                      f"but workflow is running on {head_sha}. "
-                      "Use a different version or run from the tagged commit."
+                      f"Tag {tag} already exists on commit {tag_sha}, but workflow is running on {head_sha}."
                   )
+              print(f"Validated existing release tag {tag} on HEAD")
           else:
-              print(f"Tag {tag} does not exist yet")
+              print(f"Release tag {tag} is missing and will be created from HEAD")
 
           pypi_exists = pypi_version_exists("pytest-skill-engineering", version)
           print(f"PyPI already has pytest-skill-engineering {version}: {pypi_exists}")
+          if pypi_exists and not tag_exists:
+              raise SystemExit(
+                  f"PyPI already has version {version}, but git tag {tag} is missing. "
+                  "Refuse to publish from mismatched provenance."
+              )
 
           output_path = Path(os.environ["GITHUB_OUTPUT"])
           with output_path.open("a", encoding="utf-8") as output:
@@ -174,69 +133,11 @@ jobs:
               output.write(f"pypi_exists={str(pypi_exists).lower()}\n")
           PY
 
-  build:
-    name: Build Package
-    runs-on: ubuntu-latest
-    needs: version
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
-        with:
-          version: "latest"
-
-      - name: Set up Python
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
-        with:
-          python-version: "3.13"
-
-      - name: Update version in pyproject.toml
-        run: |
-          sed -i 's/^version = ".*"/version = "${{ needs.version.outputs.version }}"/' pyproject.toml
-          echo "Updated version to ${{ needs.version.outputs.version }}"
-          grep "^version" pyproject.toml
-
-      - name: Install build dependencies
-        run: uv sync --dev
-
-      - name: Build package
-        run: uv build
-
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
-        with:
-          name: dist
-          path: dist/
-
-  test:
-    name: Test Build
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Download build artifacts
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
-        with:
-          name: dist
-          path: dist/
-
-      - name: Set up Python
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
-        with:
-          python-version: "3.13"
-
-      - name: Install package from wheel
-        run: pip install dist/*.whl
-
-      - name: Verify installation
-        run: |
-          python -c "from pytest_skill_engineering import plugin; print('Import successful')"
-
   create-tag:
-    name: Create Git Tag
+    name: Create release tag
     runs-on: ubuntu-latest
-    needs: [version, build, test]
-    if: ${{ needs.version.outputs.tag_exists != 'true' }}
+    needs: validate-release
+    if: ${{ needs.validate-release.outputs.tag_exists != 'true' }}
     permissions:
       contents: write
     steps:
@@ -251,17 +152,140 @@ jobs:
 
       - name: Create and push tag
         run: |
-          TAG="${{ needs.version.outputs.tag }}"
-          echo "Creating tag: $TAG"
-
+          TAG="${{ needs.validate-release.outputs.tag }}"
           git tag -a "$TAG" -m "Release $TAG"
           git push origin "$TAG"
+
+  build:
+    name: Build and verify tagged artifacts
+    runs-on: ubuntu-latest
+    needs: [validate-release, create-tag]
+    if: ${{ !cancelled() && needs.validate-release.result == 'success' && (needs.create-tag.result == 'success' || needs.create-tag.result == 'skipped') }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ needs.validate-release.outputs.tag }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
+        with:
+          version: "latest"
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.13"
+
+      - name: Validate tagged source version
+        env:
+          EXPECTED_TAG: ${{ needs.validate-release.outputs.tag }}
+        run: |
+          uv run python <<'PY'
+          from __future__ import annotations
+
+          import os
+          import tomllib
+          from pathlib import Path
+
+          expected_tag = os.environ["EXPECTED_TAG"]
+          expected_version = expected_tag.removeprefix("v")
+          pyproject = tomllib.loads(Path("pyproject.toml").read_text(encoding="utf-8"))
+          source_version = str(pyproject["project"]["version"])
+          if source_version != expected_version:
+              raise SystemExit(
+                  f"Checked-out tag {expected_tag} declares project.version={source_version}, "
+                  f"expected {expected_version}"
+              )
+          print(f"Validated source metadata for {expected_tag}")
+          PY
+
+      - name: Build package
+        run: uv build
+
+      - name: Verify wheel and sdist metadata
+        env:
+          EXPECTED_VERSION: ${{ needs.validate-release.outputs.version }}
+        run: |
+          uv run python <<'PY'
+          from __future__ import annotations
+
+          import email
+          import os
+          import tarfile
+          import zipfile
+          from pathlib import Path
+
+          expected = os.environ["EXPECTED_VERSION"]
+          dist = Path("dist")
+          wheel_paths = sorted(dist.glob("pytest_skill_engineering-*.whl"))
+          sdist_paths = sorted(dist.glob("pytest_skill_engineering-*.tar.gz"))
+          if len(wheel_paths) != 1 or len(sdist_paths) != 1:
+              raise SystemExit(
+                  f"Expected exactly one wheel and one sdist, found {wheel_paths!r} and {sdist_paths!r}"
+              )
+
+          wheel_path = wheel_paths[0]
+          sdist_path = sdist_paths[0]
+
+          with zipfile.ZipFile(wheel_path) as wheel:
+              metadata_name = next(
+                  name for name in wheel.namelist() if name.endswith(".dist-info/METADATA")
+              )
+              wheel_metadata = email.message_from_string(
+                  wheel.read(metadata_name).decode("utf-8")
+              )
+          wheel_version = wheel_metadata["Version"]
+
+          with tarfile.open(sdist_path, "r:gz") as sdist:
+              pkg_info_member = next(member for member in sdist.getmembers() if member.name.endswith("PKG-INFO"))
+              pkg_info_handle = sdist.extractfile(pkg_info_member)
+              if pkg_info_handle is None:
+                  raise SystemExit(f"Unable to read PKG-INFO from {sdist_path}")
+              sdist_metadata = email.message_from_bytes(pkg_info_handle.read())
+          sdist_version = sdist_metadata["Version"]
+
+          if wheel_version != expected or sdist_version != expected:
+              raise SystemExit(
+                  f"Artifact version mismatch: wheel={wheel_version}, sdist={sdist_version}, expected={expected}"
+              )
+          print(f"Validated artifact metadata for {expected}")
+          PY
+
+      - name: Install wheel with uv and verify import metadata
+        env:
+          EXPECTED_VERSION: ${{ needs.validate-release.outputs.version }}
+        run: |
+          uv venv .venv-wheel-check
+          uv pip install --python .venv-wheel-check/bin/python dist/*.whl
+          .venv-wheel-check/bin/python <<'PY'
+          from __future__ import annotations
+
+          import os
+          from importlib.metadata import version
+
+          import pytest_skill_engineering
+
+          expected = os.environ["EXPECTED_VERSION"]
+          installed_version = version("pytest-skill-engineering")
+          if installed_version != expected or pytest_skill_engineering.__version__ != expected:
+              raise SystemExit(
+                  f"Installed wheel version mismatch: metadata={installed_version}, module={pytest_skill_engineering.__version__}, expected={expected}"
+              )
+          print(f"Verified installed wheel version {expected}")
+          PY
+          rm -rf .venv-wheel-check
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: dist
+          path: dist/
 
   publish-pypi:
     name: Publish to PyPI
     runs-on: ubuntu-latest
-    needs: [version, build, test, create-tag]
-    if: ${{ !cancelled() && needs.build.result == 'success' && needs.test.result == 'success' && (needs.create-tag.result == 'success' || needs.create-tag.result == 'skipped') && needs.version.outputs.pypi_exists != 'true' }}
+    needs: [validate-release, build]
+    if: ${{ !cancelled() && needs.build.result == 'success' && needs.validate-release.outputs.pypi_exists != 'true' }}
     environment:
       name: pypi
       url: https://pypi.org/project/pytest-skill-engineering/
@@ -278,15 +302,13 @@ jobs:
         uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # v1.14.2
 
   github-release:
-    name: Create GitHub Release
+    name: Create GitHub release
     runs-on: ubuntu-latest
-    needs: [version, build, publish-pypi]
+    needs: [validate-release, build, publish-pypi]
     if: ${{ !cancelled() && needs.build.result == 'success' && (needs.publish-pypi.result == 'success' || needs.publish-pypi.result == 'skipped') }}
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-
       - name: Download build artifacts
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
@@ -296,15 +318,9 @@ jobs:
       - name: Create or update GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ needs.version.outputs.tag }}
+          TAG: ${{ needs.validate-release.outputs.tag }}
         run: |
           release_args=(--generate-notes --title "$TAG")
-          case "$TAG" in
-            *alpha*|*beta*|*rc*)
-              release_args+=(--prerelease)
-              ;;
-          esac
-
           if gh release view "$TAG" >/dev/null 2>&1; then
             echo "GitHub release $TAG already exists; refreshing attached artifacts"
             gh release upload "$TAG" dist/* --clobber
@@ -313,12 +329,12 @@ jobs:
           fi
 
   deploy-docs:
-    name: Deploy Documentation
-    needs: [version, github-release]
+    name: Deploy documentation
+    needs: [validate-release, github-release]
     permissions:
       contents: read
       pages: write
       id-token: write
     uses: ./.github/workflows/docs.yml
     with:
-      version: ${{ needs.version.outputs.tag }}
+      version: ${{ needs.validate-release.outputs.tag }}

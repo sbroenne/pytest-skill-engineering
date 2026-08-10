@@ -5,9 +5,17 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any, Literal, cast
 
 import yaml
+from copilot.session import CustomAgentConfig
+
+from pytest_skill_engineering.copilot.contracts import (
+    CopilotCustomAgentConfig,
+    CopilotMCPServerConfig,
+    CopilotReasoningEffort,
+    CopilotSessionHooks,
+)
 
 if TYPE_CHECKING:
     from pytest_skill_engineering.copilot.personas import Persona
@@ -15,11 +23,15 @@ if TYPE_CHECKING:
 _logger = logging.getLogger(__name__)
 
 
-def _parse_agent_file(path: Path) -> dict[str, Any]:
+def _empty_session_hooks() -> CopilotSessionHooks:
+    return cast(CopilotSessionHooks, {})
+
+
+def _parse_agent_file(path: Path) -> CopilotCustomAgentConfig:
     """Parse a ``.agent.md`` file into a ``CustomAgentConfig`` dict.
 
-    Handles optional YAML frontmatter (name, description, tools, mcp-servers)
-    followed by the agent's Markdown prompt body.
+    Handles optional YAML frontmatter for the current SDK-backed custom-agent
+    fields and uses the Markdown body as the agent's prompt.
     """
     content = path.read_text(encoding="utf-8")
     lines = content.split("\n")
@@ -46,17 +58,31 @@ def _parse_agent_file(path: Path) -> dict[str, Any]:
         stem = stem[: -len(".agent.md")]
     name: str = str(frontmatter.get("name") or stem)
 
-    agent: dict[str, Any] = {"name": name}
-    if "description" in frontmatter:
-        agent["description"] = frontmatter["description"]
+    agent: CopilotCustomAgentConfig = {"name": name, "prompt": body}
+    for key in (
+        "description",
+        "display_name",
+        "infer",
+        "skills",
+        "model",
+        "reasoning_effort",
+        "tools",
+    ):
+        if key in frontmatter:
+            agent[key] = frontmatter[key]
     if body:
         agent["prompt"] = body
-    if "tools" in frontmatter:
-        agent["tools"] = frontmatter["tools"]
     if "mcp-servers" in frontmatter:
         agent["mcp_servers"] = frontmatter["mcp-servers"]
 
     return agent
+
+
+def _default_persona() -> "Persona":
+    """Return the default persona (VSCodePersona)."""
+    from pytest_skill_engineering.copilot.personas import VSCodePersona  # noqa: PLC0415
+
+    return VSCodePersona()
 
 
 @dataclass(slots=True, frozen=True)
@@ -98,7 +124,7 @@ class CopilotEval:
 
     # Model selection (None = Copilot's default)
     model: str | None = None
-    reasoning_effort: Literal["low", "medium", "high", "xhigh"] | None = None
+    reasoning_effort: CopilotReasoningEffort | None = None
 
     # System message content — maps to SDK's system_message.content
     # In the Copilot SDK, this is NOT a "system prompt" — it's instructions
@@ -127,11 +153,11 @@ class CopilotEval:
     auto_confirm: bool = True
 
     # MCP servers to attach to the session
-    mcp_servers: dict[str, Any] = field(default_factory=dict)
+    mcp_servers: dict[str, CopilotMCPServerConfig] = field(default_factory=dict)
 
     # Custom agents (SDK CustomAgentConfig: name, prompt, description,
     # display_name, tools, mcp_servers, infer)
-    custom_agents: list[dict[str, Any]] = field(default_factory=list)
+    custom_agents: list[CustomAgentConfig] = field(default_factory=list)
 
     # Skill directories
     skill_directories: list[str] = field(default_factory=list)
@@ -146,13 +172,13 @@ class CopilotEval:
 
     # SDK passthrough: lifecycle hooks (SessionHooks).
     # Maps to the SDK's ``hooks`` parameter on ``create_session()``.
-    hooks: dict[str, Any] = field(default_factory=dict)
+    hooks: CopilotSessionHooks = field(default_factory=_empty_session_hooks)
 
     # IDE persona — controls which polyfill tools are injected to simulate
     # the target runtime environment (VS Code, Claude Code, Copilot CLI, etc.)
     # VSCodePersona is the default: it polyfills runSubagent when custom_agents
     # are present, matching VS Code's native behaviour.
-    persona: "Persona" = field(default_factory=lambda: _default_persona())
+    persona: "Persona" = field(default_factory=_default_persona)
 
     def build_session_config(self) -> dict[str, Any]:
         """Build a SessionConfig dict for the Copilot SDK.
@@ -275,7 +301,7 @@ class CopilotEval:
             instructions = instructions_file.read_text(encoding="utf-8").strip() or None
 
         # Load custom agents — recursive so subagents/ subdirectories are included
-        agents: list[dict[str, Any]] = []
+        agents: list[CustomAgentConfig] = []
         agents_dir = github_dir / "agents"
         if agents_dir.exists():
             for agent_file in sorted(agents_dir.rglob("*.agent.md")):
@@ -424,7 +450,6 @@ class CopilotEval:
             )
         """
         from pytest_skill_engineering.copilot.config import load_mcp_config  # noqa: PLC0415
-        from pytest_skill_engineering.core.evals import load_custom_agent  # noqa: PLC0415
 
         root = Path(path).resolve()
         claude_dir = root / ".claude"
@@ -441,13 +466,13 @@ class CopilotEval:
         combined_instructions = "\n\n".join(instruction_parts) or None
 
         # 2. Load custom agents from .claude/agents/
-        agents: list[dict[str, Any]] = []
+        agents: list[CustomAgentConfig] = []
         agents_dir = claude_dir / "agents"
         if agents_dir.is_dir():
             # Claude Code uses plain .md files for agents
             for agent_file in sorted(agents_dir.glob("*.md")):
                 try:
-                    agents.append(load_custom_agent(agent_file))
+                    agents.append(_parse_agent_file(agent_file))
                 except (FileNotFoundError, ValueError) as exc:
                     _logger.warning("Skipping agent file %s: %s", agent_file.name, exc)
 
@@ -488,14 +513,3 @@ class CopilotEval:
         }
         config.update(overrides)
         return cls(**config)
-
-
-def _default_persona() -> "Persona":
-    """Return the default persona (VSCodePersona).
-
-    Defined as a function to avoid a circular-import at module level:
-    ``personas.py`` imports ``agent.py``, so we defer the import.
-    """
-    from pytest_skill_engineering.copilot.personas import VSCodePersona  # noqa: PLC0415
-
-    return VSCodePersona()

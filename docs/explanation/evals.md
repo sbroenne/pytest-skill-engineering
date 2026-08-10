@@ -1,195 +1,42 @@
 ---
-description: "Understand Evals in pytest-skill-engineering: CopilotEval combines the GitHub Copilot coding agent with skills, custom agents, and working directory configuration."
+description: "CopilotEval is the public harness for testing GitHub Copilot against your tools, system prompts, skills, and custom agents."
 ---
 
-# Evals
+# CopilotEval
 
-The core concept in pytest-skill-engineering.
+`CopilotEval` is the public execution harness.
 
-## What is an Eval?
+It defines:
 
-An **Eval** (specifically `CopilotEval`) is a test configuration that bundles everything needed to run a test using the **real GitHub Copilot coding agent**.
+- the **system prompt** (`instructions=`)
+- the **model** (`model=`)
+- the **tool surface** (`mcp_servers=`, `allowed_tools=`)
+- the **custom agents** (`custom_agents=`)
+- the **prompt files** you choose to send as user prompts
+- execution limits such as `max_turns` and `max_retries`
 
-```
-CopilotEval = Copilot Agent + Skills + Custom Agents + Instructions
-```
+## Why one harness
 
-```python
-from pytest_skill_engineering.copilot import CopilotEval
+The project is intentionally Copilot-only. That keeps the runtime, reports, and documentation aligned with the real GitHub Copilot experience.
 
-agent = CopilotEval(
-    name="banking-test",
-    instructions="You are a banking assistant.",
-    skill_directories=["skills/banking-advisor"],  # Optional
-    max_turns=10,
-)
-```
+## What you compare
 
-## The Eval is NOT What You Test
+Create multiple `CopilotEval` instances when you want to compare:
 
-**You don't test evals. You USE evals to test:**
+- model choices
+- system prompts
+- skill directories
+- custom agents
+- MCP server variants
 
-| Target | Question |
-|--------|----------|
-| **MCP Server** | Can Copilot understand and use my tools? |
-| **Agent Skill** | Does this domain knowledge improve performance? |
-| **Custom Agent** | Do these `.agent.md` instructions trigger proper subagent dispatch? |
-| **Tool Descriptions** | Can Copilot discover and use tools correctly? |
+The report ranks them by pass rate first and cost second.
 
-The Eval is the **test harness** that bundles the GitHub Copilot coding agent with the configuration you want to evaluate.
+## Stable identity vs display names
 
-## CopilotEval Components
+Every eval needs a stable machine identity internally, but reports should display human-readable names.
+Use `name=` for the display label users see in the report.
 
-| Component | Required | Example |
-|-----------|----------|---------|
-| Name | ✓ | `"banking-test"` |
-| Instructions | Optional | `"You are a helpful assistant."` |
-| Skills | Optional | `skill_directories=["skills/banking"]` |
-| Custom Agents | Optional | `custom_agents=[load_custom_agent("agents/reviewer.agent.md")]` |
-| Model | Optional | `model="gpt-5.5"` (defaults to Copilot's active model) |
-| Working Directory | Optional | `working_directory=str(tmp_path)` |
+## Retries
 
-## Eval Leaderboard
-
-**When you test multiple evals, the report shows an Eval Leaderboard.**
-
-This happens automatically — no configuration needed. Just parametrize your tests:
-
-```python
-from pathlib import Path
-import pytest
-from pytest_skill_engineering.copilot import CopilotEval
-from pytest_skill_engineering import Skill
-
-SKILLS = {
-    "v1": Skill.from_path("skills/financial-advisor-v1"),
-    "v2": Skill.from_path("skills/financial-advisor-v2"),
-}
-
-
-@pytest.mark.parametrize("skill_name,skill", SKILLS.items())
-async def test_banking(copilot_eval, skill_name, skill):
-    agent = CopilotEval(
-        name=f"banking-{skill_name}",
-        model="gpt-5.4-mini",
-        skill_directories=[str(skill.path)],
-    )
-    result = await copilot_eval(agent, "What's my checking balance?")
-    assert result.success
-```
-
-The report shows:
-
-| Eval | Pass Rate | Cost |
-|-------|-----------|------|
-| gpt-5.4-mini (v1) | 100% | $0.002 |
-| gpt-5.4-mini (v2) | 100% | $0.004 |
-
-## Winning Criteria
-
-**Winning Eval = Highest pass rate → Lowest cost (tiebreaker)**
-
-1. **Pass rate** (primary) — 100% beats 95%, always
-2. **Cost** (tiebreaker) — Among equal pass rates, cheaper wins
-
-## Dimension Detection
-
-The AI analysis detects *what varies* between evals to provide targeted feedback:
-
-| What Varies | AI Feedback Focuses On |
-|-------------|------------------------|
-| Model | Which model works best with your tools |
-| Skill | Whether domain knowledge helps |
-| Custom Agent | Which `.agent.md` instructions produce better behavior |
-| Server | Which implementation is more reliable |
-
-This is for **AI analysis only** — the leaderboard always appears when multiple evals are tested.
-
-## Examples
-
-### Compare Models
-
-```python
-MODELS = ["gpt-5.4-mini", "gpt-4.1"]
-
-
-@pytest.mark.parametrize("model", MODELS)
-async def test_with_model(copilot_eval, model):
-    agent = CopilotEval(
-        name=f"banking-{model}",
-        model=model,
-    )
-    result = await copilot_eval(agent, "What's my checking balance?")
-    assert result.success
-```
-
-### Compare Custom Agent Versions
-
-A/B test two versions of a `.agent.md` file to find which instructions work better:
-
-```python
-from pathlib import Path
-from pytest_skill_engineering.copilot import CopilotEval
-from pytest_skill_engineering.core.evals import load_custom_agent
-
-AGENT_VERSIONS = {
-    path.stem: load_custom_agent(path)
-    for path in Path(".github/agents").glob("reviewer-*.agent.md")
-}
-
-
-@pytest.mark.parametrize("name,agent_def", AGENT_VERSIONS.items())
-async def test_reviewer(copilot_eval, name, agent_def):
-    agent = CopilotEval(
-        name=f"reviewer-{name}",
-        custom_agents=[agent_def],
-    )
-    result = await copilot_eval(agent, "Review src/auth.py for security issues")
-    assert result.success
-```
-
-### Compare Multiple Dimensions
-
-```python
-MODELS = ["claude-opus-4.8", "gpt-5.6-sol"]
-SKILLS = {
-    "v1": Skill.from_path("skills/advisor-v1"),
-    "v2": Skill.from_path("skills/advisor-v2"),
-}
-
-
-@pytest.mark.parametrize("model", MODELS)
-@pytest.mark.parametrize("skill_name,skill", SKILLS.items())
-async def test_combinations(copilot_eval, model, skill_name, skill):
-    agent = CopilotEval(
-        name=f"banking-{model}-{skill_name}",
-        model=model,
-        skill_directories=[str(skill.path)],
-    )
-    result = await copilot_eval(agent, "What's my checking balance?")
-    assert result.success
-```
-
-## Custom Agents
-
-A **custom agent** is a specialized sub-agent defined in a `.agent.md` or `.md` file with YAML frontmatter (`name`, `description`, `tools`) and a markdown prompt body.
-
-```python
-from pytest_skill_engineering.copilot import CopilotEval
-from pytest_skill_engineering.core.evals import load_custom_agent
-
-# Load and test a custom agent via CopilotEval
-agent = CopilotEval(
-    name="reviewer-test",
-    custom_agents=[load_custom_agent(".github/agents/reviewer.agent.md")],
-)
-```
-
-The `tools` frontmatter field maps to `allowed_tools` — restricting which tools the agent can call. See [Custom Agents](../getting-started/custom-agents.md) for a full guide.
-
-## Next Steps
-
-- [Choosing a Test Harness](choosing-a-harness.md) — `Eval` vs `CopilotEval`: full trade-off guide
-- [Comparing Configurations](../getting-started/comparing.md) — More comparison patterns
-- [A/B Testing Servers](../getting-started/ab-testing-servers.md) — Test server versions
-- [AI Analysis](ai-analysis.md) — What the AI evaluation produces
+`max_retries` defaults to `2`.
+Retries are useful for transient Copilot session failures, not as a substitute for fixing deterministic tool or prompt problems.

@@ -2,8 +2,7 @@
 
 Loads VS Code (``.github/agents/*.agent.md``) and Claude Code
 (``.claude/agents/*.md``) custom agent definitions into dicts
-compatible with both :attr:`Eval.from_agent_file` and
-:attr:`CopilotEval.custom_agents`.
+compatible with :attr:`CopilotEval.custom_agents`.
 
 Eval files use YAML frontmatter for metadata and a markdown body for
 the agent's prompt/instructions.
@@ -33,13 +32,6 @@ Example usage::
 
     # All agents from a directory
     agents = load_custom_agents("agents/")
-
-    # Use with Eval.from_agent_file()
-    from pytest_skill_engineering import Eval, Provider
-    agent = Eval.from_agent_file(
-        ".github/agents/reviewer.agent.md",
-        provider=Provider(model="azure/gpt-5.4-mini"),
-    )
 
     # Use with CopilotEval
     from pytest_skill_engineering.copilot import CopilotEval
@@ -141,8 +133,7 @@ def load_custom_agent(
             - ``prompt`` (str): Markdown body after frontmatter.
             - ``description`` (str): From frontmatter, empty if absent.
             - ``metadata`` (dict): Full parsed frontmatter dict.
-        Compatible with :attr:`CopilotEval.custom_agents` and
-        :meth:`Eval.from_agent_file`.
+        Compatible with :attr:`CopilotEval.custom_agents`.
 
     Raises:
         FileNotFoundError: If the file does not exist.

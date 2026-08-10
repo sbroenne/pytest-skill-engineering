@@ -14,6 +14,7 @@ from pytest_skill_engineering.reporting import (
     generate_html,
     generate_mermaid_sequence,
 )
+from pytest_skill_engineering.reporting.generator import _build_report_context
 from pytest_skill_engineering.reporting.insights import InsightsResult
 
 _TEST_INSIGHTS = InsightsResult(
@@ -299,7 +300,7 @@ class TestGenerateMermaidSequence:
         )
         mermaid = generate_mermaid_sequence(result)
 
-        assert 'Tools--xAgent: "Error: File not found"' in mermaid
+        assert 'Tools--xEval: "Error: File not found"' in mermaid
 
     def test_content_truncation(self) -> None:
         long_content = "A" * 100
@@ -482,3 +483,158 @@ class TestAgentLeaderboardSortOrder:
         assert gpt5_pos > 0, "gpt-5.4-mini not found in leaderboard"
         assert gpt4_pos > 0, "gpt-4.1 not found in leaderboard"
         assert gpt5_pos < gpt4_pos, "gpt-5.4-mini should rank before gpt-4.1 (lower cost)"
+
+
+class TestReportContextGrouping:
+    """Deterministic grouping and aggregation regressions."""
+
+    def test_same_agent_id_aggregates_under_one_display_name(self) -> None:
+        report = SuiteReport(
+            name="suite",
+            timestamp="2026-08-10T12:00:00Z",
+            duration_ms=200.0,
+            tests=[
+                TestReport(
+                    name="tests/test_demo.py::test_one",
+                    outcome="passed",
+                    duration_ms=100.0,
+                    eval_result=EvalResult(turns=[], success=True),
+                    agent_id="agent-stable",
+                    eval_name="Economy eval",
+                    model="gpt-5.4-mini",
+                ),
+                TestReport(
+                    name="tests/test_demo.py::test_two",
+                    outcome="passed",
+                    duration_ms=100.0,
+                    eval_result=EvalResult(turns=[], success=True),
+                    agent_id="agent-stable",
+                    eval_name="Economy eval",
+                    model="gpt-5.4-mini",
+                ),
+            ],
+            passed=2,
+        )
+
+        ctx = _build_report_context(report, insights=_TEST_INSIGHTS)
+        assert len(ctx.agents) == 1
+        assert ctx.agents[0].agent_id == "agent-stable"
+        assert ctx.agents[0].display_name == "Economy eval"
+        assert ctx.agents[0].total == 2
+
+    def test_conflicting_eval_names_for_same_agent_id_raise(self) -> None:
+        report = SuiteReport(
+            name="suite",
+            timestamp="2026-08-10T12:00:00Z",
+            duration_ms=200.0,
+            tests=[
+                TestReport(
+                    name="tests/test_demo.py::test_one",
+                    outcome="passed",
+                    duration_ms=100.0,
+                    eval_result=EvalResult(turns=[], success=True),
+                    agent_id="agent-stable",
+                    eval_name="First name",
+                    model="gpt-5.4-mini",
+                ),
+                TestReport(
+                    name="tests/test_demo.py::test_two",
+                    outcome="passed",
+                    duration_ms=100.0,
+                    eval_result=EvalResult(turns=[], success=True),
+                    agent_id="agent-stable",
+                    eval_name="Second name",
+                    model="gpt-5.4-mini",
+                ),
+            ],
+            passed=2,
+        )
+
+        with pytest.raises(ValueError, match="conflicting eval_name"):
+            _build_report_context(report, insights=_TEST_INSIGHTS)
+
+    def test_parameter_ids_remain_distinct_except_synthetic_iterations(self) -> None:
+        report = SuiteReport(
+            name="suite",
+            timestamp="2026-08-10T12:00:00Z",
+            duration_ms=300.0,
+            tests=[
+                TestReport(
+                    name="tests/test_demo.py::test_balance[concise-gpt-5.4-mini]",
+                    outcome="passed",
+                    duration_ms=100.0,
+                    eval_result=EvalResult(turns=[], success=True),
+                    agent_id="agent-a",
+                    eval_name="agent-a",
+                    model="gpt-5.4-mini",
+                ),
+                TestReport(
+                    name="tests/test_demo.py::test_balance[detailed-gpt-5.4-mini]",
+                    outcome="passed",
+                    duration_ms=100.0,
+                    eval_result=EvalResult(turns=[], success=True),
+                    agent_id="agent-a",
+                    eval_name="agent-a",
+                    model="gpt-5.4-mini",
+                ),
+                TestReport(
+                    name="tests/test_demo.py::test_balance[concise-gpt-5.4-mini]",
+                    outcome="failed",
+                    duration_ms=100.0,
+                    eval_result=EvalResult(turns=[], success=False),
+                    agent_id="agent-a",
+                    eval_name="agent-a",
+                    model="gpt-5.4-mini",
+                    iteration=2,
+                ),
+            ],
+            passed=2,
+            failed=1,
+        )
+
+        ctx = _build_report_context(report, insights=_TEST_INSIGHTS)
+        grouped_cases = {test.case_id: test for test in ctx.test_groups[0].tests}
+        assert set(grouped_cases) == {
+            "tests/test_demo.py::test_balance[concise-gpt-5.4-mini]",
+            "tests/test_demo.py::test_balance[detailed-gpt-5.4-mini]",
+        }
+        assert (
+            grouped_cases["tests/test_demo.py::test_balance[concise-gpt-5.4-mini]"]
+            .results_by_agent_id["agent-a"]
+            .iterations
+        )
+
+    def test_comparison_marks_case_failed_if_any_result_fails(self) -> None:
+        report = SuiteReport(
+            name="suite",
+            timestamp="2026-08-10T12:00:00Z",
+            duration_ms=200.0,
+            tests=[
+                TestReport(
+                    name="tests/test_demo.py::test_shared_case",
+                    outcome="passed",
+                    duration_ms=100.0,
+                    eval_result=EvalResult(turns=[], success=True),
+                    agent_id="agent-a",
+                    eval_name="agent-a",
+                    model="gpt-5.4-mini",
+                ),
+                TestReport(
+                    name="tests/test_demo.py::test_shared_case",
+                    outcome="failed",
+                    duration_ms=100.0,
+                    eval_result=EvalResult(turns=[], success=False),
+                    agent_id="agent-b",
+                    eval_name="agent-b",
+                    model="gpt-5.4-mini",
+                    error="AssertionError: failed",
+                ),
+            ],
+            passed=1,
+            failed=1,
+        )
+
+        ctx = _build_report_context(report, insights=_TEST_INSIGHTS)
+        test_case = ctx.test_groups[0].tests[0]
+        assert test_case.has_difference
+        assert test_case.has_failed

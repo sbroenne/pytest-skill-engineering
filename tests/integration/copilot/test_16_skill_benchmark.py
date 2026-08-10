@@ -10,6 +10,8 @@ from pathlib import Path
 
 import pytest
 
+pytestmark = [pytest.mark.copilot, pytest.mark.skill, pytest.mark.slow]
+
 
 class TestSkillBenchmark:
     """Test the skill_benchmark fixture for Phase 4 workflow."""

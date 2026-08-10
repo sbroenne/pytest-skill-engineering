@@ -23,7 +23,7 @@ class Prompt:
 
     Example usage:
         prompt = Prompt.from_yaml("prompts/banking.yaml")
-        agent = Eval(system_prompt=prompt.system_prompt, ...)
+        agent = CopilotEval(instructions=prompt.system_prompt, ...)
     """
 
     name: str
@@ -96,7 +96,7 @@ def load_prompts(directory: str | Path) -> list[Prompt]:
 
         @pytest.mark.parametrize("prompt", prompts, ids=lambda p: p.name)
         async def test_prompts(eval_run, prompt):
-            agent = Eval(system_prompt=prompt.system_prompt, ...)
+            agent = CopilotEval(instructions=prompt.system_prompt, ...)
     """
     directory = Path(directory)
     if not directory.exists():
@@ -146,7 +146,7 @@ def load_system_prompts(directory: str | Path) -> dict[str, str]:
 
         @pytest.mark.parametrize("prompt_name,system_prompt", prompts.items())
         async def test_with_prompt(eval_run, prompt_name, system_prompt):
-            agent = Eval(system_prompt=system_prompt, ...)
+            agent = CopilotEval(instructions=system_prompt, ...)
     """
     directory = Path(directory)
     if not directory.exists():

@@ -7,7 +7,7 @@ on:
 
 permissions:
   contents: write
-  id-token: write
+  copilot-requests: write
   checks: write
   pull-requests: write
 
@@ -17,15 +17,12 @@ concurrency:
 
 jobs:
   hero-tests:
-    name: Hero Tests (Azure OpenAI)
+    name: Hero Tests (Copilot)
     runs-on: ubuntu-latest
     if: >-
       github.event_name == 'workflow_dispatch' ||
       (github.event_name == 'pull_request' && github.event.label.name == 'run-hero-tests')
     environment: hero-tests
-
-    env:
-      AZURE_API_BASE: ${{ secrets.AZURE_OPENAI_ENDPOINT }}
 
     steps:
       - name: Checkout
@@ -47,16 +44,11 @@ jobs:
       - name: Install dependencies
         run: uv sync --all-extras
 
-      - name: Azure login (OIDC)
-        uses: azure/login@532459ea530d8321f2fb9bb10d1e0bcf23869a43 # v3
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
       - name: Run hero tests
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          uv run pytest tests/showcase/ -v \
+          uv run python -m pytest tests/showcase/ -v \
             --aitest-html=docs/demo/hero-report.html \
             --junitxml=hero-results.xml \
             -o "addopts=--aitest-summary-model=copilot/gpt-5.5"
@@ -81,7 +73,7 @@ jobs:
 
       - name: Commit updated hero report
         uses: stefanzweifel/git-auto-commit-action@4a55954c782fc1ea30b9056cd3e7a2b40ca8887d # v7
-        if: always()
+        if: success()
         with:
           commit_message: "ci: update hero report [skip ci]"
           file_pattern: docs/demo/hero-report.html

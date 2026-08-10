@@ -11,6 +11,40 @@ from pytest_skill_engineering.reporting import SuiteReport, TestReport, generate
 from pytest_skill_engineering.reporting.insights import InsightsResult
 
 
+def _minimal_eval_result(*, success: bool = True) -> dict[str, object]:
+    return {
+        "turns": [{"role": "assistant", "content": "Done.", "tool_calls": []}],
+        "success": success,
+        "error": None if success else "boom",
+        "duration_ms": 100.0,
+        "token_usage": {"prompt": 10, "completion": 5},
+        "cost_usd": 0.0,
+        "session_context_count": 0,
+        "assertions": [],
+        "available_tools": [],
+        "skill_info": None,
+        "effective_system_prompt": "Markdown CLI test prompt.",
+        "mcp_prompts": [],
+        "prompt_name": None,
+        "custom_agent_info": None,
+        "premium_requests": 0.0,
+        "instruction_files": [],
+        "clarification_stats": None,
+    }
+
+
+def _test_entry(name: str) -> dict[str, object]:
+    return {
+        "name": name,
+        "outcome": "passed",
+        "duration_ms": 100.0,
+        "eval_result": _minimal_eval_result(),
+        "agent_id": "test-agent",
+        "eval_name": "test-agent",
+        "model": "test-model",
+    }
+
+
 @pytest.fixture
 def insights() -> InsightsResult:
     """Minimal insights for markdown generation (required)."""
@@ -330,18 +364,10 @@ class TestGenerateMdCli:
             "passed": 1,
             "failed": 0,
             "skipped": 0,
-            "tests": [
-                {
-                    "name": "test_a",
-                    "outcome": "passed",
-                    "duration_ms": 100.0,
-                    "agent_id": "test-agent",
-                    "eval_name": "test-agent",
-                    "model": "test-model",
-                }
-            ],
+            "tests": [_test_entry("test_a")],
             "insights": {
                 "markdown_summary": "All good.",
+                "model": "test-model",
                 "cost_usd": 0.01,
                 "tokens_used": 500,
                 "cached": True,
@@ -373,16 +399,7 @@ class TestGenerateMdCli:
             "passed": 1,
             "failed": 0,
             "skipped": 0,
-            "tests": [
-                {
-                    "name": "test_a",
-                    "outcome": "passed",
-                    "duration_ms": 100.0,
-                    "agent_id": "test-agent",
-                    "eval_name": "test-agent",
-                    "model": "test-model",
-                }
-            ],
+            "tests": [_test_entry("test_a")],
         }
         json_path = tmp_path / "results.json"
         json_path.write_text(json.dumps(json_data), encoding="utf-8")
@@ -426,18 +443,10 @@ class TestGenerateMdCli:
             "passed": 1,
             "failed": 0,
             "skipped": 0,
-            "tests": [
-                {
-                    "name": "test_a",
-                    "outcome": "passed",
-                    "duration_ms": 100.0,
-                    "agent_id": "test-agent",
-                    "eval_name": "test-agent",
-                    "model": "test-model",
-                }
-            ],
+            "tests": [_test_entry("test_a")],
             "insights": {
                 "markdown_summary": "Tests passed.",
+                "model": "test-model",
                 "cost_usd": 0.01,
                 "tokens_used": 500,
                 "cached": True,

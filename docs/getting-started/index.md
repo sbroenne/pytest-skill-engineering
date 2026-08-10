@@ -1,111 +1,71 @@
 ---
-description: "Write your first AI test in under 5 minutes. Set up pytest-skill-engineering to test MCP servers, tools, skills, and custom agents with the real GitHub Copilot coding agent."
+description: "Write your first CopilotEval, attach MCP servers, and compare system prompts, skills, and custom agents."
 ---
 
 # Getting Started
 
-Write your first AI test in under 5 minutes using the **real GitHub Copilot coding agent**.
+pytest-skill-engineering uses the real GitHub Copilot coding agent to test AI behavior.
 
-## What You're Testing
+## What you are testing
 
-pytest-skill-engineering tests whether GitHub Copilot can understand and use your tools:
+You are not re-testing your Python functions. You are testing whether Copilot can:
 
-- **MCP Server Tools** — Can Copilot discover and call your tools correctly?
-- **Agent Skills** — Does domain knowledge improve performance?
-- **Custom Agents** — Do your `.agent.md` instructions produce the right behavior and trigger subagent dispatch?
-- **MCP Server Prompts** — Do your bundled prompt templates render and produce the right behavior?
-- **CLI Tools** — Can Copilot effectively use command-line interfaces?
+- discover the right tool
+- choose the right arguments
+- recover from errors
+- follow the right system prompt
+- route work to the right custom agent
 
-## Installation
+## Install and authenticate
 
 ```bash
 uv add pytest-skill-engineering
-```
-
-## Authentication
-
-Authenticate with GitHub Copilot (one-time):
-
-```bash
 gh auth login
 ```
 
-This gives pytest-skill-engineering access to the real GitHub Copilot coding agent.
+In CI, set `GITHUB_TOKEN` instead.
 
-## Your First Test
-
-The simplest case: verify GitHub Copilot can use your MCP server correctly.
+## First complete example
 
 ```python
+import sys
+
 from pytest_skill_engineering.copilot import CopilotEval
 
 
-async def test_balance_query(copilot_eval):
-    """Verify Copilot can use get_balance correctly."""
+TODO_MCP = {
+    "todo": {
+        "command": sys.executable,
+        "args": ["-m", "pytest_skill_engineering.testing.todo_mcp"],
+        "tools": ["*"],
+    }
+}
+
+
+async def test_add_task(copilot_eval):
     agent = CopilotEval(
-        skill_directories=["skills/banking-advisor"],  # Optional skill
-        max_turns=10,
+        name="todo-default",
+        model="gpt-5.4-mini",
+        instructions="Use the todo tools to manage tasks.",
+        mcp_servers=TODO_MCP,
     )
-    result = await copilot_eval(agent, "What's my checking account balance?")
+
+    result = await copilot_eval(agent, "Add a task to buy groceries")
 
     assert result.success
-    assert result.tool_was_called("get_balance")
+    assert result.tool_was_called("add_task")
 ```
 
-**What this tests:**
-
-- **Tool discovery** — Did Copilot find `get_balance`?
-- **Parameter inference** — Did it pass `account="checking"` correctly?
-- **Response handling** — Did it interpret the tool output?
-- **Skill integration** — Did the banking skill improve performance?
-
-If this fails, your MCP server's tool descriptions, schemas, or skill content need work.
-
-## The Workflow
-
-This is **test-driven skill engineering** — iterate on your AI interface the same way you iterate on code:
-
-1. **Write a test** — describe what a user would say
-2. **Run it** — GitHub Copilot tries to use your tools
-3. **Fix the interface** — improve tool descriptions, skills, or agent instructions until it passes
-4. **Generate a report** — AI analysis tells you what else to optimize
-
-Red/Green/Refactor for the skill stack.
-
-## Running the Test
+Run it with:
 
 ```bash
-pytest tests/test_banking.py -v
+uv run python -m pytest tests/test_todo.py -v
 ```
 
-## AI-Powered Reports
+## What to compare next
 
-Configure reporting in `pyproject.toml`:
-
-```toml
-[tool.pytest.ini_options]
-addopts = """
---aitest-summary-model=copilot/gpt-5.4-mini
---aitest-html=aitest-reports/report.html
-"""
-```
-
-Run pytest:
-
-```bash
-pytest tests/
-```
-
-The report includes:
-
-- **Eval Leaderboard** — Which configurations work best (pass rate + cost)
-- **AI Analysis** — Deployment recommendation, failure root causes, tool description improvements
-- **Tool Feedback** — Specific suggestions with copy-to-clipboard buttons
-- **Cost Tracking** — Premium requests and USD estimates
-
-## Next Steps
-
-- [Custom Agents](custom-agents.md) — Test `.agent.md` files and validate subagent dispatch
-- [Agent Skills](skills.md) — Add domain knowledge (agentskills.io spec-compliant)
-- [Plugin Testing](plugins.md) — Load complete plugin directories
-- [Test Coding Agents](../how-to/test-coding-agents.md) — Full `CopilotEval` reference
+- [System prompts](system-prompts.md)
+- [Skills](skills.md)
+- [Custom agents](custom-agents.md)
+- [Comparing configurations](comparing.md)
+- [Multi-turn sessions](sessions.md)

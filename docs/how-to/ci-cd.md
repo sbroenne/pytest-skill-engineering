@@ -8,13 +8,13 @@ Run pytest-skill-engineering in CI pipelines with JUnit XML reporting and automa
 
 ## JUnit XML for CI Pipelines
 
-pytest includes built-in JUnit XML output that works with all CI systems. Use it alongside aitest reports:
+pytest includes built-in JUnit XML output that works with all CI systems. Use it alongside report generation:
 
 ```bash
-pytest tests/ \
+uv run python -m pytest tests/ \
     --junitxml=results.xml \
     --aitest-html=report.html \
-  --aitest-summary-model=copilot/gpt-5.5
+    --aitest-summary-model=copilot/gpt-5.4-mini
 ```
 
 | Format | Purpose | Consumers |
@@ -71,8 +71,8 @@ This project includes a ready-to-use hero test workflow at `.github/workflows/he
 ### How It Works
 
 1. **Trigger**: Add the `run-hero-tests` label to a PR, or run manually via `workflow_dispatch`
-2. **Authentication**: Uses Azure OIDC (Workload Identity Federation) — no stored API keys
-3. **Execution**: Runs `tests/showcase/` against Azure OpenAI with AI-powered insights
+2. **Authentication**: Grants `copilot-requests: write` and passes the built-in `GITHUB_TOKEN` directly to the Copilot SDK
+3. **Execution**: Runs `tests/showcase/` against the current Copilot SDK setup with AI-powered insights
 4. **Results**:
     - **JUnit annotations** on the PR checks tab (pass/fail per test)
     - **HTML report artifact** downloadable from the workflow run
@@ -83,16 +83,15 @@ This project includes a ready-to-use hero test workflow at `.github/workflows/he
 
 ```yaml
 # .github/workflows/hero-tests.yml (simplified)
-- name: Azure login (OIDC)
-  uses: azure/login@v2
-  with:
-    client-id: ${{ secrets.AZURE_CLIENT_ID }}
-    tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-    subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+permissions:
+  contents: write
+  copilot-requests: write
 
 - name: Run hero tests
+  env:
+    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   run: |
-    uv run pytest tests/showcase/ -v \
+    uv run python -m pytest tests/showcase/ -v \
       --aitest-html=docs/demo/hero-report.html \
       --junitxml=hero-results.xml \
       -o "addopts=--aitest-summary-model=copilot/gpt-5.5"
@@ -122,25 +121,15 @@ This project includes a ready-to-use hero test workflow at `.github/workflows/he
     file_pattern: docs/demo/hero-report.html
 ```
 
-### Azure OIDC Setup (One-Time)
+### Copilot CI Auth Setup
 
-To enable the workflow, configure Workload Identity Federation in Azure:
+To enable Copilot-backed CI runs:
 
-1. **Create an App Registration** in Azure Entra ID
-2. **Add a federated credential** for your GitHub repo:
-    - Issuer: `https://token.actions.githubusercontent.com`
-    - Subject: `repo:YOUR_ORG/YOUR_REPO:environment:hero-tests`
-    - Audience: `api://AzureADTokenExchange`
-3. **Grant access**: Assign `Cognitive Services OpenAI User` role on your Azure OpenAI resource
-4. **Add GitHub secrets**:
-    - `AZURE_CLIENT_ID` — App Registration client ID
-    - `AZURE_TENANT_ID` — Azure AD tenant ID
-    - `AZURE_SUBSCRIPTION_ID` — Azure subscription ID
-5. **Create GitHub environment**: Named `hero-tests` (optional, for protection rules)
-6. **Create PR label**: Add `run-hero-tests` label to the repository
-
-!!! tip "No API Keys Required"
-    OIDC uses short-lived tokens exchanged at runtime. No secrets to rotate.
+1. Grant the job `contents: read` (or `write` when committing reports) and `copilot-requests: write`
+2. Pass `${{ secrets.GITHUB_TOKEN }}` to the test process as `GITHUB_TOKEN`
+3. For organization-owned repositories, enable **Allow use of Copilot CLI billed to the organization**
+4. Create the optional `hero-tests` environment if you want protection rules
+5. Create the `run-hero-tests` PR label
 
 ### Overriding pyproject.toml Defaults
 
@@ -148,7 +137,7 @@ The `addopts` in `pyproject.toml` sets default report paths. The workflow overri
 
 ```bash
 # Override addopts to avoid conflict with pyproject.toml defaults
-uv run pytest tests/showcase/ -v \
+uv run python -m pytest tests/showcase/ -v \
   -o "addopts=--aitest-summary-model=copilot/gpt-5.5" \
   --aitest-html=docs/demo/hero-report.html \
   --junitxml=hero-results.xml
@@ -162,7 +151,7 @@ For your own tests, adapt the pattern:
 # .github/workflows/test.yml
 - name: Run eval tests
   run: |
-    pytest tests/ \
+    uv run python -m pytest tests/ \
       --junitxml=reports/results.xml \
       --aitest-html=reports/report.html \
       --aitest-json=reports/report.json \

@@ -10,7 +10,7 @@ description: "Test custom instruction files — verify that .github/copilot-inst
 |------|-------|---------|
 | `.github/copilot-instructions.md` | Repo root | Project-wide coding standards (VS Code Copilot) |
 | `*.instructions.md` | Anywhere | File-scoped rules with optional `applyTo` glob |
-| `AGENTS.md` | Repo root | Workspace instructions (OpenAI Codex / multi-agent) |
+| `AGENTS.md` | Repo root | Workspace instructions used by some coding-agent tools |
 | `CLAUDE.md` | Repo root | Claude Code workspace instructions |
 
 These are distinct from Custom Agents (`.agent.md` specialist personas) and Prompt Files (slash commands). Custom instructions define conventions; prompt files are user inputs.

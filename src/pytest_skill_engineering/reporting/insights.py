@@ -5,11 +5,13 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
-import re
 import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
+
+from pytest_skill_engineering.core.serialization import serialize_dataclass
+from pytest_skill_engineering.reporting.schema import REPORT_SCHEMA_VERSION
 
 if TYPE_CHECKING:
     from pytest_skill_engineering.core.result import (
@@ -98,14 +100,21 @@ def _build_analysis_input(
             "In the Winner Card, omit cost or mark it as 'N/A (pricing unavailable)'.\n"
         )
 
-    # Pre-computed agent statistics for AI accuracy (grouped by agent name)
+    # Pre-computed agent statistics for AI accuracy (grouped by stable agent ID)
     agent_agg: dict[str, dict[str, Any]] = {}
     has_iterations = any(t.iteration is not None for t in suite_report.tests)
     for test in suite_report.tests:
-        eval_name = test.eval_name or test.model or "unknown"
-        if eval_name not in agent_agg:
-            agent_agg[eval_name] = {
-                "name": test.eval_name or test.model or "unknown",
+        agent_id = test.agent_id
+        if not agent_id:
+            msg = f"Test {test.name!r} missing 'agent_id'"
+            raise ValueError(msg)
+        if not test.eval_name:
+            msg = f"Test {test.name!r} missing 'eval_name'"
+            raise ValueError(msg)
+
+        if agent_id not in agent_agg:
+            agent_agg[agent_id] = {
+                "name": test.eval_name,
                 "passed": 0,
                 "failed": 0,
                 "total": 0,
@@ -115,7 +124,7 @@ def _build_analysis_input(
                 "turn_counts": [],
                 "iter_groups": {},  # test_base_name -> {"passed": int, "total": int}
             }
-        agg = agent_agg[eval_name]
+        agg = agent_agg[agent_id]
         agg["total"] += 1
         if test.outcome == "passed":
             agg["passed"] += 1
@@ -129,8 +138,7 @@ def _build_analysis_input(
             agg["turn_counts"].append(len(test.eval_result.turns))
         # Track iteration groups for flakiness detection
         if has_iterations and test.iteration is not None:
-            # Strip "-iter-N" parametrize suffix to group by base test name
-            base_name = re.sub(r"-iter-\d+\]$", "]", test.name)
+            base_name = test.name
             ig = agg["iter_groups"]
             if base_name not in ig:
                 ig[base_name] = {"passed": 0, "total": 0}
@@ -449,25 +457,79 @@ def _build_analysis_input(
     return "\n".join(sections)
 
 
-def _get_results_hash(suite_report: SuiteReport) -> str:
-    """Generate a hash of test results for caching."""
-    # Hash key fields that affect analysis
+def _canonicalize(value: Any) -> Any:
+    """Recursively canonicalize values for deterministic cache hashing."""
+    if isinstance(value, dict):
+        return {key: _canonicalize(value[key]) for key in sorted(value)}
+    if isinstance(value, list):
+        return [_canonicalize(item) for item in value]
+    return value
+
+
+def _get_results_hash(
+    suite_report: SuiteReport,
+    *,
+    tool_info: list[ToolInfo],
+    skill_info: list[SkillInfo],
+    prompts: dict[str, str],
+    mcp_prompt_info: list[MCPPrompt] | None,
+    custom_agent_info: list[CustomAgentInfo] | None,
+    prompt_names: list[str] | None,
+    instruction_file_info: list[InstructionFileInfo] | None,
+    model: str,
+    analysis_prompt: str,
+    min_pass_rate: int | None,
+    compact: bool,
+) -> str:
+    """Generate a deterministic hash of all insight-shaping inputs."""
+    serialized_suite = serialize_dataclass(suite_report)
+    tests = serialized_suite.get("tests", [])
+    if isinstance(tests, list):
+        serialized_suite["tests"] = sorted(
+            tests,
+            key=lambda test: (
+                str(test["name"]),
+                str(test["agent_id"]),
+                int(test.get("iteration") or 0),
+            ),
+        )
+
     hash_content = {
-        "tests": [
-            {
-                "name": t.name,
-                "outcome": t.outcome,
-                "error": t.error,
-            }
-            for t in suite_report.tests
-        ],
-        "summary": {
-            "total": suite_report.total,
-            "passed": suite_report.passed,
-            "failed": suite_report.failed,
-        },
+        "schema_version": REPORT_SCHEMA_VERSION,
+        "model": model,
+        "analysis_prompt": analysis_prompt,
+        "min_pass_rate": min_pass_rate,
+        "compact": compact,
+        "suite_report": serialized_suite,
+        "tool_info": sorted(
+            serialize_dataclass(tool_info),
+            key=lambda tool: (str(tool["server_name"]), str(tool["name"])),
+        ),
+        "skill_info": sorted(
+            serialize_dataclass(skill_info),
+            key=lambda skill: str(skill["name"]),
+        ),
+        "prompts": prompts,
+        "mcp_prompt_info": sorted(
+            serialize_dataclass(mcp_prompt_info or []),
+            key=lambda prompt: str(prompt["name"]),
+        ),
+        "custom_agent_info": sorted(
+            serialize_dataclass(custom_agent_info or []),
+            key=lambda agent: str(agent["name"]),
+        ),
+        "prompt_names": sorted(prompt_names or []),
+        "instruction_file_info": sorted(
+            serialize_dataclass(instruction_file_info or []),
+            key=lambda item: str(item["name"]),
+        ),
     }
-    content = json.dumps(hash_content, sort_keys=True)
+    content = json.dumps(
+        _canonicalize(hash_content),
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=False,
+    )
     return hashlib.sha256(content.encode()).hexdigest()[:16]
 
 
@@ -516,24 +578,6 @@ async def generate_insights(
 
     from pytest_skill_engineering.copilot.judge import copilot_judge  # noqa: PLC0415
 
-    # Check cache first
-    results_hash = _get_results_hash(suite_report)
-    cache_path = cache_dir / f".aitest_cache_{results_hash}.json" if cache_dir else None
-
-    if cache_path and cache_path.exists():
-        try:
-            cached = json.loads(cache_path.read_text())
-            return InsightsResult(
-                markdown_summary=cached.get("insights", ""),
-                model=cached.get("model", model),
-                tokens_used=cached.get("tokens_used", 0),
-                cost_usd=cached.get("cost_usd", 0.0),
-                duration_ms=cached.get("duration_ms", 0.0),
-                cached=True,
-            )
-        except Exception:
-            _logger.debug("Cache invalid, regenerating insights", exc_info=True)
-
     # Build prompt - LLM returns markdown directly
     prompt_template = analysis_prompt if analysis_prompt else _load_analysis_prompt()
 
@@ -552,6 +596,37 @@ async def generate_insights(
     )
 
     full_prompt = f"{prompt_template}\n\n---\n\n# Test Data\n\n{analysis_input}"
+
+    # Check cache only after the full prompt and all cache inputs are resolved.
+    results_hash = _get_results_hash(
+        suite_report,
+        tool_info=tool_info or [],
+        skill_info=skill_info or [],
+        prompts=prompts or {},
+        mcp_prompt_info=mcp_prompt_info,
+        custom_agent_info=custom_agent_info,
+        prompt_names=prompt_names,
+        instruction_file_info=instruction_file_info,
+        model=model,
+        analysis_prompt=prompt_template,
+        min_pass_rate=min_pass_rate,
+        compact=compact,
+    )
+    cache_path = cache_dir / f".aitest_cache_{results_hash}.json" if cache_dir else None
+
+    if cache_path and cache_path.exists():
+        try:
+            cached = json.loads(cache_path.read_text())
+            return InsightsResult(
+                markdown_summary=cached["insights"],
+                model=cached["model"],
+                tokens_used=cached["tokens_used"],
+                cost_usd=cached["cost_usd"],
+                duration_ms=cached["duration_ms"],
+                cached=True,
+            )
+        except Exception:
+            _logger.debug("Cache invalid, regenerating insights", exc_info=True)
 
     # Strip model prefix if present (copilot/, azure/, openai/)
     judge_model = model
@@ -589,7 +664,7 @@ async def generate_insights(
                     "cost_usd": insights_cost,
                     "duration_ms": duration_ms,
                 }
-                cache_path.write_text(json.dumps(cache_data))
+                cache_path.write_text(json.dumps(cache_data, sort_keys=True))
 
             return InsightsResult(
                 markdown_summary=markdown_content,

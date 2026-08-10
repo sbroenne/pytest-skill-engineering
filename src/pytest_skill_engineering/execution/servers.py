@@ -12,6 +12,7 @@ import json
 import logging
 import os
 import sys
+import time
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import TYPE_CHECKING, Any, Literal
@@ -168,56 +169,101 @@ class MCPServerProcess:
             )
             await self._session.initialize()
 
-            # Discover tools
-            tools_result = await self._session.list_tools()
-            for tool in tools_result.tools:
-                self._tools[tool.name] = {
-                    "name": tool.name,
-                    "description": tool.description or "",
-                    "inputSchema": tool.input_schema,
-                }
-
-            # Discover prompts (if server supports them)
-            try:
-                prompts_result = await self._session.list_prompts()
-                for prompt in prompts_result.prompts:
-                    from pytest_skill_engineering.core.result import MCPPrompt, MCPPromptArgument
-
-                    args = [
-                        MCPPromptArgument(
-                            name=a.name,
-                            description=a.description or "",
-                            required=bool(a.required),
-                        )
-                        for a in (prompt.arguments or [])
-                    ]
-                    self._prompts[prompt.name] = MCPPrompt(
-                        name=prompt.name,
-                        description=prompt.description or "",
-                        arguments=args,
-                    )
-            except Exception:
-                # Prompts capability is optional — server may not support it
-                _logger.debug("Server does not support prompts capability", exc_info=True)
-
-            # Check tools if wait strategy requires it
             if self.config.wait.strategy == WaitStrategy.TOOLS and self.config.wait.tools:
-                missing = set(self.config.wait.tools) - set(self._tools.keys())
-                if missing:
-                    raise ServerStartError("MCP", label, f"Required tools not available: {missing}")
+                await self._wait_for_required_tools(label)
+            else:
+                await self._refresh_capabilities()
 
         except ServerStartError:
-            if self._exit_stack:
-                await self._exit_stack.aclose()
-                self._exit_stack = None
+            await self._cleanup_failed_start("MCP startup")
             self._session = None
             raise
         except Exception as e:
-            if self._exit_stack:
-                await self._exit_stack.aclose()
-                self._exit_stack = None
+            await self._cleanup_failed_start("MCP startup")
             self._session = None
             raise ServerStartError("MCP", label, str(e)) from e
+
+    async def _cleanup_failed_start(self, context: str) -> None:
+        """Best-effort cleanup for startup failures."""
+        if self._exit_stack is None:
+            return
+        exit_stack = self._exit_stack
+        self._exit_stack = None
+        try:
+            await exit_stack.aclose()
+        except Exception:
+            _logger.warning("%s cleanup failed", context, exc_info=True)
+
+    async def _refresh_capabilities(self) -> None:
+        """Refresh tool and prompt metadata from the connected server."""
+        if self._session is None:
+            raise RuntimeError("Server not started")
+
+        tools_result = await self._session.list_tools()
+        self._tools = {
+            tool.name: {
+                "name": tool.name,
+                "description": tool.description or "",
+                "inputSchema": tool.input_schema,
+            }
+            for tool in tools_result.tools
+        }
+
+        self._prompts = {}
+        try:
+            prompts_result = await self._session.list_prompts()
+            from pytest_skill_engineering.core.result import MCPPrompt, MCPPromptArgument
+
+            for prompt in prompts_result.prompts:
+                args = [
+                    MCPPromptArgument(
+                        name=a.name,
+                        description=a.description or "",
+                        required=bool(a.required),
+                    )
+                    for a in (prompt.arguments or [])
+                ]
+                self._prompts[prompt.name] = MCPPrompt(
+                    name=prompt.name,
+                    description=prompt.description or "",
+                    arguments=args,
+                )
+        except Exception:
+            _logger.debug("Server does not support prompts capability", exc_info=True)
+
+    async def _wait_for_required_tools(self, label: list[str]) -> None:
+        """Poll until all required tools are exposed or the timeout elapses."""
+        required_tools = tuple(self.config.wait.tools)
+        deadline = time.monotonic() + (self.config.wait.timeout_ms / 1000)
+        delay_s = 0.05
+        last_error: Exception | None = None
+
+        while True:
+            try:
+                await self._refresh_capabilities()
+                last_error = None
+            except Exception as exc:
+                last_error = exc
+
+            available_tools = set(self._tools)
+            missing = sorted(set(required_tools) - available_tools)
+            if not missing:
+                return
+
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                details = [
+                    "Required tools not available.",
+                    "Timed out after "
+                    f"{self.config.wait.timeout_ms}ms waiting for tools {list(required_tools)}.",
+                    f"Last visible tools: {sorted(available_tools)}.",
+                ]
+                if last_error is not None:
+                    details.append(f"Last discovery error: {last_error}")
+                raise ServerStartError("MCP", label, " ".join(details))
+
+            await asyncio.sleep(min(delay_s, remaining))
+            delay_s = min(delay_s * 2, 0.5)
 
     async def _open_transport(self) -> tuple[Any, Any]:
         """Open the appropriate transport and return (read_stream, write_stream)."""
@@ -228,6 +274,12 @@ class MCPServerProcess:
                 from mcp.client.stdio import StdioServerParameters, stdio_client
 
                 cmd = self.config.command
+                if not cmd or not isinstance(cmd[0], str) or not cmd[0].strip():
+                    raise ServerStartError(
+                        "MCP",
+                        self._transport_label(),
+                        "stdio transport requires a non-empty command",
+                    )
                 params = StdioServerParameters(
                     command=cmd[0],
                     args=[*cmd[1:], *self.config.args],

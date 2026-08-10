@@ -1,27 +1,23 @@
 # Per-million-token pricing overrides.
 #
-# Add an entry for each model you want cost estimates for. Models not listed
-# here contribute $0.00 to cost and are surfaced under "Incomplete Pricing
-# Data" in the report's AI analysis.
-# Use this to:
-#   - Add pricing for models (e.g. private/Azure deployments)
-#   - Keep cost estimates accurate as vendor pricing changes
+# Add an entry for each Copilot model string you want USD estimates for.
+# Models not listed here contribute $0.00 to the USD estimate and appear under
+# incomplete pricing data in the AI analysis.
+#
+# Use this file to keep optional cost comparisons honest when you choose to run
+# more expensive model benchmarks. Routine day-to-day testing should usually
+# start with gpt-5.4-mini.
 #
 # Format:
 #   "model-key" = { input = <per_million_input>, output = <per_million_output>, cache_read = <per_million_cache_read> }
 #
-# "cache_read" is optional (defaults to 0.0) and prices cached-prompt input
-# tokens, which vendors typically bill at ~10% of the normal input rate.
-#
+# cache_read is optional and defaults to 0.0.
 # The model key must match the string passed to CopilotEval(model=...).
 
 [models]
-# Frontier flagship models used by tests/integration/copilot (as of 2026-07,
-# vendor list pricing per Anthropic/OpenAI via GitHub Copilot billing docs —
-# verify against your plan before relying on these for real cost decisions).
 "claude-opus-4.8" = { input = 5.00, output = 25.00, cache_read = 0.50 }
 "gpt-5.6-sol" = { input = 5.00, output = 30.00, cache_read = 0.50 }
 
 # Examples (uncomment and adjust as needed):
-# "azure/my-custom-deploy" = { input = 2.00, output = 8.00 }
-# "claude-sonnet-4" = { input = 3.00, output = 15.00, cache_read = 0.30 }
+# "gpt-5.5" = { input = 1.25, output = 5.00 }
+# "my-private-model" = { input = 2.00, output = 8.00 }

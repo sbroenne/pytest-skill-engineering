@@ -159,7 +159,7 @@ async def test_plugin_routes_to_reviewer(copilot_eval, tmp_path):
     result = await copilot_eval(agent, "Review this code for security issues")
 
     assert result.success
-    invoked = [s.eval_name for s in result.subagent_invocations]
+    invoked = [s.name for s in result.subagent_invocations]
     assert "reviewer" in invoked
 ```
 
@@ -274,7 +274,7 @@ agent = CopilotEval(
 | `excluded_tools` | List of tool names to block from the agent |
 | `skill_directories` | Directories containing skills to load |
 | `reasoning_effort` | Reasoning effort level (`"low"`, `"medium"`, `"high"`) |
-| `custom_agents` | List of custom agent definitions for subagent dispatch |
+| `custom_agents` | List of custom agent definitions for custom agent dispatch |
 
 ## Comparing Plugin Configurations
 

@@ -10,7 +10,7 @@ pricing for models. Models without pricing return ``0.0``.
     # fraction of the normal input rate.
     [models]
     "claude-sonnet-4" = { input = 3.00, output = 15.00, cache_read = 0.30 }
-    "azure/my-custom-deploy" = { input = 2.00, output = 8.00 }
+    "copilot/gpt-5.4-mini" = { input = 2.00, output = 8.00 }
 """
 
 from __future__ import annotations
@@ -27,7 +27,10 @@ models_without_pricing: set[str] = set()
 
 # ── User overrides (pricing.toml) ────────────────────────────────────────────
 
-# Each entry is (input_per_million, output_per_million, cache_read_per_million).
+# Each entry is (input_per_million, output_per_million, cache_read_per_million),
+# cached by the resolved pricing file (or by cwd when none exists there).
+_user_overrides_cache: dict[tuple[Path, int | None], dict[str, tuple[float, float, float]]] = {}
+_user_overrides_cache_key: tuple[Path, int | None] | None = None
 _user_overrides: dict[str, tuple[float, float, float]] | None = None
 
 
@@ -37,19 +40,30 @@ def _load_user_overrides() -> dict[str, tuple[float, float, float]]:
     Searches upward from cwd for the first ``pricing.toml`` found.
     Returns an empty dict when no file exists.
     """
-    global _user_overrides  # noqa: PLW0603
-    if _user_overrides is not None:
-        return _user_overrides
+    global _user_overrides
+    global _user_overrides_cache_key
 
-    _user_overrides = {}
-    toml_path = _find_pricing_toml()
+    current_dir = Path.cwd().resolve()
+    toml_path = _find_pricing_toml(current_dir)
+    cache_key = _pricing_cache_key(current_dir, toml_path)
+    if _user_overrides is not None and _user_overrides_cache_key is None:
+        return _user_overrides
+    if _user_overrides is not None and _user_overrides_cache_key == cache_key:
+        return _user_overrides
+    cached = _user_overrides_cache.get(cache_key)
+    if cached is not None:
+        _user_overrides = cached
+        _user_overrides_cache_key = cache_key
+        return cached
+
+    overrides: dict[str, tuple[float, float, float]] = {}
+    _user_overrides_cache[cache_key] = overrides
+    _user_overrides = overrides
+    _user_overrides_cache_key = cache_key
     if toml_path is None:
-        return _user_overrides
+        return overrides
 
-    try:
-        import tomllib
-    except ModuleNotFoundError:  # Python < 3.11
-        import tomli as tomllib  # type: ignore[no-redef]
+    import tomllib
 
     try:
         raw = tomllib.loads(toml_path.read_text(encoding="utf-8"))
@@ -59,23 +73,37 @@ def _load_user_overrides() -> dict[str, tuple[float, float, float]]:
                 input_pm = float(value.get("input", 0))
                 output_pm = float(value.get("output", 0))
                 cache_read_pm = float(value.get("cache_read", 0))
-                _user_overrides[key] = (input_pm, output_pm, cache_read_pm)
-        if _user_overrides:
+                overrides[key] = (input_pm, output_pm, cache_read_pm)
+        if overrides:
             _logger.info(
                 "Loaded %d pricing override(s) from %s",
-                len(_user_overrides),
+                len(overrides),
                 toml_path,
             )
-    except Exception:
+    except (
+        AttributeError,
+        OSError,
+        UnicodeDecodeError,
+        ValueError,
+        TypeError,
+        tomllib.TOMLDecodeError,
+    ):
         _logger.warning("Failed to parse %s; ignoring", toml_path, exc_info=True)
 
-    return _user_overrides
+    return overrides
 
 
-def _find_pricing_toml() -> Path | None:
+def _pricing_cache_key(current_dir: Path, toml_path: Path | None) -> tuple[Path, int | None]:
+    """Build a cache key scoped to the active cwd and pricing file version."""
+    if toml_path is None:
+        return current_dir, None
+    stat = toml_path.stat()
+    return toml_path.resolve(), stat.st_mtime_ns
+
+
+def _find_pricing_toml(current_dir: Path) -> Path | None:
     """Walk upward from cwd looking for ``pricing.toml``."""
-    current = Path.cwd().resolve()
-    for parent in (current, *current.parents):
+    for parent in (current_dir, *current_dir.parents):
         candidate = parent / "pricing.toml"
         if candidate.is_file():
             return candidate

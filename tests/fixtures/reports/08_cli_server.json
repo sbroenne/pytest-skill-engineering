@@ -1,17 +1,17 @@
 {
-  "name": "pytest-skill-engineering",
-  "timestamp": "2026-02-07T20:33:04.280157",
-  "duration_ms": 15799.222100002225,
+  "name": "fixture-08-cli-server",
+  "timestamp": "2026-08-10T18:07:00+00:00",
+  "duration_ms": 6000.0,
   "tests": [
     {
       "name": "tests/fixtures/scenario_08_cli_server.py::test_cli_echo_basic",
       "outcome": "passed",
-      "duration_ms": 5350.666000013007,
+      "duration_ms": 3000.0,
       "eval_result": {
         "turns": [
           {
             "role": "user",
-            "content": "Echo the message 'Hello from CLI'",
+            "content": "Echo hello from the CLI wrapper.",
             "tool_calls": []
           },
           {
@@ -21,108 +21,62 @@
               {
                 "name": "echo_execute",
                 "arguments": {
-                  "args": "Hello from CLI"
+                  "args": "hello"
                 },
-                "result": "{\"exit_code\": 0, \"stdout\": \"Hello\\r\\nfrom\\r\\nCLI\\r\\n\", \"stderr\": \"\"}",
+                "result": "{\"stdout\":\"hello\\n\"}",
                 "error": null,
-                "duration_ms": 708.9484999887645
+                "duration_ms": 180.0,
+                "image_content": null,
+                "image_media_type": null
               }
             ]
           },
           {
             "role": "assistant",
-            "content": "Hello\nfrom\nCLI",
+            "content": "The CLI returned hello.",
             "tool_calls": []
           }
         ],
         "success": true,
         "error": null,
-        "duration_ms": 5043.283699982567,
+        "duration_ms": 3000.0,
         "token_usage": {
-          "prompt": 374,
-          "completion": 99
+          "prompt": 130,
+          "completion": 65
         },
-        "cost_usd": 0.0002915,
-        "_messages": [
-          {
-            "role": "system",
-            "content": "You are a helpful assistant. Use echo_execute to echo messages back."
-          },
-          {
-            "role": "user",
-            "content": "Echo the message 'Hello from CLI'"
-          },
-          {
-            "content": null,
-            "role": "assistant",
-            "tool_calls": [
-              {
-                "function": {
-                  "arguments": "{\"args\":\"Hello from CLI\"}",
-                  "name": "echo_execute"
-                },
-                "id": "call_RD83mjLnBLqPLZWkogJ6ds56",
-                "type": "function"
-              }
-            ],
-            "function_call": null,
-            "provider_specific_fields": {
-              "refusal": null
-            },
-            "annotations": []
-          },
-          {
-            "role": "tool",
-            "tool_call_id": "call_RD83mjLnBLqPLZWkogJ6ds56",
-            "content": "{\"exit_code\": 0, \"stdout\": \"Hello\\r\\nfrom\\r\\nCLI\\r\\n\", \"stderr\": \"\"}"
-          },
-          {
-            "role": "assistant",
-            "content": "Hello\nfrom\nCLI"
-          }
-        ],
+        "cost_usd": 0.0,
         "session_context_count": 0,
         "assertions": [],
-        "available_tools": [
-          {
-            "name": "echo_execute",
-            "description": "Execute echo CLI command with arguments.",
-            "input_schema": {
-              "type": "object",
-              "properties": {
-                "args": {
-                  "type": "string",
-                  "description": "Command-line arguments to pass to echo"
-                }
-              },
-              "required": []
-            },
-            "server_name": "echo-cli"
-          }
-        ],
+        "available_tools": [],
         "skill_info": null,
-        "effective_system_prompt": "You are a helpful assistant. Use echo_execute to echo messages back.",
+        "effective_system_prompt": "Fixture instructions for gpt-5.4-mini.",
+        "mcp_prompts": [],
+        "prompt_name": null,
+        "custom_agent_info": null,
+        "premium_requests": 1.0,
+        "instruction_files": [],
         "clarification_stats": null
       },
       "error": null,
       "assertions": [],
-      "docstring": "Basic CLI tool usage \u2014 echo a message.",
+      "docstring": "Exercise a simple CLI wrapper call.",
       "class_docstring": null,
-      "agent_id": "1f3d37ce-7075-4639-bdec-b8377d380fa3",
-      "eval_name": "cli-agent",
-      "model": "gpt-5-mini",
+      "agent_id": "cli-gpt-5-4-mini",
+      "eval_name": "gpt-5.4-mini",
+      "model": "gpt-5.4-mini",
       "system_prompt_name": null,
-      "skill_name": null
+      "skill_name": null,
+      "iteration": null
     },
     {
       "name": "tests/fixtures/scenario_08_cli_server.py::test_cli_echo_with_reasoning",
       "outcome": "passed",
-      "duration_ms": 10448.556099989219,
+      "duration_ms": 3000.0,
       "eval_result": {
         "turns": [
           {
             "role": "user",
-            "content": "Use the echo command to say 'pytest-skill-engineering works' and confirm it worked",
+            "content": "Echo hello and explain the result.",
             "tool_calls": []
           },
           {
@@ -132,116 +86,64 @@
               {
                 "name": "echo_execute",
                 "arguments": {
-                  "args": "pytest-skill-engineering works"
+                  "args": "hello"
                 },
-                "result": "{\"exit_code\": 0, \"stdout\": \"pytest-skill-engineering\\r\\nworks\\r\\n\", \"stderr\": \"\"}",
+                "result": "{\"stdout\":\"hello\\n\"}",
                 "error": null,
-                "duration_ms": 618.0719000112731
+                "duration_ms": 180.0,
+                "image_content": null,
+                "image_media_type": null
               }
             ]
           },
           {
             "role": "assistant",
-            "content": "I ran the echo command with \"pytest-skill-engineering works\". Output (stdout):\npytest-skill-engineering\nworks\n\nExit code: 0 \u2014 so it worked.",
+            "content": "The CLI returned hello and I explained it.",
             "tool_calls": []
           }
         ],
         "success": true,
         "error": null,
-        "duration_ms": 6608.72940000263,
+        "duration_ms": 3000.0,
         "token_usage": {
-          "prompt": 394,
-          "completion": 712
+          "prompt": 130,
+          "completion": 65
         },
-        "cost_usd": 0.0015225,
-        "_messages": [
-          {
-            "role": "system",
-            "content": "You are a helpful assistant. Use echo_execute to echo messages back."
-          },
-          {
-            "role": "user",
-            "content": "Use the echo command to say 'pytest-skill-engineering works' and confirm it worked"
-          },
-          {
-            "content": null,
-            "role": "assistant",
-            "tool_calls": [
-              {
-                "function": {
-                  "arguments": "{\"args\":\"pytest-skill-engineering works\"}",
-                  "name": "echo_execute"
-                },
-                "id": "call_v754LufD6VnZwgIa674Cwzbv",
-                "type": "function"
-              }
-            ],
-            "function_call": null,
-            "provider_specific_fields": {
-              "refusal": null
-            },
-            "annotations": []
-          },
-          {
-            "role": "tool",
-            "tool_call_id": "call_v754LufD6VnZwgIa674Cwzbv",
-            "content": "{\"exit_code\": 0, \"stdout\": \"pytest-skill-engineering\\r\\nworks\\r\\n\", \"stderr\": \"\"}"
-          },
-          {
-            "role": "assistant",
-            "content": "I ran the echo command with \"pytest-skill-engineering works\". Output (stdout):\npytest-skill-engineering\nworks\n\nExit code: 0 \u2014 so it worked."
-          }
-        ],
+        "cost_usd": 0.0,
         "session_context_count": 0,
         "assertions": [],
-        "available_tools": [
-          {
-            "name": "echo_execute",
-            "description": "Execute echo CLI command with arguments.",
-            "input_schema": {
-              "type": "object",
-              "properties": {
-                "args": {
-                  "type": "string",
-                  "description": "Command-line arguments to pass to echo"
-                }
-              },
-              "required": []
-            },
-            "server_name": "echo-cli"
-          }
-        ],
+        "available_tools": [],
         "skill_info": null,
-        "effective_system_prompt": "You are a helpful assistant. Use echo_execute to echo messages back.",
+        "effective_system_prompt": "Fixture instructions for gpt-5.4-mini.",
+        "mcp_prompts": [],
+        "prompt_name": null,
+        "custom_agent_info": null,
+        "premium_requests": 1.0,
+        "instruction_files": [],
         "clarification_stats": null
       },
       "error": null,
-      "assertions": [
-        {
-          "type": "llm",
-          "passed": true,
-          "message": "confirms the echo command executed successfully",
-          "details": "The content shows the command's stdout and reports exit code 0, explicitly stating it worked\u2014this confirms successful execution."
-        }
-      ],
-      "docstring": "CLI tool with reasoning \u2014 echo and explain.",
+      "assertions": [],
+      "docstring": "Exercise CLI output plus explanatory text.",
       "class_docstring": null,
-      "agent_id": "1f3d37ce-7075-4639-bdec-b8377d380fa3",
-      "eval_name": "cli-agent",
-      "model": "gpt-5-mini",
+      "agent_id": "cli-gpt-5-4-mini",
+      "eval_name": "gpt-5.4-mini",
+      "model": "gpt-5.4-mini",
       "system_prompt_name": null,
-      "skill_name": null
+      "skill_name": null,
+      "iteration": null
     }
   ],
   "passed": 2,
   "failed": 0,
   "skipped": 0,
-  "suite_docstring": "CLI server tests \u2014 demonstrates CLIServer usage.",
+  "suite_docstring": "CLI wrapper fixture report.",
   "schema_version": "3.0",
   "insights": {
-    "markdown_summary": "## \ud83c\udfaf Recommendation\n\n**Deploy: cli-agent (gpt-5-mini + default prompt)**\n\nAchieves **100% pass rate** across all tests at **$0.00181 total cost**, with correct tool usage and clear confirmations.\n\n**Reasoning:** All tests passed with no retries or errors. Cost is minimal and response quality meets expectations for both direct CLI usage and explanatory output. No alternative configurations were tested.\n\n**Alternatives:** None \u2014 only one configuration tested.\n\n## \ud83d\udd27 MCP Tool Feedback\n\n### echo-cli\nThe tool is easy to discover and was used correctly in every test. The agent consistently chose the correct tool and interpreted results properly.\n\n| Tool | Status | Calls | Issues |\n|------|--------|-------|--------|\n| echo_execute | \u2705 | 2 | Working well |\n\n## \ud83d\udce6 Tool Response Optimization\n\n### echo_execute (from echo-cli)\n- **Current response size:** ~30 tokens per call\n- **Issues found:**  \n  - `stdout` includes embedded newlines (`\\r\\n`) that are faithfully echoed by the assistant, inflating tokens in both tool output and final response.\n  - `stderr` is always an empty string in observed calls.\n- **Suggested optimization:**  \n  - Normalize `stdout` to a single line when possible and omit `stderr` when empty.\n- **Estimated savings:** ~10 tokens per call (~33% reduction)\n\n**Example current vs optimized:**\n```json\n// Current (~30 tokens)\n{\"exit_code\":0,\"stdout\":\"Hello\\r\\nfrom\\r\\nCLI\\r\\n\",\"stderr\":\"\"}\n\n// Optimized (~20 tokens)\n{\"exit_code\":0,\"stdout\":\"Hello from CLI\"}\n```\n\nThis change preserves semantic meaning for tests while reducing token usage in both tool responses and assistant outputs.",
-    "cost_usd": 0.0065436,
-    "tokens_used": 2748,
-    "cached": false
+    "markdown_summary": "## \ud83c\udfaf Recommendation\n\nDeploy the strongest passing eval for **CLI server**.\n\n## \u274c Failure Analysis\n\nAt least one compared result failed, so the report must keep the failure visible.\n\n## \ud83d\udd27 MCP Tool Feedback\n\nTool names are deterministic in these fixture reports.\n",
+    "cost_usd": 0.0012,
+    "tokens_used": 240,
+    "cached": true,
+    "model": "copilot/gpt-5.4-mini"
   }
 }

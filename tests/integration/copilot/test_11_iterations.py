@@ -15,7 +15,7 @@ import pytest
 
 from pytest_skill_engineering.copilot.eval import CopilotEval
 
-pytestmark = [pytest.mark.copilot]
+pytestmark = [pytest.mark.copilot, pytest.mark.iterations, pytest.mark.slow]
 
 
 class TestIterationBaseline:

@@ -1,12 +1,12 @@
 {
-  "name": "pytest-skill-engineering",
-  "timestamp": "2026-02-07T19:19:20.752801",
-  "duration_ms": 37155.369799991604,
+  "name": "fixture-01-single-agent",
+  "timestamp": "2026-08-10T18:00:00+00:00",
+  "duration_ms": 6000.0,
   "tests": [
     {
       "name": "tests/fixtures/scenario_01_single_agent.py::test_check_balance",
       "outcome": "passed",
-      "duration_ms": 13733.995100017637,
+      "duration_ms": 3000.0,
       "eval_result": {
         "turns": [
           {
@@ -23,237 +23,67 @@
                 "arguments": {
                   "account": "checking"
                 },
-                "result": "{\"account\": \"checking\", \"balance\": 1500.0, \"formatted\": \"$1,500.00\"}",
+                "result": "{\"formatted\": \"$1,500.00\"}",
                 "error": null,
-                "duration_ms": 2.604199980851263
+                "duration_ms": 180.0,
+                "image_content": null,
+                "image_media_type": null
               }
             ]
           },
           {
             "role": "assistant",
-            "content": "Your checking account balance is $1,500.00. Would you like to do anything else with your accounts (transfer, withdraw, deposit, see transactions)?",
+            "content": "Your checking balance is $1,500.00.",
             "tool_calls": []
           }
         ],
         "success": true,
         "error": null,
-        "duration_ms": 6761.116799985757,
+        "duration_ms": 3000.0,
         "token_usage": {
-          "prompt": 871,
-          "completion": 60
+          "prompt": 130,
+          "completion": 65
         },
-        "cost_usd": 0.00033775,
-        "_messages": [
-          {
-            "role": "system",
-            "content": "You are a helpful banking assistant.\nUse the available tools to manage accounts and transactions.\nAlways use tools - never make up balances or account data."
-          },
-          {
-            "role": "user",
-            "content": "What's my checking account balance?"
-          },
-          {
-            "content": null,
-            "role": "assistant",
-            "tool_calls": [
-              {
-                "function": {
-                  "arguments": "{\"account\":\"checking\"}",
-                  "name": "get_balance"
-                },
-                "id": "call_Ogy8RPciQCXreayeWqHZyoN5",
-                "type": "function"
-              }
-            ],
-            "function_call": null,
-            "provider_specific_fields": {
-              "refusal": null
-            },
-            "annotations": []
-          },
-          {
-            "role": "tool",
-            "tool_call_id": "call_Ogy8RPciQCXreayeWqHZyoN5",
-            "content": "{\"account\": \"checking\", \"balance\": 1500.0, \"formatted\": \"$1,500.00\"}"
-          },
-          {
-            "role": "assistant",
-            "content": "Your checking account balance is $1,500.00. Would you like to do anything else with your accounts (transfer, withdraw, deposit, see transactions)?"
-          }
-        ],
+        "cost_usd": 0.0,
         "session_context_count": 0,
         "assertions": [],
-        "available_tools": [
-          {
-            "name": "get_balance",
-            "description": "Get the current balance of a specific account (checking or savings).",
-            "input_schema": {
-              "type": "object",
-              "properties": {
-                "account": {
-                  "type": "string",
-                  "description": "Account name: 'checking' or 'savings'",
-                  "enum": [
-                    "checking",
-                    "savings"
-                  ]
-                }
-              },
-              "required": [
-                "account"
-              ]
-            },
-            "server_name": "pytest_skill_engineering.testing.banking_mcp"
-          },
-          {
-            "name": "get_all_balances",
-            "description": "Get balances for all accounts at once, including total.",
-            "input_schema": {
-              "type": "object",
-              "properties": {}
-            },
-            "server_name": "pytest_skill_engineering.testing.banking_mcp"
-          },
-          {
-            "name": "transfer",
-            "description": "Transfer money between accounts (checking and savings).",
-            "input_schema": {
-              "type": "object",
-              "properties": {
-                "from_account": {
-                  "type": "string",
-                  "description": "Source account name",
-                  "enum": [
-                    "checking",
-                    "savings"
-                  ]
-                },
-                "to_account": {
-                  "type": "string",
-                  "description": "Destination account name",
-                  "enum": [
-                    "checking",
-                    "savings"
-                  ]
-                },
-                "amount": {
-                  "type": "number",
-                  "description": "Amount to transfer in dollars"
-                }
-              },
-              "required": [
-                "from_account",
-                "to_account",
-                "amount"
-              ]
-            },
-            "server_name": "pytest_skill_engineering.testing.banking_mcp"
-          },
-          {
-            "name": "deposit",
-            "description": "Deposit money into an account.",
-            "input_schema": {
-              "type": "object",
-              "properties": {
-                "account": {
-                  "type": "string",
-                  "description": "Account to deposit into",
-                  "enum": [
-                    "checking",
-                    "savings"
-                  ]
-                },
-                "amount": {
-                  "type": "number",
-                  "description": "Amount to deposit in dollars"
-                }
-              },
-              "required": [
-                "account",
-                "amount"
-              ]
-            },
-            "server_name": "pytest_skill_engineering.testing.banking_mcp"
-          },
-          {
-            "name": "withdraw",
-            "description": "Withdraw money from an account.",
-            "input_schema": {
-              "type": "object",
-              "properties": {
-                "account": {
-                  "type": "string",
-                  "description": "Account to withdraw from",
-                  "enum": [
-                    "checking",
-                    "savings"
-                  ]
-                },
-                "amount": {
-                  "type": "number",
-                  "description": "Amount to withdraw in dollars"
-                }
-              },
-              "required": [
-                "account",
-                "amount"
-              ]
-            },
-            "server_name": "pytest_skill_engineering.testing.banking_mcp"
-          },
-          {
-            "name": "get_transactions",
-            "description": "Get recent transaction history, optionally filtered by account.",
-            "input_schema": {
-              "type": "object",
-              "properties": {
-                "account": {
-                  "type": "string",
-                  "description": "Optional: filter by account name",
-                  "enum": [
-                    "checking",
-                    "savings"
-                  ]
-                },
-                "limit": {
-                  "type": "integer",
-                  "description": "Maximum number of transactions to return (default: 10)",
-                  "default": 10
-                }
-              }
-            },
-            "server_name": "pytest_skill_engineering.testing.banking_mcp"
-          }
-        ],
+        "available_tools": [],
         "skill_info": null,
-        "effective_system_prompt": "You are a helpful banking assistant.\nUse the available tools to manage accounts and transactions.\nAlways use tools - never make up balances or account data."
+        "effective_system_prompt": "Fixture instructions for gpt-5.4-mini.",
+        "mcp_prompts": [],
+        "prompt_name": null,
+        "custom_agent_info": null,
+        "premium_requests": 1.0,
+        "instruction_files": [],
+        "clarification_stats": null
       },
       "error": null,
       "assertions": [
         {
           "type": "llm",
           "passed": true,
-          "message": "mentions the checking account balance amount",
-          "details": "The content explicitly states the checking account balance as $1,500.00."
+          "message": "mentions the current balance",
+          "details": "Deterministic fixture assertion."
         }
       ],
-      "docstring": "Basic balance check \u2014 should pass.",
+      "docstring": "Check a single account balance.",
       "class_docstring": null,
-      "agent_id": "8fa82e98-35c0-4a0d-b3c3-8f81e3669c46",
-      "eval_name": "banking-agent",
-      "model": "gpt-5-mini",
+      "agent_id": "agent-gpt-5-4-mini",
+      "eval_name": "gpt-5.4-mini",
+      "model": "gpt-5.4-mini",
       "system_prompt_name": null,
-      "skill_name": null
+      "skill_name": null,
+      "iteration": null
     },
     {
-      "name": "tests/fixtures/scenario_01_single_agent.py::test_transfer_between_accounts",
+      "name": "tests/fixtures/scenario_01_single_agent.py::test_transfer_confirmation",
       "outcome": "passed",
-      "duration_ms": 7056.472500000382,
+      "duration_ms": 3000.0,
       "eval_result": {
         "turns": [
           {
             "role": "user",
-            "content": "Transfer $200 from checking to savings",
+            "content": "Transfer $200 to savings and confirm it worked.",
             "tool_calls": []
           },
           {
@@ -267,704 +97,95 @@
                   "to_account": "savings",
                   "amount": 200
                 },
-                "result": "{\"transaction_id\": \"TX0001\", \"type\": \"transfer\", \"from_account\": \"checking\", \"to_account\": \"savings\", \"amount\": 200, \"amount_formatted\": \"$200.00\", \"new_balance_from\": 1300.0, \"new_balance_to\": 3200.0, \"message\": \"Successfully transferred $200.00 from checking to savings.\"}",
+                "result": "ok",
                 "error": null,
-                "duration_ms": 2.9747000080533326
-              }
-            ]
-          },
-          {
-            "role": "assistant",
-            "content": "Done \u2014 I transferred $200 from your checking to savings. Your new balances:\n- Checking: $1,300.00\n- Savings: $3,200.00\n\nWould you like a receipt or anything else?",
-            "tool_calls": []
-          }
-        ],
-        "success": true,
-        "error": null,
-        "duration_ms": 2019.8448000010103,
-        "token_usage": {
-          "prompt": 941,
-          "completion": 83
-        },
-        "cost_usd": 0.00040125,
-        "_messages": [
-          {
-            "role": "system",
-            "content": "You are a helpful banking assistant.\nUse the available tools to manage accounts and transactions.\nAlways use tools - never make up balances or account data."
-          },
-          {
-            "role": "user",
-            "content": "Transfer $200 from checking to savings"
-          },
-          {
-            "content": null,
-            "role": "assistant",
-            "tool_calls": [
-              {
-                "function": {
-                  "arguments": "{\"from_account\":\"checking\",\"to_account\":\"savings\",\"amount\":200}",
-                  "name": "transfer"
-                },
-                "id": "call_hwX7egtt5Uz40ONlk3oppWxO",
-                "type": "function"
-              }
-            ],
-            "function_call": null,
-            "provider_specific_fields": {
-              "refusal": null
-            },
-            "annotations": []
-          },
-          {
-            "role": "tool",
-            "tool_call_id": "call_hwX7egtt5Uz40ONlk3oppWxO",
-            "content": "{\"transaction_id\": \"TX0001\", \"type\": \"transfer\", \"from_account\": \"checking\", \"to_account\": \"savings\", \"amount\": 200, \"amount_formatted\": \"$200.00\", \"new_balance_from\": 1300.0, \"new_balance_to\": 3200.0, \"message\": \"Successfully transferred $200.00 from checking to savings.\"}"
-          },
-          {
-            "role": "assistant",
-            "content": "Done \u2014 I transferred $200 from your checking to savings. Your new balances:\n- Checking: $1,300.00\n- Savings: $3,200.00\n\nWould you like a receipt or anything else?"
-          }
-        ],
-        "session_context_count": 0,
-        "assertions": [],
-        "available_tools": [
-          {
-            "name": "get_balance",
-            "description": "Get the current balance of a specific account (checking or savings).",
-            "input_schema": {
-              "type": "object",
-              "properties": {
-                "account": {
-                  "type": "string",
-                  "description": "Account name: 'checking' or 'savings'",
-                  "enum": [
-                    "checking",
-                    "savings"
-                  ]
-                }
+                "duration_ms": 180.0,
+                "image_content": null,
+                "image_media_type": null
               },
-              "required": [
-                "account"
-              ]
-            },
-            "server_name": "pytest_skill_engineering.testing.banking_mcp"
-          },
-          {
-            "name": "get_all_balances",
-            "description": "Get balances for all accounts at once, including total.",
-            "input_schema": {
-              "type": "object",
-              "properties": {}
-            },
-            "server_name": "pytest_skill_engineering.testing.banking_mcp"
-          },
-          {
-            "name": "transfer",
-            "description": "Transfer money between accounts (checking and savings).",
-            "input_schema": {
-              "type": "object",
-              "properties": {
-                "from_account": {
-                  "type": "string",
-                  "description": "Source account name",
-                  "enum": [
-                    "checking",
-                    "savings"
-                  ]
-                },
-                "to_account": {
-                  "type": "string",
-                  "description": "Destination account name",
-                  "enum": [
-                    "checking",
-                    "savings"
-                  ]
-                },
-                "amount": {
-                  "type": "number",
-                  "description": "Amount to transfer in dollars"
-                }
-              },
-              "required": [
-                "from_account",
-                "to_account",
-                "amount"
-              ]
-            },
-            "server_name": "pytest_skill_engineering.testing.banking_mcp"
-          },
-          {
-            "name": "deposit",
-            "description": "Deposit money into an account.",
-            "input_schema": {
-              "type": "object",
-              "properties": {
-                "account": {
-                  "type": "string",
-                  "description": "Account to deposit into",
-                  "enum": [
-                    "checking",
-                    "savings"
-                  ]
-                },
-                "amount": {
-                  "type": "number",
-                  "description": "Amount to deposit in dollars"
-                }
-              },
-              "required": [
-                "account",
-                "amount"
-              ]
-            },
-            "server_name": "pytest_skill_engineering.testing.banking_mcp"
-          },
-          {
-            "name": "withdraw",
-            "description": "Withdraw money from an account.",
-            "input_schema": {
-              "type": "object",
-              "properties": {
-                "account": {
-                  "type": "string",
-                  "description": "Account to withdraw from",
-                  "enum": [
-                    "checking",
-                    "savings"
-                  ]
-                },
-                "amount": {
-                  "type": "number",
-                  "description": "Amount to withdraw in dollars"
-                }
-              },
-              "required": [
-                "account",
-                "amount"
-              ]
-            },
-            "server_name": "pytest_skill_engineering.testing.banking_mcp"
-          },
-          {
-            "name": "get_transactions",
-            "description": "Get recent transaction history, optionally filtered by account.",
-            "input_schema": {
-              "type": "object",
-              "properties": {
-                "account": {
-                  "type": "string",
-                  "description": "Optional: filter by account name",
-                  "enum": [
-                    "checking",
-                    "savings"
-                  ]
-                },
-                "limit": {
-                  "type": "integer",
-                  "description": "Maximum number of transactions to return (default: 10)",
-                  "default": 10
-                }
-              }
-            },
-            "server_name": "pytest_skill_engineering.testing.banking_mcp"
-          }
-        ],
-        "skill_info": null,
-        "effective_system_prompt": "You are a helpful banking assistant.\nUse the available tools to manage accounts and transactions.\nAlways use tools - never make up balances or account data."
-      },
-      "error": null,
-      "assertions": [
-        {
-          "type": "llm",
-          "passed": true,
-          "message": "confirms the transfer was completed",
-          "details": "The message explicitly states the transfer was completed ('Done \u2014 I transferred $200...') and provides updated account balances, confirming completion."
-        }
-      ],
-      "docstring": "Transfer money \u2014 tests the transfer tool.",
-      "class_docstring": null,
-      "agent_id": "8fa82e98-35c0-4a0d-b3c3-8f81e3669c46",
-      "eval_name": "banking-agent",
-      "model": "gpt-5-mini",
-      "system_prompt_name": null,
-      "skill_name": null
-    },
-    {
-      "name": "tests/fixtures/scenario_01_single_agent.py::test_transaction_history",
-      "outcome": "passed",
-      "duration_ms": 11859.495099983178,
-      "eval_result": {
-        "turns": [
-          {
-            "role": "user",
-            "content": "Show me recent transactions for all accounts",
-            "tool_calls": []
-          },
-          {
-            "role": "assistant",
-            "content": "",
-            "tool_calls": [
-              {
-                "name": "get_transactions",
-                "arguments": {
-                  "limit": 20
-                },
-                "result": "{\"transactions\": [], \"count\": 0, \"filter\": null}",
-                "error": null,
-                "duration_ms": 2.1896999969612807
-              }
-            ]
-          },
-          {
-            "role": "assistant",
-            "content": "I checked your recent transactions (up to 20) across all accounts and found none. That means there are no posted transactions in the timeframe queried.\n\nWould you like to:\n- Show current balances for all accounts?\n- Check transactions for a specific account (checking or savings) or a different number of transactions?\n- Look for pending transactions?\n- Make a deposit, withdrawal, or transfer?\n\nTell me which option and any details (account, amount, or how many transactions to retrieve) and I\u2019ll take care of it.",
-            "tool_calls": []
-          }
-        ],
-        "success": true,
-        "error": null,
-        "duration_ms": 5212.757599976612,
-        "token_usage": {
-          "prompt": 863,
-          "completion": 459
-        },
-        "cost_usd": 0.0011337499999999998,
-        "_messages": [
-          {
-            "role": "system",
-            "content": "You are a helpful banking assistant.\nUse the available tools to manage accounts and transactions.\nAlways use tools - never make up balances or account data."
-          },
-          {
-            "role": "user",
-            "content": "Show me recent transactions for all accounts"
-          },
-          {
-            "content": null,
-            "role": "assistant",
-            "tool_calls": [
-              {
-                "function": {
-                  "arguments": "{\"limit\":20}",
-                  "name": "get_transactions"
-                },
-                "id": "call_Z9pe84bKu6dOzK3fZrh7hdyb",
-                "type": "function"
-              }
-            ],
-            "function_call": null,
-            "provider_specific_fields": {
-              "refusal": null
-            },
-            "annotations": []
-          },
-          {
-            "role": "tool",
-            "tool_call_id": "call_Z9pe84bKu6dOzK3fZrh7hdyb",
-            "content": "{\"transactions\": [], \"count\": 0, \"filter\": null}"
-          },
-          {
-            "role": "assistant",
-            "content": "I checked your recent transactions (up to 20) across all accounts and found none. That means there are no posted transactions in the timeframe queried.\n\nWould you like to:\n- Show current balances for all accounts?\n- Check transactions for a specific account (checking or savings) or a different number of transactions?\n- Look for pending transactions?\n- Make a deposit, withdrawal, or transfer?\n\nTell me which option and any details (account, amount, or how many transactions to retrieve) and I\u2019ll take care of it."
-          }
-        ],
-        "session_context_count": 0,
-        "assertions": [],
-        "available_tools": [
-          {
-            "name": "get_balance",
-            "description": "Get the current balance of a specific account (checking or savings).",
-            "input_schema": {
-              "type": "object",
-              "properties": {
-                "account": {
-                  "type": "string",
-                  "description": "Account name: 'checking' or 'savings'",
-                  "enum": [
-                    "checking",
-                    "savings"
-                  ]
-                }
-              },
-              "required": [
-                "account"
-              ]
-            },
-            "server_name": "pytest_skill_engineering.testing.banking_mcp"
-          },
-          {
-            "name": "get_all_balances",
-            "description": "Get balances for all accounts at once, including total.",
-            "input_schema": {
-              "type": "object",
-              "properties": {}
-            },
-            "server_name": "pytest_skill_engineering.testing.banking_mcp"
-          },
-          {
-            "name": "transfer",
-            "description": "Transfer money between accounts (checking and savings).",
-            "input_schema": {
-              "type": "object",
-              "properties": {
-                "from_account": {
-                  "type": "string",
-                  "description": "Source account name",
-                  "enum": [
-                    "checking",
-                    "savings"
-                  ]
-                },
-                "to_account": {
-                  "type": "string",
-                  "description": "Destination account name",
-                  "enum": [
-                    "checking",
-                    "savings"
-                  ]
-                },
-                "amount": {
-                  "type": "number",
-                  "description": "Amount to transfer in dollars"
-                }
-              },
-              "required": [
-                "from_account",
-                "to_account",
-                "amount"
-              ]
-            },
-            "server_name": "pytest_skill_engineering.testing.banking_mcp"
-          },
-          {
-            "name": "deposit",
-            "description": "Deposit money into an account.",
-            "input_schema": {
-              "type": "object",
-              "properties": {
-                "account": {
-                  "type": "string",
-                  "description": "Account to deposit into",
-                  "enum": [
-                    "checking",
-                    "savings"
-                  ]
-                },
-                "amount": {
-                  "type": "number",
-                  "description": "Amount to deposit in dollars"
-                }
-              },
-              "required": [
-                "account",
-                "amount"
-              ]
-            },
-            "server_name": "pytest_skill_engineering.testing.banking_mcp"
-          },
-          {
-            "name": "withdraw",
-            "description": "Withdraw money from an account.",
-            "input_schema": {
-              "type": "object",
-              "properties": {
-                "account": {
-                  "type": "string",
-                  "description": "Account to withdraw from",
-                  "enum": [
-                    "checking",
-                    "savings"
-                  ]
-                },
-                "amount": {
-                  "type": "number",
-                  "description": "Amount to withdraw in dollars"
-                }
-              },
-              "required": [
-                "account",
-                "amount"
-              ]
-            },
-            "server_name": "pytest_skill_engineering.testing.banking_mcp"
-          },
-          {
-            "name": "get_transactions",
-            "description": "Get recent transaction history, optionally filtered by account.",
-            "input_schema": {
-              "type": "object",
-              "properties": {
-                "account": {
-                  "type": "string",
-                  "description": "Optional: filter by account name",
-                  "enum": [
-                    "checking",
-                    "savings"
-                  ]
-                },
-                "limit": {
-                  "type": "integer",
-                  "description": "Maximum number of transactions to return (default: 10)",
-                  "default": 10
-                }
-              }
-            },
-            "server_name": "pytest_skill_engineering.testing.banking_mcp"
-          }
-        ],
-        "skill_info": null,
-        "effective_system_prompt": "You are a helpful banking assistant.\nUse the available tools to manage accounts and transactions.\nAlways use tools - never make up balances or account data."
-      },
-      "error": null,
-      "assertions": [
-        {
-          "type": "llm",
-          "passed": true,
-          "message": "shows transaction or balance information",
-          "details": "The content reports transaction information by stating that a query for up to 20 recent transactions returned none (i.e., no posted transactions in the timeframe), which meets the criterion."
-        }
-      ],
-      "docstring": "View transactions \u2014 multiple tool calls possible.",
-      "class_docstring": null,
-      "agent_id": "8fa82e98-35c0-4a0d-b3c3-8f81e3669c46",
-      "eval_name": "banking-agent",
-      "model": "gpt-5-mini",
-      "system_prompt_name": null,
-      "skill_name": null
-    },
-    {
-      "name": "tests/fixtures/scenario_01_single_agent.py::test_expected_failure",
-      "outcome": "failed",
-      "duration_ms": 4505.407099990407,
-      "eval_result": {
-        "turns": [
-          {
-            "role": "user",
-            "content": "Check all balances, transfer $500 from checking to savings, then show me updated balances and transaction history",
-            "tool_calls": []
-          },
-          {
-            "role": "assistant",
-            "content": "",
-            "tool_calls": [
               {
                 "name": "get_all_balances",
                 "arguments": {},
-                "result": "{\"accounts\": {\"checking\": {\"balance\": 1500.0, \"formatted\": \"$1,500.00\"}, \"savings\": {\"balance\": 3000.0, \"formatted\": \"$3,000.00\"}}, \"total\": 4500.0, \"total_formatted\": \"$4,500.00\"}",
+                "result": "{\"checking\": \"$1,300.00\", \"savings\": \"$3,200.00\"}",
                 "error": null,
-                "duration_ms": 3.116700012469664
+                "duration_ms": 180.0,
+                "image_content": null,
+                "image_media_type": null
               }
             ]
+          },
+          {
+            "role": "assistant",
+            "content": "Transferred $200 and confirmed the updated balances.",
+            "tool_calls": []
           }
         ],
         "success": true,
         "error": null,
-        "duration_ms": 1177.7184999955352,
+        "duration_ms": 3000.0,
         "token_usage": {
-          "prompt": 423,
-          "completion": 86
+          "prompt": 130,
+          "completion": 65
         },
-        "cost_usd": 0.00027775,
-        "_messages": [
-          {
-            "role": "system",
-            "content": "You are a helpful banking assistant.\nUse the available tools to manage accounts and transactions.\nAlways use tools - never make up balances or account data."
-          },
-          {
-            "role": "user",
-            "content": "Check all balances, transfer $500 from checking to savings, then show me updated balances and transaction history"
-          },
-          {
-            "content": null,
-            "role": "assistant",
-            "tool_calls": [
-              {
-                "function": {
-                  "arguments": "{}",
-                  "name": "get_all_balances"
-                },
-                "id": "call_aTjoBUMpRKyC04zrsaFfoOpZ",
-                "type": "function"
-              }
-            ],
-            "function_call": null,
-            "provider_specific_fields": {
-              "refusal": null
-            },
-            "annotations": []
-          },
-          {
-            "role": "tool",
-            "tool_call_id": "call_aTjoBUMpRKyC04zrsaFfoOpZ",
-            "content": "{\"accounts\": {\"checking\": {\"balance\": 1500.0, \"formatted\": \"$1,500.00\"}, \"savings\": {\"balance\": 3000.0, \"formatted\": \"$3,000.00\"}}, \"total\": 4500.0, \"total_formatted\": \"$4,500.00\"}"
-          }
-        ],
+        "cost_usd": 0.0,
         "session_context_count": 0,
         "assertions": [],
-        "available_tools": [
-          {
-            "name": "get_balance",
-            "description": "Get the current balance of a specific account (checking or savings).",
-            "input_schema": {
-              "type": "object",
-              "properties": {
-                "account": {
-                  "type": "string",
-                  "description": "Account name: 'checking' or 'savings'",
-                  "enum": [
-                    "checking",
-                    "savings"
-                  ]
-                }
-              },
-              "required": [
-                "account"
-              ]
-            },
-            "server_name": "pytest_skill_engineering.testing.banking_mcp"
-          },
-          {
-            "name": "get_all_balances",
-            "description": "Get balances for all accounts at once, including total.",
-            "input_schema": {
-              "type": "object",
-              "properties": {}
-            },
-            "server_name": "pytest_skill_engineering.testing.banking_mcp"
-          },
-          {
-            "name": "transfer",
-            "description": "Transfer money between accounts (checking and savings).",
-            "input_schema": {
-              "type": "object",
-              "properties": {
-                "from_account": {
-                  "type": "string",
-                  "description": "Source account name",
-                  "enum": [
-                    "checking",
-                    "savings"
-                  ]
-                },
-                "to_account": {
-                  "type": "string",
-                  "description": "Destination account name",
-                  "enum": [
-                    "checking",
-                    "savings"
-                  ]
-                },
-                "amount": {
-                  "type": "number",
-                  "description": "Amount to transfer in dollars"
-                }
-              },
-              "required": [
-                "from_account",
-                "to_account",
-                "amount"
-              ]
-            },
-            "server_name": "pytest_skill_engineering.testing.banking_mcp"
-          },
-          {
-            "name": "deposit",
-            "description": "Deposit money into an account.",
-            "input_schema": {
-              "type": "object",
-              "properties": {
-                "account": {
-                  "type": "string",
-                  "description": "Account to deposit into",
-                  "enum": [
-                    "checking",
-                    "savings"
-                  ]
-                },
-                "amount": {
-                  "type": "number",
-                  "description": "Amount to deposit in dollars"
-                }
-              },
-              "required": [
-                "account",
-                "amount"
-              ]
-            },
-            "server_name": "pytest_skill_engineering.testing.banking_mcp"
-          },
-          {
-            "name": "withdraw",
-            "description": "Withdraw money from an account.",
-            "input_schema": {
-              "type": "object",
-              "properties": {
-                "account": {
-                  "type": "string",
-                  "description": "Account to withdraw from",
-                  "enum": [
-                    "checking",
-                    "savings"
-                  ]
-                },
-                "amount": {
-                  "type": "number",
-                  "description": "Amount to withdraw in dollars"
-                }
-              },
-              "required": [
-                "account",
-                "amount"
-              ]
-            },
-            "server_name": "pytest_skill_engineering.testing.banking_mcp"
-          },
-          {
-            "name": "get_transactions",
-            "description": "Get recent transaction history, optionally filtered by account.",
-            "input_schema": {
-              "type": "object",
-              "properties": {
-                "account": {
-                  "type": "string",
-                  "description": "Optional: filter by account name",
-                  "enum": [
-                    "checking",
-                    "savings"
-                  ]
-                },
-                "limit": {
-                  "type": "integer",
-                  "description": "Maximum number of transactions to return (default: 10)",
-                  "default": 10
-                }
-              }
-            },
-            "server_name": "pytest_skill_engineering.testing.banking_mcp"
-          }
-        ],
+        "available_tools": [],
         "skill_info": null,
-        "effective_system_prompt": "You are a helpful banking assistant.\nUse the available tools to manage accounts and transactions.\nAlways use tools - never make up balances or account data."
+        "effective_system_prompt": "Fixture instructions for gpt-5.4-mini.",
+        "mcp_prompts": [],
+        "prompt_name": null,
+        "custom_agent_info": null,
+        "premium_requests": 1.0,
+        "instruction_files": [],
+        "clarification_stats": null
       },
-      "error": "      AssertionError: Agent exceeded turn limit - unable to process multi-step request (max_turns=1)",
-      "assertions": [],
-      "docstring": "Test that fails due to turn limit \u2014 for report variety.",
+      "error": null,
+      "assertions": [
+        {
+          "type": "llm",
+          "passed": true,
+          "message": "confirms the transfer outcome",
+          "details": "Deterministic fixture assertion."
+        },
+        {
+          "type": "llm_score",
+          "passed": true,
+          "message": "4/5 (80%)",
+          "details": "Deterministic score reasoning.",
+          "dimensions": [
+            {
+              "name": "correctness",
+              "score": 4,
+              "max_score": 5,
+              "weight": 1.0
+            }
+          ],
+          "total": 4,
+          "max_total": 5,
+          "weighted_score": 0.8
+        }
+      ],
+      "docstring": "Transfer funds and verify the result.",
       "class_docstring": null,
-      "agent_id": "8fa82e98-35c0-4a0d-b3c3-8f81e3669c46",
-      "eval_name": "banking-agent",
-      "model": "gpt-5-mini",
+      "agent_id": "agent-gpt-5-4-mini",
+      "eval_name": "gpt-5.4-mini",
+      "model": "gpt-5.4-mini",
       "system_prompt_name": null,
-      "skill_name": null
+      "skill_name": null,
+      "iteration": null
     }
   ],
-  "passed": 3,
-  "failed": 1,
+  "passed": 2,
+  "failed": 0,
   "skipped": 0,
-  "suite_docstring": "Single agent tests - basic report without comparison UI.",
+  "suite_docstring": "Single agent banking smoke report.",
   "schema_version": "3.0",
   "insights": {
-    "markdown_summary": "## \ud83c\udfaf Recommendation\n\n**Deploy: banking-agent (gpt-5-mini, default prompt)**\n\n**Reasoning:** Achieves a 75% pass rate (3/4) at very low cost ($0.002151 total across all tests). All core single-step banking actions (balance, transfer, transactions) pass reliably and use tools correctly. The only failure is due to a configured turn limit, not tool misuse or model behavior.\n\n**Alternatives:** None \u2014 only one configuration tested.\n\n## \u274c Failure Analysis\n\n### Test that fails due to turn limit \u2014 for report variety. (banking-agent)\n- **Problem:** The agent could not complete a multi-step request (check balances \u2192 transfer \u2192 show updated balances \u2192 show transactions) because the test enforces `max_turns=1`.\n- **Root Cause:** Test configuration limits the session to a single turn, but the user request explicitly requires multiple tool calls and responses. The agent correctly initiated the first step (`get_all_balances`) but was blocked before completing the sequence.\n- **Fix:** Increase allowed turns for this test.\n  - **Exact change:** Set `max_turns` from `1` to `4` (or higher) for this test case.\n  - **Alternative fix (if max_turns must remain 1):** Split into separate tests:\n    1. \u201cCheck all balances \u2014 should pass\u201d\n    2. \u201cTransfer $500 from checking to savings \u2014 should pass\u201d\n    3. \u201cShow updated balances and transaction history \u2014 should pass\u201d\n\n## \ud83d\udd27 MCP Tool Feedback\n\n### pytest_skill_engineering.testing.banking_mcp\nOverall, tools are discoverable and used correctly. Naming is clear and aligned with user intents.\n\n| Tool | Status | Calls | Issues |\n|------|--------|-------|--------|\n| get_balance | \u2705 | 1 | Working well |\n| transfer | \u2705 | 1 | Working well |\n| get_transactions | \u2705 | 1 | Working well |\n| get_all_balances | \u26a0\ufe0f | 1 | Tool works, but multi-step usage blocked by test turn limit |\n| deposit | \u2705 | 0 | Not exercised in tests |\n| withdraw | \u2705 | 0 | Not exercised in tests |\n\n## \ud83d\udcdd System Prompt Feedback\n\n### default (mixed)\n- **Token count:** ~24 tokens\n- **Problem:** The prompt does not address multi-step planning or constraints like turn limits. In multi-action requests, the agent attempts to proceed sequentially, which conflicts with tests that cap turns.\n- **Suggested change:** Add an explicit instruction to batch tool usage when possible.\n  - **Exact text to append:**\n    ```\n    If a user request requires multiple actions and turn limits may apply, plan all required tool calls up front and execute them in the minimum number of turns.\n    ```\n\n## \ud83d\udca1 Optimizations\n\n1. **Align test turn limits with realistic user tasks** (recommended)\n   - Current: Complex, multi-action requests are tested with `max_turns=1`.\n   - Change: Allow 3\u20134 turns for composite banking workflows or decompose them into atomic tests.\n   - Impact: Prevents false negatives; improves effective pass rate from 75% to 100% with no additional model cost.\n\n2. **Reduce verbose assistant follow-ups** (suggestion)\n   - Current: Assistant frequently asks multiple follow-up questions after completing tasks.\n   - Change: Add instruction to ask at most one follow-up question or offer a concise menu.\n   - Impact: Minor cost reduction (~5\u201310% fewer tokens per test).\n\n## \ud83d\udce6 Tool Response Optimization\n\n### get_balance (from pytest_skill_engineering.testing.banking_mcp)\n- **Current response size:** ~18 tokens\n- **Issues found:** Redundant formatted string duplicates numeric balance.\n- **Suggested optimization:** Omit `formatted` and let the assistant format.\n- **Estimated savings:** ~6 tokens per call (~33% reduction)\n\n**Example current vs optimized:**\n```json\n// Current (~18 tokens)\n{\"account\":\"checking\",\"balance\":1500.0,\"formatted\":\"$1,500.00\"}\n\n// Optimized (~12 tokens)\n{\"account\":\"checking\",\"balance\":1500.0}\n```\n\n### transfer (from pytest_skill_engineering.testing.banking_mcp)\n- **Current response size:** ~45 tokens\n- **Issues found:** Both `message` and formatted fields duplicate information already present in structured fields.\n- **Suggested optimization:** Remove `message` and `amount_formatted`.\n- **Estimated savings:** ~15 tokens per call (~33% reduction)\n\n**Example current vs optimized:**\n```json\n// Current (~45 tokens)\n{\n  \"transaction_id\":\"TX0001\",\n  \"type\":\"transfer\",\n  \"from_account\":\"checking\",\n  \"to_account\":\"savings\",\n  \"amount\":200,\n  \"amount_formatted\":\"$200.00\",\n  \"new_balance_from\":1300.0,\n  \"new_balance_to\":3200.0,\n  \"message\":\"Successfully transferred $200.00 from checking to savings.\"\n}\n\n// Optimized (~30 tokens)\n{\n  \"transaction_id\":\"TX0001\",\n  \"from_account\":\"checking\",\n  \"to_account\":\"savings\",\n  \"amount\":200,\n  \"new_balance_from\":1300.0,\n  \"new_balance_to\":3200.0\n}\n```\n\n### get_transactions (from pytest_skill_engineering.testing.banking_mcp)\n- **Current response size:** ~14 tokens\n- **Issues found:** Includes `filter: null`, which is unused.\n- **Suggested optimization:** Omit null fields.\n- **Estimated savings:** ~2 tokens per call (~14% reduction)\n\n**Example current vs optimized:**\n```json\n// Current (~14 tokens)\n{\"transactions\":[],\"count\":0,\"filter\":null}\n\n// Optimized (~12 tokens)\n{\"transactions\":[],\"count\":0}\n```",
-    "cost_usd": 0.0234675,
-    "tokens_used": 4856,
-    "cached": false
+    "markdown_summary": "## \ud83c\udfaf Recommendation\n\nDeploy the strongest passing eval for **single-agent coverage**.\n\n## \u274c Failure Analysis\n\nAt least one compared result failed, so the report must keep the failure visible.\n\n## \ud83d\udd27 MCP Tool Feedback\n\nTool names are deterministic in these fixture reports.\n",
+    "cost_usd": 0.0012,
+    "tokens_used": 240,
+    "cached": true,
+    "model": "copilot/gpt-5.4-mini"
   }
 }

@@ -10,6 +10,14 @@ if TYPE_CHECKING:
     from pytest_skill_engineering.reporting.collector import SuiteReport
 
 
+def _require_key(data: dict[str, Any], key: str, *, context: str) -> Any:
+    """Read a required key or raise a schema-alignment error."""
+    if key not in data:
+        msg = f"{context} is missing required field {key!r}"
+        raise ValueError(msg)
+    return data[key]
+
+
 def serialize_dataclass(obj: Any) -> Any:
     """Convert dataclass to dict recursively, handling special types.
 
@@ -18,7 +26,7 @@ def serialize_dataclass(obj: Any) -> Any:
 
     Uses manual field iteration instead of ``dataclasses.asdict()`` to avoid
     ``copy.deepcopy`` on large private fields (e.g. ``_messages`` containing
-    PydanticAI model objects).
+    SDK session payloads).
     """
     if is_dataclass(obj) and not isinstance(obj, type):
         result = {}
@@ -51,14 +59,25 @@ def deserialize_suite_report(data: dict[str, Any]) -> SuiteReport:
     from pytest_skill_engineering.reporting.collector import SuiteReport, TestReport
 
     # Reconstruct tests
+    raw_tests = _require_key(data, "tests", context="SuiteReport")
+    if not isinstance(raw_tests, list):
+        raise ValueError("SuiteReport field 'tests' must be a list")
+
     tests = []
-    for test_data in data.get("tests", []):
-        # Reconstruct agent result if present (support both new and legacy field name)
+    for test_data in raw_tests:
+        if not isinstance(test_data, dict):
+            raise ValueError("SuiteReport tests must contain objects")
+
         eval_result = None
-        if test_data.get("eval_result") or test_data.get("agent_result"):
-            test_data.setdefault("eval_result", test_data.get("agent_result"))
-        if test_data.get("eval_result"):
-            ar_data = test_data["eval_result"]
+        raw_eval_result = _require_key(
+            test_data,
+            "eval_result",
+            context=f"TestReport {test_data!r}",
+        )
+        if raw_eval_result is not None:
+            if not isinstance(raw_eval_result, dict):
+                raise ValueError("TestReport field 'eval_result' must be an object or null")
+            ar_data = raw_eval_result
 
             # Reconstruct turns
             turns = []
@@ -73,7 +92,7 @@ def deserialize_suite_report(data: dict[str, Any]) -> SuiteReport:
 
                     tool_calls.append(
                         ToolCall(
-                            name=tc_data["name"],
+                            name=_require_key(tc_data, "name", context="ToolCall"),
                             arguments=tc_data.get("arguments", {}),
                             result=tc_data.get("result"),
                             error=tc_data.get("error"),
@@ -85,8 +104,8 @@ def deserialize_suite_report(data: dict[str, Any]) -> SuiteReport:
 
                 turns.append(
                     Turn(
-                        role=turn_data["role"],
-                        content=turn_data["content"],
+                        role=_require_key(turn_data, "role", context="Turn"),
+                        content=_require_key(turn_data, "content", context="Turn"),
                         tool_calls=tool_calls,
                     )
                 )
@@ -129,10 +148,10 @@ def deserialize_suite_report(data: dict[str, Any]) -> SuiteReport:
             for t_data in ar_data.get("available_tools", []):
                 available_tools.append(
                     ToolInfo(
-                        name=t_data["name"],
-                        description=t_data["description"],
-                        input_schema=t_data.get("input_schema", {}),
-                        server_name=t_data.get("server_name", ""),
+                        name=_require_key(t_data, "name", context="ToolInfo"),
+                        description=_require_key(t_data, "description", context="ToolInfo"),
+                        input_schema=_require_key(t_data, "input_schema", context="ToolInfo"),
+                        server_name=_require_key(t_data, "server_name", context="ToolInfo"),
                     )
                 )
 
@@ -149,7 +168,7 @@ def deserialize_suite_report(data: dict[str, Any]) -> SuiteReport:
                 ]
                 mcp_prompts.append(
                     MCPPrompt(
-                        name=p_data["name"],
+                        name=_require_key(p_data, "name", context="MCPPrompt"),
                         description=p_data.get("description", ""),
                         arguments=args,
                     )
@@ -160,8 +179,8 @@ def deserialize_suite_report(data: dict[str, Any]) -> SuiteReport:
             si_data = ar_data.get("skill_info")
             if si_data:
                 skill_info = SkillInfo(
-                    name=si_data["name"],
-                    description=si_data["description"],
+                    name=_require_key(si_data, "name", context="SkillInfo"),
+                    description=_require_key(si_data, "description", context="SkillInfo"),
                     instruction_content=si_data.get("instruction_content", ""),
                     reference_names=si_data.get("reference_names", []),
                 )
@@ -173,7 +192,7 @@ def deserialize_suite_report(data: dict[str, Any]) -> SuiteReport:
             ca_data = ar_data.get("custom_agent_info")
             if ca_data:
                 custom_agent_info = CustomAgentInfo(
-                    name=ca_data["name"],
+                    name=_require_key(ca_data, "name", context="CustomAgentInfo"),
                     description=ca_data.get("description", ""),
                     file_path=ca_data.get("file_path", ""),
                 )
@@ -183,7 +202,7 @@ def deserialize_suite_report(data: dict[str, Any]) -> SuiteReport:
             for if_data in ar_data.get("instruction_files", []):
                 instruction_files.append(
                     InstructionFileInfo(
-                        name=if_data["name"],
+                        name=_require_key(if_data, "name", context="InstructionFileInfo"),
                         file_path=if_data.get("file_path", ""),
                         apply_to=if_data.get("apply_to", ""),
                         description=if_data.get("description", ""),
@@ -193,36 +212,39 @@ def deserialize_suite_report(data: dict[str, Any]) -> SuiteReport:
             # Reconstruct agent result
             eval_result = EvalResult(
                 turns=turns,
-                success=ar_data.get("success", False),
+                success=_require_key(ar_data, "success", context="EvalResult"),
                 error=ar_data.get("error"),
-                duration_ms=ar_data.get("duration_ms", 0.0),
-                token_usage=ar_data.get("token_usage", {}),
-                cost_usd=ar_data.get("cost_usd", 0.0),
-                session_context_count=ar_data.get("session_context_count", 0),
+                duration_ms=_require_key(ar_data, "duration_ms", context="EvalResult"),
+                token_usage=_require_key(ar_data, "token_usage", context="EvalResult"),
+                cost_usd=_require_key(ar_data, "cost_usd", context="EvalResult"),
+                session_context_count=_require_key(
+                    ar_data, "session_context_count", context="EvalResult"
+                ),
                 clarification_stats=clarification_stats,
                 assertions=assertions,
                 available_tools=available_tools,
                 skill_info=skill_info,
-                effective_system_prompt=ar_data.get("effective_system_prompt", ""),
+                effective_system_prompt=_require_key(
+                    ar_data, "effective_system_prompt", context="EvalResult"
+                ),
                 mcp_prompts=mcp_prompts,
                 prompt_name=ar_data.get("prompt_name"),
                 custom_agent_info=custom_agent_info,
-                premium_requests=ar_data.get("premium_requests", 0.0),
+                premium_requests=_require_key(ar_data, "premium_requests", context="EvalResult"),
                 instruction_files=instruction_files,
             )
 
-        # Read identity from typed fields (support both new and legacy field names)
-        agent_id = test_data.get("agent_id", "")
-        eval_name = test_data.get("eval_name", test_data.get("agent_name", ""))
-        model = test_data.get("model", "")
+        agent_id = _require_key(test_data, "agent_id", context="TestReport")
+        eval_name = _require_key(test_data, "eval_name", context="TestReport")
+        model = _require_key(test_data, "model", context="TestReport")
         system_prompt_name = test_data.get("system_prompt_name")
         skill_name = test_data.get("skill_name")
 
         # Reconstruct test report
         test_report = TestReport(
-            name=test_data["name"],
-            outcome=test_data["outcome"],
-            duration_ms=test_data["duration_ms"],
+            name=_require_key(test_data, "name", context="TestReport"),
+            outcome=_require_key(test_data, "outcome", context="TestReport"),
+            duration_ms=_require_key(test_data, "duration_ms", context="TestReport"),
             eval_result=eval_result,
             error=test_data.get("error"),
             assertions=test_data.get("assertions", []),
@@ -239,12 +261,12 @@ def deserialize_suite_report(data: dict[str, Any]) -> SuiteReport:
 
     # Reconstruct suite report
     return SuiteReport(
-        name=data["name"],
-        timestamp=data["timestamp"],
-        duration_ms=data["duration_ms"],
+        name=_require_key(data, "name", context="SuiteReport"),
+        timestamp=_require_key(data, "timestamp", context="SuiteReport"),
+        duration_ms=_require_key(data, "duration_ms", context="SuiteReport"),
         tests=tests,
-        passed=data.get("passed", 0),
-        failed=data.get("failed", 0),
-        skipped=data.get("skipped", 0),
+        passed=_require_key(data, "passed", context="SuiteReport"),
+        failed=_require_key(data, "failed", context="SuiteReport"),
+        skipped=_require_key(data, "skipped", context="SuiteReport"),
         suite_docstring=data.get("suite_docstring"),
     )

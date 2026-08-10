@@ -292,13 +292,93 @@ class TestEventMapperSubagents:
 
     def test_subagent_lifecycle(self):
         mapper = EventMapper()
-        mapper.handle(_make_event("subagent.started", eval_name="code-reviewer"))
-        mapper.handle(_make_event("subagent.completed", eval_name="code-reviewer", duration=1000))
+        mapper.handle(
+            _make_event(
+                "subagent.started",
+                agent_name="code-reviewer",
+                tool_call_id="call-1",
+            )
+        )
+        mapper.handle(
+            _make_event(
+                "subagent.completed",
+                agent_name="code-reviewer",
+                tool_call_id="call-1",
+                duration=1000,
+            )
+        )
         result = mapper.build()
         assert len(result.subagent_invocations) == 1
         sa = result.subagent_invocations[0]
         assert sa.name == "code-reviewer"
         assert sa.status == "completed"
+        assert sa.invocation_id == "call-1"
+        assert sa.duration_ms == 1000
+
+    def test_same_name_subagents_are_tracked_by_tool_call_id(self):
+        mapper = EventMapper()
+        mapper.handle(
+            _make_event(
+                "subagent.started",
+                agent_name="file-writer",
+                tool_call_id="call-1",
+            )
+        )
+        mapper.handle(
+            _make_event(
+                "subagent.started",
+                agent_name="file-writer",
+                tool_call_id="call-2",
+            )
+        )
+        mapper.handle(
+            _make_event(
+                "subagent.completed",
+                agent_name="file-writer",
+                tool_call_id="call-2",
+                duration=250,
+            )
+        )
+        mapper.handle(
+            _make_event(
+                "subagent.failed",
+                agent_name="file-writer",
+                tool_call_id="call-1",
+                duration=500,
+            )
+        )
+        result = mapper.build()
+
+        assert [(inv.invocation_id, inv.status) for inv in result.subagent_invocations] == [
+            ("call-1", "failed"),
+            ("call-2", "completed"),
+        ]
+
+    def test_native_task_dispatch_uses_agent_type_when_agentslug_missing(self):
+        mapper = EventMapper()
+        mapper.handle(
+            _make_event(
+                "tool.execution_start",
+                tool_name="task",
+                tool_call_id="call-1",
+                arguments='{"agent_type":"docs-writer","name":"docs-writer","prompt":"write docs"}',
+            )
+        )
+        mapper.handle(
+            _make_event(
+                "tool.execution_complete",
+                tool_name="task",
+                tool_call_id="call-1",
+                success=True,
+                result=SimpleNamespace(content="done"),
+            )
+        )
+        result = mapper.build()
+
+        assert result.success
+        assert [(inv.name, inv.status) for inv in result.subagent_invocations] == [
+            ("docs-writer", "completed")
+        ]
 
 
 class TestEventMapperSessionEvents:

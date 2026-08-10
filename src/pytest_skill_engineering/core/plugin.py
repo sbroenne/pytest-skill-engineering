@@ -15,15 +15,14 @@ Supports three directory layouts:
 Example::
 
     from pytest_skill_engineering.core.plugin import load_plugin
+    from pytest_skill_engineering.copilot.eval import CopilotEval
 
     plugin = load_plugin("my-plugin/")
     # → Plugin(metadata=PluginMetadata(name="my-plugin"), ...)
 
-    # Use with Eval.from_plugin()
-    from pytest_skill_engineering import Eval, Provider
-    agent = Eval.from_plugin(
+    agent = CopilotEval.from_plugin(
         "my-plugin/",
-        provider=Provider(model="azure/gpt-5.4-mini"),
+        model="gpt-5.4-mini",
     )
 """
 
@@ -168,6 +167,7 @@ def _load_from_manifest(path: Path, manifest_path: Path) -> Plugin:
 
     # Discover skills
     skills = _discover_skills(path)
+    _validate_skill_reference_names(skills)
 
     # Parse MCP servers from manifest
     mcp_servers = _parse_mcp_servers(manifest)
@@ -224,11 +224,7 @@ def _load_project_directory(path: Path, *, format_hint: str) -> Plugin:
         # MCP servers from .mcp.json
         mcp_json = path / ".mcp.json"
         if mcp_json.exists():
-            try:
-                raw = json.loads(mcp_json.read_text(encoding="utf-8"))
-                mcp_servers = raw.get("mcpServers", raw.get("mcp_servers", {}))
-            except (json.JSONDecodeError, AttributeError):
-                pass
+            mcp_servers = _load_claude_project_mcp_servers(mcp_json)
     elif format_hint == "github":
         agents = _discover_agents(path)
         skills = _discover_skills(path)
@@ -236,6 +232,7 @@ def _load_project_directory(path: Path, *, format_hint: str) -> Plugin:
         _append_file_content(instruction_parts, path / "copilot-instructions.md")
         _append_file_content(instruction_parts, path.parent / "copilot-instructions.md")
 
+    _validate_skill_reference_names(skills)
     instructions = "\n\n".join(instruction_parts)
 
     return Plugin(
@@ -266,6 +263,26 @@ def _parse_metadata(manifest: dict[str, Any], *, fallback_name: str) -> PluginMe
         description=str(manifest.get("description", "")),
         author=str(manifest.get("author", "")),
     )
+
+
+def _load_claude_project_mcp_servers(mcp_json: Path) -> dict[str, dict[str, Any]]:
+    """Load MCP server definitions from a Claude project ``.mcp.json`` file."""
+    try:
+        raw = json.loads(mcp_json.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        _logger.warning("Failed to parse %s: %s", mcp_json, exc)
+        return {}
+
+    if not isinstance(raw, dict):
+        _logger.warning("%s must contain a JSON object", mcp_json)
+        return {}
+
+    servers = raw.get("mcpServers", raw.get("mcp_servers", {}))
+    if not isinstance(servers, dict):
+        _logger.warning("%s has invalid mcpServers payload; expected an object", mcp_json)
+        return {}
+
+    return dict(servers)
 
 
 def _discover_agents(plugin_dir: Path) -> list[dict[str, Any]]:
@@ -320,6 +337,22 @@ def _discover_skills(plugin_dir: Path) -> list[Skill]:
             _logger.warning("Skipping skill %s: %s", skill_dir.name, exc)
 
     return skills
+
+
+def _validate_skill_reference_names(skills: list[Skill]) -> None:
+    """Reject duplicate reference basenames across loaded skills."""
+    owners: dict[str, str] = {}
+    for skill in skills:
+        for reference_name in skill.references:
+            owner = owners.get(reference_name)
+            if owner is not None:
+                msg = (
+                    f"Duplicate skill reference filename '{reference_name}' in skills "
+                    f"'{owner}' and '{skill.name}'. Reference filenames must be unique "
+                    "across a loaded plugin so they cannot overwrite each other."
+                )
+                raise ValueError(msg)
+            owners[reference_name] = skill.name
 
 
 def _parse_mcp_servers(manifest: dict[str, Any]) -> dict[str, dict[str, Any]]:

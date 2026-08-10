@@ -1,11 +1,11 @@
 
-# pytest-skill-engineering
+# fixture-10-dimension-detection
 
 > **4** tests | **4** passed | **0** failed | **100%** pass rate  
-> Duration: 23.6s | Cost: 🧪 $0.001297 · 🤖 $0.0142 · 💰 $0.0155 | Tokens: 706–913  
-> February 07, 2026 at 08:34 PM
+> Duration: 12.0s | Cost: 🧪 4 PR · 🤖 $0.001200 · 💰 $0.001200 | Tokens: 195–195  
+> August 10, 2026 at 08:09 PM
 
-*2×2 matrix proving dimension auto-detection.*
+*Dimension detection and parameter identity fixture.*
 
 
 ## Eval Leaderboard
@@ -13,10 +13,10 @@
 
 |#|Eval|Tests|Pass Rate|Tokens|Cost|Duration|
 | :---: | :--- | :---: | :---: | ---: | ---: | ---: |
-|🥇|gpt-5-mini + concise 🏆|1/1|100%|893|$0.000297|4.7s|
-|🥈|gpt-4.1-mini + concise|1/1|100%|706|$0.000317|5.1s|
-|🥉|gpt-4.1-mini + detailed|1/1|100%|717|$0.000340|5.7s|
-|4|gpt-5-mini + detailed|1/1|100%|913|$0.000344|8.2s|
+|🥇|claude-haiku-4.5 / concise 🏆|1/1|100%|195|1 PR|3.0s|
+|🥈|claude-haiku-4.5 / detailed|1/1|100%|195|1 PR|3.0s|
+|🥉|gpt-5.4-mini / concise|1/1|100%|195|1 PR|3.0s|
+|4|gpt-5.4-mini / detailed|1/1|100%|195|1 PR|3.0s|
 
 
 
@@ -24,108 +24,40 @@
 
 ## 🎯 Recommendation
 
-**Deploy: gpt-5-mini + concise**
+Deploy the strongest passing eval for **dimension detection**.
 
-Achieves **100% pass rate at the lowest cost** among all configurations.
+## ❌ Failure Analysis
 
-**Reasoning:**  
-All four configurations passed. Cost is the differentiator:
-- **gpt-5-mini + concise:** $0.000297 (baseline, lowest cost)
-- gpt-4.1-mini + concise: $0.000317 (**~7% higher cost**)
-- gpt-4.1-mini + detailed: $0.000340 (**~14% higher cost**)
-- gpt-5-mini + detailed: $0.000344 (**~16% higher cost**)
-
-Response quality is equivalent for this test (correct tool use, correct balance, appropriate short reply). The concise prompt reduces cost without harming correctness, and gpt-5-mini edges out gpt-4.1-mini on price.
-
-**Alternatives:**  
-- **gpt-4.1-mini + concise:** Slightly higher cost (~7%) with no quality benefit in this scenario.  
-- **Detailed prompt variants:** Both models incur ~14–16% higher cost with no added value for a simple balance query.
+At least one compared result failed, so the report must keep the failure visible.
 
 ## 🔧 MCP Tool Feedback
 
-### pytest_skill_engineering.testing.banking_mcp
-Overall, tools are clearly described and correctly selected. The agent consistently chose `get_balance` for a single-account query.
+Tool names are deterministic in these fixture reports.
 
-| Tool | Status | Calls | Issues |
-|------|--------|-------|--------|
-| get_balance | ✅ | 4 | Working well |
-| get_all_balances | ✅ | 0 | Not needed for this test |
-| transfer | ✅ | 0 | Not needed for this test |
-| deposit | ✅ | 0 | Not needed for this test |
-| withdraw | ✅ | 0 | Not needed for this test |
-| get_transactions | ✅ | 0 | Not needed for this test |
-
-No description changes are required based on this test.
-
-## 📝 System Prompt Feedback
-
-### detailed (mixed)
-- **Token count:** Low, but encourages extra verbosity
-- **Problem:** The instruction “Explain your reasoning” is unnecessary for a simple balance query and risks longer outputs in more complex tests.
-- **Suggested change:**  
-  Replace:
-  ```
-  Explain your reasoning.
-  ```
-  With:
-  ```
-  Explain your reasoning only when the user asks for an explanation.
-  ```
-
-### concise (effective)
-- **Token count:** Minimal
-- **Problem:** None observed
-- **Suggested change:** None
-
-## 💡 Optimizations
-
-1. **Default to concise prompt for read-only queries** (recommended)
-   - Current: Both detailed and concise prompts tested equally.
-   - Change: Use the concise prompt as the default for balance and other simple read-only operations.
-   - Impact: **~15% cost reduction** per request compared to the detailed prompt, with identical correctness.
-
-## 📦 Tool Response Optimization
-
-### get_balance (from pytest_skill_engineering.testing.banking_mcp)
-- **Current response size:** ~20 tokens
-- **Issues found:** Redundant fields for LLM consumption (`balance` and `formatted` convey the same value).
-- **Suggested optimization:** Return only one representation, preferably a preformatted string for direct user output.
-- **Estimated savings:** ~5–7 tokens per call (~25–35% reduction)
-
-**Example current vs optimized:**
-```json
-// Current (~20 tokens)
-{"account":"checking","balance":1500.0,"formatted":"$1,500.00"}
-
-// Optimized (~13 tokens)
-{"account":"checking","formatted":"$1,500.00"}
-```
-
-This optimization is safe for the tested scenario, as the agent never used the raw numeric value.
 
 
 ## Test Results
 
 
-### 2×2 matrix proving dimension auto-detection.
+### Session: Dimension detection cases.
 
 
-#### ✅ Balance query across 2 models × 2 prompts = 4 runs.
+#### ✅ Keep distinct pytest parameter IDs in the report. [concise-gpt-5.4-mini]
 
 <details>
-<summary>✅ gpt-5-mini + detailed — 8.2s · 913 tokens · 3 turns · $0.000344</summary>
+<summary>✅ gpt-5.4-mini / concise — 3.0s · 195 tokens · 3 turns · 1 PR</summary>
 
 **Tool Calls:**
 
 
 |Tool|Status|Args|
 | :--- | :---: | :--- |
-|`get_balance`|✅|account='checking'|
+|`get_all_balances`|✅||
 
 
 **Response:**
 
-> Your checking account balance is $1,500.00. Would you like to do anything with this account (transfer, withdraw, view transactions)? I can also show balances for all accounts.
+> gpt-5.4-mini answered with the concise prompt.
 
 ```mermaid
 sequenceDiagram
@@ -133,28 +65,31 @@ sequenceDiagram
     participant Eval
     participant Tools
 
-    User->>Eval: "What's my checking account balance?"
-    Eval->>Tools: "get_balance({'account': 'checking'})"
-    Tools-->>Eval: "{'account': 'checking', 'balance': 1500.0, 'formatted': '$1,"
-    Eval->>User: "Your checking account balance is $1,500.00. Would you like to do anything with t"
+    User->>Eval: "Check balances with all dimensions enabled."
+    Eval->>Tools: "get_all_balances({})"
+    Tools-->>Eval: "{'checking':'$1,500.00','savings':'$3,000.00'}"
+    Eval->>User: "gpt-5.4-mini answered with the concise prompt."
 ```
 
 </details>
 
+
+#### ✅ Keep distinct pytest parameter IDs in the report. [detailed-gpt-5.4-mini]
+
 <details>
-<summary>✅ gpt-4.1-mini + detailed — 5.7s · 717 tokens · 3 turns · $0.000340</summary>
+<summary>✅ gpt-5.4-mini / detailed — 3.0s · 195 tokens · 3 turns · 1 PR</summary>
 
 **Tool Calls:**
 
 
 |Tool|Status|Args|
 | :--- | :---: | :--- |
-|`get_balance`|✅|account='checking'|
+|`get_all_balances`|✅||
 
 
 **Response:**
 
-> Your checking account balance is $1,500.00. Is there anything else you would like to check or do with your accounts?
+> gpt-5.4-mini answered with the detailed prompt.
 
 ```mermaid
 sequenceDiagram
@@ -162,28 +97,31 @@ sequenceDiagram
     participant Eval
     participant Tools
 
-    User->>Eval: "What's my checking account balance?"
-    Eval->>Tools: "get_balance({'account': 'checking'})"
-    Tools-->>Eval: "{'account': 'checking', 'balance': 1500.0, 'formatted': '$1,"
-    Eval->>User: "Your checking account balance is $1,500.00. Is there anything else you would lik"
+    User->>Eval: "Check balances with all dimensions enabled."
+    Eval->>Tools: "get_all_balances({})"
+    Tools-->>Eval: "{'checking':'$1,500.00','savings':'$3,000.00'}"
+    Eval->>User: "gpt-5.4-mini answered with the detailed prompt."
 ```
 
 </details>
 
+
+#### ✅ Keep distinct pytest parameter IDs in the report. [concise-claude-haiku-4.5]
+
 <details>
-<summary>✅ gpt-5-mini + concise — 4.7s · 893 tokens · 3 turns · $0.000297</summary>
+<summary>✅ claude-haiku-4.5 / concise — 3.0s · 195 tokens · 3 turns · 1 PR</summary>
 
 **Tool Calls:**
 
 
 |Tool|Status|Args|
 | :--- | :---: | :--- |
-|`get_balance`|✅|account='checking'|
+|`get_all_balances`|✅||
 
 
 **Response:**
 
-> Your checking balance is $1,500.00. Anything else?
+> claude-haiku-4.5 answered with the concise prompt.
 
 ```mermaid
 sequenceDiagram
@@ -191,28 +129,31 @@ sequenceDiagram
     participant Eval
     participant Tools
 
-    User->>Eval: "What's my checking account balance?"
-    Eval->>Tools: "get_balance({'account': 'checking'})"
-    Tools-->>Eval: "{'account': 'checking', 'balance': 1500.0, 'formatted': '$1,"
-    Eval->>User: "Your checking balance is $1,500.00. Anything else?"
+    User->>Eval: "Check balances with all dimensions enabled."
+    Eval->>Tools: "get_all_balances({})"
+    Tools-->>Eval: "{'checking':'$1,500.00','savings':'$3,000.00'}"
+    Eval->>User: "claude-haiku-4.5 answered with the concise prompt."
 ```
 
 </details>
 
+
+#### ✅ Keep distinct pytest parameter IDs in the report. [detailed-claude-haiku-4.5]
+
 <details>
-<summary>✅ gpt-4.1-mini + concise — 5.1s · 706 tokens · 3 turns · $0.000317</summary>
+<summary>✅ claude-haiku-4.5 / detailed — 3.0s · 195 tokens · 3 turns · 1 PR</summary>
 
 **Tool Calls:**
 
 
 |Tool|Status|Args|
 | :--- | :---: | :--- |
-|`get_balance`|✅|account='checking'|
+|`get_all_balances`|✅||
 
 
 **Response:**
 
-> Your checking account balance is $1,500.00.
+> claude-haiku-4.5 answered with the detailed prompt.
 
 ```mermaid
 sequenceDiagram
@@ -220,12 +161,12 @@ sequenceDiagram
     participant Eval
     participant Tools
 
-    User->>Eval: "What's my checking account balance?"
-    Eval->>Tools: "get_balance({'account': 'checking'})"
-    Tools-->>Eval: "{'account': 'checking', 'balance': 1500.0, 'formatted': '$1,"
-    Eval->>User: "Your checking account balance is $1,500.00."
+    User->>Eval: "Check balances with all dimensions enabled."
+    Eval->>Tools: "get_all_balances({})"
+    Tools-->>Eval: "{'checking':'$1,500.00','savings':'$3,000.00'}"
+    Eval->>User: "claude-haiku-4.5 answered with the detailed prompt."
 ```
 
 </details>
 
-*Generated by [pytest-skill-engineering](https://github.com/sbroenne/pytest-skill-engineering) on February 07, 2026 at 08:34 PM*
+*Generated by [pytest-skill-engineering](https://github.com/sbroenne/pytest-skill-engineering) on August 10, 2026 at 08:09 PM*

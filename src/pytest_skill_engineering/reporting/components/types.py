@@ -12,10 +12,14 @@ from typing import Any
 
 @dataclass(slots=True)
 class AgentData:
-    """Data for a single agent in the leaderboard."""
+    """Data for a single agent in the leaderboard.
 
-    id: str
-    name: str
+    ``agent_id`` is the stable machine key used throughout report generation.
+    ``display_name`` is presentation-only.
+    """
+
+    agent_id: str
+    display_name: str
     passed: int
     failed: int
     total: int
@@ -114,11 +118,15 @@ class TestResultData:
 
 @dataclass(slots=True)
 class TestData:
-    """Data for a single test across all agents."""
+    """Data for a single test case across all agents.
 
-    id: str
+    ``case_id`` preserves the full pytest parameter identity except for the
+    synthetic iteration axis stripped by the producer.
+    """
+
+    case_id: str
     display_name: str
-    results_by_agent: dict[str, TestResultData]
+    results_by_agent_id: dict[str, TestResultData]
     has_difference: bool
     has_failed: bool
 
@@ -138,7 +146,7 @@ class TestGroupData:
     type: str  # "session" or "standalone"
     name: str
     tests: list[TestData]
-    agent_stats: dict[str, AgentStats]
+    agent_stats_by_id: dict[str, AgentStats]
 
 
 @dataclass(slots=True)

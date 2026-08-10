@@ -41,8 +41,19 @@ Usage::
 
 from __future__ import annotations
 
+from dataclasses import replace
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
+
+from pytest_skill_engineering.copilot.contracts import (
+    CopilotCustomAgentConfig,
+    declared_agent_tools,
+    merge_agent_mcp_servers,
+    require_custom_agent_name,
+    require_custom_agent_prompt,
+    require_mapping,
+    resolve_agent_reasoning_effort,
+)
 
 if TYPE_CHECKING:
     from copilot.tools import Tool, ToolInvocation, ToolResult
@@ -243,7 +254,10 @@ def _inject_tool(session_config: dict[str, Any], tool: "Tool") -> None:
     session_config["tools"] = existing + [tool]
 
 
-def _build_agents_block(custom_agents: list[dict[str, Any]], tool_name: str = "runSubagent") -> str:
+def _build_agents_block(
+    custom_agents: list[CopilotCustomAgentConfig],
+    tool_name: str = "runSubagent",
+) -> str:
     """Build the <agents> XML block that VS Code injects into the system prompt.
 
     Mirrors ``computeAutomaticInstructions.ts`` in ``microsoft/vscode``:
@@ -276,11 +290,12 @@ def _build_agents_block(custom_agents: list[dict[str, Any]], tool_name: str = "r
         ),
     ]
     for a in custom_agents:
+        agent_name = require_custom_agent_name(a)
         lines.append("<agent>")
-        lines.append(f"<name>{a['name']}</name>")
+        lines.append(f"<name>{agent_name}</name>")
         if desc := a.get("description"):
             lines.append(f"<description>{desc}</description>")
-        if hint := a.get("argument_hint") or a.get("argumentHint"):
+        if hint := a.get("argument_hint"):
             lines.append(f"<argumentHint>{hint}</argumentHint>")
         lines.append("</agent>")
     lines.append("</agents>")
@@ -289,7 +304,7 @@ def _build_agents_block(custom_agents: list[dict[str, Any]], tool_name: str = "r
 
 def _make_runsubagent_tool(
     parent_agent: "CopilotEval",
-    custom_agents: list[dict[str, Any]],
+    custom_agents: list[CopilotCustomAgentConfig],
     mapper: "EventMapper",
 ) -> "Tool":
     """Build a ``runSubagent`` polyfill tool for the VS Code persona."""
@@ -298,7 +313,7 @@ def _make_runsubagent_tool(
 
 def _make_task_tool(
     parent_agent: "CopilotEval",
-    custom_agents: list[dict[str, Any]],
+    custom_agents: list[CopilotCustomAgentConfig],
     mapper: "EventMapper",
 ) -> "Tool":
     """Build a ``task`` polyfill tool for the Claude Code persona."""
@@ -308,7 +323,7 @@ def _make_task_tool(
 def _make_subagent_dispatch_tool(
     tool_name: str,
     parent_agent: "CopilotEval",
-    custom_agents: list[dict[str, Any]],
+    custom_agents: list[CopilotCustomAgentConfig],
     mapper: "EventMapper",
 ) -> "Tool":
     """Build a subagent dispatch polyfill tool.
@@ -328,66 +343,99 @@ def _make_subagent_dispatch_tool(
     """
     from copilot.tools import Tool, ToolResult
 
-    from pytest_skill_engineering.copilot.eval import CopilotEval as _CopilotAgent
     from pytest_skill_engineering.copilot.runner import run_copilot
 
-    agent_map: dict[str, dict[str, Any]] = {a["name"]: a for a in custom_agents}
+    agent_map: dict[str, CopilotCustomAgentConfig] = {
+        require_custom_agent_name(agent): agent for agent in custom_agents
+    }
 
     async def _handler(invocation: "ToolInvocation") -> "ToolResult":
-        args: dict[str, Any] = invocation.arguments or {}
+        if not invocation.tool_call_id:
+            return ToolResult(
+                text_result_for_llm="Error: custom-agent dispatch is missing tool_call_id.",
+                result_type="failure",
+            )
 
-        eval_name: str | None = args.get("eval_name") or args.get("agent") or args.get("agentName")
-        prompt_text: str = (
-            args.get("prompt")
-            or args.get("message")
-            or args.get("task")
-            or args.get("description")
-            or ""
-        )
+        try:
+            args = require_mapping(invocation.arguments or {})
+        except ValueError as exc:
+            return ToolResult(text_result_for_llm=f"Error: {exc}", result_type="failure")
 
-        if not eval_name:
+        agent_slug = args.get("agentSlug")
+        prompt_text = args.get("prompt")
+
+        if not isinstance(agent_slug, str) or not agent_slug:
             available = sorted(agent_map)
             return ToolResult(
                 text_result_for_llm=(
-                    f"Error: eval_name is required. Available agents: {available}"
+                    f"Error: agentSlug is required. Available agents: {available}"
                 ),
                 result_type="failure",
             )
 
-        agent_cfg = agent_map.get(eval_name)
+        if not isinstance(prompt_text, str) or not prompt_text:
+            return ToolResult(
+                text_result_for_llm="Error: prompt is required for custom-agent dispatch.",
+                result_type="failure",
+            )
+
+        agent_cfg = agent_map.get(agent_slug)
         if agent_cfg is None:
             available = sorted(agent_map)
             return ToolResult(
                 text_result_for_llm=(
-                    f"Error: agent '{eval_name}' not found. Available: {available}"
+                    f"Error: agent '{agent_slug}' not found. Available: {available}"
                 ),
                 result_type="failure",
             )
 
-        mapper.record_subagent_start(eval_name)
+        try:
+            system_prompt = require_custom_agent_prompt(agent_cfg)
+        except ValueError as exc:
+            return ToolResult(text_result_for_llm=f"Error: {exc}", result_type="failure")
 
-        sub_agent = _CopilotAgent(
-            name=eval_name,
-            model=parent_agent.model,
-            instructions=agent_cfg.get("prompt"),
-            working_directory=parent_agent.working_directory,
+        reasoning_effort = resolve_agent_reasoning_effort(
+            parent_model=parent_agent.model,
+            parent_reasoning_effort=parent_agent.reasoning_effort,
+            agent_config=agent_cfg,
+        )
+        allowed_tools = declared_agent_tools(agent_cfg)
+        mcp_servers = merge_agent_mcp_servers(parent_agent.mcp_servers, agent_cfg)
+
+        mapper.record_subagent_start(invocation_id=invocation.tool_call_id, name=agent_slug)
+
+        sub_agent = replace(
+            parent_agent,
+            name=agent_slug,
+            model=agent_cfg.get("model", parent_agent.model),
+            reasoning_effort=reasoning_effort,
+            instructions=system_prompt,
             timeout_s=min(parent_agent.timeout_s, 600.0),
             max_turns=min(parent_agent.max_turns, 30),
-            auto_confirm=True,
+            allowed_tools=allowed_tools,
+            excluded_tools=None,
+            mcp_servers=mcp_servers,
+            active_agent=None,
         )
 
         sub_result = await run_copilot(sub_agent, prompt_text)
 
         if sub_result.success:
-            mapper.record_subagent_complete(eval_name)
+            mapper.record_subagent_complete(
+                invocation_id=invocation.tool_call_id,
+                name=agent_slug,
+            )
             return ToolResult(
                 text_result_for_llm=sub_result.final_response or "Sub-agent completed.",
                 result_type="success",
             )
 
-        mapper.record_subagent_failed(eval_name)
+        mapper.record_subagent_failed(
+            invocation_id=invocation.tool_call_id,
+            name=agent_slug,
+        )
         return ToolResult(
-            text_result_for_llm=f"Sub-agent '{eval_name}' failed: {sub_result.error}",
+            text_result_for_llm=f"Sub-agent '{agent_slug}' failed: {sub_result.error}",
             result_type="failure",
         )
 
@@ -402,17 +450,17 @@ def _make_subagent_dispatch_tool(
         parameters={
             "type": "object",
             "properties": {
-                "eval_name": {
+                "agentSlug": {
                     "type": "string",
-                    "description": "Name of the agent to dispatch.",
+                    "description": "Machine-readable custom agent name to dispatch.",
                     "enum": sorted(agent_map),
                 },
                 "prompt": {
                     "type": "string",
-                    "description": "Task or message to send to the agent.",
+                    "description": "Full task prompt to send to the custom agent.",
                 },
             },
-            "required": ["eval_name", "prompt"],
+            "required": ["agentSlug", "prompt"],
         },
     )
 

@@ -291,11 +291,11 @@ def _agent_result_column(
 
     return div(
         class_=f"comparison-column {hidden_class} {border_class}",
-        data_agent_id=agent.id,
+        data_agent_id=agent.agent_id,
     )[
         # Eval name + status header
         div(".flex.items-center.justify-between.mb-4")[
-            div(".font-medium.text-text-light")[agent.name],
+            div(".font-medium.text-text-light")[agent.display_name],
             status_span,
         ],
         # Content
@@ -327,7 +327,7 @@ def test_comparison(
     Shows side-by-side results for each agent on a single test.
 
     Args:
-        test: Test data with results_by_agent.
+        test: Test data with results_by_agent_id.
         all_agent_ids: All agent IDs.
         selected_agent_ids: Currently selected agent IDs.
         agents_by_id: Mapping of agent ID to agent data.
@@ -347,7 +347,7 @@ def test_comparison(
         [
             _agent_result_column(
                 agents_by_id[agent_id],
-                test.results_by_agent.get(agent_id),
+                test.results_by_agent_id.get(agent_id),
                 agent_id in selected_set,
             )
             for agent_id in all_agent_ids

@@ -17,9 +17,9 @@ def skill_factory() -> Callable[[Path | str], Skill]:
     Example:
         def test_with_skill(skill_factory, eval_run):
             skill = skill_factory("path/to/my-skill")
-            agent = Eval(
-                provider=Provider(model="azure/gpt-5.4-mini"),
-                skill=skill,
+            agent = CopilotEval(
+                skill_directories=[str(skill.path)],
+                model="gpt-5.4-mini",
             )
             result = await eval_run(agent, "Do something with the skill")
             assert result.success

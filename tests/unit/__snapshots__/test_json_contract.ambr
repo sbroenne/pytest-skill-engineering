@@ -7,6 +7,7 @@
       'cached': 'bool',
       'cost_usd': 'float',
       'markdown_summary': 'str',
+      'model': 'str',
       'tokens_used': 'int',
     }),
     'name': 'str',
@@ -31,41 +32,26 @@
         'error': 'NoneType',
         'eval_name': 'str',
         'eval_result': dict({
-          '_messages': list([
-            dict({
-              'content': 'str',
-              'role': 'str',
-            }),
-          ]),
           'assertions': list([
             '<empty>',
           ]),
           'available_tools': list([
-            dict({
-              'description': 'str',
-              'input_schema': dict({
-                'properties': dict({
-                  'account': dict({
-                    'description': 'str',
-                    'enum': list([
-                      'str',
-                    ]),
-                    'type': 'str',
-                  }),
-                }),
-                'required': list([
-                  'str',
-                ]),
-                'type': 'str',
-              }),
-              'name': 'str',
-              'server_name': 'str',
-            }),
+            '<empty>',
           ]),
+          'clarification_stats': 'NoneType',
           'cost_usd': 'float',
+          'custom_agent_info': 'NoneType',
           'duration_ms': 'float',
           'effective_system_prompt': 'str',
           'error': 'NoneType',
+          'instruction_files': list([
+            '<empty>',
+          ]),
+          'mcp_prompts': list([
+            '<empty>',
+          ]),
+          'premium_requests': 'float',
+          'prompt_name': 'NoneType',
           'session_context_count': 'int',
           'skill_info': 'NoneType',
           'success': 'bool',
@@ -83,6 +69,7 @@
             }),
           ]),
         }),
+        'iteration': 'NoneType',
         'model': 'str',
         'name': 'str',
         'outcome': 'str',
@@ -101,6 +88,7 @@
       'cached': 'bool',
       'cost_usd': 'float',
       'markdown_summary': 'str',
+      'model': 'str',
       'tokens_used': 'int',
     }),
     'name': 'str',
@@ -112,12 +100,7 @@
       dict({
         'agent_id': 'str',
         'assertions': list([
-          dict({
-            'details': 'str',
-            'message': 'str',
-            'passed': 'bool',
-            'type': 'str',
-          }),
+          '<empty>',
         ]),
         'class_docstring': 'NoneType',
         'docstring': 'str',
@@ -125,41 +108,26 @@
         'error': 'NoneType',
         'eval_name': 'str',
         'eval_result': dict({
-          '_messages': list([
-            dict({
-              'content': 'str',
-              'role': 'str',
-            }),
-          ]),
           'assertions': list([
             '<empty>',
           ]),
           'available_tools': list([
-            dict({
-              'description': 'str',
-              'input_schema': dict({
-                'properties': dict({
-                  'account': dict({
-                    'description': 'str',
-                    'enum': list([
-                      'str',
-                    ]),
-                    'type': 'str',
-                  }),
-                }),
-                'required': list([
-                  'str',
-                ]),
-                'type': 'str',
-              }),
-              'name': 'str',
-              'server_name': 'str',
-            }),
+            '<empty>',
           ]),
+          'clarification_stats': 'NoneType',
           'cost_usd': 'float',
+          'custom_agent_info': 'NoneType',
           'duration_ms': 'float',
           'effective_system_prompt': 'str',
           'error': 'NoneType',
+          'instruction_files': list([
+            '<empty>',
+          ]),
+          'mcp_prompts': list([
+            '<empty>',
+          ]),
+          'premium_requests': 'float',
+          'prompt_name': 'NoneType',
           'session_context_count': 'int',
           'skill_info': 'NoneType',
           'success': 'bool',
@@ -177,6 +145,7 @@
             }),
           ]),
         }),
+        'iteration': 'NoneType',
         'model': 'str',
         'name': 'str',
         'outcome': 'str',
@@ -195,6 +164,7 @@
       'cached': 'bool',
       'cost_usd': 'float',
       'markdown_summary': 'str',
+      'model': 'str',
       'tokens_used': 'int',
     }),
     'name': 'str',
@@ -206,12 +176,7 @@
       dict({
         'agent_id': 'str',
         'assertions': list([
-          dict({
-            'details': 'str',
-            'message': 'str',
-            'passed': 'bool',
-            'type': 'str',
-          }),
+          '<empty>',
         ]),
         'class_docstring': 'str',
         'docstring': 'str',
@@ -219,41 +184,26 @@
         'error': 'NoneType',
         'eval_name': 'str',
         'eval_result': dict({
-          '_messages': list([
-            dict({
-              'content': 'str',
-              'role': 'str',
-            }),
-          ]),
           'assertions': list([
             '<empty>',
           ]),
           'available_tools': list([
-            dict({
-              'description': 'str',
-              'input_schema': dict({
-                'properties': dict({
-                  'account': dict({
-                    'description': 'str',
-                    'enum': list([
-                      'str',
-                    ]),
-                    'type': 'str',
-                  }),
-                }),
-                'required': list([
-                  'str',
-                ]),
-                'type': 'str',
-              }),
-              'name': 'str',
-              'server_name': 'str',
-            }),
+            '<empty>',
           ]),
+          'clarification_stats': 'NoneType',
           'cost_usd': 'float',
+          'custom_agent_info': 'NoneType',
           'duration_ms': 'float',
           'effective_system_prompt': 'str',
           'error': 'NoneType',
+          'instruction_files': list([
+            '<empty>',
+          ]),
+          'mcp_prompts': list([
+            '<empty>',
+          ]),
+          'premium_requests': 'float',
+          'prompt_name': 'NoneType',
           'session_context_count': 'int',
           'skill_info': 'NoneType',
           'success': 'bool',
@@ -271,6 +221,7 @@
             }),
           ]),
         }),
+        'iteration': 'NoneType',
         'model': 'str',
         'name': 'str',
         'outcome': 'str',
@@ -289,6 +240,235 @@
       'cached': 'bool',
       'cost_usd': 'float',
       'markdown_summary': 'str',
+      'model': 'str',
+      'tokens_used': 'int',
+    }),
+    'name': 'str',
+    'passed': 'int',
+    'schema_version': 'str',
+    'skipped': 'int',
+    'suite_docstring': 'str',
+    'tests': list([
+      dict({
+        'agent_id': 'str',
+        'assertions': list([
+          '<empty>',
+        ]),
+        'class_docstring': 'NoneType',
+        'docstring': 'str',
+        'duration_ms': 'float',
+        'error': 'NoneType',
+        'eval_name': 'str',
+        'eval_result': dict({
+          'assertions': list([
+            '<empty>',
+          ]),
+          'available_tools': list([
+            '<empty>',
+          ]),
+          'clarification_stats': 'NoneType',
+          'cost_usd': 'float',
+          'custom_agent_info': 'NoneType',
+          'duration_ms': 'float',
+          'effective_system_prompt': 'str',
+          'error': 'NoneType',
+          'instruction_files': list([
+            '<empty>',
+          ]),
+          'mcp_prompts': list([
+            '<empty>',
+          ]),
+          'premium_requests': 'float',
+          'prompt_name': 'NoneType',
+          'session_context_count': 'int',
+          'skill_info': 'NoneType',
+          'success': 'bool',
+          'token_usage': dict({
+            'completion': 'int',
+            'prompt': 'int',
+          }),
+          'turns': list([
+            dict({
+              'content': 'str',
+              'role': 'str',
+              'tool_calls': list([
+                '<empty>',
+              ]),
+            }),
+          ]),
+        }),
+        'iteration': 'NoneType',
+        'model': 'str',
+        'name': 'str',
+        'outcome': 'str',
+        'skill_name': 'NoneType',
+        'system_prompt_name': 'NoneType',
+      }),
+    ]),
+    'timestamp': 'str',
+  })
+# ---
+# name: TestJsonSchemaContract.test_json_schema_shape[05_prompt_comparison]
+  dict({
+    'duration_ms': 'float',
+    'failed': 'int',
+    'insights': dict({
+      'cached': 'bool',
+      'cost_usd': 'float',
+      'markdown_summary': 'str',
+      'model': 'str',
+      'tokens_used': 'int',
+    }),
+    'name': 'str',
+    'passed': 'int',
+    'schema_version': 'str',
+    'skipped': 'int',
+    'suite_docstring': 'str',
+    'tests': list([
+      dict({
+        'agent_id': 'str',
+        'assertions': list([
+          '<empty>',
+        ]),
+        'class_docstring': 'NoneType',
+        'docstring': 'str',
+        'duration_ms': 'float',
+        'error': 'NoneType',
+        'eval_name': 'str',
+        'eval_result': dict({
+          'assertions': list([
+            '<empty>',
+          ]),
+          'available_tools': list([
+            '<empty>',
+          ]),
+          'clarification_stats': 'NoneType',
+          'cost_usd': 'float',
+          'custom_agent_info': 'NoneType',
+          'duration_ms': 'float',
+          'effective_system_prompt': 'str',
+          'error': 'NoneType',
+          'instruction_files': list([
+            '<empty>',
+          ]),
+          'mcp_prompts': list([
+            '<empty>',
+          ]),
+          'premium_requests': 'float',
+          'prompt_name': 'NoneType',
+          'session_context_count': 'int',
+          'skill_info': 'NoneType',
+          'success': 'bool',
+          'token_usage': dict({
+            'completion': 'int',
+            'prompt': 'int',
+          }),
+          'turns': list([
+            dict({
+              'content': 'str',
+              'role': 'str',
+              'tool_calls': list([
+                '<empty>',
+              ]),
+            }),
+          ]),
+        }),
+        'iteration': 'NoneType',
+        'model': 'str',
+        'name': 'str',
+        'outcome': 'str',
+        'skill_name': 'NoneType',
+        'system_prompt_name': 'str',
+      }),
+    ]),
+    'timestamp': 'str',
+  })
+# ---
+# name: TestJsonSchemaContract.test_json_schema_shape[06_model_prompt_matrix]
+  dict({
+    'duration_ms': 'float',
+    'failed': 'int',
+    'insights': dict({
+      'cached': 'bool',
+      'cost_usd': 'float',
+      'markdown_summary': 'str',
+      'model': 'str',
+      'tokens_used': 'int',
+    }),
+    'name': 'str',
+    'passed': 'int',
+    'schema_version': 'str',
+    'skipped': 'int',
+    'suite_docstring': 'str',
+    'tests': list([
+      dict({
+        'agent_id': 'str',
+        'assertions': list([
+          '<empty>',
+        ]),
+        'class_docstring': 'str',
+        'docstring': 'str',
+        'duration_ms': 'float',
+        'error': 'NoneType',
+        'eval_name': 'str',
+        'eval_result': dict({
+          'assertions': list([
+            '<empty>',
+          ]),
+          'available_tools': list([
+            '<empty>',
+          ]),
+          'clarification_stats': 'NoneType',
+          'cost_usd': 'float',
+          'custom_agent_info': 'NoneType',
+          'duration_ms': 'float',
+          'effective_system_prompt': 'str',
+          'error': 'NoneType',
+          'instruction_files': list([
+            '<empty>',
+          ]),
+          'mcp_prompts': list([
+            '<empty>',
+          ]),
+          'premium_requests': 'float',
+          'prompt_name': 'NoneType',
+          'session_context_count': 'int',
+          'skill_info': 'NoneType',
+          'success': 'bool',
+          'token_usage': dict({
+            'completion': 'int',
+            'prompt': 'int',
+          }),
+          'turns': list([
+            dict({
+              'content': 'str',
+              'role': 'str',
+              'tool_calls': list([
+                '<empty>',
+              ]),
+            }),
+          ]),
+        }),
+        'iteration': 'NoneType',
+        'model': 'str',
+        'name': 'str',
+        'outcome': 'str',
+        'skill_name': 'NoneType',
+        'system_prompt_name': 'str',
+      }),
+    ]),
+    'timestamp': 'str',
+  })
+# ---
+# name: TestJsonSchemaContract.test_json_schema_shape[07_skill_improvement]
+  dict({
+    'duration_ms': 'float',
+    'failed': 'int',
+    'insights': dict({
+      'cached': 'bool',
+      'cost_usd': 'float',
+      'markdown_summary': 'str',
+      'model': 'str',
       'tokens_used': 'int',
     }),
     'name': 'str',
@@ -310,44 +490,29 @@
         'class_docstring': 'NoneType',
         'docstring': 'str',
         'duration_ms': 'float',
-        'error': 'NoneType',
+        'error': 'str',
         'eval_name': 'str',
         'eval_result': dict({
-          '_messages': list([
-            dict({
-              'content': 'str',
-              'role': 'str',
-            }),
-          ]),
           'assertions': list([
             '<empty>',
           ]),
           'available_tools': list([
-            dict({
-              'description': 'str',
-              'input_schema': dict({
-                'properties': dict({
-                  'account': dict({
-                    'description': 'str',
-                    'enum': list([
-                      'str',
-                    ]),
-                    'type': 'str',
-                  }),
-                }),
-                'required': list([
-                  'str',
-                ]),
-                'type': 'str',
-              }),
-              'name': 'str',
-              'server_name': 'str',
-            }),
+            '<empty>',
           ]),
+          'clarification_stats': 'NoneType',
           'cost_usd': 'float',
+          'custom_agent_info': 'NoneType',
           'duration_ms': 'float',
           'effective_system_prompt': 'str',
-          'error': 'NoneType',
+          'error': 'str',
+          'instruction_files': list([
+            '<empty>',
+          ]),
+          'mcp_prompts': list([
+            '<empty>',
+          ]),
+          'premium_requests': 'float',
+          'prompt_name': 'NoneType',
           'session_context_count': 'int',
           'skill_info': 'NoneType',
           'success': 'bool',
@@ -365,11 +530,240 @@
             }),
           ]),
         }),
+        'iteration': 'NoneType',
         'model': 'str',
         'name': 'str',
         'outcome': 'str',
         'skill_name': 'NoneType',
         'system_prompt_name': 'NoneType',
+      }),
+    ]),
+    'timestamp': 'str',
+  })
+# ---
+# name: TestJsonSchemaContract.test_json_schema_shape[08_cli_server]
+  dict({
+    'duration_ms': 'float',
+    'failed': 'int',
+    'insights': dict({
+      'cached': 'bool',
+      'cost_usd': 'float',
+      'markdown_summary': 'str',
+      'model': 'str',
+      'tokens_used': 'int',
+    }),
+    'name': 'str',
+    'passed': 'int',
+    'schema_version': 'str',
+    'skipped': 'int',
+    'suite_docstring': 'str',
+    'tests': list([
+      dict({
+        'agent_id': 'str',
+        'assertions': list([
+          '<empty>',
+        ]),
+        'class_docstring': 'NoneType',
+        'docstring': 'str',
+        'duration_ms': 'float',
+        'error': 'NoneType',
+        'eval_name': 'str',
+        'eval_result': dict({
+          'assertions': list([
+            '<empty>',
+          ]),
+          'available_tools': list([
+            '<empty>',
+          ]),
+          'clarification_stats': 'NoneType',
+          'cost_usd': 'float',
+          'custom_agent_info': 'NoneType',
+          'duration_ms': 'float',
+          'effective_system_prompt': 'str',
+          'error': 'NoneType',
+          'instruction_files': list([
+            '<empty>',
+          ]),
+          'mcp_prompts': list([
+            '<empty>',
+          ]),
+          'premium_requests': 'float',
+          'prompt_name': 'NoneType',
+          'session_context_count': 'int',
+          'skill_info': 'NoneType',
+          'success': 'bool',
+          'token_usage': dict({
+            'completion': 'int',
+            'prompt': 'int',
+          }),
+          'turns': list([
+            dict({
+              'content': 'str',
+              'role': 'str',
+              'tool_calls': list([
+                '<empty>',
+              ]),
+            }),
+          ]),
+        }),
+        'iteration': 'NoneType',
+        'model': 'str',
+        'name': 'str',
+        'outcome': 'str',
+        'skill_name': 'NoneType',
+        'system_prompt_name': 'NoneType',
+      }),
+    ]),
+    'timestamp': 'str',
+  })
+# ---
+# name: TestJsonSchemaContract.test_json_schema_shape[09_ab_servers]
+  dict({
+    'duration_ms': 'float',
+    'failed': 'int',
+    'insights': dict({
+      'cached': 'bool',
+      'cost_usd': 'float',
+      'markdown_summary': 'str',
+      'model': 'str',
+      'tokens_used': 'int',
+    }),
+    'name': 'str',
+    'passed': 'int',
+    'schema_version': 'str',
+    'skipped': 'int',
+    'suite_docstring': 'str',
+    'tests': list([
+      dict({
+        'agent_id': 'str',
+        'assertions': list([
+          '<empty>',
+        ]),
+        'class_docstring': 'NoneType',
+        'docstring': 'str',
+        'duration_ms': 'float',
+        'error': 'NoneType',
+        'eval_name': 'str',
+        'eval_result': dict({
+          'assertions': list([
+            '<empty>',
+          ]),
+          'available_tools': list([
+            '<empty>',
+          ]),
+          'clarification_stats': 'NoneType',
+          'cost_usd': 'float',
+          'custom_agent_info': 'NoneType',
+          'duration_ms': 'float',
+          'effective_system_prompt': 'str',
+          'error': 'NoneType',
+          'instruction_files': list([
+            '<empty>',
+          ]),
+          'mcp_prompts': list([
+            '<empty>',
+          ]),
+          'premium_requests': 'float',
+          'prompt_name': 'NoneType',
+          'session_context_count': 'int',
+          'skill_info': 'NoneType',
+          'success': 'bool',
+          'token_usage': dict({
+            'completion': 'int',
+            'prompt': 'int',
+          }),
+          'turns': list([
+            dict({
+              'content': 'str',
+              'role': 'str',
+              'tool_calls': list([
+                '<empty>',
+              ]),
+            }),
+          ]),
+        }),
+        'iteration': 'NoneType',
+        'model': 'str',
+        'name': 'str',
+        'outcome': 'str',
+        'skill_name': 'NoneType',
+        'system_prompt_name': 'str',
+      }),
+    ]),
+    'timestamp': 'str',
+  })
+# ---
+# name: TestJsonSchemaContract.test_json_schema_shape[10_dimension_detection]
+  dict({
+    'duration_ms': 'float',
+    'failed': 'int',
+    'insights': dict({
+      'cached': 'bool',
+      'cost_usd': 'float',
+      'markdown_summary': 'str',
+      'model': 'str',
+      'tokens_used': 'int',
+    }),
+    'name': 'str',
+    'passed': 'int',
+    'schema_version': 'str',
+    'skipped': 'int',
+    'suite_docstring': 'str',
+    'tests': list([
+      dict({
+        'agent_id': 'str',
+        'assertions': list([
+          '<empty>',
+        ]),
+        'class_docstring': 'str',
+        'docstring': 'str',
+        'duration_ms': 'float',
+        'error': 'NoneType',
+        'eval_name': 'str',
+        'eval_result': dict({
+          'assertions': list([
+            '<empty>',
+          ]),
+          'available_tools': list([
+            '<empty>',
+          ]),
+          'clarification_stats': 'NoneType',
+          'cost_usd': 'float',
+          'custom_agent_info': 'NoneType',
+          'duration_ms': 'float',
+          'effective_system_prompt': 'str',
+          'error': 'NoneType',
+          'instruction_files': list([
+            '<empty>',
+          ]),
+          'mcp_prompts': list([
+            '<empty>',
+          ]),
+          'premium_requests': 'float',
+          'prompt_name': 'NoneType',
+          'session_context_count': 'int',
+          'skill_info': 'NoneType',
+          'success': 'bool',
+          'token_usage': dict({
+            'completion': 'int',
+            'prompt': 'int',
+          }),
+          'turns': list([
+            dict({
+              'content': 'str',
+              'role': 'str',
+              'tool_calls': list([
+                '<empty>',
+              ]),
+            }),
+          ]),
+        }),
+        'iteration': 'NoneType',
+        'model': 'str',
+        'name': 'str',
+        'outcome': 'str',
+        'skill_name': 'NoneType',
+        'system_prompt_name': 'str',
       }),
     ]),
     'timestamp': 'str',
@@ -404,26 +798,7 @@
             '<empty>',
           ]),
           'available_tools': list([
-            dict({
-              'description': 'str',
-              'input_schema': dict({
-                'properties': dict({
-                  'account': dict({
-                    'description': 'str',
-                    'enum': list([
-                      'str',
-                    ]),
-                    'type': 'str',
-                  }),
-                }),
-                'required': list([
-                  'str',
-                ]),
-                'type': 'str',
-              }),
-              'name': 'str',
-              'server_name': 'str',
-            }),
+            '<empty>',
           ]),
           'clarification_stats': 'NoneType',
           'cost_usd': 'float',
@@ -479,12 +854,7 @@
       dict({
         'agent_id': 'str',
         'assertions': list([
-          dict({
-            'details': 'str',
-            'message': 'str',
-            'passed': 'bool',
-            'type': 'str',
-          }),
+          '<empty>',
         ]),
         'class_docstring': 'NoneType',
         'docstring': 'str',
@@ -496,26 +866,7 @@
             '<empty>',
           ]),
           'available_tools': list([
-            dict({
-              'description': 'str',
-              'input_schema': dict({
-                'properties': dict({
-                  'account': dict({
-                    'description': 'str',
-                    'enum': list([
-                      'str',
-                    ]),
-                    'type': 'str',
-                  }),
-                }),
-                'required': list([
-                  'str',
-                ]),
-                'type': 'str',
-              }),
-              'name': 'str',
-              'server_name': 'str',
-            }),
+            '<empty>',
           ]),
           'clarification_stats': 'NoneType',
           'cost_usd': 'float',
@@ -571,12 +922,7 @@
       dict({
         'agent_id': 'str',
         'assertions': list([
-          dict({
-            'details': 'str',
-            'message': 'str',
-            'passed': 'bool',
-            'type': 'str',
-          }),
+          '<empty>',
         ]),
         'class_docstring': 'str',
         'docstring': 'str',
@@ -588,26 +934,7 @@
             '<empty>',
           ]),
           'available_tools': list([
-            dict({
-              'description': 'str',
-              'input_schema': dict({
-                'properties': dict({
-                  'account': dict({
-                    'description': 'str',
-                    'enum': list([
-                      'str',
-                    ]),
-                    'type': 'str',
-                  }),
-                }),
-                'required': list([
-                  'str',
-                ]),
-                'type': 'str',
-              }),
-              'name': 'str',
-              'server_name': 'str',
-            }),
+            '<empty>',
           ]),
           'clarification_stats': 'NoneType',
           'cost_usd': 'float',
@@ -663,12 +990,7 @@
       dict({
         'agent_id': 'str',
         'assertions': list([
-          dict({
-            'details': 'str',
-            'message': 'str',
-            'passed': 'bool',
-            'type': 'str',
-          }),
+          '<empty>',
         ]),
         'class_docstring': 'NoneType',
         'docstring': 'str',
@@ -680,26 +1002,7 @@
             '<empty>',
           ]),
           'available_tools': list([
-            dict({
-              'description': 'str',
-              'input_schema': dict({
-                'properties': dict({
-                  'account': dict({
-                    'description': 'str',
-                    'enum': list([
-                      'str',
-                    ]),
-                    'type': 'str',
-                  }),
-                }),
-                'required': list([
-                  'str',
-                ]),
-                'type': 'str',
-              }),
-              'name': 'str',
-              'server_name': 'str',
-            }),
+            '<empty>',
           ]),
           'clarification_stats': 'NoneType',
           'cost_usd': 'float',
@@ -738,6 +1041,419 @@
         'outcome': 'str',
         'skill_name': 'NoneType',
         'system_prompt_name': 'NoneType',
+      }),
+    ]),
+    'timestamp': 'str',
+  })
+# ---
+# name: TestRoundTrip.test_round_trip_preserves_schema[05_prompt_comparison]
+  dict({
+    'duration_ms': 'float',
+    'failed': 'int',
+    'name': 'str',
+    'passed': 'int',
+    'skipped': 'int',
+    'suite_docstring': 'str',
+    'tests': list([
+      dict({
+        'agent_id': 'str',
+        'assertions': list([
+          '<empty>',
+        ]),
+        'class_docstring': 'NoneType',
+        'docstring': 'str',
+        'duration_ms': 'float',
+        'error': 'NoneType',
+        'eval_name': 'str',
+        'eval_result': dict({
+          'assertions': list([
+            '<empty>',
+          ]),
+          'available_tools': list([
+            '<empty>',
+          ]),
+          'clarification_stats': 'NoneType',
+          'cost_usd': 'float',
+          'custom_agent_info': 'NoneType',
+          'duration_ms': 'float',
+          'effective_system_prompt': 'str',
+          'error': 'NoneType',
+          'instruction_files': list([
+            '<empty>',
+          ]),
+          'mcp_prompts': list([
+            '<empty>',
+          ]),
+          'premium_requests': 'float',
+          'prompt_name': 'NoneType',
+          'session_context_count': 'int',
+          'skill_info': 'NoneType',
+          'success': 'bool',
+          'token_usage': dict({
+            'completion': 'int',
+            'prompt': 'int',
+          }),
+          'turns': list([
+            dict({
+              'content': 'str',
+              'role': 'str',
+              'tool_calls': list([
+                '<empty>',
+              ]),
+            }),
+          ]),
+        }),
+        'iteration': 'NoneType',
+        'model': 'str',
+        'name': 'str',
+        'outcome': 'str',
+        'skill_name': 'NoneType',
+        'system_prompt_name': 'str',
+      }),
+    ]),
+    'timestamp': 'str',
+  })
+# ---
+# name: TestRoundTrip.test_round_trip_preserves_schema[06_model_prompt_matrix]
+  dict({
+    'duration_ms': 'float',
+    'failed': 'int',
+    'name': 'str',
+    'passed': 'int',
+    'skipped': 'int',
+    'suite_docstring': 'str',
+    'tests': list([
+      dict({
+        'agent_id': 'str',
+        'assertions': list([
+          '<empty>',
+        ]),
+        'class_docstring': 'str',
+        'docstring': 'str',
+        'duration_ms': 'float',
+        'error': 'NoneType',
+        'eval_name': 'str',
+        'eval_result': dict({
+          'assertions': list([
+            '<empty>',
+          ]),
+          'available_tools': list([
+            '<empty>',
+          ]),
+          'clarification_stats': 'NoneType',
+          'cost_usd': 'float',
+          'custom_agent_info': 'NoneType',
+          'duration_ms': 'float',
+          'effective_system_prompt': 'str',
+          'error': 'NoneType',
+          'instruction_files': list([
+            '<empty>',
+          ]),
+          'mcp_prompts': list([
+            '<empty>',
+          ]),
+          'premium_requests': 'float',
+          'prompt_name': 'NoneType',
+          'session_context_count': 'int',
+          'skill_info': 'NoneType',
+          'success': 'bool',
+          'token_usage': dict({
+            'completion': 'int',
+            'prompt': 'int',
+          }),
+          'turns': list([
+            dict({
+              'content': 'str',
+              'role': 'str',
+              'tool_calls': list([
+                '<empty>',
+              ]),
+            }),
+          ]),
+        }),
+        'iteration': 'NoneType',
+        'model': 'str',
+        'name': 'str',
+        'outcome': 'str',
+        'skill_name': 'NoneType',
+        'system_prompt_name': 'str',
+      }),
+    ]),
+    'timestamp': 'str',
+  })
+# ---
+# name: TestRoundTrip.test_round_trip_preserves_schema[07_skill_improvement]
+  dict({
+    'duration_ms': 'float',
+    'failed': 'int',
+    'name': 'str',
+    'passed': 'int',
+    'skipped': 'int',
+    'suite_docstring': 'str',
+    'tests': list([
+      dict({
+        'agent_id': 'str',
+        'assertions': list([
+          dict({
+            'details': 'str',
+            'message': 'str',
+            'passed': 'bool',
+            'type': 'str',
+          }),
+        ]),
+        'class_docstring': 'NoneType',
+        'docstring': 'str',
+        'duration_ms': 'float',
+        'error': 'str',
+        'eval_name': 'str',
+        'eval_result': dict({
+          'assertions': list([
+            '<empty>',
+          ]),
+          'available_tools': list([
+            '<empty>',
+          ]),
+          'clarification_stats': 'NoneType',
+          'cost_usd': 'float',
+          'custom_agent_info': 'NoneType',
+          'duration_ms': 'float',
+          'effective_system_prompt': 'str',
+          'error': 'str',
+          'instruction_files': list([
+            '<empty>',
+          ]),
+          'mcp_prompts': list([
+            '<empty>',
+          ]),
+          'premium_requests': 'float',
+          'prompt_name': 'NoneType',
+          'session_context_count': 'int',
+          'skill_info': 'NoneType',
+          'success': 'bool',
+          'token_usage': dict({
+            'completion': 'int',
+            'prompt': 'int',
+          }),
+          'turns': list([
+            dict({
+              'content': 'str',
+              'role': 'str',
+              'tool_calls': list([
+                '<empty>',
+              ]),
+            }),
+          ]),
+        }),
+        'iteration': 'NoneType',
+        'model': 'str',
+        'name': 'str',
+        'outcome': 'str',
+        'skill_name': 'NoneType',
+        'system_prompt_name': 'NoneType',
+      }),
+    ]),
+    'timestamp': 'str',
+  })
+# ---
+# name: TestRoundTrip.test_round_trip_preserves_schema[08_cli_server]
+  dict({
+    'duration_ms': 'float',
+    'failed': 'int',
+    'name': 'str',
+    'passed': 'int',
+    'skipped': 'int',
+    'suite_docstring': 'str',
+    'tests': list([
+      dict({
+        'agent_id': 'str',
+        'assertions': list([
+          '<empty>',
+        ]),
+        'class_docstring': 'NoneType',
+        'docstring': 'str',
+        'duration_ms': 'float',
+        'error': 'NoneType',
+        'eval_name': 'str',
+        'eval_result': dict({
+          'assertions': list([
+            '<empty>',
+          ]),
+          'available_tools': list([
+            '<empty>',
+          ]),
+          'clarification_stats': 'NoneType',
+          'cost_usd': 'float',
+          'custom_agent_info': 'NoneType',
+          'duration_ms': 'float',
+          'effective_system_prompt': 'str',
+          'error': 'NoneType',
+          'instruction_files': list([
+            '<empty>',
+          ]),
+          'mcp_prompts': list([
+            '<empty>',
+          ]),
+          'premium_requests': 'float',
+          'prompt_name': 'NoneType',
+          'session_context_count': 'int',
+          'skill_info': 'NoneType',
+          'success': 'bool',
+          'token_usage': dict({
+            'completion': 'int',
+            'prompt': 'int',
+          }),
+          'turns': list([
+            dict({
+              'content': 'str',
+              'role': 'str',
+              'tool_calls': list([
+                '<empty>',
+              ]),
+            }),
+          ]),
+        }),
+        'iteration': 'NoneType',
+        'model': 'str',
+        'name': 'str',
+        'outcome': 'str',
+        'skill_name': 'NoneType',
+        'system_prompt_name': 'NoneType',
+      }),
+    ]),
+    'timestamp': 'str',
+  })
+# ---
+# name: TestRoundTrip.test_round_trip_preserves_schema[09_ab_servers]
+  dict({
+    'duration_ms': 'float',
+    'failed': 'int',
+    'name': 'str',
+    'passed': 'int',
+    'skipped': 'int',
+    'suite_docstring': 'str',
+    'tests': list([
+      dict({
+        'agent_id': 'str',
+        'assertions': list([
+          '<empty>',
+        ]),
+        'class_docstring': 'NoneType',
+        'docstring': 'str',
+        'duration_ms': 'float',
+        'error': 'NoneType',
+        'eval_name': 'str',
+        'eval_result': dict({
+          'assertions': list([
+            '<empty>',
+          ]),
+          'available_tools': list([
+            '<empty>',
+          ]),
+          'clarification_stats': 'NoneType',
+          'cost_usd': 'float',
+          'custom_agent_info': 'NoneType',
+          'duration_ms': 'float',
+          'effective_system_prompt': 'str',
+          'error': 'NoneType',
+          'instruction_files': list([
+            '<empty>',
+          ]),
+          'mcp_prompts': list([
+            '<empty>',
+          ]),
+          'premium_requests': 'float',
+          'prompt_name': 'NoneType',
+          'session_context_count': 'int',
+          'skill_info': 'NoneType',
+          'success': 'bool',
+          'token_usage': dict({
+            'completion': 'int',
+            'prompt': 'int',
+          }),
+          'turns': list([
+            dict({
+              'content': 'str',
+              'role': 'str',
+              'tool_calls': list([
+                '<empty>',
+              ]),
+            }),
+          ]),
+        }),
+        'iteration': 'NoneType',
+        'model': 'str',
+        'name': 'str',
+        'outcome': 'str',
+        'skill_name': 'NoneType',
+        'system_prompt_name': 'str',
+      }),
+    ]),
+    'timestamp': 'str',
+  })
+# ---
+# name: TestRoundTrip.test_round_trip_preserves_schema[10_dimension_detection]
+  dict({
+    'duration_ms': 'float',
+    'failed': 'int',
+    'name': 'str',
+    'passed': 'int',
+    'skipped': 'int',
+    'suite_docstring': 'str',
+    'tests': list([
+      dict({
+        'agent_id': 'str',
+        'assertions': list([
+          '<empty>',
+        ]),
+        'class_docstring': 'str',
+        'docstring': 'str',
+        'duration_ms': 'float',
+        'error': 'NoneType',
+        'eval_name': 'str',
+        'eval_result': dict({
+          'assertions': list([
+            '<empty>',
+          ]),
+          'available_tools': list([
+            '<empty>',
+          ]),
+          'clarification_stats': 'NoneType',
+          'cost_usd': 'float',
+          'custom_agent_info': 'NoneType',
+          'duration_ms': 'float',
+          'effective_system_prompt': 'str',
+          'error': 'NoneType',
+          'instruction_files': list([
+            '<empty>',
+          ]),
+          'mcp_prompts': list([
+            '<empty>',
+          ]),
+          'premium_requests': 'float',
+          'prompt_name': 'NoneType',
+          'session_context_count': 'int',
+          'skill_info': 'NoneType',
+          'success': 'bool',
+          'token_usage': dict({
+            'completion': 'int',
+            'prompt': 'int',
+          }),
+          'turns': list([
+            dict({
+              'content': 'str',
+              'role': 'str',
+              'tool_calls': list([
+                '<empty>',
+              ]),
+            }),
+          ]),
+        }),
+        'iteration': 'NoneType',
+        'model': 'str',
+        'name': 'str',
+        'outcome': 'str',
+        'skill_name': 'NoneType',
+        'system_prompt_name': 'str',
       }),
     ]),
     'timestamp': 'str',

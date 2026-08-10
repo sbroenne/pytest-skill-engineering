@@ -8,15 +8,14 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
-from pytest_skill_engineering.core.result import SubagentInvocation, ToolCall, Turn  # noqa: F401
-
-if TYPE_CHECKING:
-    from pytest_skill_engineering.copilot.eval import CopilotEval
+from pytest_skill_engineering.copilot.contracts import CopilotResultAgent, SubagentInvocation
+from pytest_skill_engineering.core.result import ToolCall, Turn  # noqa: F401
 
 __all__ = [
     "CopilotResult",
+    "SubagentInvocation",
     "ToolCall",
     "Turn",
     "UsageInfo",
@@ -79,7 +78,7 @@ class CopilotResult:
     # Set automatically by run_copilot() so the plugin hook can
     # stash results for pytest-skill-engineering without requiring the
     # copilot_eval fixture.
-    agent: CopilotEval | None = field(default=None, repr=False)
+    agent: CopilotResultAgent | None = field(default=None, repr=False)
 
     @property
     def final_response(self) -> str | None:

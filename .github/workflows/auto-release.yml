@@ -4,19 +4,94 @@ on:
   push:
     branches: [main]
 
+permissions:
+  actions: write
+  contents: read
+
 jobs:
-  release:
-    name: Patch release after Dependabot merge
+  detect-release:
+    name: Detect checked-in release
     runs-on: ubuntu-latest
-    # Only trigger when dependabot merges a dependency update
-    if: |
-      github.actor == 'dependabot[bot]' ||
-      startsWith(github.event.head_commit.message, 'chore(deps):') ||
-      startsWith(github.event.head_commit.message, 'chore(deps-dev):')
-    permissions:
-      actions: write
+    outputs:
+      should_release: ${{ steps.detect.outputs.should_release }}
+      version: ${{ steps.detect.outputs.version }}
     steps:
-      - name: Trigger patch release
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.13"
+
+      - name: Detect unreleased source version
+        id: detect
+        run: |
+          python <<'PY'
+          from __future__ import annotations
+
+          import os
+          import subprocess
+          import tomllib
+          from pathlib import Path
+
+
+          def parse_semver(version: str) -> tuple[int, int, int]:
+              parts = version.strip().split(".")
+              if len(parts) != 3 or any(not part.isdigit() for part in parts):
+                  raise SystemExit(f"project.version must be plain semver X.Y.Z, got {version!r}")
+              return tuple(int(part) for part in parts)
+
+
+          def git(*args: str) -> str:
+              return subprocess.run(
+                  ["git", *args],
+                  check=True,
+                  capture_output=True,
+                  text=True,
+              ).stdout.strip()
+
+
+          pyproject = tomllib.loads(Path("pyproject.toml").read_text(encoding="utf-8"))
+          version = str(pyproject["project"]["version"])
+          parse_semver(version)
+          tag = f"v{version}"
+          tag_exists = subprocess.run(
+              ["git", "rev-parse", "--verify", f"refs/tags/{tag}"],
+              check=False,
+              capture_output=True,
+              text=True,
+          ).returncode == 0
+
+          latest_versions = [
+              raw.removeprefix("v")
+              for raw in git("tag", "--list", "v*").splitlines()
+              if raw.strip()
+          ]
+          latest_version = max(latest_versions, key=parse_semver) if latest_versions else None
+          should_release = (not tag_exists) and (
+              latest_version is None or parse_semver(version) > parse_semver(latest_version)
+          )
+
+          output_path = Path(os.environ["GITHUB_OUTPUT"])
+          with output_path.open("a", encoding="utf-8") as output:
+              output.write(f"version={version}\n")
+              output.write(f"should_release={str(should_release).lower()}\n")
+
+          if should_release:
+              print(f"Detected unreleased source version {version}; dispatching release workflow")
+          else:
+              print(f"No unreleased checked-in version detected (source={version}, latest_tag={latest_version})")
+          PY
+
+  release:
+    name: Dispatch release workflow
+    runs-on: ubuntu-latest
+    needs: detect-release
+    if: ${{ needs.detect-release.outputs.should_release == 'true' }}
+    steps:
+      - name: Trigger release workflow
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
         with:
           script: |
@@ -24,9 +99,6 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               workflow_id: 'release.yml',
-              ref: 'main',
-              inputs: {
-                version_bump: 'patch'
-              }
+              ref: 'main'
             });
-            console.log(`Triggered patch release for commit: ${context.sha.substring(0, 7)}`);
+            console.log(`Triggered release workflow for ${context.sha.substring(0, 7)}`);
