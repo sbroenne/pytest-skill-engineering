@@ -7,17 +7,23 @@ and injects list_skill_references/read_skill_reference tools.
 from __future__ import annotations
 
 from pathlib import Path
-from types import SimpleNamespace
-from unittest.mock import MagicMock
 
 import pytest
 
+from pytest_skill_engineering.copilot.contracts import CopilotEvalConfig
+from pytest_skill_engineering.copilot.eval import CopilotEval
+from pytest_skill_engineering.copilot.events import EventMapper
 from pytest_skill_engineering.copilot.personas import (
     ClaudeCodePersona,
     CopilotCLIPersona,
     VSCodePersona,
     _inject_skill_reference_tools,
 )
+from pytest_skill_engineering.copilot.result import CopilotResult
+
+
+async def _unused_nested_runner(agent: CopilotEvalConfig, prompt: str) -> CopilotResult:
+    raise AssertionError(f"Unexpected nested run for {agent.name}: {prompt}")
 
 
 @pytest.fixture()
@@ -50,23 +56,23 @@ class TestInjectSkillReferenceTools:
 
     def test_no_skill_directories(self) -> None:
         """No-op when agent has no skill_directories."""
-        agent = SimpleNamespace(skill_directories=[])
+        agent = CopilotEval(skill_directories=[])
         config: dict = {}
-        _inject_skill_reference_tools(agent, config)  # type: ignore[arg-type]
+        _inject_skill_reference_tools(agent, config)
         assert "tools" not in config
 
     def test_skill_without_references_no_tools(self, skill_dir_no_refs: Path) -> None:
         """No tools injected when skill has no references/ dir."""
-        agent = SimpleNamespace(skill_directories=[str(skill_dir_no_refs)])
+        agent = CopilotEval(skill_directories=[str(skill_dir_no_refs)])
         config: dict = {}
-        _inject_skill_reference_tools(agent, config)  # type: ignore[arg-type]
+        _inject_skill_reference_tools(agent, config)
         assert "tools" not in config
 
     def test_skill_with_references_injects_tools(self, skill_dir: Path) -> None:
         """Two tools injected when skill has references/."""
-        agent = SimpleNamespace(skill_directories=[str(skill_dir)])
+        agent = CopilotEval(skill_directories=[str(skill_dir)])
         config: dict = {}
-        _inject_skill_reference_tools(agent, config)  # type: ignore[arg-type]
+        _inject_skill_reference_tools(agent, config)
         assert "tools" in config
         tool_names = [t.name for t in config["tools"]]
         assert "list_skill_references" in tool_names
@@ -74,9 +80,9 @@ class TestInjectSkillReferenceTools:
 
     def test_only_supported_extensions(self, skill_dir: Path) -> None:
         """Only .md, .txt, .json, .yaml, .yml files are included."""
-        agent = SimpleNamespace(skill_directories=[str(skill_dir)])
+        agent = CopilotEval(skill_directories=[str(skill_dir)])
         config: dict = {}
-        _inject_skill_reference_tools(agent, config)  # type: ignore[arg-type]
+        _inject_skill_reference_tools(agent, config)
         read_tool = next(t for t in config["tools"] if t.name == "read_skill_reference")
         enum_values = read_tool.parameters["properties"]["filename"]["enum"]
         assert "guide.md" in enum_values
@@ -86,9 +92,9 @@ class TestInjectSkillReferenceTools:
 
     def test_system_message_added(self, skill_dir: Path) -> None:
         """System message mentioning references is prepended."""
-        agent = SimpleNamespace(skill_directories=[str(skill_dir)])
+        agent = CopilotEval(skill_directories=[str(skill_dir)])
         config: dict = {}
-        _inject_skill_reference_tools(agent, config)  # type: ignore[arg-type]
+        _inject_skill_reference_tools(agent, config)
         assert "system_message" in config
         content = config["system_message"]["content"]
         assert "list_skill_references" in content
@@ -105,9 +111,9 @@ class TestInjectSkillReferenceTools:
         refs.mkdir()
         (refs / "doc.md").write_text("# Doc")
 
-        agent = SimpleNamespace(skill_directories=[str(parent)])
+        agent = CopilotEval(skill_directories=[str(parent)])
         config: dict = {}
-        _inject_skill_reference_tools(agent, config)  # type: ignore[arg-type]
+        _inject_skill_reference_tools(agent, config)
         assert "tools" in config
         read_tool = next(t for t in config["tools"] if t.name == "read_skill_reference")
         assert "doc.md" in read_tool.parameters["properties"]["filename"]["enum"]
@@ -116,20 +122,17 @@ class TestInjectSkillReferenceTools:
 class TestPersonaSkillRefIntegration:
     """Test that each persona calls _inject_skill_reference_tools."""
 
-    def _make_agent(self, skill_dir: Path) -> SimpleNamespace:
-        return SimpleNamespace(
+    def _make_agent(self, skill_dir: Path) -> CopilotEval:
+        return CopilotEval(
             skill_directories=[str(skill_dir)],
-            custom_agents=[],
-            working_directory=None,
-            instructions=None,
         )
 
     def test_vscode_persona_injects_refs(self, skill_dir: Path) -> None:
         persona = VSCodePersona()
         agent = self._make_agent(skill_dir)
         config: dict = {}
-        mapper = MagicMock()
-        persona.apply(agent, config, mapper)  # type: ignore[arg-type]
+        mapper = EventMapper()
+        persona.apply(agent, config, mapper, _unused_nested_runner)
         tool_names = [t.name for t in config.get("tools", [])]
         assert "list_skill_references" in tool_names
 
@@ -137,8 +140,8 @@ class TestPersonaSkillRefIntegration:
         persona = CopilotCLIPersona()
         agent = self._make_agent(skill_dir)
         config: dict = {}
-        mapper = MagicMock()
-        persona.apply(agent, config, mapper)  # type: ignore[arg-type]
+        mapper = EventMapper()
+        persona.apply(agent, config, mapper, _unused_nested_runner)
         tool_names = [t.name for t in config.get("tools", [])]
         assert "list_skill_references" in tool_names
 
@@ -146,7 +149,7 @@ class TestPersonaSkillRefIntegration:
         persona = ClaudeCodePersona()
         agent = self._make_agent(skill_dir)
         config: dict = {}
-        mapper = MagicMock()
-        persona.apply(agent, config, mapper)  # type: ignore[arg-type]
+        mapper = EventMapper()
+        persona.apply(agent, config, mapper, _unused_nested_runner)
         tool_names = [t.name for t in config.get("tools", [])]
         assert "list_skill_references" in tool_names

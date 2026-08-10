@@ -3,22 +3,20 @@
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Literal, cast
+from typing import Any, Literal, cast
 
 import yaml
-from copilot.session import CustomAgentConfig
 
 from pytest_skill_engineering.copilot.contracts import (
     CopilotCustomAgentConfig,
     CopilotMCPServerConfig,
+    CopilotPersona,
     CopilotReasoningEffort,
     CopilotSessionHooks,
 )
-
-if TYPE_CHECKING:
-    from pytest_skill_engineering.copilot.personas import Persona
+from pytest_skill_engineering.copilot.personas import ClaudeCodePersona, VSCodePersona
 
 _logger = logging.getLogger(__name__)
 
@@ -78,10 +76,8 @@ def _parse_agent_file(path: Path) -> CopilotCustomAgentConfig:
     return agent
 
 
-def _default_persona() -> "Persona":
+def _default_persona() -> CopilotPersona:
     """Return the default persona (VSCodePersona)."""
-    from pytest_skill_engineering.copilot.personas import VSCodePersona  # noqa: PLC0415
-
     return VSCodePersona()
 
 
@@ -157,7 +153,7 @@ class CopilotEval:
 
     # Custom agents (SDK CustomAgentConfig: name, prompt, description,
     # display_name, tools, mcp_servers, infer)
-    custom_agents: list[CustomAgentConfig] = field(default_factory=list)
+    custom_agents: list[CopilotCustomAgentConfig] = field(default_factory=list)
 
     # Skill directories
     skill_directories: list[str] = field(default_factory=list)
@@ -178,7 +174,7 @@ class CopilotEval:
     # the target runtime environment (VS Code, Claude Code, Copilot CLI, etc.)
     # VSCodePersona is the default: it polyfills runSubagent when custom_agents
     # are present, matching VS Code's native behaviour.
-    persona: "Persona" = field(default_factory=_default_persona)
+    persona: CopilotPersona = field(default_factory=_default_persona)
 
     def build_session_config(self) -> dict[str, Any]:
         """Build a SessionConfig dict for the Copilot SDK.
@@ -249,6 +245,33 @@ class CopilotEval:
 
         return config
 
+    def create_subagent(
+        self,
+        *,
+        name: str,
+        model: str | None,
+        reasoning_effort: CopilotReasoningEffort | None,
+        instructions: str,
+        timeout_s: float,
+        max_turns: int,
+        allowed_tools: list[str] | None,
+        mcp_servers: dict[str, CopilotMCPServerConfig],
+    ) -> CopilotEval:
+        """Create the exact nested eval configuration for a custom agent."""
+        return replace(
+            self,
+            name=name,
+            model=model,
+            reasoning_effort=reasoning_effort,
+            instructions=instructions,
+            timeout_s=timeout_s,
+            max_turns=max_turns,
+            allowed_tools=allowed_tools,
+            excluded_tools=None,
+            mcp_servers=mcp_servers,
+            active_agent=None,
+        )
+
     @classmethod
     def from_copilot_config(
         cls,
@@ -301,7 +324,7 @@ class CopilotEval:
             instructions = instructions_file.read_text(encoding="utf-8").strip() or None
 
         # Load custom agents — recursive so subagents/ subdirectories are included
-        agents: list[CustomAgentConfig] = []
+        agents: list[CopilotCustomAgentConfig] = []
         agents_dir = github_dir / "agents"
         if agents_dir.exists():
             for agent_file in sorted(agents_dir.rglob("*.agent.md")):
@@ -320,7 +343,7 @@ class CopilotEval:
         path: str | Path,
         *,
         model: str = "",
-        persona: "Persona | None" = None,
+        persona: CopilotPersona | None = None,
         instructions: str = "",
         working_directory: str = "",
         name: str = "",
@@ -380,10 +403,6 @@ class CopilotEval:
         if persona is None:
             resolved = Path(path).resolve()
             if resolved.name == ".claude" or (resolved / ".claude").is_dir():
-                from pytest_skill_engineering.copilot.personas import (  # noqa: PLC0415
-                    ClaudeCodePersona,
-                )
-
                 persona = ClaudeCodePersona()
             else:
                 persona = _default_persona()
@@ -409,7 +428,7 @@ class CopilotEval:
         path: str | Path = ".",
         *,
         model: str = "",
-        persona: "Persona | None" = None,
+        persona: CopilotPersona | None = None,
         instructions: str = "",
         working_directory: str = "",
         name: str = "claude-code-eval",
@@ -466,7 +485,7 @@ class CopilotEval:
         combined_instructions = "\n\n".join(instruction_parts) or None
 
         # 2. Load custom agents from .claude/agents/
-        agents: list[CustomAgentConfig] = []
+        agents: list[CopilotCustomAgentConfig] = []
         agents_dir = claude_dir / "agents"
         if agents_dir.is_dir():
             # Claude Code uses plain .md files for agents
@@ -495,10 +514,6 @@ class CopilotEval:
 
         # 5. Default persona to ClaudeCodePersona
         if persona is None:
-            from pytest_skill_engineering.copilot.personas import (  # noqa: PLC0415
-                ClaudeCodePersona,
-            )
-
             persona = ClaudeCodePersona()
 
         config: dict[str, Any] = {

@@ -15,8 +15,9 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any
 
+from pytest_skill_engineering.copilot.contracts import CopilotEvalConfig, CopilotRunResult
 from pytest_skill_engineering.copilot.events import EventMapper
 
 CopilotClient: Any
@@ -43,13 +44,10 @@ if TYPE_CHECKING:
     from copilot.generated.session_events import SessionEvent
     from copilot.session import CopilotSession
 
-    from pytest_skill_engineering.copilot.eval import CopilotEval
-    from pytest_skill_engineering.copilot.result import CopilotResult
-
 logger = logging.getLogger(__name__)
 
 
-async def run_copilot(agent: CopilotEval, prompt: str) -> CopilotResult:
+async def run_copilot(agent: CopilotEvalConfig, prompt: str) -> CopilotRunResult:
     """Execute a prompt against GitHub Copilot and return structured results.
 
     This is the primary entry point for test execution. It manages the full
@@ -75,7 +73,7 @@ async def run_copilot(agent: CopilotEval, prompt: str) -> CopilotResult:
         TimeoutError: If the prompt takes longer than agent.timeout_s.
         RuntimeError: If the Copilot CLI fails to start.
     """
-    last_result: CopilotResult | None = None
+    last_result: CopilotRunResult | None = None
 
     for attempt in range(1, agent.max_retries + 2):  # +2: 1 initial + max_retries
         result = await _run_copilot_once(agent, prompt)
@@ -97,7 +95,9 @@ async def run_copilot(agent: CopilotEval, prompt: str) -> CopilotResult:
             await asyncio.sleep(agent.retry_delay_s)
 
     # All retries exhausted — return last result
-    return cast("CopilotResult", last_result)
+    if last_result is None:
+        raise RuntimeError("Copilot execution did not run")
+    return last_result
 
 
 _TRANSIENT_PATTERNS = (
@@ -137,7 +137,7 @@ async def _stop_client_safely(client: Any) -> None:
             logger.warning("force_stop also failed", exc_info=True)
 
 
-async def _run_copilot_once(agent: "CopilotEval", prompt: str) -> "CopilotResult":
+async def _run_copilot_once(agent: CopilotEvalConfig, prompt: str) -> CopilotRunResult:
     """Execute a single attempt of a prompt against GitHub Copilot."""
     # Pass GITHUB_TOKEN from environment for CI authentication.
     # When None, the SDK falls back to the logged-in gh user.
@@ -165,7 +165,7 @@ async def _run_copilot_once(agent: "CopilotEval", prompt: str) -> "CopilotResult
 
         # Apply the persona: injects polyfill tools and system-message
         # additions that match the target IDE environment.
-        agent.persona.apply(agent, session_config, mapper)
+        agent.persona.apply(agent, session_config, mapper, run_copilot)
 
         # Install permission handler if auto_confirm is enabled
         if agent.auto_confirm:

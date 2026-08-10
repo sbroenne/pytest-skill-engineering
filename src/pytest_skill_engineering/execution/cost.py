@@ -16,6 +16,7 @@ pricing for models. Models without pricing return ``0.0``.
 from __future__ import annotations
 
 import logging
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
@@ -27,39 +28,49 @@ models_without_pricing: set[str] = set()
 
 # ── User overrides (pricing.toml) ────────────────────────────────────────────
 
-# Each entry is (input_per_million, output_per_million, cache_read_per_million),
-# cached by the resolved pricing file (or by cwd when none exists there).
-_user_overrides_cache: dict[tuple[Path, int | None], dict[str, tuple[float, float, float]]] = {}
-_user_overrides_cache_key: tuple[Path, int | None] | None = None
-_user_overrides: dict[str, tuple[float, float, float]] | None = None
+Pricing = tuple[float, float, float]
+PricingTable = dict[str, Pricing]
+PricingCacheKey = tuple[Path, int | None]
 
 
-def _load_user_overrides() -> dict[str, tuple[float, float, float]]:
+@dataclass(slots=True)
+class _PricingCache:
+    """Pricing tables keyed by resolved file identity and modification time."""
+
+    tables: dict[PricingCacheKey, PricingTable] = field(default_factory=dict)
+
+    def load(self, current_dir: Path) -> PricingTable:
+        toml_path = _find_pricing_toml(current_dir)
+        cache_key = _pricing_cache_key(current_dir, toml_path)
+        cached = self.tables.get(cache_key)
+        if cached is not None:
+            return cached
+
+        overrides = _read_pricing_file(toml_path)
+        self.tables[cache_key] = overrides
+        return overrides
+
+    def clear(self) -> None:
+        """Discard all cached pricing tables."""
+        self.tables.clear()
+
+
+_pricing_cache = _PricingCache()
+
+
+def _load_user_overrides() -> PricingTable:
     """Load per-million-token overrides from ``pricing.toml``.
 
     Searches upward from cwd for the first ``pricing.toml`` found.
     Returns an empty dict when no file exists.
     """
-    global _user_overrides
-    global _user_overrides_cache_key
-
     current_dir = Path.cwd().resolve()
-    toml_path = _find_pricing_toml(current_dir)
-    cache_key = _pricing_cache_key(current_dir, toml_path)
-    if _user_overrides is not None and _user_overrides_cache_key is None:
-        return _user_overrides
-    if _user_overrides is not None and _user_overrides_cache_key == cache_key:
-        return _user_overrides
-    cached = _user_overrides_cache.get(cache_key)
-    if cached is not None:
-        _user_overrides = cached
-        _user_overrides_cache_key = cache_key
-        return cached
+    return _pricing_cache.load(current_dir)
 
-    overrides: dict[str, tuple[float, float, float]] = {}
-    _user_overrides_cache[cache_key] = overrides
-    _user_overrides = overrides
-    _user_overrides_cache_key = cache_key
+
+def _read_pricing_file(toml_path: Path | None) -> PricingTable:
+    """Parse a pricing file into per-million-token rates."""
+    overrides: PricingTable = {}
     if toml_path is None:
         return overrides
 
@@ -93,7 +104,7 @@ def _load_user_overrides() -> dict[str, tuple[float, float, float]]:
     return overrides
 
 
-def _pricing_cache_key(current_dir: Path, toml_path: Path | None) -> tuple[Path, int | None]:
+def _pricing_cache_key(current_dir: Path, toml_path: Path | None) -> PricingCacheKey:
     """Build a cache key scoped to the active cwd and pricing file version."""
     if toml_path is None:
         return current_dir, None

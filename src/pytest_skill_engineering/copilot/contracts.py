@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass
 from typing import Any, Literal, Protocol, TypeAlias
 
@@ -20,6 +20,133 @@ class CopilotResultAgent(Protocol):
 
     @property
     def working_directory(self) -> str | None:
+        raise NotImplementedError
+
+
+class CopilotRunResult(Protocol):
+    """Result surface needed by recursive Copilot execution."""
+
+    agent: CopilotResultAgent | None
+
+    @property
+    def success(self) -> bool:
+        raise NotImplementedError
+
+    @property
+    def error(self) -> str | None:
+        raise NotImplementedError
+
+    @property
+    def final_response(self) -> str | None:
+        raise NotImplementedError
+
+
+class CopilotEventMapper(Protocol):
+    """Subagent lifecycle operations needed by persona dispatch tools."""
+
+    def record_subagent_start(self, *, invocation_id: str, name: str) -> None:
+        raise NotImplementedError
+
+    def record_subagent_complete(self, *, invocation_id: str, name: str) -> None:
+        raise NotImplementedError
+
+    def record_subagent_failed(self, *, invocation_id: str, name: str) -> None:
+        raise NotImplementedError
+
+
+class CopilotEvalConfig(CopilotResultAgent, Protocol):
+    """Configuration surface consumed by the runner and personas."""
+
+    @property
+    def name(self) -> str:
+        raise NotImplementedError
+
+    @property
+    def model(self) -> str | None:
+        raise NotImplementedError
+
+    @property
+    def reasoning_effort(self) -> CopilotReasoningEffort | None:
+        raise NotImplementedError
+
+    @property
+    def allowed_tools(self) -> list[str] | None:
+        raise NotImplementedError
+
+    @property
+    def excluded_tools(self) -> list[str] | None:
+        raise NotImplementedError
+
+    @property
+    def max_turns(self) -> int:
+        raise NotImplementedError
+
+    @property
+    def timeout_s(self) -> float:
+        raise NotImplementedError
+
+    @property
+    def max_retries(self) -> int:
+        raise NotImplementedError
+
+    @property
+    def retry_delay_s(self) -> float:
+        raise NotImplementedError
+
+    @property
+    def auto_confirm(self) -> bool:
+        raise NotImplementedError
+
+    @property
+    def mcp_servers(self) -> dict[str, CopilotMCPServerConfig]:
+        raise NotImplementedError
+
+    @property
+    def custom_agents(self) -> list[CopilotCustomAgentConfig]:
+        raise NotImplementedError
+
+    @property
+    def skill_directories(self) -> list[str]:
+        raise NotImplementedError
+
+    @property
+    def persona(self) -> CopilotPersona:
+        raise NotImplementedError
+
+    def build_session_config(self) -> dict[str, Any]:
+        raise NotImplementedError
+
+    def create_subagent(
+        self,
+        *,
+        name: str,
+        model: str | None,
+        reasoning_effort: CopilotReasoningEffort | None,
+        instructions: str,
+        timeout_s: float,
+        max_turns: int,
+        allowed_tools: list[str] | None,
+        mcp_servers: dict[str, CopilotMCPServerConfig],
+    ) -> CopilotEvalConfig:
+        raise NotImplementedError
+
+
+CopilotNestedRunner: TypeAlias = Callable[
+    [CopilotEvalConfig, str],
+    Awaitable[CopilotRunResult],
+]
+
+
+class CopilotPersona(Protocol):
+    """Persona behavior required by a Copilot eval configuration."""
+
+    def apply(
+        self,
+        agent: CopilotEvalConfig,
+        session_config: dict[str, Any],
+        mapper: CopilotEventMapper,
+        nested_runner: CopilotNestedRunner,
+    ) -> None:
         raise NotImplementedError
 
 
