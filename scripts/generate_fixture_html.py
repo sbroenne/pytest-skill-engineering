@@ -19,6 +19,7 @@ from pathlib import Path
 
 # Add src to path for imports
 ROOT = Path(__file__).parent.parent
+sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "src"))
 
 from pytest_skill_engineering.cli import load_suite_report  # noqa: E402
@@ -26,10 +27,14 @@ from pytest_skill_engineering.reporting.generator import (  # noqa: E402
     generate_html as _generate_html,
 )
 from pytest_skill_engineering.reporting.generator import generate_md as _generate_md  # noqa: E402
+from tests.fixtures.report_fixtures import (  # noqa: E402
+    ALL_REPORT_SPECS,
+    DOCS_REPORTS_DIR,
+    FIXTURE_JSON_DIR,
+    write_fixture_json,
+)
 
-FIXTURES_DIR = ROOT / "tests" / "fixtures" / "reports"
-# Output to docs/reports for public viewing (tracked in git)
-OUTPUT_DIR = ROOT / "docs" / "reports"
+OUTPUT_DIR = DOCS_REPORTS_DIR
 
 
 def generate_fixture_html(json_path: Path, output_dir: Path) -> list[Path]:
@@ -76,7 +81,7 @@ def main(argv: list[str] | None = None) -> int:
         "--fixture",
         "-f",
         type=str,
-        help="Generate specific fixture (e.g., '01' for 01_single_agent.json)",
+        help="Generate specific fixture (e.g., '01', '04_agent_selector', or 'hero-report')",
     )
     parser.add_argument(
         "--output",
@@ -88,31 +93,30 @@ def main(argv: list[str] | None = None) -> int:
 
     args = parser.parse_args(argv)
 
-    # Ensure output directory exists
-    args.output.mkdir(parents=True, exist_ok=True)
-
-    # Find fixtures to process
     if args.fixture:
-        fixtures = list(FIXTURES_DIR.glob(f"{args.fixture}*.json"))
-        if not fixtures:
-            print(f"No fixture matching '{args.fixture}' found in {FIXTURES_DIR}")
+        specs = [
+            spec
+            for spec in ALL_REPORT_SPECS
+            if spec.name == args.fixture or spec.name.startswith(args.fixture)
+        ]
+        if not specs:
+            print(f"No fixture matching '{args.fixture}' found in manifest")
             return 1
     else:
-        fixtures = sorted(FIXTURES_DIR.glob("*.json"))
+        specs = list(ALL_REPORT_SPECS)
 
-    if not fixtures:
-        print(f"No JSON fixtures found in {FIXTURES_DIR}")
-        return 1
-
-    print(f"Generating HTML for {len(fixtures)} fixture(s)...")
+    print(f"Generating report artifacts for {len(specs)} fixture(s)...")
 
     generated = []
     errors = []
 
-    for json_path in fixtures:
-        print(f"  {json_path.name}...", end=" ")
+    for spec in specs:
+        output_dir = args.output if args.output != OUTPUT_DIR else spec.output_dir
+        output_dir.mkdir(parents=True, exist_ok=True)
+        print(f"  {spec.name} ({spec.generator_source})...", end=" ")
         try:
-            paths = generate_fixture_html(json_path, args.output)
+            json_path = write_fixture_json(spec)
+            paths = generate_fixture_html(json_path, output_dir)
             names = ", ".join(p.name for p in paths)
             print(f"OK -> {names}")
             generated.extend(paths)
@@ -121,14 +125,15 @@ def main(argv: list[str] | None = None) -> int:
 
             print(f"ERROR: {e}")
             traceback.print_exc()
-            errors.append((json_path, e))
+            errors.append((spec.name, e))
 
     print(f"\nGenerated: {len(generated)}, Errors: {len(errors)}")
+    print(f"JSON fixtures refreshed in {FIXTURE_JSON_DIR}")
 
     if errors:
         print("\nErrors:")
-        for path, error in errors:
-            print(f"  {path.name}: {error}")
+        for name, error in errors:
+            print(f"  {name}: {error}")
 
     # Open in browser if requested (HTML files only)
     if args.open and generated:

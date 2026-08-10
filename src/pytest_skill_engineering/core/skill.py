@@ -111,7 +111,7 @@ class Skill:
 
     Example:
         skill = Skill.from_path(Path("skills/my-skill"))
-        agent = Eval(provider=provider, skill=skill)
+        agent = CopilotEval(skill_directories=[str(skill.path)])
     """
 
     path: Path

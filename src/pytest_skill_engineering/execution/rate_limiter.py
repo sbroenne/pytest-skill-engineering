@@ -5,7 +5,7 @@ tokens per minute (tpm). Rate limiters are shared across all engine instances
 using the same model, so concurrent tests respect deployment limits.
 
 Usage:
-    limiter = get_rate_limiter("azure/gpt-5.4-mini", rpm=10, tpm=10000)
+    limiter = get_rate_limiter("copilot/gpt-5.4-mini", rpm=10, tpm=10000)
     await limiter.acquire()  # Waits if rate limit would be exceeded
     # ... make API call ...
     limiter.record_tokens(1500)  # Track token usage for tpm enforcement
@@ -38,7 +38,7 @@ def get_rate_limiter(
     restrictive limits (minimum of old and new values).
 
     Args:
-        model: Model identifier string (e.g. "azure/gpt-5.4-mini").
+        model: Model identifier string (e.g. "copilot/gpt-5.4-mini").
         rpm: Requests per minute limit.
         tpm: Tokens per minute limit.
 
@@ -73,8 +73,8 @@ class RateLimiter:
     ``acquire()`` represents one agent run (which may internally make multiple
     LLM requests across turns). For rpm, this means the limit applies to
     agent runs, not individual LLM calls. This is a pragmatic trade-off:
-    true per-LLM-call rate limiting would require wrapping the PydanticAI
-    model, which is significantly more complex.
+    true per-LLM-call rate limiting would require wrapping the Copilot SDK's
+    model execution path, which is significantly more complex.
 
     For tpm, token usage is recorded after each run via ``record_tokens()``,
     and the limiter checks cumulative usage in the sliding window before

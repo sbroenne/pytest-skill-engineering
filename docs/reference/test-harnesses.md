@@ -1,231 +1,49 @@
 ---
-description: "Built-in Todo and Banking MCP test servers for validating LLM behavior without external dependencies."
+description: "Built-in local MCP test servers and low-level helpers that pair with CopilotEval."
 ---
 
-# Test Harnesses
+# Test harnesses
 
-Built-in MCP servers for testing LLM behavior without external dependencies.
+The public execution harness is `CopilotEval`.
+This page documents the built-in local test servers and helper types you can pair with it.
 
-## Available Servers
+## Built-in MCP servers
 
-| Server | Use Case | State |
-|--------|----------|-------|
-| `TodoStore` | CRUD operations | Stateful |
-| `BankingService` | Multi-turn sessions, financial workflows | Stateful |
-
-## TodoStore
-
-Stateful task management for testing CRUD operations.
-
-### Use Case
-
-- Testing state changes across calls
-- Multi-step workflows (add → complete → delete)
-- Testing agent's ability to track IDs
-
-### Tools
-
-| Tool | Description |
-|------|-------------|
-| `add_task` | Create a new task |
-| `complete_task` | Mark task as done |
-| `delete_task` | Remove a task |
-| `list_tasks` | List tasks (optional filtering) |
-| `get_task` | Get task by ID |
-| `update_task` | Update task properties |
-
-### Example
+### Todo MCP server
 
 ```python
 import sys
-from pytest_skill_engineering.copilot import CopilotEval
 
-
-@pytest.fixture
-def todo_agent():
-    return CopilotEval(
-        name="todo-assistant",
-        model="gpt-5.4-mini",
-        instructions="You are a task management assistant.",
-    )
-
-
-async def test_add_and_complete(copilot_eval, todo_agent):
-    result = await copilot_eval(todo_agent, "Add a task: Buy groceries")
-    assert result.tool_was_called("add_task")
-
-    result = await copilot_eval(todo_agent, "Mark the groceries task as done")
-    assert result.tool_was_called("complete_task")
+TODO_MCP = {
+    "todo": {
+        "command": sys.executable,
+        "args": ["-m", "pytest_skill_engineering.testing.todo_mcp"],
+        "tools": ["*"],
+    }
+}
 ```
 
-### Direct Usage
+### Banking MCP server
 
 ```python
-from pytest_skill_engineering.testing import TodoStore
+import sys
 
-store = TodoStore()
-
-result = store.add_task("Buy groceries", priority="high")
-task_id = result.value["id"]
-
-result = store.complete_task(task_id)
-assert result.success
-
-result = store.list_tasks()
-print(result.value["tasks"])
+BANKING_MCP = {
+    "banking": {
+        "command": sys.executable,
+        "args": ["-m", "pytest_skill_engineering.testing.banking_mcp"],
+        "tools": ["*"],
+    }
+}
 ```
 
-## BankingService
+Attach either mapping to `CopilotEval(mcp_servers=...)`.
 
-Stateful banking service for multi-turn session testing.
+## Lower-level helpers
 
-### Use Case
+- `MCPServer` — process configuration for local or remote MCP servers
+- `MCPServerProcess` — direct protocol interaction for prompt discovery or lower-level checks
+- `Wait` — startup readiness helpers such as `Wait.for_tools(...)`
+- `CLIServer` — wraps a CLI as a single tool surface; constructor is `CLIServer(command=..., tool_prefix=...)`
 
-- Multi-turn conversations with state changes
-- Session-based workflows (check balance → transfer → verify)
-- Testing context retention across conversation turns
-- Complex prompts requiring multiple tool calls
-
-### Tools
-
-| Tool | Description |
-|------|-------------|
-| `get_balance` | Get balance for one account |
-| `get_all_balances` | Get balances for all accounts |
-| `transfer` | Move money between accounts |
-| `deposit` | Deposit money into an account |
-| `withdraw` | Withdraw money from an account |
-| `get_transactions` | View transaction history |
-
-### Initial State
-
-| Account | Balance |
-|---------|---------|
-| Checking | $1,500.00 |
-| Savings | $3,000.00 |
-
-### Example
-
-```python
-from pytest_skill_engineering.copilot import CopilotEval
-
-
-async def test_check_balance(copilot_eval):
-    agent = CopilotEval(
-        name="banking",
-        model="gpt-5.4-mini",
-        instructions="You are a banking assistant.",
-    )
-
-    result = await copilot_eval(agent, "What's my checking balance?")
-    assert result.tool_was_called("get_balance")
-
-
-async def test_transfer_funds(copilot_eval):
-    agent = CopilotEval(
-        name="banking",
-        model="gpt-5.4-mini",
-        instructions="You are a banking assistant.",
-    )
-
-    result = await copilot_eval(agent, "Transfer $500 from checking to savings")
-    assert result.tool_was_called("transfer")
-```
-
-### Direct Usage
-
-```python
-from pytest_skill_engineering.testing.banking import BankingService
-
-service = BankingService()
-
-result = service.get_balance("checking")
-print(result.value)  # {"account": "checking", "balance": 1500.0, ...}
-
-result = service.transfer("checking", "savings", 500.0)
-assert result.success
-
-result = service.get_all_balances()
-print(result.value["total_formatted"])  # "$4,500.00"
-```
-
-## Creating Custom Test Servers
-
-### 1. Create a Store Class
-
-```python
-from dataclasses import dataclass
-from pytest_skill_engineering.testing.types import ToolResult
-
-
-@dataclass
-class MyStore:
-    state: dict = None
-
-    def __post_init__(self):
-        self.state = self.state or {}
-
-    def my_tool(self, arg: str) -> ToolResult:
-        """Do something."""
-        return ToolResult(
-            success=True,
-            value={"result": arg.upper()},
-        )
-```
-
-### 2. Create MCP Server Wrapper
-
-```python
-from mcp.server import Server
-from mcp.types import Tool, TextContent
-
-
-def create_my_server(store: MyStore | None = None):
-    store = store or MyStore()
-    server = Server("my-server")
-
-    @server.list_tools()
-    async def list_tools():
-        return [
-            Tool(
-                name="my_tool",
-                description="Do something with input",
-                inputSchema={
-                    "type": "object",
-                    "properties": {
-                        "arg": {"type": "string"},
-                    },
-                    "required": ["arg"],
-                },
-            ),
-        ]
-
-    @server.call_tool()
-    async def call_tool(name: str, arguments: dict):
-        if name == "my_tool":
-            result = store.my_tool(arguments["arg"])
-            return [TextContent(type="text", text=str(result.value))]
-        raise ValueError(f"Unknown tool: {name}")
-
-    return server
-```
-
-### 3. Use in Tests
-
-```python
-@pytest.fixture(scope="module")
-def my_server():
-    return create_my_server()
-
-
-async def test_my_tool(copilot_eval, agent_with_my_server):
-    result = await copilot_eval(agent_with_my_server, "Use my tool")
-    assert result.tool_was_called("my_tool")
-```
-
-## Best Practices
-
-| Server | Best For | Avoid |
-|--------|----------|-------|
-| `TodoStore` | CRUD workflows | Extremely complex logic |
-| `BankingService` | Financial workflows, sessions | Stateless tests |
+These helpers are useful for fixture setup and deterministic process control, but the complete Copilot-facing example should still show the final `mcp_servers={...}` mapping.

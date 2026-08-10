@@ -1,15 +1,12 @@
 ---
-description: "API reference, CLI options, configuration, and EvalResult documentation for pytest-skill-engineering."
+description: "Configuration, CLI, result, and assertion reference for pytest-skill-engineering."
 ---
 
 # Reference
 
-Technical documentation for pytest-skill-engineering types and configuration.
-
-## Guides
-
-- **[API](api.md)** — Auto-generated API reference
-- **[CLI Options](cli.md)** — Command-line interface
-- **[EvalResult](result.md)** — Result object and assertions
-- **[Configuration](configuration.md)** — Provider and agent setup
-- **[Test Harnesses](test-harnesses.md)** — Built-in test servers
+- [API](api.md)
+- [CLI options](cli.md)
+- [CopilotResult](result.md)
+- [Configuration](configuration.md)
+- [Test harnesses](test-harnesses.md)
+- [Assertions](assertions.md)

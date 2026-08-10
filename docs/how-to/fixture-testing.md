@@ -29,17 +29,17 @@ They demonstrate:
 
 ```bash
 # Run a specific scenario
-pytest tests/fixtures/scenario_01_single_agent.py -v
+uv run python -m pytest tests/fixtures/scenario_01_single_agent.py -v
 
 # Run a single test
-pytest tests/fixtures/scenario_01_single_agent.py::test_balance_check -v
+uv run python -m pytest tests/fixtures/scenario_01_single_agent.py::test_balance_check -v
 
 # Generate fixture JSON report
-pytest tests/fixtures/scenario_01_single_agent.py -v \
+uv run python -m pytest tests/fixtures/scenario_01_single_agent.py -v \
     --aitest-json=tests/fixtures/reports/01_single_agent.json
 
 # Run all fixtures
-pytest tests/fixtures/ -v
+uv run python -m pytest tests/fixtures/ -v
 ```
 
 ## Test Suites
@@ -60,7 +60,7 @@ async def test_balance_check(copilot_eval, llm_assert):
     assert result.success
     assert result.tool_was_called("get_balance")
     assert llm_assert(result.final_response, "mentions the account balance")
-    assert result.cost_usd < 0.05
+    assert result.total_premium_requests >= 0
 ```
 
 **Tests:** `test_balance_check`, `test_transfer_funds`, `test_transaction_history`, `test_expected_failure`
@@ -162,8 +162,8 @@ assert calls[0].arguments["amount"] == 100
 Validate efficiency:
 
 ```python
-# Cost (in USD)
-assert result.cost_usd < 0.01  # Under 1 cent
+# Premium-request usage
+assert result.total_premium_requests >= 0
 
 # Duration (in milliseconds)
 assert result.duration_ms < 30000  # Under 30 seconds
@@ -178,7 +178,7 @@ assert total_tokens < 5000
 Running fixture tests generates JSON and HTML reports:
 
 ```bash
-pytest tests/fixtures/scenario_01_single_agent.py -v \
+uv run python -m pytest tests/fixtures/scenario_01_single_agent.py -v \
     --aitest-json=tests/fixtures/reports/01_single_agent.json \
     --aitest-html=docs/reports/01_single_agent.html
 
@@ -201,20 +201,20 @@ Generate reports for all 4 fixture suites:
 
 ```bash
 # Generate each fixture individually
-pytest tests/fixtures/scenario_01_single_agent.py -v \
+uv run python -m pytest tests/fixtures/scenario_01_single_agent.py -v \
     --aitest-json=tests/fixtures/reports/01_single_agent.json
-pytest tests/fixtures/scenario_02_multi_agent.py -v \
+uv run python -m pytest tests/fixtures/scenario_02_multi_agent.py -v \
     --aitest-json=tests/fixtures/reports/02_multi_agent.json
-pytest tests/fixtures/scenario_03_sessions.py -v \
+uv run python -m pytest tests/fixtures/scenario_03_sessions.py -v \
     --aitest-json=tests/fixtures/reports/03_multi_agent_sessions.json
-pytest tests/fixtures/scenario_04_agent_selector.py -v \
+uv run python -m pytest tests/fixtures/scenario_04_agent_selector.py -v \
     --aitest-json=tests/fixtures/reports/04_agent_selector.json
 ```
 
 Then regenerate HTML from all JSONs:
 
 ```bash
-python scripts/generate_fixture_html.py
+uv run python scripts/generate_fixture_html.py
 ```
 
 This updates HTML reports in `docs/reports/` without re-running tests (faster).
@@ -223,13 +223,13 @@ This updates HTML reports in `docs/reports/` without re-running tests (faster).
 
 When writing fixture tests, follow this pattern:
 
-1. **Create eval** — Configure provider, servers, system prompt, skill
+1. **Create eval** — Configure model, servers, system prompt, skill
 2. **Run prompt** — Use `copilot_eval(agent, "user message")`
 3. **Validate success** — `assert result.success`
 4. **Assert tool usage** — `assert result.tool_was_called(...)`
 5. **Check arguments** — `assert result.tool_call_arg(...) == expected`
 6. **Semantic validation** — `assert llm_assert(response, "criterion")`
-7. **Performance validation** — `assert result.cost_usd < threshold`
+7. **Performance validation** — assert on duration, tokens, or premium requests
 
 Example:
 
@@ -251,7 +251,7 @@ async def test_transfer_workflow(self, copilot_eval, llm_assert):
     assert llm_assert(result.final_response, "confirms transfer of $100 to savings")
 
     # Validate efficiency
-    assert result.cost_usd < 0.05, f"Cost too high: ${result.cost_usd}"
+    assert result.total_premium_requests >= 0
     assert result.duration_ms < 30000, f"Took too long: {result.duration_ms}ms"
 ```
 
@@ -260,20 +260,20 @@ async def test_transfer_workflow(self, copilot_eval, llm_assert):
 If a fixture test fails:
 
 1. **Check the error message** — AI assertion detail explains why
-2. **Run the test locally** — `pytest tests/fixtures/... -vv`
+2. **Run the test locally** — `uv run python -m pytest tests/fixtures/... -vv`
 3. **Check JSON report** — `tests/fixtures/reports/01_*.json` has full details
 4. **Verify eval config** — Is the right server/model/prompt used?
-5. **Check tool availability** — Does `result.available_tools` include what you need?
+5. **Check tool availability** — Ensure the eval attached the expected MCP servers and tool allow-list.
 
 ### Common Issues
 
 **"Tool not found"**
 ```python
-# Check available tools
-print(f"Available: {[t.name for t in result.available_tools]}")
+# Check which tools were actually called
+print(f"Called tools: {sorted(result.tool_names_called)}")
 
-# Ensure MCP server is running
-assert len(result.available_tools) > 0
+# Ensure the eval attached the expected MCP server/tool surface
+assert result.all_tool_calls
 ```
 
 **"Wrong parameter passed"**

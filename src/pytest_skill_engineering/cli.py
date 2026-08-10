@@ -4,7 +4,7 @@ Usage:
     pytest-skill-engineering-report results.json --html report.html
     pytest-skill-engineering-report results.json --md report.md
     pytest-skill-engineering-report results.json --html report.html \
-        --summary --summary-model azure/gpt-4.1
+        --summary --summary-model copilot/gpt-5.4-mini
 
 Configuration (in order of precedence):
     1. CLI arguments (highest)
@@ -19,12 +19,14 @@ import json
 import logging
 import os
 import sys
+import tomllib
 from pathlib import Path
 from typing import Any
 
 from pytest_skill_engineering.reporting.collector import SuiteReport
 from pytest_skill_engineering.reporting.generator import generate_html, generate_md
 from pytest_skill_engineering.reporting.insights import InsightsResult
+from pytest_skill_engineering.reporting.schema import REPORT_SCHEMA_VERSION
 
 _logger = logging.getLogger(__name__)
 
@@ -35,15 +37,6 @@ def load_config_from_pyproject() -> dict[str, Any]:
     Searches for pyproject.toml in current directory and parents.
     Returns empty dict if not found or section doesn't exist.
     """
-    try:
-        import tomllib
-    except ImportError:
-        # Python < 3.11 fallback
-        try:
-            import tomli as tomllib  # type: ignore[import-not-found]
-        except ImportError:
-            return {}
-
     # Search for pyproject.toml
     current = Path.cwd()
     for parent in [current, *current.parents]:
@@ -85,24 +78,21 @@ def load_suite_report(
     data = json.loads(json_path.read_text(encoding="utf-8"))
 
     schema_version = data.get("schema_version")
-    try:
-        major = int(schema_version.split(".")[0]) if schema_version else 0
-    except (ValueError, AttributeError):
-        major = 0
-    if major < 2:
+    if schema_version != REPORT_SCHEMA_VERSION:
         msg = (
             f"Unsupported schema version: {schema_version!r}. "
-            "Only v2.0+ is supported. Re-run tests to generate a new JSON file."
+            f"Only {REPORT_SCHEMA_VERSION} is supported. "
+            "Re-run tests with the current package version to generate a new JSON file."
         )
         raise ValueError(msg)
 
-    return _load_v2_report(data)
+    return _load_v3_report(data)
 
 
-def _load_v2_report(
+def _load_v3_report(
     data: dict[str, Any],
 ) -> tuple[SuiteReport, InsightsResult | None]:
-    """Load report from v2.0 schema format (current format with dataclasses).
+    """Load report from the current dataclass-backed schema.
 
     Returns:
         Tuple of (SuiteReport, InsightsResult or None)
@@ -115,20 +105,15 @@ def _load_v2_report(
     insights = None
     raw_insights = data.get("insights")
     if raw_insights:
-        if isinstance(raw_insights, dict) and raw_insights.get("markdown_summary"):
-            insights = InsightsResult(
-                markdown_summary=raw_insights["markdown_summary"],
-                model=raw_insights.get("model", "unknown"),
-                tokens_used=raw_insights.get("tokens_used", 0),
-                cost_usd=raw_insights.get("cost_usd", 0.0),
-                cached=raw_insights.get("cached", True),
-            )
-        elif isinstance(raw_insights, str) and raw_insights:
-            insights = InsightsResult(
-                markdown_summary=raw_insights,
-                model="unknown",
-                cached=True,
-            )
+        if not isinstance(raw_insights, dict):
+            raise ValueError("Report insights must be an object in the current schema")
+        insights = InsightsResult(
+            markdown_summary=raw_insights["markdown_summary"],
+            model=raw_insights["model"],
+            tokens_used=raw_insights["tokens_used"],
+            cost_usd=raw_insights["cost_usd"],
+            cached=raw_insights["cached"],
+        )
 
     return suite_report, insights
 
@@ -144,7 +129,7 @@ def generate_ai_summary(
 
     Args:
         report: The suite report to summarize
-        model: Model string (e.g., azure/gpt-4.1)
+        model: Model string (for example ``copilot/gpt-5.4-mini``)
         analysis_prompt: Custom analysis prompt text (optional)
         compact: Omit full conversation for passed tests to reduce tokens
 
@@ -205,7 +190,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--summary-model",
         metavar="MODEL",
-        help="Model for AI summary (e.g., azure/gpt-4.1, openai/gpt-4o). "
+        help="Model for AI summary (for example copilot/gpt-5.4-mini). "
         "Can also be set via AITEST_SUMMARY_MODEL env var or pyproject.toml.",
     )
 
@@ -253,11 +238,11 @@ def main(argv: list[str] | None = None) -> int:
     if args.summary and not summary_model:
         print("Error: --summary requires --summary-model to be specified", file=sys.stderr)
         print("Options:", file=sys.stderr)
-        print("  --summary-model azure/gpt-4.1", file=sys.stderr)
-        print("  AITEST_SUMMARY_MODEL=azure/gpt-4.1", file=sys.stderr)
+        print("  --summary-model copilot/gpt-5.4-mini", file=sys.stderr)
+        print("  AITEST_SUMMARY_MODEL=copilot/gpt-5.4-mini", file=sys.stderr)
         print(
             "  pyproject.toml: [tool.pytest-skill-engineering-report]"
-            " summary-model = 'azure/gpt-4.1'",
+            " summary-model = 'copilot/gpt-5.4-mini'",
             file=sys.stderr,
         )
         return 1

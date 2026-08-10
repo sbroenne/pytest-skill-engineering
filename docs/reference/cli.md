@@ -1,149 +1,50 @@
 ---
-description: "Command-line options for pytest-skill-engineering: configure reports, AI analysis models, minimum pass rates, and more."
+description: "pytest and report-regeneration CLI options for pytest-skill-engineering."
 ---
 
-# CLI Options
+# CLI options
 
-## Recommended: pyproject.toml
-
-Configure once, run simply:
+## Recommended defaults
 
 ```toml
 [tool.pytest.ini_options]
 addopts = """
---aitest-summary-model=copilot/gpt-5.5
+--aitest-summary-model=copilot/gpt-5.4-mini
 --aitest-html=aitest-reports/report.html
 """
 ```
 
-Then just `pytest tests/` — reports are generated automatically.
+## pytest options
 
-## pytest Options
+| Option | Meaning |
+|---|---|
+| `--aitest-summary-model=MODEL` | Copilot model for AI insights |
+| `--aitest-html=PATH` | Write HTML report |
+| `--aitest-md=PATH` | Write Markdown report |
+| `--aitest-json=PATH` | Write JSON report |
+| `--aitest-min-pass-rate=N` | Fail if overall pass rate drops below `N` |
+| `--aitest-iterations=N` | Run each test `N` times; reports strip only the synthetic iteration suffix |
+| `--aitest-analysis-prompt=PATH` | Override the AI analysis system prompt file |
+| `--aitest-summary-compact` | Omit full passing transcripts from AI analysis |
+| `--aitest-print-analysis-prompt` | Print the resolved analysis prompt source |
+| `--llm-model=MODEL` | Copilot model for `llm_assert` / `llm_score` |
+| `--llm-vision-model=MODEL` | Reserved for `llm_assert_image`; the fixture currently raises `NotImplementedError` |
 
-| Option | Description | Required |
-|--------|-------------|----------|
-| `--aitest-summary-model=MODEL` | Model for AI insights | Yes (for HTML/MD reports) |
-| `--aitest-html=PATH` | Generate HTML report | No |
-| `--aitest-md=PATH` | Generate Markdown report | No |
-| `--aitest-json=PATH` | Custom JSON path | No (default: `aitest-reports/results.json`) |
-| `--aitest-min-pass-rate=N` | Fail if overall pass rate below N% | No |
-| `--aitest-iterations=N` | Run each test N times and aggregate results | No (default: `1`) |
-| `--aitest-analysis-prompt=PATH` | Custom analysis prompt file for AI insights | No |
-| `--aitest-summary-compact` | Omit full conversation turns for passed tests in AI analysis (reduces tokens) | No |
-| `--aitest-print-analysis-prompt` | Print resolved analysis prompt source/path at runtime | No |
-| `--llm-model=MODEL` | Model for `llm_assert` semantic assertions (default: `copilot/gpt-5.4-mini`) | No |
-| `--llm-vision-model=MODEL` | Vision model for `llm_assert_image` assertions (defaults to `--llm-model`) | No |
-
-!!! note
-    **JSON is always generated** after every test run, even without `--aitest-summary-model`. HTML and Markdown reports require a summary model for AI-powered analysis. JSON output contains raw test data that can be used later to regenerate reports via `pytest-skill-engineering-report`.
-
-### CLI Examples
+Run pytest with:
 
 ```bash
-# Run tests with HTML report
-pytest tests/ \
-    --aitest-summary-model=copilot/gpt-5.5 \
-    --aitest-html=report.html
-
-# Run tests with Markdown report
-pytest tests/ \
-    --aitest-summary-model=copilot/gpt-5.5 \
-    --aitest-md=report.md
-
-# With JSON output
-pytest tests/ \
-    --aitest-summary-model=copilot/gpt-5.5 \
-    --aitest-html=report.html \
-    --aitest-json=results.json
-
-# Run each test 3 times for statistical confidence
-pytest tests/ \
-    --aitest-summary-model=copilot/gpt-5.5 \
-    --aitest-html=report.html \
-    --aitest-iterations=3
-
-# Reduce summary token usage for large suites
-pytest tests/ \
-    --aitest-summary-model=copilot/gpt-5.5 \
-    --aitest-html=report.html \
-    --aitest-summary-compact
-
-# Debug which analysis prompt is used (CLI file / hook / built-in)
-pytest tests/ \
-    --aitest-summary-model=copilot/gpt-5.5 \
-    --aitest-html=report.html \
-    --aitest-print-analysis-prompt
+uv run python -m pytest tests/ -v
 ```
 
-## pytest-skill-engineering-report CLI
-
-Regenerate reports from saved JSON without re-running tests.
+## Report regeneration CLI
 
 ```bash
-pytest-skill-engineering-report <json-file> [options]
+uv run pytest-skill-engineering-report aitest-reports/results.json   --html aitest-reports/report.html
 ```
 
-| Option | Description | Required |
-|--------|-------------|----------|
-| `--html PATH` | Generate HTML report | At least one of `--html` or `--md` |
-| `--md PATH` | Generate Markdown report | At least one of `--html` or `--md` |
-| `--summary` | Generate AI-powered summary | No |
-| `--summary-model MODEL` | Model for AI insights | Required with `--summary` |
-| `--analysis-prompt PATH` | Custom analysis prompt file for AI insights | No |
-| `--compact` | Omit full conversation turns for passed tests (reduces tokens) | No |
-| `--print-analysis-prompt` | Print resolved analysis prompt source/path before summary generation | No |
+Add `--summary --summary-model copilot/gpt-5.4-mini` to refresh AI insights.
 
-`--summary-model` can also be set via `AITEST_SUMMARY_MODEL` env var or `[tool.pytest-skill-engineering-report]` in `pyproject.toml`.
+## Environment variables
 
-### Examples
-
-```bash
-# Regenerate HTML from existing JSON (uses insights already in JSON)
-pytest-skill-engineering-report results.json --html report.html
-
-# Generate Markdown report
-pytest-skill-engineering-report results.json --md report.md
-
-# Generate both formats
-pytest-skill-engineering-report results.json --html report.html --md report.md
-
-# Generate with fresh AI analysis
-pytest-skill-engineering-report results.json \
-    --html report.html \
-    --summary \
-    --summary-model copilot/gpt-5.5
-
-# Debug which prompt source is used (file vs built-in)
-pytest-skill-engineering-report results.json \
-    --html report.html \
-    --summary \
-    --summary-model copilot/gpt-5.5 \
-    --print-analysis-prompt
-```
-
-## Environment Variables
-
-LLM authentication is handled by [Pydantic AI](https://ai.pydantic.dev/models/):
-
-| Provider | Variable |
-|----------|----------|
-| Azure OpenAI | `AZURE_API_BASE` + `az login` |
-| OpenAI | `OPENAI_API_KEY` |
-| Anthropic | `ANTHROPIC_API_KEY` |
-| Google | `GEMINI_API_KEY` |
-
-### Azure OpenAI Setup
-
-```bash
-# Set endpoint
-export AZURE_API_BASE=https://your-resource.openai.azure.com/
-
-# Authenticate (no API key needed!)
-az login
-```
-
-### OpenAI Setup
-
-```bash
-export OPENAI_API_KEY=sk-xxx
-```
+- `GITHUB_TOKEN` — optional non-interactive Copilot auth
+- `AITEST_SUMMARY_MODEL` — default summary model for regeneration

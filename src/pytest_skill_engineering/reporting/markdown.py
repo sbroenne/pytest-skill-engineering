@@ -111,7 +111,7 @@ def _eval_leaderboard_multi(agents: list[AgentData]) -> str:
         rank = "⛔" if agent.disqualified else _medal(i)
         winner = " 🏆" if agent.is_winner else ""
         dq = " ~~disqualified~~" if agent.disqualified else ""
-        name_col = f"{agent.name}{winner}{dq}"
+        name_col = f"{agent.display_name}{winner}{dq}"
 
         rows.append(
             [
@@ -142,7 +142,7 @@ def _agent_summary_card(agent: AgentData) -> str:
     status = "✅ All Passed" if agent.pass_rate == 100 else f"❌ {agent.failed} Failed"
 
     return (
-        f"> **{agent.name}** — {status}  \n"
+        f"> **{agent.display_name}** — {status}  \n"
         f"> {agent.passed}/{agent.total} tests | "
         f"{format_cost(agent.cost, agent.premium_requests)} | "
         f"{agent.tokens:,} tokens | "
@@ -355,7 +355,7 @@ def _test_result_detail(
 
 def _test_status_icon(test: TestData) -> str:
     """Get the overall status icon for a test across all agents."""
-    outcomes = [r.outcome for r in test.results_by_agent.values()]
+    outcomes = [r.outcome for r in test.results_by_agent_id.values()]
     if all(o == "passed" for o in outcomes):
         return "✅"
     if any(o == "failed" for o in outcomes):
@@ -376,9 +376,9 @@ def _test_entry(
     diff = " ⚡" if test.has_difference and multi_agent else ""
     parts.append(Header.atx(level=_H4, title=f"{status} {test.display_name}{diff}"))
 
-    for agent_id, result in test.results_by_agent.items():
+    for agent_id, result in test.results_by_agent_id.items():
         agent = agents_by_id.get(agent_id)
-        agent_label = agent.name if agent else agent_id
+        agent_label = agent.display_name if agent else agent_id
         parts.append(_test_result_detail(result, agent_label, multi_agent=multi_agent))
 
     return "\n".join(parts)

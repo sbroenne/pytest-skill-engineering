@@ -17,12 +17,12 @@ def _agent_chip(agent: AgentData, is_selected: bool) -> Node:
         input(
             type="checkbox",
             name="compare-agent",
-            value=agent.id,
+            value=agent.agent_id,
             checked=checked,
             class_="sr-only",
-            onchange=f"updateAgentComparison('{agent.id}')",
+            onchange=f"updateAgentComparison('{agent.agent_id}')",
         ),
-        span(".truncate")[agent.name],
+        span(".truncate")[agent.display_name],
         span(".text-xs.text-text-muted.tabular-nums")[f"{agent.pass_rate:.0f}%"],
     ]
 
@@ -53,6 +53,6 @@ def agent_selector(
             span(".text-xs.text-text-muted.opacity-70")["(Click to swap agents)"],
         ],
         div(".flex.flex-wrap.gap-2")[
-            [_agent_chip(agent, agent.id in selected_set) for agent in agents]
+            [_agent_chip(agent, agent.agent_id in selected_set) for agent in agents]
         ],
     ]

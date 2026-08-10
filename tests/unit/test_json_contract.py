@@ -19,15 +19,9 @@ from syrupy.assertion import SnapshotAssertion
 
 from pytest_skill_engineering.cli import load_suite_report
 from pytest_skill_engineering.core.serialization import serialize_dataclass
+from tests.fixtures.report_fixtures import FIXTURE_NAMES
 
 FIXTURES_DIR = Path(__file__).parent.parent / "fixtures" / "reports"
-
-FIXTURE_NAMES = [
-    "01_single_agent",
-    "02_multi_agent",
-    "03_multi_agent_sessions",
-    "04_agent_selector",
-]
 
 
 def _extract_schema(obj: Any) -> Any:

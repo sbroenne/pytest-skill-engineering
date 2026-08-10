@@ -16,7 +16,7 @@ from pytest_skill_engineering.copilot.eval import CopilotEval
 
 from .conftest import MODELS
 
-pytestmark = [pytest.mark.copilot]
+pytestmark = [pytest.mark.copilot, pytest.mark.model, pytest.mark.slow]
 
 
 class TestModelComparison:

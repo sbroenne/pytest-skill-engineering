@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 import pytest
 
@@ -133,13 +133,7 @@ def _get_timestamped_path(
 def pytest_addoption(parser: Parser) -> None:
     """Add pytest CLI options for aitest.
 
-    Note: LLM authentication is handled via standard environment variables:
-    - Azure: AZURE_API_BASE + `az login` (Entra ID)
-    - OpenAI: OPENAI_API_KEY
-    - Anthropic: ANTHROPIC_API_KEY
-    - etc.
-
-    See https://ai.pydantic.dev/ for supported providers.
+    Note: Copilot-authenticated runs use the GitHub CLI or ``GITHUB_TOKEN``.
     """
     group = parser.getgroup("aitest", "AI agent testing")
     add_aitest_options(group)
@@ -149,6 +143,9 @@ def pytest_configure(config: Config) -> None:
     """Configure the aitest plugin."""
     # Register custom hookspecs so downstream plugins can extend behavior
     from pytest_skill_engineering.hooks import AitestHookSpec
+
+    if not config.pluginmanager.hasplugin("pytest_skill_engineering.fixtures"):
+        config.pluginmanager.import_plugin("pytest_skill_engineering.fixtures")
 
     config.pluginmanager.add_hookspecs(AitestHookSpec)
 
@@ -214,6 +211,81 @@ def pytest_collection_modifyitems(
             item.add_marker(pytest.mark.aitest)
 
 
+def _require_agent_string(agent: Any, *, field_name: str) -> str:
+    """Read a required string from the reporting wrapper."""
+    value = getattr(agent, field_name, None)
+    if isinstance(value, str) and value:
+        return value
+    msg = f"aitest reporting agent is missing required field '{field_name}'"
+    raise ValueError(msg)
+
+
+def _require_provider_model(agent: Any) -> str:
+    """Read the required provider model from the reporting wrapper."""
+    provider = getattr(agent, "provider", None)
+    model = getattr(provider, "model", None)
+    if isinstance(model, str) and model:
+        return model
+    raise ValueError("aitest reporting agent is missing required field 'provider.model'")
+
+
+def _display_model(model: str) -> str:
+    """Strip any provider prefix from a model name for display."""
+    return model.split("/")[-1] if "/" in model else model
+
+
+def _build_agent_identity(
+    agent: Any,
+    eval_result: EvalResult,
+) -> tuple[str, str, str, str | None, str | None]:
+    """Resolve stable and human-facing identity fields for report production."""
+    base_agent_id = _require_agent_string(agent, field_name="id")
+    eval_name = _require_agent_string(agent, field_name="name")
+    model_raw = _require_provider_model(agent)
+    system_prompt_name = getattr(agent, "system_prompt_name", None)
+    if system_prompt_name is not None and not isinstance(system_prompt_name, str):
+        raise ValueError("aitest reporting agent field 'system_prompt_name' must be a string")
+
+    skill_name = eval_result.skill_info.name if eval_result.skill_info else None
+    if skill_name is None:
+        skill = getattr(agent, "skill", None)
+        if skill is not None:
+            skill_name = _require_agent_string(skill, field_name="name")
+
+    return (
+        base_agent_id,
+        eval_name,
+        _display_model(model_raw),
+        system_prompt_name,
+        skill_name,
+    )
+
+
+def _build_case_name(item: Item) -> str:
+    """Build a case identity that removes only the synthetic iteration axis."""
+    callspec = getattr(item, "callspec", None)
+    if callspec is None or "_aitest_iteration" not in callspec.params:
+        return item.nodeid
+
+    param_names = list(callspec.params)
+    param_ids = list(getattr(callspec, "_idlist", []))
+    if len(param_names) != len(param_ids):
+        raise ValueError(
+            "Unable to derive case identity for "
+            f"{item.nodeid!r}: pytest parameter IDs are unavailable"
+        )
+
+    base_nodeid, _, _ = item.nodeid.partition("[")
+    preserved_ids = [
+        param_id
+        for param_name, param_id in zip(param_names, param_ids, strict=True)
+        if param_name != "_aitest_iteration"
+    ]
+    if not preserved_ids:
+        return base_nodeid
+    return f"{base_nodeid}[{'-'.join(preserved_ids)}]"
+
+
 @pytest.hookimpl(hookwrapper=True, tryfirst=True)
 def pytest_runtest_makereport(item: Item, call: Any) -> Any:
     """Capture test results for reporting.
@@ -224,18 +296,15 @@ def pytest_runtest_makereport(item: Item, call: Any) -> Any:
     """
     # Auto-stash CopilotResult before processing (tryfirst ensures this runs early)
     if call.when == "call" and not hasattr(item, "_aitest_result"):
-        try:
-            from pytest_skill_engineering.copilot.result import CopilotResult
+        from pytest_skill_engineering.copilot.eval import CopilotEval
+        from pytest_skill_engineering.copilot.fixtures import stash_on_item
+        from pytest_skill_engineering.copilot.result import CopilotResult
 
-            funcargs = getattr(item, "funcargs", {})
-            for val in funcargs.values():
-                if isinstance(val, CopilotResult) and val.agent is not None:
-                    from pytest_skill_engineering.copilot.fixtures import stash_on_item
-
-                    stash_on_item(item, val.agent, val)
-                    break
-        except ImportError:
-            pass  # Copilot SDK not installed — skip auto-stashing
+        funcargs = getattr(item, "funcargs", {})
+        for val in funcargs.values():
+            if isinstance(val, CopilotResult) and val.agent is not None:
+                stash_on_item(item, cast(CopilotEval, val.agent), val)
+                break
 
     outcome = yield
     report: PytestTestReport = outcome.get_result()
@@ -263,6 +332,8 @@ def pytest_runtest_makereport(item: Item, call: Any) -> Any:
 
     # Get agent identity directly from the Eval object stashed by the fixture
     agent = getattr(item, "_aitest_agent", None)
+    if agent is None:
+        raise ValueError(f"aitest result for {item.nodeid!r} is missing required agent metadata")
 
     # Get test function docstring if available
     docstring = None
@@ -306,26 +377,19 @@ def pytest_runtest_makereport(item: Item, call: Any) -> Any:
                     error_msg = stripped
                     break
 
-    # Build agent identity from the Eval object
-    agent_id = agent.id if agent else ""
-    if agent:
-        raw = agent.provider.model
-        model = raw.split("/")[-1] if "/" in raw else raw
-    else:
-        model = ""
-    eval_name = agent.name if agent else ""
-    system_prompt_name = agent.system_prompt_name if agent else None
-    skill_name = agent.skill.name if agent and agent.skill else None
-
     # Detect iteration index from _aitest_iteration fixture
     iteration: int | None = None
     callspec = getattr(item, "callspec", None)
     if callspec and "_aitest_iteration" in callspec.params:
         iteration = callspec.params["_aitest_iteration"]
 
+    agent_id, eval_name, model, system_prompt_name, skill_name = _build_agent_identity(
+        agent, eval_result
+    )
+
     # Create test report with typed identity fields
     test_report = TestReport(
-        name=item.nodeid,
+        name=_build_case_name(item),
         outcome=report.outcome,
         duration_ms=report.duration * 1000,
         eval_result=eval_result,
@@ -378,12 +442,13 @@ def _add_junit_properties(
 
     # Eval identity (from Eval object)
     if agent:
-        model = agent.provider.model
-        display_model = model.split("/")[-1] if "/" in model else model
-        props.append(("aitest.agent.name", agent.name))
-        props.append(("aitest.model", display_model))
-        if agent.system_prompt_name:
-            props.append(("aitest.prompt", agent.system_prompt_name))
+        agent_id, eval_name, model, system_prompt_name, _ = _build_agent_identity(
+            agent, eval_result
+        )
+        props.append(("aitest.agent.name", eval_name))
+        props.append(("aitest.model", model))
+        if system_prompt_name:
+            props.append(("aitest.prompt", system_prompt_name))
 
     # Skill
     if eval_result.skill_info:
@@ -559,17 +624,18 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
                 f"\naitest: pass rate {actual_rate:.1f}% meets minimum threshold {min_pass_rate}%",
             )
 
-    # Reset rate limiter state so long-lived processes start fresh next session
+    # Reset global plugin/execution state without masking the main test outcome.
     from pytest_skill_engineering.execution.rate_limiter import reset_rate_limiters
 
-    reset_rate_limiters()
+    try:
+        reset_rate_limiters()
+    except Exception:
+        _logger.warning("Rate limiter cleanup failed", exc_info=True)
 
-    # Clean up shared CopilotClient if it was started for copilot/ model provider
-    shutdown_copilot_model_client()
-
-
-# Register fixtures from fixtures module
-pytest_plugins = ["pytest_skill_engineering.fixtures"]
+    try:
+        shutdown_copilot_model_client()
+    except Exception:
+        _logger.warning("Copilot client cleanup failed", exc_info=True)
 
 
 # ── Coding agent analysis prompt ──

@@ -24,6 +24,7 @@ from pytest_skill_engineering.reporting.components.types import (
     TestResultData,
     ToolCallData,
 )
+from pytest_skill_engineering.reporting.schema import REPORT_SCHEMA_VERSION
 
 if TYPE_CHECKING:
     from pytest_skill_engineering.core.result import EvalResult
@@ -45,6 +46,38 @@ def _resolve_agent_id(test: TestReport) -> str:
         msg = f"Test {test.name!r} missing 'agent_id'"
         raise ValueError(msg)
     return agent_id
+
+
+def _resolve_eval_name(test: TestReport) -> str:
+    """Get the presentation label from TestReport."""
+    if not test.eval_name:
+        msg = f"Test {test.name!r} missing 'eval_name'"
+        raise ValueError(msg)
+    return test.eval_name
+
+
+def _resolve_model_name(test: TestReport) -> str:
+    """Get the display model from TestReport."""
+    if not test.model:
+        msg = f"Test {test.name!r} missing 'model'"
+        raise ValueError(msg)
+    return test.model
+
+
+def _case_display_name(test: TestReport) -> str:
+    """Build a human-readable label while preserving semantic parameter cases."""
+    tail = test.short_name
+    suffix = ""
+    if "[" in tail and tail.endswith("]"):
+        suffix = tail[tail.index("[") :]
+
+    if test.docstring:
+        first_line = test.docstring.split("\n")[0].strip()
+        if first_line:
+            label = first_line[:60] + ("…" if len(first_line) > 60 else "")
+            return f"{label} {suffix}".strip()
+
+    return tail
 
 
 def generate_html(
@@ -87,7 +120,7 @@ def generate_json(
     import json
 
     report_dict = serialize_dataclass(report)
-    report_dict["schema_version"] = "3.0"
+    report_dict["schema_version"] = REPORT_SCHEMA_VERSION
 
     if insights:
         report_dict["insights"] = {
@@ -167,7 +200,7 @@ def generate_mermaid_sequence(result: EvalResult) -> str:
                     lines.append(f'    Eval->>Tools: "{tc.name}({args_preview})"')
                     if tc.error:
                         err_preview = _sanitize_mermaid_text(str(tc.error), 60)
-                        lines.append(f'    Tools--xAgent: "Error: {err_preview}"')
+                        lines.append(f'    Tools--xEval: "Error: {err_preview}"')
                     elif tc.result:
                         result_preview = _sanitize_mermaid_text(tc.result, 60)
                         lines.append(f'    Tools-->>Eval: "{result_preview}"')
@@ -229,12 +262,12 @@ def _build_report_context(
     )
 
     agents, agents_by_id = _build_agents(report, min_pass_rate=min_pass_rate)
-    all_agent_ids = [a.id for a in agents]
+    all_agent_ids = [a.agent_id for a in agents]
 
     agents_by_coverage = sorted(
         agents, key=lambda a: (-a.total, a.disqualified, -a.pass_rate, a.cost)
     )
-    selected_agent_ids = [a.id for a in agents_by_coverage[:2]]
+    selected_agent_ids = [a.agent_id for a in agents_by_coverage[:2]]
 
     test_groups = _build_test_groups_typed(report, all_agent_ids, agents_by_id)
 
@@ -265,18 +298,27 @@ def _build_agents(
             "premium_requests": 0.0,
             "tokens": 0,
             "duration_ms": 0,
-            "eval_name": None,
+            "display_name": None,
             "model": None,
         }
     )
 
     for test in report.tests:
-        model = test.model or "unknown"
-        eval_name = test.eval_name or model  # Eval.name is always set; fallback for legacy JSON
+        agent_id = _resolve_agent_id(test)
+        model = _resolve_model_name(test)
+        eval_name = _resolve_eval_name(test)
 
-        stats = agent_stats[eval_name]
-        stats["model"] = model
-        stats["eval_name"] = eval_name
+        stats = agent_stats[agent_id]
+        if stats["display_name"] is None:
+            stats["display_name"] = eval_name
+        elif stats["display_name"] != eval_name:
+            msg = f"Agent ID {agent_id!r} has conflicting eval_name values"
+            raise ValueError(msg)
+        if stats["model"] is None:
+            stats["model"] = model
+        elif stats["model"] != model:
+            msg = f"Agent ID {agent_id!r} has conflicting model values"
+            raise ValueError(msg)
         stats["total"] += 1
 
         if test.outcome == "passed":
@@ -297,7 +339,7 @@ def _build_agents(
                 stats["tokens"] += usage.get("prompt", 0) + usage.get("completion", 0)
 
     agents = []
-    for agent_name_key, stats in agent_stats.items():
+    for agent_id, stats in agent_stats.items():
         total = stats["total"]
         passed = stats["passed"]
         pass_rate = (passed / total * 100) if total > 0 else 0
@@ -306,8 +348,8 @@ def _build_agents(
 
         agents.append(
             AgentData(
-                id=agent_name_key,
-                name=stats["eval_name"],
+                agent_id=agent_id,
+                display_name=stats["display_name"],
                 passed=passed,
                 failed=stats["failed"],
                 total=total,
@@ -321,14 +363,20 @@ def _build_agents(
         )
 
     agents.sort(
-        key=lambda a: (a.disqualified, -a.pass_rate, -a.total, a.cost / max(a.total, 1), a.id)
+        key=lambda a: (
+            a.disqualified,
+            -a.pass_rate,
+            -a.total,
+            a.cost / max(a.total, 1),
+            a.agent_id,
+        )
     )
 
     for i, agent in enumerate(agents):
         if not agent.disqualified:
             agents[i] = AgentData(
-                id=agent.id,
-                name=agent.name,
+                agent_id=agent.agent_id,
+                display_name=agent.display_name,
                 passed=agent.passed,
                 failed=agent.failed,
                 total=agent.total,
@@ -341,7 +389,7 @@ def _build_agents(
             )
             break
 
-    agents_by_id = {a.id: a for a in agents}
+    agents_by_id = {a.agent_id: a for a in agents}
     return agents, agents_by_id
 
 
@@ -357,18 +405,16 @@ def _build_test_groups_typed(
     :class:`TestResultData` with per-iteration breakdown in its
     ``iterations`` list and an ``iteration_pass_rate``.
     """
-    test_groups: dict[str, dict[str, list[Any]]] = defaultdict(lambda: defaultdict(list))
+    test_groups: dict[str, dict[str, list[TestReport]]] = defaultdict(lambda: defaultdict(list))
 
     for test in report.tests:
         parts = test.name.split("::")
         if len(parts) >= 2:
             class_name = parts[-2]
-            test_name = parts[-1].split("[")[0]
         else:
             class_name = "standalone"
-            test_name = parts[-1].split("[")[0]
 
-        test_groups[class_name][test_name].append(test)
+        test_groups[class_name][test.name].append(test)
 
     result = []
     for group_name, tests_by_name in test_groups.items():
@@ -385,7 +431,7 @@ def _build_test_groups_typed(
                     group_display_name = first_line
 
         test_list = []
-        for test_name, test_variants in tests_by_name.items():
+        for case_id, test_variants in tests_by_name.items():
             has_difference = False
             has_failed = False
             outcomes = set()
@@ -394,14 +440,14 @@ def _build_test_groups_typed(
             # Group variants by agent, then aggregate iterations per agent.
             variants_by_agent: dict[str, list[TestReport]] = defaultdict(list)
             for test in test_variants:
-                eval_name = test.eval_name or test.model or "unknown"
-                if eval_name in all_agent_ids:
-                    variants_by_agent[eval_name].append(test)
+                agent_id = _resolve_agent_id(test)
+                if agent_id in all_agent_ids:
+                    variants_by_agent[agent_id].append(test)
 
-            results_by_agent: dict[str, TestResultData] = {}
-            for eval_name, agent_tests in variants_by_agent.items():
+            results_by_agent_id: dict[str, TestResultData] = {}
+            for agent_id, agent_tests in variants_by_agent.items():
                 result_data = _build_result_for_agent(agent_tests)
-                results_by_agent[eval_name] = result_data
+                results_by_agent_id[agent_id] = result_data
                 outcomes.add(result_data.outcome)
                 if not result_data.passed:
                     has_failed = True
@@ -409,17 +455,13 @@ def _build_test_groups_typed(
             if len(outcomes) > 1:
                 has_difference = True
 
-            display_name = test_name
-            if first_test and hasattr(first_test, "docstring") and first_test.docstring:
-                first_line = first_test.docstring.split("\n")[0].strip()
-                if first_line:
-                    display_name = first_line[:60] + ("…" if len(first_line) > 60 else "")
+            display_name = _case_display_name(first_test) if first_test else case_id
 
             test_list.append(
                 TestData(
-                    id=test_name,
+                    case_id=case_id,
                     display_name=display_name,
-                    results_by_agent=results_by_agent,
+                    results_by_agent_id=results_by_agent_id,
                     has_difference=has_difference,
                     has_failed=has_failed,
                 )
@@ -430,14 +472,14 @@ def _build_test_groups_typed(
             passed = sum(
                 1
                 for t in test_list
-                if t.results_by_agent.get(agent_id)
-                and t.results_by_agent[agent_id].outcome == "passed"
+                if t.results_by_agent_id.get(agent_id)
+                and t.results_by_agent_id[agent_id].outcome == "passed"
             )
             failed = sum(
                 1
                 for t in test_list
-                if t.results_by_agent.get(agent_id)
-                and t.results_by_agent[agent_id].outcome != "passed"
+                if t.results_by_agent_id.get(agent_id)
+                and t.results_by_agent_id[agent_id].outcome != "passed"
             )
             agent_stats_map[agent_id] = AgentStats(passed=passed, failed=failed)
 
@@ -446,7 +488,7 @@ def _build_test_groups_typed(
                 type="session" if is_session else "standalone",
                 name=group_display_name,
                 tests=test_list,
-                agent_stats=agent_stats_map,
+                agent_stats_by_id=agent_stats_map,
             )
         )
 

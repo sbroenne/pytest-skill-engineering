@@ -1,58 +1,30 @@
 
-# pytest-skill-engineering
+# fixture-08-cli-server
 
 > **2** tests | **2** passed | **0** failed | **100%** pass rate  
-> Duration: 15.8s | Cost: 🧪 $0.001814 · 🤖 $0.006544 · 💰 $0.008358 | Tokens: 473–1,106  
-> February 07, 2026 at 08:33 PM
+> Duration: 6.0s | Cost: 🧪 2 PR · 🤖 $0.001200 · 💰 $0.001200 | Tokens: 195–195  
+> August 10, 2026 at 08:07 PM
 
-*CLI server tests — demonstrates CLIServer usage.*
+*CLI wrapper fixture report.*
 
-> **cli-agent** — ✅ All Passed  
-> 2/2 tests | $0.001814 | 1,579 tokens | 15.8s
+> **gpt-5.4-mini** — ✅ All Passed  
+> 2/2 tests | 2 PR | 390 tokens | 6.0s
 
 
 ## AI Analysis
 
 ## 🎯 Recommendation
 
-**Deploy: cli-agent (gpt-5-mini + default prompt)**
+Deploy the strongest passing eval for **CLI server**.
 
-Achieves **100% pass rate** across all tests at **$0.00181 total cost**, with correct tool usage and clear confirmations.
+## ❌ Failure Analysis
 
-**Reasoning:** All tests passed with no retries or errors. Cost is minimal and response quality meets expectations for both direct CLI usage and explanatory output. No alternative configurations were tested.
-
-**Alternatives:** None — only one configuration tested.
+At least one compared result failed, so the report must keep the failure visible.
 
 ## 🔧 MCP Tool Feedback
 
-### echo-cli
-The tool is easy to discover and was used correctly in every test. The agent consistently chose the correct tool and interpreted results properly.
+Tool names are deterministic in these fixture reports.
 
-| Tool | Status | Calls | Issues |
-|------|--------|-------|--------|
-| echo_execute | ✅ | 2 | Working well |
-
-## 📦 Tool Response Optimization
-
-### echo_execute (from echo-cli)
-- **Current response size:** ~30 tokens per call
-- **Issues found:**  
-  - `stdout` includes embedded newlines (`\r\n`) that are faithfully echoed by the assistant, inflating tokens in both tool output and final response.
-  - `stderr` is always an empty string in observed calls.
-- **Suggested optimization:**  
-  - Normalize `stdout` to a single line when possible and omit `stderr` when empty.
-- **Estimated savings:** ~10 tokens per call (~33% reduction)
-
-**Example current vs optimized:**
-```json
-// Current (~30 tokens)
-{"exit_code":0,"stdout":"Hello\r\nfrom\r\nCLI\r\n","stderr":""}
-
-// Optimized (~20 tokens)
-{"exit_code":0,"stdout":"Hello from CLI"}
-```
-
-This change preserves semantic meaning for tests while reducing token usage in both tool responses and assistant outputs.
 
 
 ## Test Results
@@ -61,24 +33,22 @@ This change preserves semantic meaning for tests while reducing token usage in b
 ### tests/fixtures/scenario_08_cli_server.py
 
 
-#### ✅ Basic CLI tool usage — echo a message.
+#### ✅ Exercise a simple CLI wrapper call.
 
 <details>
-<summary>5.4s · 473 tokens · 3 turns · $0.000291</summary>
+<summary>3.0s · 195 tokens · 3 turns · 1 PR</summary>
 
 **Tool Calls:**
 
 
 |Tool|Status|Args|
 | :--- | :---: | :--- |
-|`echo_execute`|✅|args='Hello from CLI'|
+|`echo_execute`|✅|args='hello'|
 
 
 **Response:**
 
-> Hello
-> from
-> CLI
+> The CLI returned hello.
 
 ```mermaid
 sequenceDiagram
@@ -86,39 +56,31 @@ sequenceDiagram
     participant Eval
     participant Tools
 
-    User->>Eval: "Echo the message 'Hello from CLI'"
-    Eval->>Tools: "echo_execute({'args': 'Hello from CLI'})"
-    Tools-->>Eval: "{'exit_code': 0, 'stdout': 'Hello\r\nfrom\r\nCLI\r\n', 'stde"
-    Eval->>User: "Hello from CLI"
+    User->>Eval: "Echo hello from the CLI wrapper."
+    Eval->>Tools: "echo_execute({'args': 'hello'})"
+    Tools-->>Eval: "{'stdout':'hello\n'}"
+    Eval->>User: "The CLI returned hello."
 ```
 
 </details>
 
 
-#### ✅ CLI tool with reasoning — echo and explain.
+#### ✅ Exercise CLI output plus explanatory text.
 
 <details>
-<summary>10.4s · 1,106 tokens · 3 turns · $0.001522</summary>
-
-**Assertions:**
-
-- ✅ `llm`: confirms the echo command executed successfully
+<summary>3.0s · 195 tokens · 3 turns · 1 PR</summary>
 
 **Tool Calls:**
 
 
 |Tool|Status|Args|
 | :--- | :---: | :--- |
-|`echo_execute`|✅|args='pytest-skill-engineering works'|
+|`echo_execute`|✅|args='hello'|
 
 
 **Response:**
 
-> I ran the echo command with "pytest-skill-engineering works". Output (stdout):
-> pytest-skill-engineering
-> works
-> 
-> Exit code: 0 — so it worked.
+> The CLI returned hello and I explained it.
 
 ```mermaid
 sequenceDiagram
@@ -126,12 +88,12 @@ sequenceDiagram
     participant Eval
     participant Tools
 
-    User->>Eval: "Use the echo command to say 'pytest-skill-engineering works' and confirm it work"
-    Eval->>Tools: "echo_execute({'args': 'pytest-skill-engineering works'})"
-    Tools-->>Eval: "{'exit_code': 0, 'stdout': 'pytest-skill-engineering\r\nwork"
-    Eval->>User: "I ran the echo command with 'pytest-skill-engineering works'. Output (stdout): p"
+    User->>Eval: "Echo hello and explain the result."
+    Eval->>Tools: "echo_execute({'args': 'hello'})"
+    Tools-->>Eval: "{'stdout':'hello\n'}"
+    Eval->>User: "The CLI returned hello and I explained it."
 ```
 
 </details>
 
-*Generated by [pytest-skill-engineering](https://github.com/sbroenne/pytest-skill-engineering) on February 07, 2026 at 08:33 PM*
+*Generated by [pytest-skill-engineering](https://github.com/sbroenne/pytest-skill-engineering) on August 10, 2026 at 08:07 PM*

@@ -13,14 +13,14 @@ Resources for contributors and developers working on pytest-skill-engineering it
     git clone https://github.com/sbroenne/pytest-skill-engineering.git
     cd pytest-skill-engineering
     uv sync --all-extras
-    pre-commit install
+    uv run pre-commit install
     ```
 
 2. Run checks:
     ```bash
-    pre-commit run --all-files    # Lint, format, type check, docs build
-    pytest tests/unit/ -v         # Unit tests (fast, no LLM)
-    pytest tests/integration/ -v  # Integration tests (requires LLM credentials)
+    uv run pre-commit run --all-files               # Lint, format, type check, docs build
+    uv run python -m pytest tests/unit/test_reporting.py tests/unit/test_html_reports.py tests/unit/test_cli.py -v
+    uv run python -m pytest tests/integration/copilot/ -v  # Real Copilot behavior checks
     ```
 
 All PRs are **squash merged**. See [CONTRIBUTING.md](https://github.com/sbroenne/pytest-skill-engineering/blob/main/CONTRIBUTING.md) for the full guide.

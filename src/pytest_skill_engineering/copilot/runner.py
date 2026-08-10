@@ -125,6 +125,18 @@ def _is_transient_error(error: str | None) -> bool:
     return any(pattern in error for pattern in _TRANSIENT_PATTERNS)
 
 
+async def _stop_client_safely(client: Any) -> None:
+    """Best-effort client cleanup that never masks the primary execution result."""
+    try:
+        await client.stop()
+    except Exception:
+        logger.warning("Failed to stop Copilot CLI cleanly, force stopping", exc_info=True)
+        try:
+            await client.force_stop()
+        except Exception:
+            logger.warning("force_stop also failed", exc_info=True)
+
+
 async def _run_copilot_once(agent: "CopilotEval", prompt: str) -> "CopilotResult":
     """Execute a single attempt of a prompt against GitHub Copilot."""
     # Pass GITHUB_TOKEN from environment for CI authentication.
@@ -206,10 +218,6 @@ async def _run_copilot_once(agent: "CopilotEval", prompt: str) -> "CopilotResult
         return result
 
     finally:
-        try:
-            await client.stop()
-        except Exception:
-            logger.warning("Failed to stop Copilot CLI cleanly, force stopping")
-            await client.force_stop()
+        await _stop_client_safely(client)
 
     return mapper.build()

@@ -18,6 +18,8 @@ import pytest
 
 from pytest_skill_engineering.copilot.eval import CopilotEval
 
+from .conftest import DEFAULT_MODEL
+
 
 @pytest.mark.copilot
 class TestReasoningEffort:
@@ -32,6 +34,7 @@ class TestReasoningEffort:
         """
         agent = CopilotEval(
             name="high-reasoning",
+            model=DEFAULT_MODEL,
             reasoning_effort="high",
             instructions="Think carefully before coding.",
             working_directory=str(tmp_path),
@@ -54,6 +57,7 @@ class TestUsageTracking:
         """Usage info (tokens, cost) is populated from assistant.usage events."""
         agent = CopilotEval(
             name="usage-tracker",
+            model=DEFAULT_MODEL,
             instructions="Create files as requested.",
             working_directory=str(tmp_path),
         )
@@ -72,6 +76,7 @@ class TestUsageTracking:
         """
         agent = CopilotEval(
             name="token-dict",
+            model=DEFAULT_MODEL,
             instructions="Create files as requested.",
             working_directory=str(tmp_path),
         )
@@ -87,6 +92,7 @@ class TestUsageTracking:
         """Premium requests from the SDK is non-negative."""
         agent = CopilotEval(
             name="cost-check",
+            model=DEFAULT_MODEL,
             instructions="Create files as requested.",
             working_directory=str(tmp_path),
         )
@@ -98,6 +104,7 @@ class TestUsageTracking:
         """model_used is populated from the SDK session or usage events."""
         agent = CopilotEval(
             name="model-check",
+            model=DEFAULT_MODEL,
             instructions="Create files as requested.",
             working_directory=str(tmp_path),
         )
@@ -117,6 +124,7 @@ class TestEventCapture:
         """raw_events captures the full SDK event stream."""
         agent = CopilotEval(
             name="event-capture",
+            model=DEFAULT_MODEL,
             instructions="Create files as requested.",
             working_directory=str(tmp_path),
         )
@@ -128,6 +136,7 @@ class TestEventCapture:
         """Tool calls are captured in result.all_tool_calls."""
         agent = CopilotEval(
             name="tool-capture",
+            model=DEFAULT_MODEL,
             instructions="Create files as requested.",
             working_directory=str(tmp_path),
         )

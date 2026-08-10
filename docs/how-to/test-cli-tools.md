@@ -1,271 +1,88 @@
 ---
-description: "Test command-line tools with AI agents. Wrap CLI tools as MCP-compatible servers and validate LLM interactions."
+description: "Test CLI workflows with Copilot's native shell tools, or document CLIServer correctly when you need a wrapped CLI tool."
 ---
 
-# How to Test CLI Tools
+# How to test CLI tools
 
-Wrap command-line tools as MCP-like servers for testing CLI-based interfaces.
+For Copilot workflows, the simplest path is usually to let Copilot use its native shell tools in a controlled working directory.
 
-## Basic Setup
-
-```python
-from pytest_skill_engineering import CLIServer
-
-
-@pytest.fixture(scope="module")
-def git_server():
-    return CLIServer(
-        name="git-cli",
-        command="git",
-        tool_prefix="git",  # Creates "git_execute" tool
-    )
-```
-
-## How It Works
-
-The CLI server wraps any command-line tool and exposes it as a single tool that accepts arguments:
-
-1. **Creates a tool**: `{tool_prefix}_execute` that accepts an `args` parameter
-2. **LLM discovers usage**: The LLM must run `--help` itself to discover CLI capabilities
-3. **Returns structured output**: JSON with `exit_code`, `stdout`, `stderr`
-
-!!! note "Why no auto-discovery?"
-    By default, help discovery is disabled. This tests that your skill/prompt properly instructs the LLM to discover CLI capabilities itself. Set `discover_help=True` to pre-populate the tool description.
+## Preferred pattern: native shell workflow
 
 ```python
-# The LLM calls the tool like this:
-git_execute(args="status --porcelain")
-git_execute(args="log -n 5 --oneline")
-```
-
-## Configuration Options
-
-```python
-CLIServer(
-    name="git-cli",  # Server identifier (required)
-    command="git",  # CLI executable (required)
-    tool_prefix="git",  # Tool name prefix (default: command name)
-    shell="bash",  # Shell to use (optional)
-    cwd="/path/to/repo",  # Working directory (optional)
-    env={"KEY": "value"},  # Environment variables (optional)
-    discover_help=False,  # Default: LLM must discover CLI usage itself
-    help_flag="--help",  # Flag to get help text (default: --help)
-    description=None,  # Custom description (overrides help discovery)
-)
-```
-
-| Option | Description | Default |
-|--------|-------------|---------|
-| `name` | Server identifier | Required |
-| `command` | CLI executable to wrap | Required |
-| `tool_prefix` | Prefix for generated tool name | Command name |
-| `shell` | Shell to run commands in | Auto-detect |
-| `cwd` | Working directory | Current directory |
-| `env` | Environment variables | `{}` |
-| `discover_help` | Run help flag for tool description | `False` |
-| `help_flag` | Flag to get help text (when `discover_help=True`) | `--help` |
-| `description` | Custom tool description | `None` |
-
-## Shell Selection
-
-The shell is auto-detected based on platform:
-
-| Platform | Default | Available |
-|----------|---------|-----------|
-| Linux/macOS | `bash` | `bash`, `sh`, `zsh` |
-| Windows | `powershell` | `powershell`, `pwsh`, `cmd` |
-
-```python
-# Explicit shell selection
-CLIServer(
-    name="dir-cli",
-    command="dir",
-    tool_prefix="dir",
-    shell="cmd",  # Use cmd.exe on Windows
-)
-```
-
-## Help Discovery
-
-By default, help discovery is **disabled** (`discover_help=False`). This tests whether your skill or system prompt properly instructs the LLM to discover CLI capabilities itself by running `--help`.
-
-```python
-# Default: LLM must discover help itself
-CLIServer(
-    name="kubectl",
-    command="kubectl",
-    tool_prefix="k8s",
-)
-
-# Enable auto-discovery (pre-populates tool description with --help output)
-CLIServer(
-    name="kubectl",
-    command="kubectl",
-    tool_prefix="k8s",
-    discover_help=True,
-)
-
-# Auto-discovery with custom help flag
-CLIServer(
-    name="custom-cli",
-    command="my-tool",
-    tool_prefix="tool",
-    discover_help=True,
-    help_flag="-h",
-)
-```
-
-Help text is truncated to 2000 characters to avoid token bloat.
-
-## Custom Description
-
-When help discovery is disabled (the default), you can provide a custom description:
-
-```python
-CLIServer(
-    name="legacy-cli",
-    command="legacy-tool",
-    tool_prefix="legacy",
-    description="""
-    Manages legacy data files.
-    
-    Commands:
-    - list: List all records
-    - get <id>: Get a specific record
-    - delete <id>: Delete a record
-    - export <format>: Export data (json, csv)
-    """,
-)
-```
-
-## Tool Output Format
-
-Tool results are JSON with structured output:
-
-```json
-{
-  "exit_code": 0,
-  "stdout": "M README.md\nA new-file.txt",
-  "stderr": ""
-}
-```
-
-## Complete Example: Testing Git
-
-```python
-import pytest
-from pytest_skill_engineering import CLIServer
 from pytest_skill_engineering.copilot import CopilotEval
 
 
-@pytest.fixture(scope="module")
-def git_server():
-    return CLIServer(
-        name="git-cli",
-        command="git",
-        tool_prefix="git",
-        cwd="/path/to/repo",
+async def test_git_status(copilot_eval, tmp_path):
+    agent = CopilotEval(
+        name="git-helper",
+        model="gpt-5.4-mini",
+        instructions="Use terminal tools to inspect the repository state.",
+        working_directory=str(tmp_path),
     )
 
-
-@pytest.fixture
-def git_agent():
-    return CopilotEval(
-        name="git-assistant",
-        instructions="You are a git assistant.",
-    )
-
-
-async def test_git_status(copilot_eval, git_agent):
-    result = await copilot_eval(git_agent, "What's the repo status?")
+    result = await copilot_eval(agent, "Show me the repository status")
 
     assert result.success
-    assert result.tool_was_called("git_execute")
+```
+
+## When you have a wrapped CLI tool
+
+`CLIServer` is a lower-level helper for wrapping a CLI as a tool surface.
+Its constructor does **not** take `name=`.
+
+```python
+from pytest_skill_engineering import CLIServer
 
 
-async def test_git_log(copilot_eval, git_agent):
-    result = await copilot_eval(git_agent, "Show me the last 3 commits")
+git_server = CLIServer(
+    command="git",
+    tool_prefix="git",
+    discover_help=True,
+)
+```
+
+## Configuration options
+
+```python
+CLIServer(
+    command="git",
+    tool_prefix="git",
+    cwd="/path/to/repo",
+    env={"LC_ALL": "C"},
+    discover_help=False,
+    help_flag="--help",
+    description="Run git commands through a single wrapped tool.",
+)
+```
+
+## Complete Copilot-facing example
+
+If you expose a CLI through your own MCP wrapper, attach that wrapper to `CopilotEval` using `mcp_servers={...}`:
+
+```python
+import sys
+
+from pytest_skill_engineering.copilot import CopilotEval
+
+
+GIT_MCP = {
+    "git": {
+        "command": sys.executable,
+        "args": ["-m", "my_project.git_mcp"],
+        "tools": ["*"],
+    }
+}
+
+
+async def test_git_log(copilot_eval):
+    agent = CopilotEval(
+        name="git-mcp",
+        model="gpt-5.4-mini",
+        instructions="Use the git tools to inspect repository history.",
+        mcp_servers=GIT_MCP,
+    )
+
+    result = await copilot_eval(agent, "Show me the last three commits")
 
     assert result.success
-    assert result.tool_was_called("git_execute")
 ```
-
-## Combining MCP and CLI Servers
-
-```python
-@pytest.fixture(scope="module")
-def filesystem_server():
-    return MCPServer(
-        command=["npx", "-y", "@modelcontextprotocol/server-filesystem", "/tmp"],
-        wait=Wait.for_tools(["read_file", "write_file"]),
-    )
-
-
-@pytest.fixture(scope="module")
-def grep_server():
-    return CLIServer(
-        name="grep-cli",
-        command="grep",
-        tool_prefix="search",
-    )
-
-
-@pytest.fixture
-def hybrid_agent():
-    return CopilotEval(
-        name="hybrid",
-        instructions="You can read/write files and search content.",
-    )
-```
-
-## Troubleshooting
-
-### Command Not Found
-
-Use the full path:
-
-```python
-CLIServer(
-    name="my-cli",
-    command="/usr/local/bin/my-tool",
-    tool_prefix="tool",
-)
-```
-
-### Help Discovery Fails
-
-If you've enabled `discover_help=True` and it fails, either use a custom description or leave discovery disabled and let the LLM discover help itself:
-
-```python
-# Option 1: Provide custom description
-CLIServer(
-    name="my-cli",
-    command="my-tool",
-    tool_prefix="tool",
-    description="Tool for managing resources. Run --help for usage.",
-)
-
-# Option 2: Let LLM discover (default behavior)
-CLIServer(
-    name="my-cli",
-    command="my-tool",
-    tool_prefix="tool",
-)
-```
-
-### Working Directory Issues
-
-Use absolute paths:
-
-```python
-from pathlib import Path
-
-CLIServer(
-    name="my-cli",
-    command="my-tool",
-    tool_prefix="tool",
-    cwd=str(Path(__file__).parent / "workspace"),
-)
-```
-
-> 📁 **Real Example:** [copilot/test_09_cli.py](https://github.com/sbroenne/pytest-skill-engineering/blob/main/tests/integration/copilot/test_09_cli.py) — CLI workflow testing

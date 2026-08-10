@@ -16,6 +16,50 @@ from pytest_skill_engineering.cli import (
 from pytest_skill_engineering.reporting.collector import SuiteReport
 
 
+def _minimal_eval_result(
+    *, success: bool = True, duration_ms: float = 100.0, response: str = "Done."
+) -> dict[str, object]:
+    return {
+        "turns": [{"role": "assistant", "content": response, "tool_calls": []}],
+        "success": success,
+        "error": None if success else "boom",
+        "duration_ms": duration_ms,
+        "token_usage": {"prompt": 10, "completion": 5},
+        "cost_usd": 0.0,
+        "session_context_count": 0,
+        "assertions": [],
+        "available_tools": [],
+        "skill_info": None,
+        "effective_system_prompt": "Test system prompt.",
+        "mcp_prompts": [],
+        "prompt_name": None,
+        "custom_agent_info": None,
+        "premium_requests": 0.0,
+        "instruction_files": [],
+        "clarification_stats": None,
+    }
+
+
+def _test_entry(
+    name: str,
+    *,
+    outcome: str = "passed",
+    duration_ms: float = 100.0,
+    agent_id: str = "test-agent",
+    eval_name: str = "test-agent",
+    model: str = "test-model",
+) -> dict[str, object]:
+    return {
+        "name": name,
+        "outcome": outcome,
+        "duration_ms": duration_ms,
+        "eval_result": _minimal_eval_result(success=outcome == "passed", duration_ms=duration_ms),
+        "agent_id": agent_id,
+        "eval_name": eval_name,
+        "model": model,
+    }
+
+
 class TestConfigLoading:
     """Tests for configuration loading from pyproject.toml and env vars."""
 
@@ -64,7 +108,7 @@ class TestConfigLoading:
 class TestLoadSuiteReport:
     """Tests for loading SuiteReport from JSON."""
 
-    def test_load_v2_report(self, tmp_path: Path) -> None:
+    def test_load_v3_report(self, tmp_path: Path) -> None:
         json_data = {
             "schema_version": "3.0",
             "name": "test-suite",
@@ -74,30 +118,22 @@ class TestLoadSuiteReport:
             "failed": 1,
             "skipped": 0,
             "tests": [
-                {
-                    "name": "test_a",
-                    "outcome": "passed",
-                    "duration_ms": 100.0,
-                    "agent_id": "a1",
-                    "eval_name": "a1",
-                    "model": "gpt-5.4-mini",
-                },
-                {
-                    "name": "test_b",
-                    "outcome": "passed",
-                    "duration_ms": 200.0,
-                    "agent_id": "a1",
-                    "eval_name": "a1",
-                    "model": "gpt-5.4-mini",
-                },
-                {
-                    "name": "test_c",
-                    "outcome": "failed",
-                    "duration_ms": 300.0,
-                    "agent_id": "a1",
-                    "eval_name": "a1",
-                    "model": "gpt-5.4-mini",
-                },
+                _test_entry("test_a", agent_id="a1", eval_name="a1", model="gpt-5.4-mini"),
+                _test_entry(
+                    "test_b",
+                    duration_ms=200.0,
+                    agent_id="a1",
+                    eval_name="a1",
+                    model="gpt-5.4-mini",
+                ),
+                _test_entry(
+                    "test_c",
+                    outcome="failed",
+                    duration_ms=300.0,
+                    agent_id="a1",
+                    eval_name="a1",
+                    model="gpt-5.4-mini",
+                ),
             ],
         }
         json_path = tmp_path / "results.json"
@@ -124,6 +160,7 @@ class TestLoadSuiteReport:
             "tests": [],
             "insights": {
                 "markdown_summary": "All tests passed successfully.",
+                "model": "test-model",
                 "cost_usd": 0.01,
                 "tokens_used": 500,
                 "cached": False,
@@ -152,6 +189,73 @@ class TestLoadSuiteReport:
         import pytest
 
         with pytest.raises(ValueError, match="Unsupported schema version"):
+            load_suite_report(json_path)
+
+    def test_missing_eval_result_in_current_schema_raises(self, tmp_path: Path) -> None:
+        json_path = tmp_path / "results.json"
+        json_path.write_text(
+            json.dumps(
+                {
+                    "schema_version": "3.0",
+                    "name": "bad-suite",
+                    "timestamp": "2026-01-31T12:00:00Z",
+                    "duration_ms": 100.0,
+                    "passed": 1,
+                    "failed": 0,
+                    "skipped": 0,
+                    "tests": [
+                        {
+                            "name": "test_a",
+                            "outcome": "passed",
+                            "duration_ms": 100.0,
+                            "agent_id": "a1",
+                            "eval_name": "a1",
+                            "model": "gpt-5.4-mini",
+                        }
+                    ],
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        import pytest
+
+        with pytest.raises(ValueError, match="missing required field 'eval_result'"):
+            load_suite_report(json_path)
+
+    def test_missing_premium_requests_in_current_schema_raises(self, tmp_path: Path) -> None:
+        broken_result = _minimal_eval_result()
+        broken_result.pop("premium_requests")
+        json_path = tmp_path / "results.json"
+        json_path.write_text(
+            json.dumps(
+                {
+                    "schema_version": "3.0",
+                    "name": "bad-suite",
+                    "timestamp": "2026-01-31T12:00:00Z",
+                    "duration_ms": 100.0,
+                    "passed": 1,
+                    "failed": 0,
+                    "skipped": 0,
+                    "tests": [
+                        {
+                            "name": "test_a",
+                            "outcome": "passed",
+                            "duration_ms": 100.0,
+                            "eval_result": broken_result,
+                            "agent_id": "a1",
+                            "eval_name": "a1",
+                            "model": "gpt-5.4-mini",
+                        }
+                    ],
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        import pytest
+
+        with pytest.raises(ValueError, match="missing required field 'premium_requests'"):
             load_suite_report(json_path)
 
 
@@ -209,16 +313,7 @@ class TestMainCLI:
             "passed": 1,
             "failed": 0,
             "skipped": 0,
-            "tests": [
-                {
-                    "name": "test_a",
-                    "outcome": "passed",
-                    "duration_ms": 100.0,
-                    "agent_id": "test-agent",
-                    "eval_name": "test-agent",
-                    "model": "test-model",
-                }
-            ],
+            "tests": [_test_entry("test_a")],
             "insights": {
                 "markdown_summary": "All tests passed.",
                 "model": "test-model",
@@ -247,16 +342,7 @@ class TestMainCLI:
             "passed": 1,
             "failed": 0,
             "skipped": 0,
-            "tests": [
-                {
-                    "name": "test_a",
-                    "outcome": "passed",
-                    "duration_ms": 100.0,
-                    "agent_id": "test-agent",
-                    "eval_name": "test-agent",
-                    "model": "test-model",
-                }
-            ],
+            "tests": [_test_entry("test_a")],
         }
         json_path = tmp_path / "results.json"
         json_path.write_text(json.dumps(json_data), encoding="utf-8")
@@ -277,16 +363,7 @@ class TestMainCLI:
             "passed": 1,
             "failed": 0,
             "skipped": 0,
-            "tests": [
-                {
-                    "name": "test_a",
-                    "outcome": "passed",
-                    "duration_ms": 100.0,
-                    "agent_id": "test-agent",
-                    "eval_name": "test-agent",
-                    "model": "test-model",
-                }
-            ],
+            "tests": [_test_entry("test_a")],
             "insights": {
                 "markdown_summary": "Existing insights",
                 "model": "test-model",

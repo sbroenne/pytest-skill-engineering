@@ -15,60 +15,31 @@ Releases are triggered via **GitHub Actions workflow dispatch**. No manual taggi
 1. Navigate to [Actions → Release](https://github.com/sbroenne/pytest-skill-engineering/actions/workflows/release.yml)
 2. Click **"Run workflow"**
 3. Select the branch (typically `main`)
-4. Choose the version bump type:
-   - **patch** (default) — Bug fixes, backwards-compatible changes
-   - **minor** — New features, backwards-compatible
-   - **major** — Breaking changes
-5. Optionally, specify a custom version to override automatic versioning
-6. Click **"Run workflow"**
-
-### Version Bump Examples
-
-| Current | Bump Type | New Version |
-|---------|-----------|-------------|
-| 0.2.0   | patch     | 0.2.1       |
-| 0.2.0   | minor     | 0.3.0       |
-| 0.2.0   | major     | 1.0.0       |
-
-Custom versions can be any valid semver string (e.g., `1.2.3`, `2.0.0-beta.1`).
+4. Confirm you are running from the commit whose checked-in `project.version` you want to release
+5. Click **"Run workflow"**
 
 ## What Happens During Release
 
 The release workflow automatically:
 
-1. **Calculates version** — Uses `custom_version` when provided. Otherwise, if `pyproject.toml` is already ahead of the latest git tag, releases that version as-is. If not, increments the latest git tag based on your selection.
-2. **Updates pyproject.toml** — Writes the new version to the package metadata
-3. **Builds package** — Creates wheel and source distribution
-4. **Tests build** — Installs and verifies the package
-5. **Creates git tag** — Tags the commit with the version (e.g., `v0.2.1`)
-6. **Publishes to PyPI** — Uploads the package using trusted publishing
-7. **Creates GitHub release** — Generates release notes and attaches artifacts
-8. **Deploys documentation** — Updates the docs site with the new version
+1. **Validates checked-in metadata** — Reads `pyproject.toml`, requires plain `X.Y.Z`, and verifies it agrees with any existing tag on the commit
+2. **Creates the matching git tag** — If `vX.Y.Z` does not exist yet, the workflow creates it from the current commit
+3. **Builds from the tag** — The package build runs from a checkout of `vX.Y.Z`, so the tagged source is the release source of truth
+4. **Verifies artifacts** — Confirms source metadata, wheel metadata, sdist metadata, and an installed wheel all report the same version
+5. **Publishes to PyPI** — Uploads the package using trusted publishing
+6. **Creates GitHub release** — Generates release notes and attaches artifacts
+7. **Deploys documentation** — Builds docs from the same tag and fails if docs source metadata drifts
 
 ## Version Management
 
 !!! note "Version source of truth"
-    The release workflow prefers `custom_version`, otherwise it will release the checked-in `pyproject.toml` version when it is already ahead of the latest tag. If `pyproject.toml` is not ahead, the workflow computes the next version from the latest tag.
+    `pyproject.toml` is the release source of truth. The checked-in `project.version` must already be the version you intend to publish, and the matching `vX.Y.Z` tag must resolve to that exact source tree.
 
-The workflow scans all `v*` tags and uses the highest semantic version as the latest release tag. If no tags exist, it starts from `v0.0.0`.
+The workflow scans existing `v*` tags only to prevent version regressions and to detect whether the matching tag already exists on the release commit.
 
-This means a repository version like `0.5.7` will no longer be ignored just because the latest published tag is still `v0.3.0`.
+## Pre-releases and Special Versions
 
-## Custom Versions
-
-Use custom versions for special releases:
-
-```yaml
-# Pre-release versions
-custom_version: 1.0.0-alpha.1
-custom_version: 2.0.0-beta.2
-custom_version: 1.5.0-rc.1
-
-# Specific version
-custom_version: 3.2.1
-```
-
-Custom versions bypass automatic version calculation. Ensure they follow semantic versioning.
+Pre-releases and special versions still follow the same rule: update `project.version` in source first, then run the workflow from that commit.
 
 ## Troubleshooting
 
@@ -76,9 +47,9 @@ Custom versions bypass automatic version calculation. Ensure they follow semanti
 
 If the workflow fails with "Tag already exists", either:
 
-- Use a custom version that hasn't been released
-- Delete the existing tag if it was created in error
-- Increment the version manually
+- Run the workflow from the already-tagged commit if that is the intended release source
+- Bump `project.version` in source and tag the new commit instead
+- Delete the existing tag only if it was created in error
 
 ### Build or test failures
 
@@ -86,12 +57,12 @@ The workflow stops before tagging if build or tests fail. Fix the issues and re-
 
 ### PyPI publish failures
 
-If PyPI publishing fails, the tag and release already exist. You may need to:
+If PyPI publishing fails, the tag and release may already exist. You may need to:
 
-1. Delete the tag: `git tag -d vX.Y.Z && git push origin :refs/tags/vX.Y.Z`
-2. Delete the GitHub release
+1. Confirm the tagged source metadata is correct
+2. Delete the GitHub release if it was partially created
 3. Fix the issue
-4. Re-run the workflow
+4. Re-run the workflow from the same tag if PyPI was not published, or bump the source version for a new release if it was
 
 ## Prerequisites
 

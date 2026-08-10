@@ -82,7 +82,9 @@ def _test_metrics(
         return div(".flex.items-center.gap-4.text-sm.text-text-muted")[metrics_items]
 
     selected_results = [
-        result for agent_id in selected_agent_ids if (result := test.results_by_agent.get(agent_id))
+        result
+        for agent_id in selected_agent_ids
+        if (result := test.results_by_agent_id.get(agent_id))
     ]
     if not selected_results:
         return None
@@ -147,12 +149,35 @@ def _agent_result_badge(
 
     return div(
         class_=f"agent-result-item flex items-center gap-2 text-xs {hidden_class}",
-        data_agent_id=agent.id,
+        data_agent_id=agent.agent_id,
     )[
-        span(".text-text-muted")[f"{agent.name}:"],
+        span(".text-text-muted")[f"{agent.display_name}:"],
         status,
         duration,
     ]
+
+
+def _display_result(
+    test: TestData,
+    *,
+    comparison_mode: bool,
+    selected_agent_ids: list[str],
+) -> TestResultData | None:
+    """Pick a representative result for the row status.
+
+    In comparison mode, any failing compared result should make the row fail.
+    """
+    if not comparison_mode:
+        return next(iter(test.results_by_agent_id.values()), None)
+
+    selected_results = [
+        result
+        for agent_id in selected_agent_ids
+        if (result := test.results_by_agent_id.get(agent_id))
+    ]
+    if not selected_results:
+        return None
+    return next((result for result in selected_results if not result.passed), selected_results[0])
 
 
 def _test_row(
@@ -163,12 +188,12 @@ def _test_row(
     comparison_mode: bool,
 ) -> Node:
     """Render a single test row."""
-    # Get first result for default display
-    first_result = None
-    if test.results_by_agent:
-        first_result = next(iter(test.results_by_agent.values()), None)
-
     selected_set = set(selected_agent_ids)
+    display_result = _display_result(
+        test,
+        comparison_mode=comparison_mode,
+        selected_agent_ids=selected_agent_ids,
+    )
 
     # Comparison mode inline results
     comparison_badges = None
@@ -177,7 +202,7 @@ def _test_row(
             [
                 _agent_result_badge(
                     agents_by_id[agent_id],
-                    test.results_by_agent.get(agent_id),
+                    test.results_by_agent_id.get(agent_id),
                     agent_id in selected_set,
                 )
                 for agent_id in all_agent_ids
@@ -186,7 +211,7 @@ def _test_row(
 
     return div(
         class_="test-row border-b border-white/5",
-        data_test_id=test.id,
+        data_test_id=test.case_id,
         data_has_diff="true" if test.has_difference else "false",
         data_has_failed="true" if test.has_failed else "false",
     )[
@@ -197,11 +222,11 @@ def _test_row(
         )[
             div(".flex.items-center.justify-between")[
                 div(".flex.items-center.gap-3.min-w-0.flex-1")[
-                    _status_icon(first_result),
+                    _status_icon(display_result),
                     span(".text-text-light.truncate")[test.display_name],
                     _diff_indicator(test.has_difference),
                 ],
-                _test_metrics(test, first_result, comparison_mode, selected_agent_ids),
+                _test_metrics(test, display_result, comparison_mode, selected_agent_ids),
             ],
             comparison_badges,
         ],
@@ -225,7 +250,7 @@ def _group_header(
     if comparison_mode:
         stats_list = []
         for agent_id in selected_agent_ids:
-            stats = group.agent_stats.get(agent_id)
+            stats = group.agent_stats_by_id.get(agent_id)
             if stats:
                 status_class = "text-green-400" if stats.failed == 0 else "text-red-400"
                 total = stats.passed + stats.failed

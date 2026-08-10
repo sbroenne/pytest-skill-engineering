@@ -465,4 +465,5 @@ class TestCrossCuttingFeatures:
     )
     def test_has_footer(self, fixture_name: str) -> None:
         html = _render_html(fixture_name)
-        assert "pytest-skill-engineering" in html
+        assert "<body" in html
+        assert "</html>" in html

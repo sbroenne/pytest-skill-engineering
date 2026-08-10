@@ -15,6 +15,8 @@ import pytest
 
 from pytest_skill_engineering.copilot.eval import CopilotEval
 
+from .conftest import DEFAULT_MODEL
+
 pytestmark = [pytest.mark.copilot]
 
 
@@ -25,6 +27,7 @@ class TestInstructionsDifferentiate:
         """Instructions requiring docstrings produce documented code."""
         agent = CopilotEval(
             name="documented-coder",
+            model=DEFAULT_MODEL,
             instructions=(
                 "You write fully documented Python. EVERY function MUST have:\n"
                 '- A docstring: """What this function does."""\n'
@@ -48,6 +51,7 @@ class TestInstructionsDifferentiate:
         """Instructions forbidding documentation produce minimal code."""
         agent = CopilotEval(
             name="minimal-coder",
+            model=DEFAULT_MODEL,
             instructions=(
                 "Write minimal Python code only. "
                 "NO docstrings whatsoever. NO type hints. NO comments of any kind. "
@@ -69,6 +73,7 @@ class TestInstructionsDifferentiate:
         """Instructions specifying FastAPI result in FastAPI being used."""
         agent = CopilotEval(
             name="fastapi-dev",
+            model=DEFAULT_MODEL,
             instructions=(
                 "You are a FastAPI specialist. ALWAYS use FastAPI for web APIs. "
                 "Never use Flask, Bottle, Starlette directly, or the standard library."
@@ -92,10 +97,12 @@ class TestInstructionsDifferentiate:
         """Instructions requiring defensive coding produce try/except blocks."""
         agent = CopilotEval(
             name="defensive-coder",
+            model=DEFAULT_MODEL,
             instructions=(
                 "Always write production-ready, defensive Python code. "
-                "All I/O operations MUST use try/except to handle failures explicitly. "
-                "Never let exceptions propagate uncaught from I/O functions."
+                "All file I/O operations MUST use an explicit try/except block. "
+                "Catching FileNotFoundError, PermissionError, and json.JSONDecodeError "
+                "is mandatory. Never let exceptions propagate uncaught from I/O functions."
             ),
             working_directory=str(tmp_path),
         )
@@ -118,6 +125,7 @@ class TestToolRestrictions:
         """Eval with run_in_terminal excluded never calls that tool."""
         agent = CopilotEval(
             name="no-terminal",
+            model=DEFAULT_MODEL,
             instructions="Create files as requested. Do not run any terminal commands.",
             working_directory=str(tmp_path),
             excluded_tools=["run_in_terminal"],

@@ -4,23 +4,17 @@ on:
   workflow_dispatch:
     inputs:
       test_path:
-        description: "Test path to run (default: all non-Copilot integration tests)"
+        description: "Copilot integration test path to run"
         required: false
-        default: "tests/integration/"
-      include_copilot:
-        description: "Include Copilot tests (requires Copilot credentials)"
-        required: false
-        default: "false"
-        type: choice
-        options: ["false", "true"]
+        default: "tests/integration/copilot/test_01_basic.py"
 
 jobs:
   integration-test:
     name: Integration Tests
     runs-on: ubuntu-latest
     permissions:
-      id-token: write
       contents: read
+      copilot-requests: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
@@ -37,20 +31,13 @@ jobs:
       - name: Install dependencies
         run: uv sync --all-extras
 
-      - name: Azure login (OIDC)
-        uses: azure/login@532459ea530d8321f2fb9bb10d1e0bcf23869a43 # v3
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
       - name: Run integration tests
         env:
-          AZURE_OPENAI_ENDPOINT: ${{ secrets.AZURE_OPENAI_ENDPOINT }}
-          AZURE_API_BASE: ${{ secrets.AZURE_OPENAI_ENDPOINT }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          IGNORE=""
-          if [ "${{ inputs.include_copilot }}" = "false" ]; then
-            IGNORE="--ignore=tests/integration/copilot"
+          TEST_PATH="${{ inputs.test_path }}"
+          if [ ! -e "$TEST_PATH" ]; then
+            echo "Requested test path does not exist: $TEST_PATH" >&2
+            exit 1
           fi
-          uv run pytest ${{ inputs.test_path }} -v --tb=short $IGNORE
+          uv run python -m pytest "$TEST_PATH" -v --tb=short

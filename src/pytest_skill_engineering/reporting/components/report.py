@@ -314,15 +314,17 @@ def _scripts_section(ctx: ReportContext) -> Node:
     agents_json = json.dumps(
         [
             {
-                "id": a.id,
-                "name": a.name,
+                "id": a.agent_id,
+                "name": a.display_name,
                 "pass_rate": a.pass_rate,
             }
             for a in ctx.agents
         ]
     )
 
-    agents_by_id_json = json.dumps({a.id: {"id": a.id, "name": a.name} for a in ctx.agents})
+    agents_by_id_json = json.dumps(
+        {a.agent_id: {"id": a.agent_id, "name": a.display_name} for a in ctx.agents}
+    )
 
     selected_ids_json = json.dumps(ctx.selected_agent_ids)
 

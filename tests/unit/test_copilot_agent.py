@@ -156,17 +156,17 @@ class TestParseAgentFile:
             encoding="utf-8",
         )
         result = _parse_agent_file(f)
-        assert result["name"] == "test-specialist"
-        assert result["description"] == "Writes tests"
-        assert result["prompt"] == "You are a testing specialist."
-        assert result["tools"] == ["read", "search"]
+        assert result.get("name") == "test-specialist"
+        assert result.get("description") == "Writes tests"
+        assert result.get("prompt") == "You are a testing specialist."
+        assert result.get("tools") == ["read", "search"]
 
     def test_without_frontmatter(self, tmp_path):
         f = tmp_path / "my-agent.agent.md"
         f.write_text("You are a helpful agent.", encoding="utf-8")
         result = _parse_agent_file(f)
-        assert result["name"] == "my-agent"
-        assert result["prompt"] == "You are a helpful agent."
+        assert result.get("name") == "my-agent"
+        assert result.get("prompt") == "You are a helpful agent."
         assert "description" not in result
         assert "tools" not in result
 
@@ -174,7 +174,7 @@ class TestParseAgentFile:
         f = tmp_path / "security-reviewer.agent.md"
         f.write_text("---\ndescription: Reviews security\n---\nCheck for vulns.", encoding="utf-8")
         result = _parse_agent_file(f)
-        assert result["name"] == "security-reviewer"
+        assert result.get("name") == "security-reviewer"
 
     def test_mcp_servers_key_normalised(self, tmp_path):
         f = tmp_path / "mcp-agent.agent.md"
@@ -211,8 +211,8 @@ class TestFromCopilotConfig:
         )
         agent = CopilotEval.from_copilot_config(tmp_path)
         assert len(agent.custom_agents) == 1
-        assert agent.custom_agents[0]["name"] == "tester"
-        assert agent.custom_agents[0]["prompt"] == "Write tests."
+        assert agent.custom_agents[0].get("name") == "tester"
+        assert agent.custom_agents[0].get("prompt") == "Write tests."
 
     def test_loads_from_custom_path(self, tmp_path):
         """Any arbitrary directory can be pointed at — not just 'the project'."""
@@ -224,7 +224,7 @@ class TestFromCopilotConfig:
         )
         agent = CopilotEval.from_copilot_config(config_dir)
         assert len(agent.custom_agents) == 1
-        assert agent.custom_agents[0]["name"] == "reviewer"
+        assert agent.custom_agents[0].get("name") == "reviewer"
 
     def test_overrides_applied(self, tmp_path):
         github = tmp_path / ".github"
@@ -246,5 +246,5 @@ class TestFromCopilotConfig:
             "---\nname: a-agent\n---\nA.", encoding="utf-8"
         )
         agent = CopilotEval.from_copilot_config(tmp_path)
-        names = [a["name"] for a in agent.custom_agents]
+        names = [a.get("name") for a in agent.custom_agents]
         assert names == ["a-agent", "b-agent"]  # sorted by filename

@@ -50,7 +50,7 @@ def _leaderboard_row(agent: AgentData, rank: int) -> Node:
         # Eval name
         td[
             div(".font-medium.text-text-light")[
-                span(class_="line-through" if agent.disqualified else "")[agent.name],
+                span(class_="line-through" if agent.disqualified else "")[agent.display_name],
                 (
                     span(".ml-2.text-xs.text-red-400")["below threshold"]
                     if agent.disqualified
@@ -107,7 +107,7 @@ def _single_agent_card(agent: AgentData) -> Node:
 
     return div(".card.p-5")[
         div(".flex.items-center.justify-between")[
-            div(".text-lg.font-medium.text-text-light")[agent.name],
+            div(".text-lg.font-medium.text-text-light")[agent.display_name],
             div(".text-right")[
                 div(class_=f"{status_class} text-2xl font-semibold tabular-nums")[
                     f"{agent.passed}/{agent.total}"

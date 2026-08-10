@@ -1,17 +1,72 @@
 {
-  "name": "pytest-skill-engineering",
-  "timestamp": "2026-02-07T19:39:58.046563",
-  "duration_ms": 72078.94730003318,
+  "name": "fixture-07-skill-improvement",
+  "timestamp": "2026-08-10T18:06:00+00:00",
+  "duration_ms": 6000.0,
   "tests": [
     {
-      "name": "tests/fixtures/scenario_07_skill_improvement.py::test_fund_allocation_advice[baseline]",
-      "outcome": "passed",
-      "duration_ms": 23865.081399999326,
+      "name": "tests/fixtures/scenario_07_skill_improvement.py::test_without_skill",
+      "outcome": "failed",
+      "duration_ms": 3000.0,
       "eval_result": {
         "turns": [
           {
             "role": "user",
-            "content": "How should I allocate the money across my accounts?",
+            "content": "Explain available account types.",
+            "tool_calls": []
+          },
+          {
+            "role": "assistant",
+            "content": "Accounts exist.",
+            "tool_calls": []
+          }
+        ],
+        "success": false,
+        "error": "AssertionError: expected banking terminology was missing",
+        "duration_ms": 3000.0,
+        "token_usage": {
+          "prompt": 130,
+          "completion": 65
+        },
+        "cost_usd": 0.0,
+        "session_context_count": 0,
+        "assertions": [],
+        "available_tools": [],
+        "skill_info": null,
+        "effective_system_prompt": "Fixture instructions for baseline.",
+        "mcp_prompts": [],
+        "prompt_name": null,
+        "custom_agent_info": null,
+        "premium_requests": 1.0,
+        "instruction_files": [],
+        "clarification_stats": null
+      },
+      "error": "AssertionError: expected banking terminology was missing",
+      "assertions": [
+        {
+          "type": "llm",
+          "passed": false,
+          "message": "uses domain-correct banking terminology",
+          "details": "Deterministic fixture assertion."
+        }
+      ],
+      "docstring": "Baseline agent without the skill.",
+      "class_docstring": null,
+      "agent_id": "baseline-no-skill",
+      "eval_name": "baseline",
+      "model": "gpt-5.4-mini",
+      "system_prompt_name": null,
+      "skill_name": null,
+      "iteration": null
+    },
+    {
+      "name": "tests/fixtures/scenario_07_skill_improvement.py::test_with_skill",
+      "outcome": "passed",
+      "duration_ms": 3000.0,
+      "eval_result": {
+        "turns": [
+          {
+            "role": "user",
+            "content": "Explain available account types.",
             "tool_calls": []
           },
           {
@@ -21,850 +76,69 @@
               {
                 "name": "get_all_balances",
                 "arguments": {},
-                "result": "{\"accounts\": {\"checking\": {\"balance\": 1500.0, \"formatted\": \"$1,500.00\"}, \"savings\": {\"balance\": 3000.0, \"formatted\": \"$3,000.00\"}}, \"total\": 4500.0, \"total_formatted\": \"$4,500.00\"}",
+                "result": "{\"checking\":\"$1,500.00\",\"savings\":\"$3,000.00\"}",
                 "error": null,
-                "duration_ms": 3.466000023763627
+                "duration_ms": 180.0,
+                "image_content": null,
+                "image_media_type": null
               }
             ]
           },
           {
             "role": "assistant",
-            "content": "Right now you have $4,500 total: $1,500 in checking and $3,000 in savings. How you should split it depends on your goals and monthly cash flow. A few quick questions that will let me give a specific plan:\n- How much are your typical monthly living expenses (rent/mortgage, bills, food, transport)?\n- Any upcoming large expenses in the next 6\u201312 months (car repair, vacation, tuition, down payment)?\n- Do you have high\u2011interest debt (credit cards) you\u2019re paying down?\n- Do you feel comfortable with the current cushion in your checking for monthly bills, or do you often overdraft?\n\nUntil I hear back, here are general guidelines and three simple allocation options you can pick based on your situation.\n\nKey rules of thumb\n- Emergency fund: aim for 3\u20136 months of essential expenses in savings. If your income is unstable or you have dependents, aim toward 6 months.\n- Checking buffer: keep enough in checking to cover one month of bills plus a small buffer ($500\u2013$1,000) to avoid overdrafts.\n- Short\u2011term goals (under 2 years): keep in savings or a dedicated short\u2011term account, not in stocks.\n- Long\u2011term investing: once emergency fund is in place and high\u2011interest debt is handled, redirect extra toward investments/retirement.\n\nExample allocations (based on different priorities)\n1) Conservative / safety-first\n- Goal: build emergency fund\n- Keep $1,500 in checking for monthly use\n- Move $1,500 from checking into savings so savings = $4,500 (larger emergency cushion)\nResult: checking $0\u2013not ideal unless you keep buffer; better: keep $1,000 in checking and transfer $500 \u2192 savings. I recommend leaving at least $500\u2013$1,000 in checking.\n\n2) Balanced / day-to-day + short-term goals\n- Keep $1,500 in checking (covers monthly bills)\n- Savings $3,000 remain for short-term goals or emergency top-up\n- Automate monthly transfer of a fixed amount into savings (e.g., $300/month)\n\n3) Aggressive savings / building emergency + investing\n- Keep $1,000 in checking\n- Move $500 from checking \u2192 savings now (savings = $3,500)\n- Any additional monthly surplus split 70% to investments/retirement, 30% to savings until emergency fund target met\n\nPractical next steps I recommend\n- Tell me your monthly expenses and goals so I can recommend an exact target emergency fund and a transfer amount.\n- If you want, I can move funds between your accounts now (tell me how much and which direction).\n- Set up automation: a weekly/biweekly/ monthly transfer into savings right after paydays.\n- Consider a separate savings sub-account or high-yield savings for goals to keep money organized and earning more interest.\n\nIf you want a specific suggestion now, tell me whether your priority is (A) build emergency fund, (B) save for a short-term goal, (C) pay down debt/invest \u2014 and I\u2019ll propose one exact transfer (and I can execute it if you\u2019d like).",
+            "content": "Checking handles daily spending, while savings earns interest.",
             "tool_calls": []
           }
         ],
         "success": true,
         "error": null,
-        "duration_ms": 15731.991799984826,
+        "duration_ms": 3000.0,
         "token_usage": {
-          "prompt": 902,
-          "completion": 1267
+          "prompt": 130,
+          "completion": 65
         },
-        "cost_usd": 0.0027595,
-        "_messages": [
-          {
-            "role": "system",
-            "content": "You are a helpful banking assistant.\nUse the available tools to manage accounts and answer questions."
-          },
-          {
-            "role": "user",
-            "content": "How should I allocate the money across my accounts?"
-          },
-          {
-            "content": null,
-            "role": "assistant",
-            "tool_calls": [
-              {
-                "function": {
-                  "arguments": "{}",
-                  "name": "get_all_balances"
-                },
-                "id": "call_0YNi7IDe1HTS5ECUJG2O2J6V",
-                "type": "function"
-              }
-            ],
-            "function_call": null,
-            "provider_specific_fields": {
-              "refusal": null
-            },
-            "annotations": []
-          },
-          {
-            "role": "tool",
-            "tool_call_id": "call_0YNi7IDe1HTS5ECUJG2O2J6V",
-            "content": "{\"accounts\": {\"checking\": {\"balance\": 1500.0, \"formatted\": \"$1,500.00\"}, \"savings\": {\"balance\": 3000.0, \"formatted\": \"$3,000.00\"}}, \"total\": 4500.0, \"total_formatted\": \"$4,500.00\"}"
-          },
-          {
-            "role": "assistant",
-            "content": "Right now you have $4,500 total: $1,500 in checking and $3,000 in savings. How you should split it depends on your goals and monthly cash flow. A few quick questions that will let me give a specific plan:\n- How much are your typical monthly living expenses (rent/mortgage, bills, food, transport)?\n- Any upcoming large expenses in the next 6\u201312 months (car repair, vacation, tuition, down payment)?\n- Do you have high\u2011interest debt (credit cards) you\u2019re paying down?\n- Do you feel comfortable with the current cushion in your checking for monthly bills, or do you often overdraft?\n\nUntil I hear back, here are general guidelines and three simple allocation options you can pick based on your situation.\n\nKey rules of thumb\n- Emergency fund: aim for 3\u20136 months of essential expenses in savings. If your income is unstable or you have dependents, aim toward 6 months.\n- Checking buffer: keep enough in checking to cover one month of bills plus a small buffer ($500\u2013$1,000) to avoid overdrafts.\n- Short\u2011term goals (under 2 years): keep in savings or a dedicated short\u2011term account, not in stocks.\n- Long\u2011term investing: once emergency fund is in place and high\u2011interest debt is handled, redirect extra toward investments/retirement.\n\nExample allocations (based on different priorities)\n1) Conservative / safety-first\n- Goal: build emergency fund\n- Keep $1,500 in checking for monthly use\n- Move $1,500 from checking into savings so savings = $4,500 (larger emergency cushion)\nResult: checking $0\u2013not ideal unless you keep buffer; better: keep $1,000 in checking and transfer $500 \u2192 savings. I recommend leaving at least $500\u2013$1,000 in checking.\n\n2) Balanced / day-to-day + short-term goals\n- Keep $1,500 in checking (covers monthly bills)\n- Savings $3,000 remain for short-term goals or emergency top-up\n- Automate monthly transfer of a fixed amount into savings (e.g., $300/month)\n\n3) Aggressive savings / building emergency + investing\n- Keep $1,000 in checking\n- Move $500 from checking \u2192 savings now (savings = $3,500)\n- Any additional monthly surplus split 70% to investments/retirement, 30% to savings until emergency fund target met\n\nPractical next steps I recommend\n- Tell me your monthly expenses and goals so I can recommend an exact target emergency fund and a transfer amount.\n- If you want, I can move funds between your accounts now (tell me how much and which direction).\n- Set up automation: a weekly/biweekly/ monthly transfer into savings right after paydays.\n- Consider a separate savings sub-account or high-yield savings for goals to keep money organized and earning more interest.\n\nIf you want a specific suggestion now, tell me whether your priority is (A) build emergency fund, (B) save for a short-term goal, (C) pay down debt/invest \u2014 and I\u2019ll propose one exact transfer (and I can execute it if you\u2019d like)."
-          }
-        ],
+        "cost_usd": 0.0,
         "session_context_count": 0,
         "assertions": [],
-        "available_tools": [
-          {
-            "name": "get_balance",
-            "description": "Get the current balance of a specific account (checking or savings).",
-            "input_schema": {
-              "type": "object",
-              "properties": {
-                "account": {
-                  "type": "string",
-                  "description": "Account name: 'checking' or 'savings'",
-                  "enum": [
-                    "checking",
-                    "savings"
-                  ]
-                }
-              },
-              "required": [
-                "account"
-              ]
-            },
-            "server_name": "pytest_skill_engineering.testing.banking_mcp"
-          },
-          {
-            "name": "get_all_balances",
-            "description": "Get balances for all accounts at once, including total.",
-            "input_schema": {
-              "type": "object",
-              "properties": {}
-            },
-            "server_name": "pytest_skill_engineering.testing.banking_mcp"
-          },
-          {
-            "name": "transfer",
-            "description": "Transfer money between accounts (checking and savings).",
-            "input_schema": {
-              "type": "object",
-              "properties": {
-                "from_account": {
-                  "type": "string",
-                  "description": "Source account name",
-                  "enum": [
-                    "checking",
-                    "savings"
-                  ]
-                },
-                "to_account": {
-                  "type": "string",
-                  "description": "Destination account name",
-                  "enum": [
-                    "checking",
-                    "savings"
-                  ]
-                },
-                "amount": {
-                  "type": "number",
-                  "description": "Amount to transfer in dollars"
-                }
-              },
-              "required": [
-                "from_account",
-                "to_account",
-                "amount"
-              ]
-            },
-            "server_name": "pytest_skill_engineering.testing.banking_mcp"
-          },
-          {
-            "name": "deposit",
-            "description": "Deposit money into an account.",
-            "input_schema": {
-              "type": "object",
-              "properties": {
-                "account": {
-                  "type": "string",
-                  "description": "Account to deposit into",
-                  "enum": [
-                    "checking",
-                    "savings"
-                  ]
-                },
-                "amount": {
-                  "type": "number",
-                  "description": "Amount to deposit in dollars"
-                }
-              },
-              "required": [
-                "account",
-                "amount"
-              ]
-            },
-            "server_name": "pytest_skill_engineering.testing.banking_mcp"
-          },
-          {
-            "name": "withdraw",
-            "description": "Withdraw money from an account.",
-            "input_schema": {
-              "type": "object",
-              "properties": {
-                "account": {
-                  "type": "string",
-                  "description": "Account to withdraw from",
-                  "enum": [
-                    "checking",
-                    "savings"
-                  ]
-                },
-                "amount": {
-                  "type": "number",
-                  "description": "Amount to withdraw in dollars"
-                }
-              },
-              "required": [
-                "account",
-                "amount"
-              ]
-            },
-            "server_name": "pytest_skill_engineering.testing.banking_mcp"
-          },
-          {
-            "name": "get_transactions",
-            "description": "Get recent transaction history, optionally filtered by account.",
-            "input_schema": {
-              "type": "object",
-              "properties": {
-                "account": {
-                  "type": "string",
-                  "description": "Optional: filter by account name",
-                  "enum": [
-                    "checking",
-                    "savings"
-                  ]
-                },
-                "limit": {
-                  "type": "integer",
-                  "description": "Maximum number of transactions to return (default: 10)",
-                  "default": 10
-                }
-              }
-            },
-            "server_name": "pytest_skill_engineering.testing.banking_mcp"
-          }
-        ],
+        "available_tools": [],
         "skill_info": null,
-        "effective_system_prompt": "You are a helpful banking assistant.\nUse the available tools to manage accounts and answer questions."
+        "effective_system_prompt": "Fixture instructions for with skill.",
+        "mcp_prompts": [],
+        "prompt_name": null,
+        "custom_agent_info": null,
+        "premium_requests": 1.0,
+        "instruction_files": [],
+        "clarification_stats": null
       },
       "error": null,
       "assertions": [
         {
           "type": "llm",
           "passed": true,
-          "message": "provides financial advice about fund allocation",
-          "details": "The content gives explicit financial advice on allocating funds (checking vs savings), provides rules of thumb, numerical example allocations and percentage splits, and recommends specific transfers and automation\u2014meeting the criterion."
+          "message": "uses domain-correct banking terminology",
+          "details": "Deterministic fixture assertion."
         }
       ],
-      "docstring": "Ask for allocation advice \u2014 skilled agent should apply 50/30/20 rule.",
+      "docstring": "Treatment agent with the financial-literacy skill.",
       "class_docstring": null,
-      "agent_id": "bcdf19f2-5315-4124-88f3-36677b59a55c",
-      "eval_name": "baseline",
-      "model": "gpt-5-mini",
+      "agent_id": "treatment-financial-literacy",
+      "eval_name": "with skill",
+      "model": "gpt-5.4-mini",
       "system_prompt_name": null,
-      "skill_name": null
-    },
-    {
-      "name": "tests/fixtures/scenario_07_skill_improvement.py::test_fund_allocation_advice[with-financial-skill]",
-      "outcome": "failed",
-      "duration_ms": 17714.165800018236,
-      "eval_result": {
-        "turns": [
-          {
-            "role": "user",
-            "content": "How should I allocate the money across my accounts?",
-            "tool_calls": []
-          },
-          {
-            "role": "assistant",
-            "content": "I can help \u2014 to give specific transfers I\u2019ll need a little info. Quick question first: do you want general guidance, or do you want me to look up your current balances and suggest exact transfers now?\n\nBelow is a short, practical plan you can use right away plus what I\u2019ll do if you want me to check your accounts.\n\nHigh-level rules (my priorities)\n- Emergency fund first: build 3\u20136 months of essential expenses in savings before other big goals.\n- Follow 50/30/20 as a baseline: 50% needs, 30% wants, 20% savings/debt repayment.\n- Pay yourself first: automate savings and debt payments as soon as pay arrives.\n- Avoid lifestyle creep: keep increases in spending tied to savings/investment goals.\n\nRecommended account allocation (general)\n- Checking: Enough to cover 1\u20132 months of regular bills and upcoming spending (rent/mortgage, utilities, loan payments, groceries). This is your operating account.\n- Savings (high-yield if possible): Emergency fund (3\u20136 months of essential expenses) + short-term sinking funds (vacation, car maintenance, big purchases). Once emergency fund target is hit, use savings for short-term goals or if you prefer, keep some in dedicated sub-accounts.\n- Retirement accounts (401(k), IRA): Contribute at least enough to get full employer match. Then aim to get to 10\u201320% of gross income toward retirement (after employer match).\n- Brokerage or other investment accounts: For long-term non-retirement goals once emergency savings and retirement match are covered.\n- Extra cash to pay down debt: If you have high\u2011interest debt (credit cards, payday loans), direct additional savings to pay that down before extra investing.\n\nPractical monthly allocation (based on take-home pay)\n- Needs (50%) \u2014 keep in/check from checking to pay bills\n- Wants (30%) \u2014 discretionary spending from checking\n- Savings & debt (20%) \u2014 split this automatically: \n  - First, to savings until emergency fund reaches 3\u20136 months\n  - Next, extra to high\u2011interest debt, then retirement/brokerage\n\nWhere to keep each dollar\n- Emergency fund: savings account (high-yield) \u2014 goal: 3\u20136 months of essentials\n- Monthly buffer: checking \u2014 1\u20132 months of expenses\n- Retirement contributions: payroll 401(k) pre-tax or Roth IRA \u2014 automated each paycheck\n- Short-term goals: savings sub-accounts or labeled buckets\n- Long-term investing: brokerage account or additional retirement contributions after debt/EF/retirement match\n\nExample (if your take-home is $4,000/month)\n- Needs: $2,000 (keeping $2,000 in checking for monthly bills)\n- Wants: $1,200 (spending from checking)\n- Savings/Debt: $800 \u2014 automate $500 \u2192 savings until EF complete, $300 \u2192 extra debt payment or IRA\n\nNext steps I can do for you (pick one)\n1) If you want tailored suggestions, tell me:\n   - monthly take-home pay\n   - monthly essential expenses (rent/mortgage, utilities, insurance, minimum debt payments, groceries)\n   - current checking & savings balances\n   - any high-interest debt amounts & interest rates\n   - retirement contributions/employer match\n2) I can fetch your current balances now and make recommended transfers \u2014 tell me which accounts (checking/savings) I may access and whether you want me to execute transfers automatically or just show a plan.\n\nWhich would you like me to do?",
-            "tool_calls": []
-          }
-        ],
-        "success": true,
-        "error": null,
-        "duration_ms": 11112.0981000131,
-        "token_usage": {
-          "prompt": 664,
-          "completion": 1319
-        },
-        "cost_usd": 0.0028039999999999996,
-        "_messages": [
-          {
-            "role": "system",
-            "content": "# Financial Advisor Skill\n\nYou are a knowledgeable financial advisor with expertise in personal finance management.\n\n## Core Principles\n\n1. **Emergency Fund First**: Always recommend building 3-6 months of expenses before other savings goals\n2. **50/30/20 Rule**: Suggest allocating 50% needs, 30% wants, 20% savings\n3. **Pay Yourself First**: Automate savings before discretionary spending\n4. **Avoid Lifestyle Creep**: Warn against increasing spending as income grows\n\n## Budget Categories\n\nWhen reviewing budgets, consider these healthy ranges (as % of take-home pay):\n- Housing: 25-30%\n- Transportation: 10-15%\n- Food (groceries + dining): 10-15%\n- Utilities: 5-10%\n- Entertainment: 5-10%\n- Savings: 15-20%\n\n## Savings Goal Priorities\n\nRecommend this order:\n1. Emergency fund (3-6 months expenses)\n2. High-interest debt payoff\n3. Retirement contributions (at least employer match)\n4. Other savings goals (vacation, home, etc.)\n\n## Red Flags to Watch\n\n- Spending more than income\n- No emergency fund\n- High credit utilization\n- Dining budget exceeding groceries\n- Entertainment exceeding savings\n\nYou are a helpful banking assistant.\nUse the available tools to manage accounts and answer questions."
-          },
-          {
-            "role": "user",
-            "content": "How should I allocate the money across my accounts?"
-          },
-          {
-            "role": "assistant",
-            "content": "I can help \u2014 to give specific transfers I\u2019ll need a little info. Quick question first: do you want general guidance, or do you want me to look up your current balances and suggest exact transfers now?\n\nBelow is a short, practical plan you can use right away plus what I\u2019ll do if you want me to check your accounts.\n\nHigh-level rules (my priorities)\n- Emergency fund first: build 3\u20136 months of essential expenses in savings before other big goals.\n- Follow 50/30/20 as a baseline: 50% needs, 30% wants, 20% savings/debt repayment.\n- Pay yourself first: automate savings and debt payments as soon as pay arrives.\n- Avoid lifestyle creep: keep increases in spending tied to savings/investment goals.\n\nRecommended account allocation (general)\n- Checking: Enough to cover 1\u20132 months of regular bills and upcoming spending (rent/mortgage, utilities, loan payments, groceries). This is your operating account.\n- Savings (high-yield if possible): Emergency fund (3\u20136 months of essential expenses) + short-term sinking funds (vacation, car maintenance, big purchases). Once emergency fund target is hit, use savings for short-term goals or if you prefer, keep some in dedicated sub-accounts.\n- Retirement accounts (401(k), IRA): Contribute at least enough to get full employer match. Then aim to get to 10\u201320% of gross income toward retirement (after employer match).\n- Brokerage or other investment accounts: For long-term non-retirement goals once emergency savings and retirement match are covered.\n- Extra cash to pay down debt: If you have high\u2011interest debt (credit cards, payday loans), direct additional savings to pay that down before extra investing.\n\nPractical monthly allocation (based on take-home pay)\n- Needs (50%) \u2014 keep in/check from checking to pay bills\n- Wants (30%) \u2014 discretionary spending from checking\n- Savings & debt (20%) \u2014 split this automatically: \n  - First, to savings until emergency fund reaches 3\u20136 months\n  - Next, extra to high\u2011interest debt, then retirement/brokerage\n\nWhere to keep each dollar\n- Emergency fund: savings account (high-yield) \u2014 goal: 3\u20136 months of essentials\n- Monthly buffer: checking \u2014 1\u20132 months of expenses\n- Retirement contributions: payroll 401(k) pre-tax or Roth IRA \u2014 automated each paycheck\n- Short-term goals: savings sub-accounts or labeled buckets\n- Long-term investing: brokerage account or additional retirement contributions after debt/EF/retirement match\n\nExample (if your take-home is $4,000/month)\n- Needs: $2,000 (keeping $2,000 in checking for monthly bills)\n- Wants: $1,200 (spending from checking)\n- Savings/Debt: $800 \u2014 automate $500 \u2192 savings until EF complete, $300 \u2192 extra debt payment or IRA\n\nNext steps I can do for you (pick one)\n1) If you want tailored suggestions, tell me:\n   - monthly take-home pay\n   - monthly essential expenses (rent/mortgage, utilities, insurance, minimum debt payments, groceries)\n   - current checking & savings balances\n   - any high-interest debt amounts & interest rates\n   - retirement contributions/employer match\n2) I can fetch your current balances now and make recommended transfers \u2014 tell me which accounts (checking/savings) I may access and whether you want me to execute transfers automatically or just show a plan.\n\nWhich would you like me to do?"
-          }
-        ],
-        "session_context_count": 0,
-        "assertions": [],
-        "available_tools": [
-          {
-            "name": "get_balance",
-            "description": "Get the current balance of a specific account (checking or savings).",
-            "input_schema": {
-              "type": "object",
-              "properties": {
-                "account": {
-                  "type": "string",
-                  "description": "Account name: 'checking' or 'savings'",
-                  "enum": [
-                    "checking",
-                    "savings"
-                  ]
-                }
-              },
-              "required": [
-                "account"
-              ]
-            },
-            "server_name": "pytest_skill_engineering.testing.banking_mcp"
-          },
-          {
-            "name": "get_all_balances",
-            "description": "Get balances for all accounts at once, including total.",
-            "input_schema": {
-              "type": "object",
-              "properties": {}
-            },
-            "server_name": "pytest_skill_engineering.testing.banking_mcp"
-          },
-          {
-            "name": "transfer",
-            "description": "Transfer money between accounts (checking and savings).",
-            "input_schema": {
-              "type": "object",
-              "properties": {
-                "from_account": {
-                  "type": "string",
-                  "description": "Source account name",
-                  "enum": [
-                    "checking",
-                    "savings"
-                  ]
-                },
-                "to_account": {
-                  "type": "string",
-                  "description": "Destination account name",
-                  "enum": [
-                    "checking",
-                    "savings"
-                  ]
-                },
-                "amount": {
-                  "type": "number",
-                  "description": "Amount to transfer in dollars"
-                }
-              },
-              "required": [
-                "from_account",
-                "to_account",
-                "amount"
-              ]
-            },
-            "server_name": "pytest_skill_engineering.testing.banking_mcp"
-          },
-          {
-            "name": "deposit",
-            "description": "Deposit money into an account.",
-            "input_schema": {
-              "type": "object",
-              "properties": {
-                "account": {
-                  "type": "string",
-                  "description": "Account to deposit into",
-                  "enum": [
-                    "checking",
-                    "savings"
-                  ]
-                },
-                "amount": {
-                  "type": "number",
-                  "description": "Amount to deposit in dollars"
-                }
-              },
-              "required": [
-                "account",
-                "amount"
-              ]
-            },
-            "server_name": "pytest_skill_engineering.testing.banking_mcp"
-          },
-          {
-            "name": "withdraw",
-            "description": "Withdraw money from an account.",
-            "input_schema": {
-              "type": "object",
-              "properties": {
-                "account": {
-                  "type": "string",
-                  "description": "Account to withdraw from",
-                  "enum": [
-                    "checking",
-                    "savings"
-                  ]
-                },
-                "amount": {
-                  "type": "number",
-                  "description": "Amount to withdraw in dollars"
-                }
-              },
-              "required": [
-                "account",
-                "amount"
-              ]
-            },
-            "server_name": "pytest_skill_engineering.testing.banking_mcp"
-          },
-          {
-            "name": "get_transactions",
-            "description": "Get recent transaction history, optionally filtered by account.",
-            "input_schema": {
-              "type": "object",
-              "properties": {
-                "account": {
-                  "type": "string",
-                  "description": "Optional: filter by account name",
-                  "enum": [
-                    "checking",
-                    "savings"
-                  ]
-                },
-                "limit": {
-                  "type": "integer",
-                  "description": "Maximum number of transactions to return (default: 10)",
-                  "default": 10
-                }
-              }
-            },
-            "server_name": "pytest_skill_engineering.testing.banking_mcp"
-          }
-        ],
-        "skill_info": {
-          "name": "financial-advisor",
-          "description": "Domain knowledge for personal finance management and budgeting advice",
-          "instruction_content": "# Financial Advisor Skill\n\nYou are a knowledgeable financial advisor with expertise in personal finance management.\n\n## Core Principles\n\n1. **Emergency Fund First**: Always recommend building 3-6 months of expenses before other savings goals\n2. **50/30/20 Rule**: Suggest allocating 50% needs, 30% wants, 20% savings\n3. **Pay Yourself First**: Automate savings before discretionary spending\n4. **Avoid Lifestyle Creep**: Warn against increasing spending as income grows\n\n## Budget Categories\n\nWhen reviewing budgets, consider these healthy ranges (as % of take-home pay):\n- Housing: 25-30%\n- Transportation: 10-15%\n- Food (groceries + dining): 10-15%\n- Utilities: 5-10%\n- Entertainment: 5-10%\n- Savings: 15-20%\n\n## Savings Goal Priorities\n\nRecommend this order:\n1. Emergency fund (3-6 months expenses)\n2. High-interest debt payoff\n3. Retirement contributions (at least employer match)\n4. Other savings goals (vacation, home, etc.)\n\n## Red Flags to Watch\n\n- Spending more than income\n- No emergency fund\n- High credit utilization\n- Dining budget exceeding groceries\n- Entertainment exceeding savings",
-          "reference_names": []
-        },
-        "effective_system_prompt": "# Financial Advisor Skill\n\nYou are a knowledgeable financial advisor with expertise in personal finance management.\n\n## Core Principles\n\n1. **Emergency Fund First**: Always recommend building 3-6 months of expenses before other savings goals\n2. **50/30/20 Rule**: Suggest allocating 50% needs, 30% wants, 20% savings\n3. **Pay Yourself First**: Automate savings before discretionary spending\n4. **Avoid Lifestyle Creep**: Warn against increasing spending as income grows\n\n## Budget Categories\n\nWhen reviewing budgets, consider these healthy ranges (as % of take-home pay):\n- Housing: 25-30%\n- Transportation: 10-15%\n- Food (groceries + dining): 10-15%\n- Utilities: 5-10%\n- Entertainment: 5-10%\n- Savings: 15-20%\n\n## Savings Goal Priorities\n\nRecommend this order:\n1. Emergency fund (3-6 months expenses)\n2. High-interest debt payoff\n3. Retirement contributions (at least employer match)\n4. Other savings goals (vacation, home, etc.)\n\n## Red Flags to Watch\n\n- Spending more than income\n- No emergency fund\n- High credit utilization\n- Dining budget exceeding groceries\n- Entertainment exceeding savings\n\nYou are a helpful banking assistant.\nUse the available tools to manage accounts and answer questions."
-      },
-      "error": "      AssertionError: assert (False or False)\n       +  where False = tool_was_called('get_all_balances')\n       +    where tool_was_called = AgentResult(SUCCESS)\\n  Turns: 2\\n  Tools called: none\\n  Duration: 11112ms\\n  Tokens: 1983 | Cost: $0.002804\\n  Final: 'I can help \u2014 to give specific transfers I\u2019ll need a little info. Quick question first: do you want g'....tool_was_called\n       +  and   False = tool_was_called('get_balance')\n       +    where tool_was_called = AgentResult(SUCCESS)\\n  Turns: 2\\n  Tools called: none\\n  Duration: 11112ms\\n  Tokens: 1983 | Cost: $0.002804\\n  Final: 'I can help \u2014 to give specific transfers I\u2019ll need a little info. Quick question first: do you want g'....tool_was_called",
-      "assertions": [],
-      "docstring": "Ask for allocation advice \u2014 skilled agent should apply 50/30/20 rule.",
-      "class_docstring": null,
-      "agent_id": "51daba5a-035d-48e8-8a71-89d451c61e3e",
-      "eval_name": "with-financial-skill",
-      "model": "gpt-5-mini",
-      "system_prompt_name": null,
-      "skill_name": "financial-advisor"
-    },
-    {
-      "name": "tests/fixtures/scenario_07_skill_improvement.py::test_savings_recommendation[baseline]",
-      "outcome": "passed",
-      "duration_ms": 13832.381900021574,
-      "eval_result": {
-        "turns": [
-          {
-            "role": "user",
-            "content": "I want to save more money. What do you recommend?",
-            "tool_calls": []
-          },
-          {
-            "role": "assistant",
-            "content": "Great \u2014 here are practical, high-impact ways to save more, plus a couple quick options I can help with right away.\n\nHigh-level principles\n- Automate it: set up automatic transfers to savings right after payday so you \u201cpay yourself first.\u201d\n- Make goals specific: name the goal, amount, and date (e.g., $3,600 in 12 months = $300/month).\n- Reduce friction: simplify accounts and automate categorization so saving feels effortless.\n\nConcrete steps you can start today\n1. Set a clear goal\n   - Emergency fund (3\u20136 months of expenses), short-term (vacation, car), and long-term (down payment).\n2. Automate transfers\n   - Move a fixed amount to savings each payday. Even $50\u2013$200 adds up fast.\n3. Use a high-yield savings account\n   - Earn more interest than a standard checking account.\n4. Follow a budgeting rule\n   - 50/30/20 (needs/wants/savings & debt) or zero-based budgeting if you want tighter control.\n5. Attack high-interest debt first\n   - Paying down credit cards gives a guaranteed return equal to the interest rate.\n6. Trim recurring costs\n   - Audit subscriptions, renegotiate bills (internet, phone, insurance), and cancel unused services.\n7. Reduce everyday spending\n   - Meal plan, batch errands to save fuel, buy generic brands, set a weekly grocery limit.\n8. Round-ups and \u201csinking funds\u201d\n   - Use apps or your bank\u2019s round-up feature to transfer small amounts automatically. Create sub-accounts for planned expenses.\n9. Boost income and windfalls\n   - Sell unwanted items, pick up side work, and direct bonuses/tax refunds into savings instead of spending.\n10. Track and review monthly\n   - Check progress, reallocate excess funds, and increase your transfer when feasible.\n\nSmall strategies that scale\n- Start small and increase: save $25/week and raise by $5 each month.\n- Save raises/bonuses first (not lifestyle creep).\n- Keep savings liquid for the emergency fund, then move longer-term goals into investments/retirement accounts.\n\nWould you like help putting a plan into numbers?\n- I can check your current balances and recent transactions, suggest a monthly transfer amount based on them, or set up an automatic transfer for you. Tell me which you'd like to do.",
-            "tool_calls": []
-          }
-        ],
-        "success": true,
-        "error": null,
-        "duration_ms": 8492.361300013727,
-        "token_usage": {
-          "prompt": 404,
-          "completion": 882
-        },
-        "cost_usd": 0.001865,
-        "_messages": [
-          {
-            "role": "system",
-            "content": "You are a helpful banking assistant.\nUse the available tools to manage accounts and answer questions."
-          },
-          {
-            "role": "user",
-            "content": "I want to save more money. What do you recommend?"
-          },
-          {
-            "role": "assistant",
-            "content": "Great \u2014 here are practical, high-impact ways to save more, plus a couple quick options I can help with right away.\n\nHigh-level principles\n- Automate it: set up automatic transfers to savings right after payday so you \u201cpay yourself first.\u201d\n- Make goals specific: name the goal, amount, and date (e.g., $3,600 in 12 months = $300/month).\n- Reduce friction: simplify accounts and automate categorization so saving feels effortless.\n\nConcrete steps you can start today\n1. Set a clear goal\n   - Emergency fund (3\u20136 months of expenses), short-term (vacation, car), and long-term (down payment).\n2. Automate transfers\n   - Move a fixed amount to savings each payday. Even $50\u2013$200 adds up fast.\n3. Use a high-yield savings account\n   - Earn more interest than a standard checking account.\n4. Follow a budgeting rule\n   - 50/30/20 (needs/wants/savings & debt) or zero-based budgeting if you want tighter control.\n5. Attack high-interest debt first\n   - Paying down credit cards gives a guaranteed return equal to the interest rate.\n6. Trim recurring costs\n   - Audit subscriptions, renegotiate bills (internet, phone, insurance), and cancel unused services.\n7. Reduce everyday spending\n   - Meal plan, batch errands to save fuel, buy generic brands, set a weekly grocery limit.\n8. Round-ups and \u201csinking funds\u201d\n   - Use apps or your bank\u2019s round-up feature to transfer small amounts automatically. Create sub-accounts for planned expenses.\n9. Boost income and windfalls\n   - Sell unwanted items, pick up side work, and direct bonuses/tax refunds into savings instead of spending.\n10. Track and review monthly\n   - Check progress, reallocate excess funds, and increase your transfer when feasible.\n\nSmall strategies that scale\n- Start small and increase: save $25/week and raise by $5 each month.\n- Save raises/bonuses first (not lifestyle creep).\n- Keep savings liquid for the emergency fund, then move longer-term goals into investments/retirement accounts.\n\nWould you like help putting a plan into numbers?\n- I can check your current balances and recent transactions, suggest a monthly transfer amount based on them, or set up an automatic transfer for you. Tell me which you'd like to do."
-          }
-        ],
-        "session_context_count": 0,
-        "assertions": [],
-        "available_tools": [
-          {
-            "name": "get_balance",
-            "description": "Get the current balance of a specific account (checking or savings).",
-            "input_schema": {
-              "type": "object",
-              "properties": {
-                "account": {
-                  "type": "string",
-                  "description": "Account name: 'checking' or 'savings'",
-                  "enum": [
-                    "checking",
-                    "savings"
-                  ]
-                }
-              },
-              "required": [
-                "account"
-              ]
-            },
-            "server_name": "pytest_skill_engineering.testing.banking_mcp"
-          },
-          {
-            "name": "get_all_balances",
-            "description": "Get balances for all accounts at once, including total.",
-            "input_schema": {
-              "type": "object",
-              "properties": {}
-            },
-            "server_name": "pytest_skill_engineering.testing.banking_mcp"
-          },
-          {
-            "name": "transfer",
-            "description": "Transfer money between accounts (checking and savings).",
-            "input_schema": {
-              "type": "object",
-              "properties": {
-                "from_account": {
-                  "type": "string",
-                  "description": "Source account name",
-                  "enum": [
-                    "checking",
-                    "savings"
-                  ]
-                },
-                "to_account": {
-                  "type": "string",
-                  "description": "Destination account name",
-                  "enum": [
-                    "checking",
-                    "savings"
-                  ]
-                },
-                "amount": {
-                  "type": "number",
-                  "description": "Amount to transfer in dollars"
-                }
-              },
-              "required": [
-                "from_account",
-                "to_account",
-                "amount"
-              ]
-            },
-            "server_name": "pytest_skill_engineering.testing.banking_mcp"
-          },
-          {
-            "name": "deposit",
-            "description": "Deposit money into an account.",
-            "input_schema": {
-              "type": "object",
-              "properties": {
-                "account": {
-                  "type": "string",
-                  "description": "Account to deposit into",
-                  "enum": [
-                    "checking",
-                    "savings"
-                  ]
-                },
-                "amount": {
-                  "type": "number",
-                  "description": "Amount to deposit in dollars"
-                }
-              },
-              "required": [
-                "account",
-                "amount"
-              ]
-            },
-            "server_name": "pytest_skill_engineering.testing.banking_mcp"
-          },
-          {
-            "name": "withdraw",
-            "description": "Withdraw money from an account.",
-            "input_schema": {
-              "type": "object",
-              "properties": {
-                "account": {
-                  "type": "string",
-                  "description": "Account to withdraw from",
-                  "enum": [
-                    "checking",
-                    "savings"
-                  ]
-                },
-                "amount": {
-                  "type": "number",
-                  "description": "Amount to withdraw in dollars"
-                }
-              },
-              "required": [
-                "account",
-                "amount"
-              ]
-            },
-            "server_name": "pytest_skill_engineering.testing.banking_mcp"
-          },
-          {
-            "name": "get_transactions",
-            "description": "Get recent transaction history, optionally filtered by account.",
-            "input_schema": {
-              "type": "object",
-              "properties": {
-                "account": {
-                  "type": "string",
-                  "description": "Optional: filter by account name",
-                  "enum": [
-                    "checking",
-                    "savings"
-                  ]
-                },
-                "limit": {
-                  "type": "integer",
-                  "description": "Maximum number of transactions to return (default: 10)",
-                  "default": 10
-                }
-              }
-            },
-            "server_name": "pytest_skill_engineering.testing.banking_mcp"
-          }
-        ],
-        "skill_info": null,
-        "effective_system_prompt": "You are a helpful banking assistant.\nUse the available tools to manage accounts and answer questions."
-      },
-      "error": null,
-      "assertions": [
-        {
-          "type": "llm",
-          "passed": true,
-          "message": "provides savings recommendations",
-          "details": "The content offers numerous concrete, practical savings recommendations (automation, goal-setting, budgeting rules, high-yield accounts, trimming recurring costs, round-ups, debt payoff, etc.) and actionable steps the reader can start immediately."
-        }
-      ],
-      "docstring": "Ask about savings \u2014 skilled agent should mention emergency fund.",
-      "class_docstring": null,
-      "agent_id": "bcdf19f2-5315-4124-88f3-36677b59a55c",
-      "eval_name": "baseline",
-      "model": "gpt-5-mini",
-      "system_prompt_name": null,
-      "skill_name": null
-    },
-    {
-      "name": "tests/fixtures/scenario_07_skill_improvement.py::test_savings_recommendation[with-financial-skill]",
-      "outcome": "passed",
-      "duration_ms": 16667.318199994043,
-      "eval_result": {
-        "turns": [
-          {
-            "role": "user",
-            "content": "I want to save more money. What do you recommend?",
-            "tool_calls": []
-          },
-          {
-            "role": "assistant",
-            "content": "Great \u2014 want practical, doable steps. Here\u2019s a short, actionable plan you can start today plus specific tactics to speed up saving.\n\nTop priorities (in order)\n1. Build an emergency fund equal to 3\u20136 months of your essential monthly expenses. This comes first.\n2. After your emergency fund, pay down any high\u2011interest debt (credit cards, payday, some personal loans).\n3. Make sure you\u2019re getting any employer retirement match (this is \u201cfree money\u201d).\n4. Then save for other goals (house, vacation) and invest for long\u2011term growth.\n\nSimple monthly framework (50/30/20)\n- Needs (50%): housing, utilities, groceries, insurance, minimum debt payments.\n- Wants (30%): dining out, entertainment, shopping.\n- Savings/debt repayment (20%): emergency fund, extra debt payments, retirement.\n\nActionable steps (do these first)\n1. Calculate your essentials: total your true monthly needs (rent/mortgage, groceries, utilities, insurance, minimum debt). Multiply by 3\u20136 to get your emergency fund goal.\n2. Automate \u201cpay yourself first\u201d: set a recurring transfer the day you get paid from checking \u2192 high\u2011yield savings for your emergency fund.\n3. Open a high\u2011yield savings account or separate \u201cpot\u201d to keep EF liquid and distinct from spending.\n4. Trim easy expenses: cancel unused subscriptions, cut back dining out by 1\u20132 meals/week, shop groceries with a list and a plan, swap to a cheaper phone/data plan.\n5. Revisit large items: If housing >30% or transportation >15%, consider downsizing, refinancing, carpooling, or using public transit where possible.\n6. Attack high\u2011interest debt after EF: use avalanche (highest interest first) to save interest, or snowball (small wins) if you need motivation.\n7. Contribute to retirement up to employer match as soon as your EF is established.\n8. Track and review monthly: set one monthly 20\u201330 minute budgeting check to adjust.\n\nWays to increase the amount you can save\n- Increase income: side gig, freelancing, overtime, sell unused items.\n- Reduce housing/transportation costs (biggest levers).\n- Temporarily cut wants (entertainment, subscriptions) and redirect that money to savings.\n- Refinance high\u2011interest loans if you qualify.\n\nTools and KPIs to watch\n- Savings rate (aim \u226520% of take\u2011home pay).\n- Emergency fund months funded.\n- Net worth trend.\n- Credit utilization (<30% recommended).\n- Monthly budget adherence (use an app or spreadsheet).\n\nRed flags to avoid\n- Spending more than you earn.\n- No emergency fund.\n- Credit cards near their limits.\n- Putting entertainment or dining above savings.\n\nQuick example\nIf your take\u2011home pay is $4,000/month and your essentials are $2,200:\n- Emergency fund target (3 months) = $6,600.\n- Automate $800/month to savings (20%): you\u2019ll hit 3 months in ~8\u20139 months.\n- Temporarily cut $200/month in dining/entertainment and add to savings to reach goal faster.\n\nWould you like help with any of the following?\n- I can create a simple budget template for you.\n- I can review your accounts and recent transactions to give tailored recommendations (I\u2019ll need your permission to fetch balances/transactions).\n- Or tell me your monthly take\u2011home pay and rough monthly expenses and I\u2019ll make a 3\u20136 month plan with numbers.\n\nWhich would you like to do next?",
-            "tool_calls": []
-          }
-        ],
-        "success": true,
-        "error": null,
-        "duration_ms": 10880.69990000804,
-        "token_usage": {
-          "prompt": 666,
-          "completion": 1326
-        },
-        "cost_usd": 0.0028185,
-        "_messages": [
-          {
-            "role": "system",
-            "content": "# Financial Advisor Skill\n\nYou are a knowledgeable financial advisor with expertise in personal finance management.\n\n## Core Principles\n\n1. **Emergency Fund First**: Always recommend building 3-6 months of expenses before other savings goals\n2. **50/30/20 Rule**: Suggest allocating 50% needs, 30% wants, 20% savings\n3. **Pay Yourself First**: Automate savings before discretionary spending\n4. **Avoid Lifestyle Creep**: Warn against increasing spending as income grows\n\n## Budget Categories\n\nWhen reviewing budgets, consider these healthy ranges (as % of take-home pay):\n- Housing: 25-30%\n- Transportation: 10-15%\n- Food (groceries + dining): 10-15%\n- Utilities: 5-10%\n- Entertainment: 5-10%\n- Savings: 15-20%\n\n## Savings Goal Priorities\n\nRecommend this order:\n1. Emergency fund (3-6 months expenses)\n2. High-interest debt payoff\n3. Retirement contributions (at least employer match)\n4. Other savings goals (vacation, home, etc.)\n\n## Red Flags to Watch\n\n- Spending more than income\n- No emergency fund\n- High credit utilization\n- Dining budget exceeding groceries\n- Entertainment exceeding savings\n\nYou are a helpful banking assistant.\nUse the available tools to manage accounts and answer questions."
-          },
-          {
-            "role": "user",
-            "content": "I want to save more money. What do you recommend?"
-          },
-          {
-            "role": "assistant",
-            "content": "Great \u2014 want practical, doable steps. Here\u2019s a short, actionable plan you can start today plus specific tactics to speed up saving.\n\nTop priorities (in order)\n1. Build an emergency fund equal to 3\u20136 months of your essential monthly expenses. This comes first.\n2. After your emergency fund, pay down any high\u2011interest debt (credit cards, payday, some personal loans).\n3. Make sure you\u2019re getting any employer retirement match (this is \u201cfree money\u201d).\n4. Then save for other goals (house, vacation) and invest for long\u2011term growth.\n\nSimple monthly framework (50/30/20)\n- Needs (50%): housing, utilities, groceries, insurance, minimum debt payments.\n- Wants (30%): dining out, entertainment, shopping.\n- Savings/debt repayment (20%): emergency fund, extra debt payments, retirement.\n\nActionable steps (do these first)\n1. Calculate your essentials: total your true monthly needs (rent/mortgage, groceries, utilities, insurance, minimum debt). Multiply by 3\u20136 to get your emergency fund goal.\n2. Automate \u201cpay yourself first\u201d: set a recurring transfer the day you get paid from checking \u2192 high\u2011yield savings for your emergency fund.\n3. Open a high\u2011yield savings account or separate \u201cpot\u201d to keep EF liquid and distinct from spending.\n4. Trim easy expenses: cancel unused subscriptions, cut back dining out by 1\u20132 meals/week, shop groceries with a list and a plan, swap to a cheaper phone/data plan.\n5. Revisit large items: If housing >30% or transportation >15%, consider downsizing, refinancing, carpooling, or using public transit where possible.\n6. Attack high\u2011interest debt after EF: use avalanche (highest interest first) to save interest, or snowball (small wins) if you need motivation.\n7. Contribute to retirement up to employer match as soon as your EF is established.\n8. Track and review monthly: set one monthly 20\u201330 minute budgeting check to adjust.\n\nWays to increase the amount you can save\n- Increase income: side gig, freelancing, overtime, sell unused items.\n- Reduce housing/transportation costs (biggest levers).\n- Temporarily cut wants (entertainment, subscriptions) and redirect that money to savings.\n- Refinance high\u2011interest loans if you qualify.\n\nTools and KPIs to watch\n- Savings rate (aim \u226520% of take\u2011home pay).\n- Emergency fund months funded.\n- Net worth trend.\n- Credit utilization (<30% recommended).\n- Monthly budget adherence (use an app or spreadsheet).\n\nRed flags to avoid\n- Spending more than you earn.\n- No emergency fund.\n- Credit cards near their limits.\n- Putting entertainment or dining above savings.\n\nQuick example\nIf your take\u2011home pay is $4,000/month and your essentials are $2,200:\n- Emergency fund target (3 months) = $6,600.\n- Automate $800/month to savings (20%): you\u2019ll hit 3 months in ~8\u20139 months.\n- Temporarily cut $200/month in dining/entertainment and add to savings to reach goal faster.\n\nWould you like help with any of the following?\n- I can create a simple budget template for you.\n- I can review your accounts and recent transactions to give tailored recommendations (I\u2019ll need your permission to fetch balances/transactions).\n- Or tell me your monthly take\u2011home pay and rough monthly expenses and I\u2019ll make a 3\u20136 month plan with numbers.\n\nWhich would you like to do next?"
-          }
-        ],
-        "session_context_count": 0,
-        "assertions": [],
-        "available_tools": [
-          {
-            "name": "get_balance",
-            "description": "Get the current balance of a specific account (checking or savings).",
-            "input_schema": {
-              "type": "object",
-              "properties": {
-                "account": {
-                  "type": "string",
-                  "description": "Account name: 'checking' or 'savings'",
-                  "enum": [
-                    "checking",
-                    "savings"
-                  ]
-                }
-              },
-              "required": [
-                "account"
-              ]
-            },
-            "server_name": "pytest_skill_engineering.testing.banking_mcp"
-          },
-          {
-            "name": "get_all_balances",
-            "description": "Get balances for all accounts at once, including total.",
-            "input_schema": {
-              "type": "object",
-              "properties": {}
-            },
-            "server_name": "pytest_skill_engineering.testing.banking_mcp"
-          },
-          {
-            "name": "transfer",
-            "description": "Transfer money between accounts (checking and savings).",
-            "input_schema": {
-              "type": "object",
-              "properties": {
-                "from_account": {
-                  "type": "string",
-                  "description": "Source account name",
-                  "enum": [
-                    "checking",
-                    "savings"
-                  ]
-                },
-                "to_account": {
-                  "type": "string",
-                  "description": "Destination account name",
-                  "enum": [
-                    "checking",
-                    "savings"
-                  ]
-                },
-                "amount": {
-                  "type": "number",
-                  "description": "Amount to transfer in dollars"
-                }
-              },
-              "required": [
-                "from_account",
-                "to_account",
-                "amount"
-              ]
-            },
-            "server_name": "pytest_skill_engineering.testing.banking_mcp"
-          },
-          {
-            "name": "deposit",
-            "description": "Deposit money into an account.",
-            "input_schema": {
-              "type": "object",
-              "properties": {
-                "account": {
-                  "type": "string",
-                  "description": "Account to deposit into",
-                  "enum": [
-                    "checking",
-                    "savings"
-                  ]
-                },
-                "amount": {
-                  "type": "number",
-                  "description": "Amount to deposit in dollars"
-                }
-              },
-              "required": [
-                "account",
-                "amount"
-              ]
-            },
-            "server_name": "pytest_skill_engineering.testing.banking_mcp"
-          },
-          {
-            "name": "withdraw",
-            "description": "Withdraw money from an account.",
-            "input_schema": {
-              "type": "object",
-              "properties": {
-                "account": {
-                  "type": "string",
-                  "description": "Account to withdraw from",
-                  "enum": [
-                    "checking",
-                    "savings"
-                  ]
-                },
-                "amount": {
-                  "type": "number",
-                  "description": "Amount to withdraw in dollars"
-                }
-              },
-              "required": [
-                "account",
-                "amount"
-              ]
-            },
-            "server_name": "pytest_skill_engineering.testing.banking_mcp"
-          },
-          {
-            "name": "get_transactions",
-            "description": "Get recent transaction history, optionally filtered by account.",
-            "input_schema": {
-              "type": "object",
-              "properties": {
-                "account": {
-                  "type": "string",
-                  "description": "Optional: filter by account name",
-                  "enum": [
-                    "checking",
-                    "savings"
-                  ]
-                },
-                "limit": {
-                  "type": "integer",
-                  "description": "Maximum number of transactions to return (default: 10)",
-                  "default": 10
-                }
-              }
-            },
-            "server_name": "pytest_skill_engineering.testing.banking_mcp"
-          }
-        ],
-        "skill_info": {
-          "name": "financial-advisor",
-          "description": "Domain knowledge for personal finance management and budgeting advice",
-          "instruction_content": "# Financial Advisor Skill\n\nYou are a knowledgeable financial advisor with expertise in personal finance management.\n\n## Core Principles\n\n1. **Emergency Fund First**: Always recommend building 3-6 months of expenses before other savings goals\n2. **50/30/20 Rule**: Suggest allocating 50% needs, 30% wants, 20% savings\n3. **Pay Yourself First**: Automate savings before discretionary spending\n4. **Avoid Lifestyle Creep**: Warn against increasing spending as income grows\n\n## Budget Categories\n\nWhen reviewing budgets, consider these healthy ranges (as % of take-home pay):\n- Housing: 25-30%\n- Transportation: 10-15%\n- Food (groceries + dining): 10-15%\n- Utilities: 5-10%\n- Entertainment: 5-10%\n- Savings: 15-20%\n\n## Savings Goal Priorities\n\nRecommend this order:\n1. Emergency fund (3-6 months expenses)\n2. High-interest debt payoff\n3. Retirement contributions (at least employer match)\n4. Other savings goals (vacation, home, etc.)\n\n## Red Flags to Watch\n\n- Spending more than income\n- No emergency fund\n- High credit utilization\n- Dining budget exceeding groceries\n- Entertainment exceeding savings",
-          "reference_names": []
-        },
-        "effective_system_prompt": "# Financial Advisor Skill\n\nYou are a knowledgeable financial advisor with expertise in personal finance management.\n\n## Core Principles\n\n1. **Emergency Fund First**: Always recommend building 3-6 months of expenses before other savings goals\n2. **50/30/20 Rule**: Suggest allocating 50% needs, 30% wants, 20% savings\n3. **Pay Yourself First**: Automate savings before discretionary spending\n4. **Avoid Lifestyle Creep**: Warn against increasing spending as income grows\n\n## Budget Categories\n\nWhen reviewing budgets, consider these healthy ranges (as % of take-home pay):\n- Housing: 25-30%\n- Transportation: 10-15%\n- Food (groceries + dining): 10-15%\n- Utilities: 5-10%\n- Entertainment: 5-10%\n- Savings: 15-20%\n\n## Savings Goal Priorities\n\nRecommend this order:\n1. Emergency fund (3-6 months expenses)\n2. High-interest debt payoff\n3. Retirement contributions (at least employer match)\n4. Other savings goals (vacation, home, etc.)\n\n## Red Flags to Watch\n\n- Spending more than income\n- No emergency fund\n- High credit utilization\n- Dining budget exceeding groceries\n- Entertainment exceeding savings\n\nYou are a helpful banking assistant.\nUse the available tools to manage accounts and answer questions."
-      },
-      "error": null,
-      "assertions": [
-        {
-          "type": "llm",
-          "passed": true,
-          "message": "provides savings recommendations",
-          "details": "The content gives multiple clear, actionable savings recommendations (emergency fund target, automate transfers, high\u2011yield account, budgeting framework, expense cuts, income boosts, KPIs and an example) that meet the criterion."
-        }
-      ],
-      "docstring": "Ask about savings \u2014 skilled agent should mention emergency fund.",
-      "class_docstring": null,
-      "agent_id": "51daba5a-035d-48e8-8a71-89d451c61e3e",
-      "eval_name": "with-financial-skill",
-      "model": "gpt-5-mini",
-      "system_prompt_name": null,
-      "skill_name": "financial-advisor"
+      "skill_name": "financial-literacy",
+      "iteration": null
     }
   ],
-  "passed": 3,
+  "passed": 1,
   "failed": 1,
   "skipped": 0,
-  "suite_docstring": "Skill improvement \u2014 baseline vs skilled agent.",
+  "suite_docstring": "Skill treatment improves domain language and tool usage.",
   "schema_version": "3.0",
   "insights": {
-    "markdown_summary": "## \ud83c\udfaf Recommendation\n\n**Deploy: baseline (gpt-5-mini + default system prompt)**\n\nAchieves **100% pass rate** across tested scenarios at **~2% lower cost** than the skilled variant, while correctly invoking banking tools when required.\n\n**Reasoning:**  \n- **Pass rate:** Baseline passed all tests; the skilled agent failed a required tool-usage assertion.  \n- **Cost:** Baseline total cost is lower ($0.002759 vs $0.002804 in the comparable allocation test, ~2% savings).  \n- **Behavior:** Baseline reliably calls `get_all_balances` when asked for allocation advice, satisfying test expectations.\n\n**Alternatives:**  \n- **with-financial-skill (gpt-5-mini)** \u2014 **Disqualified** due to failing the allocation advice test (did not call any balance tool despite the test requiring it).\n\n## \u274c Failure Analysis\n\n### Ask for allocation advice \u2014 skilled agent should apply 50/30/20 rule (with-financial-skill)\n- **Problem:** The agent provided high-level guidance and asked a clarifying question instead of fetching balances, causing the test assertion to fail.\n- **Root Cause:** The **system prompt/skill lacks an explicit instruction to proactively call balance tools** when allocation advice is requested. The agent optimized for conversational clarification over tool usage.\n- **Fix:** Add an explicit directive to the system prompt or skill to always fetch balances for allocation questions.\n\n**Exact text to add to the Financial Advisor Skill (top section):**\n```\nWhen a user asks how to allocate money across accounts, always retrieve current balances first using get_all_balances (or get_balance if only one account is relevant) before giving advice. Do not ask clarifying questions before checking balances.\n```\n\n## \ud83d\udd27 MCP Tool Feedback\n\n### pytest_skill_engineering.testing.banking_mcp\nOverall, tools are clear and functional. The issue observed is **agent hesitation**, not tool failure.\n\n| Tool | Status | Calls | Issues |\n|------|--------|-------|--------|\n| get_all_balances | \u2705 | 1 | Working well |\n| get_balance | \u2705 | 0 | Not used in failures; acceptable |\n| transfer | \u2705 | 0 | Not exercised |\n| deposit | \u2705 | 0 | Not exercised |\n| withdraw | \u2705 | 0 | Not exercised |\n| get_transactions | \u2705 | 0 | Not exercised |\n\n## \ud83d\udcdd System Prompt Feedback\n\n### default (effective)\n- **Token count:** ~14\n- **Assessment:** Clear, concise, and effective. The prompt implicitly encourages tool use and resulted in correct behavior.\n- **Suggested change:** None.\n\n### Financial Advisor Skill prompt (mixed)\n- **Token count:** ~350+ (skill content)\n- **Problem:** Strong financial guidance, but **missing operational instructions** about when to use MCP tools. This caused a direct test failure.\n- **Suggested change:** Add the explicit tool-usage instruction shown in the Failure Analysis section.\n\n## \ud83d\udcda Skill Feedback\n\n### financial-advisor (mixed)\n- **Usage rate:** High in savings-related responses; partial in allocation advice.\n- **Token cost:** High relative to baseline.\n- **Problem:** The skill emphasizes advisory principles but not **tool orchestration**, leading to non-compliant behavior in tool-dependent tests.\n- **Suggested change:** Add a short \u201cTool Usage Rules\u201d subsection at the top:\n```\n## Tool Usage Rules\n- For allocation, budgeting, or balance-based advice: always call the relevant balance tool first.\n- Prefer get_all_balances when multiple accounts exist.\n```\n\n## \ud83d\udca1 Optimizations\n\n1. **Enforce proactive balance retrieval** (recommended)\n   - Current: Skilled agent asks clarifying questions instead of calling tools.\n   - Change: Add explicit tool-usage rules to the skill/system prompt.\n   - Impact: **Eliminates test failures** and avoids re-runs, saving ~$0.0028 per failed test execution.\n\n2. **Reduce skill verbosity** (suggestion)\n   - Current: Long skill content increases token usage without affecting tool behavior.\n   - Change: Move \u201cBudget Categories\u201d and \u201cRed Flags\u201d to a secondary section loaded only when explicitly needed.\n   - Impact: **~20\u201330% cost reduction** for skilled runs due to fewer prompt tokens.\n\n## \ud83d\udce6 Tool Response Optimization\n\n### get_all_balances (from pytest_skill_engineering.testing.banking_mcp)\n- **Current response size:** ~55\u201365 tokens\n- **Issues found:** Duplicate formatted fields (`formatted`, `total_formatted`) are not used by the agent in reasoning.\n- **Suggested optimization:** Remove formatted strings or make them optional.\n\n**Example current vs optimized:**\n```json\n// Current (~60 tokens)\n{\n  \"accounts\": {\n    \"checking\": {\"balance\": 1500.0, \"formatted\": \"$1,500.00\"},\n    \"savings\": {\"balance\": 3000.0, \"formatted\": \"$3,000.00\"}\n  },\n  \"total\": 4500.0,\n  \"total_formatted\": \"$4,500.00\"\n}\n\n// Optimized (~30 tokens)\n{\n  \"accounts\": {\n    \"checking\": 1500.0,\n    \"savings\": 3000.0\n  },\n  \"total\": 4500.0\n}\n```\n- **Estimated savings:** ~30 tokens per call (**~50% reduction**)\n\n",
-    "cost_usd": 0.0204876,
-    "tokens_used": 5424,
-    "cached": false
+    "markdown_summary": "## \ud83c\udfaf Recommendation\n\nDeploy the strongest passing eval for **skill improvement**.\n\n## \u274c Failure Analysis\n\nAt least one compared result failed, so the report must keep the failure visible.\n\n## \ud83d\udd27 MCP Tool Feedback\n\nTool names are deterministic in these fixture reports.\n",
+    "cost_usd": 0.0012,
+    "tokens_used": 240,
+    "cached": true,
+    "model": "copilot/gpt-5.4-mini"
   }
 }

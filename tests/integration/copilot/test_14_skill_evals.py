@@ -16,7 +16,7 @@ from pathlib import Path
 
 import pytest
 
-pytestmark = [pytest.mark.copilot]
+pytestmark = [pytest.mark.copilot, pytest.mark.skill, pytest.mark.slow]
 
 
 class TestSkillCreatorAutomation:

@@ -100,10 +100,11 @@ test_verification
 
 ## Sessions with Parametrize
 
-You can combine sessions with model comparison:
+You can combine sessions with model comparison, but those runs are intentionally opt-in because they are expensive:
 
 ```python
-@pytest.mark.parametrize("model", ["claude-opus-4.8", "gpt-5.6-sol"])
+@pytest.mark.slow
+@pytest.mark.parametrize("model", ["gpt-5.5", "claude-sonnet-5"])
 class TestShoppingWorkflow:
     """Test the same conversation flow with different models."""
 
@@ -129,10 +130,12 @@ class TestShoppingWorkflow:
         assert result.success
 ```
 
+Run that file with `uv run python -m pytest path/to/test_file.py --run-slow`.
+
 This creates two separate parametrized runs, each with its own browse → select prompts:
 
-- `test_browse[claude-opus-4.8]` / `test_select[claude-opus-4.8]`
-- `test_browse[gpt-5.6-sol]` / `test_select[gpt-5.6-sol]`
+- `test_browse[gpt-5.5]` / `test_select[gpt-5.5]`
+- `test_browse[claude-sonnet-5]` / `test_select[claude-sonnet-5]`
 
 The report shows each model's turns side by side for comparison.
 

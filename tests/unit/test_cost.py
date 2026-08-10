@@ -6,6 +6,9 @@ No LLM calls — these exercise the arithmetic and pricing lookup in
 
 from __future__ import annotations
 
+import os
+from pathlib import Path
+
 import pytest
 
 from pytest_skill_engineering.execution import cost
@@ -54,3 +57,71 @@ def test_unknown_model_returns_zero_and_is_recorded(pricing: None) -> None:
 
 def test_all_zero_tokens_short_circuits(pricing: None) -> None:
     assert cost.estimate_cost("priced-model", 0, 0, 0) == 0.0
+
+
+@pytest.fixture
+def reset_pricing_cache(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(cost, "_user_overrides_cache", {})
+    monkeypatch.setattr(cost, "_user_overrides_cache_key", None)
+    monkeypatch.setattr(cost, "_user_overrides", None)
+
+
+def test_pricing_cache_isolated_by_resolved_file_and_mtime(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, reset_pricing_cache: None
+) -> None:
+    repo_a = tmp_path / "repo-a"
+    repo_b = tmp_path / "repo-b"
+    repo_a.mkdir()
+    repo_b.mkdir()
+    pricing_a = repo_a / "pricing.toml"
+    pricing_b = repo_b / "pricing.toml"
+    pricing_a.write_text('[models]\n"model" = { input = 1, output = 2, cache_read = 3 }\n')
+    pricing_b.write_text('[models]\n"model" = { input = 4, output = 5, cache_read = 6 }\n')
+
+    monkeypatch.chdir(repo_a)
+    assert cost._load_user_overrides()["model"] == (1.0, 2.0, 3.0)
+
+    monkeypatch.chdir(repo_b)
+    assert cost._load_user_overrides()["model"] == (4.0, 5.0, 6.0)
+    assert set(path for path, _mtime in cost._user_overrides_cache) == {
+        pricing_a.resolve(),
+        pricing_b.resolve(),
+    }
+
+
+def test_pricing_cache_invalidates_when_pricing_file_changes(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, reset_pricing_cache: None
+) -> None:
+    pricing = tmp_path / "pricing.toml"
+    pricing.write_text('[models]\n"model" = { input = 1, output = 2, cache_read = 3 }\n')
+    monkeypatch.chdir(tmp_path)
+
+    assert cost._load_user_overrides()["model"] == (1.0, 2.0, 3.0)
+
+    pricing.write_text('[models]\n"model" = { input = 7, output = 8, cache_read = 9 }\n')
+    stat = pricing.stat()
+    os.utime(pricing, ns=(stat.st_atime_ns, stat.st_mtime_ns + 1))
+
+    assert cost._load_user_overrides()["model"] == (7.0, 8.0, 9.0)
+    assert len(cost._user_overrides_cache) == 2
+
+
+def test_pricing_cache_key_uses_cwd_when_no_file_exists(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, reset_pricing_cache: None
+) -> None:
+    repo_a = tmp_path / "repo-a"
+    repo_b = tmp_path / "repo-b"
+    repo_a.mkdir()
+    repo_b.mkdir()
+
+    monkeypatch.chdir(repo_a)
+    assert cost._load_user_overrides() == {}
+    key_a = cost._user_overrides_cache_key
+
+    monkeypatch.chdir(repo_b)
+    assert cost._load_user_overrides() == {}
+    key_b = cost._user_overrides_cache_key
+
+    assert key_a == (repo_a.resolve(), None)
+    assert key_b == (repo_b.resolve(), None)
+    assert len(cost._user_overrides_cache) == 2
