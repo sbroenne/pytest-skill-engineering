@@ -1,75 +1,68 @@
 # Examples
 
-Working examples are in `tests/integration/` — they are the best reference for how to use pytest-skill-engineering.
+Working examples live in [`tests/integration/copilot/`](../tests/integration/copilot/). They use real GitHub Copilot models and are the best reference for pytest-skill-engineering.
 
 ## Test Files
 
 | File | What it demonstrates |
-|------|---------------------|
-| [pydantic/test_01_basic.py](../tests/integration/pydantic/test_01_basic.py) | Natural language → tool usage with Banking and Todo servers |
-| [pydantic/test_02_models.py](../tests/integration/pydantic/test_02_models.py) | Model comparison (parametrize) |
-| [pydantic/test_03_prompts.py](../tests/integration/pydantic/test_03_prompts.py) | System prompt comparison |
-| [pydantic/test_04_matrix.py](../tests/integration/pydantic/test_04_matrix.py) | Model × prompt 2×2 grid |
-| [pydantic/test_05_skills.py](../tests/integration/pydantic/test_05_skills.py) | Skills with references and metadata |
-| [pydantic/test_06_sessions.py](../tests/integration/pydantic/test_06_sessions.py) | Multi-turn session continuity |
-| [pydantic/test_07_clarification.py](../tests/integration/pydantic/test_07_clarification.py) | ClarificationDetection feature |
-| [pydantic/test_08_scoring.py](../tests/integration/pydantic/test_08_scoring.py) | llm_score + ScoringDimension |
-| [pydantic/test_09_cli.py](../tests/integration/pydantic/test_09_cli.py) | CLIServer wrapping shell commands |
-| [pydantic/test_10_ab_servers.py](../tests/integration/pydantic/test_10_ab_servers.py) | A/B server comparison |
-| [pydantic/test_11_iterations.py](../tests/integration/pydantic/test_11_iterations.py) | --aitest-iterations=N reliability |
-| [pydantic/test_12_custom_agents.py](../tests/integration/pydantic/test_12_custom_agents.py) | Eval.from_agent_file + load_custom_agent |
+|------|----------------------|
+| [`test_01_basic.py`](../tests/integration/copilot/test_01_basic.py) | Basic file creation and refactoring |
+| [`test_02_models.py`](../tests/integration/copilot/test_02_models.py) | Model comparison |
+| [`test_03_instructions.py`](../tests/integration/copilot/test_03_instructions.py) | System prompt comparison and tool restrictions |
+| [`test_04_matrix.py`](../tests/integration/copilot/test_04_matrix.py) | Model × system prompt matrix |
+| [`test_05_skills.py`](../tests/integration/copilot/test_05_skills.py) | Skill A/B comparison |
+| [`test_06_sessions.py`](../tests/integration/copilot/test_06_sessions.py) | Multi-turn sessions |
+| [`test_07_clarification.py`](../tests/integration/copilot/test_07_clarification.py) | Clarification detection |
+| [`test_08_scoring.py`](../tests/integration/copilot/test_08_scoring.py) | LLM scoring |
+| [`test_09_cli.py`](../tests/integration/copilot/test_09_cli.py) | CLI workflows |
+| [`test_10_ab_servers.py`](../tests/integration/copilot/test_10_ab_servers.py) | Configuration A/B comparison |
+| [`test_11_iterations.py`](../tests/integration/copilot/test_11_iterations.py) | Iteration reliability |
+| [`test_12_custom_agents.py`](../tests/integration/copilot/test_12_custom_agents.py) | Custom agent dispatch |
+| [`test_13_plugins.py`](../tests/integration/copilot/test_13_plugins.py) | Plugin discovery and loading |
+| [`test_14_skill_evals.py`](../tests/integration/copilot/test_14_skill_evals.py) | Skill eval execution |
+| [`test_15_skill_refinement.py`](../tests/integration/copilot/test_15_skill_refinement.py) | Skill refinement |
+| [`test_16_skill_benchmark.py`](../tests/integration/copilot/test_16_skill_benchmark.py) | Skill benchmarking |
+| [`test_17_plugin_skill_workflow.py`](../tests/integration/copilot/test_17_plugin_skill_workflow.py) | End-to-end plugin skill workflow |
+| [`test_events.py`](../tests/integration/copilot/test_events.py) | Copilot SDK event capture |
 
 ## Run Examples
 
 ```bash
-# Prerequisites
-uv add pytest-skill-engineering
-az login               # For Azure OpenAI
+# Authenticate once
+gh auth login
 
 # Run basic usage tests
-uv run python -m pytest tests/integration/pydantic/test_01_basic.py -v
+uv run python -m pytest tests/integration/copilot/test_01_basic.py -v
 
-# Run all pydantic tests
-uv run python -m pytest tests/integration/pydantic/ -v
+# Run all Copilot integration tests
+uv run python -m pytest tests/integration/copilot/ -v
 
-# Run with report
-uv run python -m pytest tests/integration/pydantic/ -v --aitest-html=report.html
+# Generate a report
+uv run python -m pytest tests/integration/copilot/test_04_matrix.py -v \
+  --aitest-html=report.html
 ```
 
-## Test Servers
+## MCP Server Example
 
-Two built-in test servers for natural language testing:
+`CopilotEval` accepts MCP server configurations in the Copilot SDK format:
 
-### Banking Server
 ```python
-@pytest.fixture(scope="module")
-def banking_server():
-    return MCPServer(
-        command=["python", "-m", "pytest_skill_engineering.testing.banking_mcp"],
-        wait=Wait.for_tools(["get_balance", "transfer"]),
-    )
+import sys
+
+from pytest_skill_engineering.copilot import CopilotEval
 
 
-# Test: "What's my checking balance?"
+banking_eval = CopilotEval(
+    name="banking",
+    instructions="Use the banking tools for every account request.",
+    mcp_servers={
+        "banking": {
+            "command": sys.executable,
+            "args": ["-m", "pytest_skill_engineering.testing.banking_mcp"],
+            "tools": ["*"],
+        }
+    },
+)
 ```
 
-### Todo Server
-```python
-@pytest.fixture(scope="module")
-def todo_server():
-    return MCPServer(
-        command=["python", "-m", "pytest_skill_engineering.testing.todo_mcp"],
-        wait=Wait.for_tools(["add_task", "list_tasks"]),
-    )
-
-
-# Test: "Add buy milk to my shopping list"
-```
-
-## Fixtures
-
-See [conftest.py](../tests/integration/conftest.py) for fixture patterns:
-
-- `banking_server` / `todo_server` — Test MCP servers
-- `DEFAULT_MODEL`, `DEFAULT_RPM`, `DEFAULT_TPM`, `DEFAULT_MAX_TURNS` — Constants for eval creation
-- Azure token handling
+The package includes banking and todo MCP servers for integration scenarios. See [`tests/showcase/`](../tests/showcase/) for a complete banking example.
