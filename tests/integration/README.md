@@ -16,6 +16,7 @@ tests/integration/
     ├── test_01_basic.py         # Basic file creation and refactoring
     ├── test_02_models.py        # Model comparison
     ├── test_03_instructions.py  # System prompt and tool filtering
+    ├── test_04_matrix.py        # Model × system prompt matrix
     ├── test_05_skills.py        # Skill A/B comparison
     ├── test_06_sessions.py      # Multi-turn sessions
     ├── test_07_clarification.py # Clarification detection
