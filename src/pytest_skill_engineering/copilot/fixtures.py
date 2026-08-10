@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING, Any
 
 import pytest
 
-from pytest_skill_engineering.copilot.runner import run_copilot
+from pytest_skill_engineering.copilot.api import run_copilot
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Coroutine

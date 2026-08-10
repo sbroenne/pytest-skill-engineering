@@ -6,6 +6,7 @@ from pathlib import Path
 from types import SimpleNamespace
 from typing import Any, cast
 
+from pytest_skill_engineering.copilot.contracts import CopilotEvalConfig
 from pytest_skill_engineering.copilot.eval import CopilotEval
 from pytest_skill_engineering.copilot.events import EventMapper
 from pytest_skill_engineering.copilot.personas import _make_subagent_dispatch_tool
@@ -13,16 +14,14 @@ from pytest_skill_engineering.copilot.result import CopilotResult, Turn
 
 
 async def test_subagent_dispatch_preserves_exact_tools_and_merges_mcp_servers(
-    monkeypatch, tmp_path: Path
+    tmp_path: Path,
 ) -> None:
     captured: dict[str, object] = {}
 
-    async def fake_run_copilot(agent: CopilotEval, prompt: str) -> CopilotResult:
+    async def fake_run_copilot(agent: CopilotEvalConfig, prompt: str) -> CopilotResult:
         captured["agent"] = agent
         captured["prompt"] = prompt
         return CopilotResult(turns=[Turn(role="assistant", content="done")], success=True)
-
-    monkeypatch.setattr("pytest_skill_engineering.copilot.runner.run_copilot", fake_run_copilot)
 
     parent = CopilotEval(
         name="orchestrator",
@@ -52,6 +51,7 @@ async def test_subagent_dispatch_preserves_exact_tools_and_merges_mcp_servers(
             }
         ],
         mapper,
+        fake_run_copilot,
     )
 
     handler = cast(Any, dispatch_tool.handler)

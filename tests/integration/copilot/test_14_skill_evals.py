@@ -69,6 +69,7 @@ class TestSkillCreatorAutomation:
             skill_path,
             export_grading_path=grading_file,
         )
+        assert result.skill_name == "math-helper"
 
         # Verify file was written
         assert grading_file.exists(), "grading.json should be written"

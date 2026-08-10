@@ -15,15 +15,16 @@ from pytest_skill_engineering.execution import cost
 
 
 @pytest.fixture
-def pricing(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Install a deterministic pricing table and reset module globals."""
-    overrides = {
-        # (input, output, cache_read) per million tokens
-        "priced-model": (10.0, 30.0, 1.0),
-        "no-cache-model": (10.0, 30.0, 0.0),
-    }
-    monkeypatch.setattr(cost, "_user_overrides", overrides)
-    monkeypatch.setattr(cost, "models_without_pricing", set())
+def pricing(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Install a deterministic pricing file."""
+    (tmp_path / "pricing.toml").write_text(
+        "[models]\n"
+        '"priced-model" = { input = 10, output = 30, cache_read = 1 }\n'
+        '"no-cache-model" = { input = 10, output = 30 }\n'
+    )
+    monkeypatch.chdir(tmp_path)
+    cost._pricing_cache.clear()
+    cost.models_without_pricing.clear()
 
 
 def test_basic_input_output_cost(pricing: None) -> None:
@@ -60,10 +61,8 @@ def test_all_zero_tokens_short_circuits(pricing: None) -> None:
 
 
 @pytest.fixture
-def reset_pricing_cache(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(cost, "_user_overrides_cache", {})
-    monkeypatch.setattr(cost, "_user_overrides_cache_key", None)
-    monkeypatch.setattr(cost, "_user_overrides", None)
+def reset_pricing_cache() -> None:
+    cost._pricing_cache.clear()
 
 
 def test_pricing_cache_isolated_by_resolved_file_and_mtime(
@@ -83,7 +82,7 @@ def test_pricing_cache_isolated_by_resolved_file_and_mtime(
 
     monkeypatch.chdir(repo_b)
     assert cost._load_user_overrides()["model"] == (4.0, 5.0, 6.0)
-    assert set(path for path, _mtime in cost._user_overrides_cache) == {
+    assert set(path for path, _mtime in cost._pricing_cache.tables) == {
         pricing_a.resolve(),
         pricing_b.resolve(),
     }
@@ -103,7 +102,7 @@ def test_pricing_cache_invalidates_when_pricing_file_changes(
     os.utime(pricing, ns=(stat.st_atime_ns, stat.st_mtime_ns + 1))
 
     assert cost._load_user_overrides()["model"] == (7.0, 8.0, 9.0)
-    assert len(cost._user_overrides_cache) == 2
+    assert len(cost._pricing_cache.tables) == 2
 
 
 def test_pricing_cache_key_uses_cwd_when_no_file_exists(
@@ -116,12 +115,9 @@ def test_pricing_cache_key_uses_cwd_when_no_file_exists(
 
     monkeypatch.chdir(repo_a)
     assert cost._load_user_overrides() == {}
-    key_a = cost._user_overrides_cache_key
-
     monkeypatch.chdir(repo_b)
     assert cost._load_user_overrides() == {}
-    key_b = cost._user_overrides_cache_key
-
-    assert key_a == (repo_a.resolve(), None)
-    assert key_b == (repo_b.resolve(), None)
-    assert len(cost._user_overrides_cache) == 2
+    assert set(cost._pricing_cache.tables) == {
+        (repo_a.resolve(), None),
+        (repo_b.resolve(), None),
+    }

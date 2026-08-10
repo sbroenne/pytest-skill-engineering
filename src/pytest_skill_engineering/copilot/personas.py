@@ -41,12 +41,14 @@ Usage::
 
 from __future__ import annotations
 
-from dataclasses import replace
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from pytest_skill_engineering.copilot.contracts import (
     CopilotCustomAgentConfig,
+    CopilotEvalConfig,
+    CopilotEventMapper,
+    CopilotNestedRunner,
     declared_agent_tools,
     merge_agent_mcp_servers,
     require_custom_agent_name,
@@ -57,9 +59,6 @@ from pytest_skill_engineering.copilot.contracts import (
 
 if TYPE_CHECKING:
     from copilot.tools import Tool, ToolInvocation, ToolResult
-
-    from pytest_skill_engineering.copilot.eval import CopilotEval
-    from pytest_skill_engineering.copilot.events import EventMapper
 
 
 # ---------------------------------------------------------------------------
@@ -83,9 +82,10 @@ class Persona:
 
     def apply(
         self,
-        agent: "CopilotEval",
+        agent: CopilotEvalConfig,
         session_config: dict[str, Any],
-        mapper: "EventMapper",
+        mapper: CopilotEventMapper,
+        nested_runner: CopilotNestedRunner,
     ) -> None:
         """Modify *session_config* in-place to match this persona's environment.
 
@@ -133,9 +133,10 @@ class CopilotCLIPersona(Persona):
 
     def apply(
         self,
-        agent: "CopilotEval",
+        agent: CopilotEvalConfig,
         session_config: dict[str, Any],
-        mapper: "EventMapper",
+        mapper: CopilotEventMapper,
+        nested_runner: CopilotNestedRunner,
     ) -> None:
         _prepend_system_message(session_config, self._SYSTEM_MSG)
         if agent.working_directory:
@@ -168,9 +169,10 @@ class VSCodePersona(Persona):
 
     def apply(
         self,
-        agent: "CopilotEval",
+        agent: CopilotEvalConfig,
         session_config: dict[str, Any],
-        mapper: "EventMapper",
+        mapper: CopilotEventMapper,
+        nested_runner: CopilotNestedRunner,
     ) -> None:
         _prepend_system_message(session_config, self._SYSTEM_MSG)
         if agent.working_directory:
@@ -180,7 +182,12 @@ class VSCodePersona(Persona):
             if custom:
                 _prepend_system_message(session_config, custom)
         if agent.custom_agents:
-            tool = _make_runsubagent_tool(agent, agent.custom_agents, mapper)
+            tool = _make_runsubagent_tool(
+                agent,
+                agent.custom_agents,
+                mapper,
+                nested_runner,
+            )
             _inject_tool(session_config, tool)
             agents_block = _build_agents_block(agent.custom_agents, tool_name="runSubagent")
             _prepend_system_message(session_config, agents_block)
@@ -205,9 +212,10 @@ class ClaudeCodePersona(Persona):
 
     def apply(
         self,
-        agent: "CopilotEval",
+        agent: CopilotEvalConfig,
         session_config: dict[str, Any],
-        mapper: "EventMapper",
+        mapper: CopilotEventMapper,
+        nested_runner: CopilotNestedRunner,
     ) -> None:
         _prepend_system_message(session_config, self._SYSTEM_MSG)
         if agent.working_directory:
@@ -303,28 +311,43 @@ def _build_agents_block(
 
 
 def _make_runsubagent_tool(
-    parent_agent: "CopilotEval",
+    parent_agent: CopilotEvalConfig,
     custom_agents: list[CopilotCustomAgentConfig],
-    mapper: "EventMapper",
+    mapper: CopilotEventMapper,
+    nested_runner: CopilotNestedRunner,
 ) -> "Tool":
     """Build a ``runSubagent`` polyfill tool for the VS Code persona."""
-    return _make_subagent_dispatch_tool("runSubagent", parent_agent, custom_agents, mapper)
+    return _make_subagent_dispatch_tool(
+        "runSubagent",
+        parent_agent,
+        custom_agents,
+        mapper,
+        nested_runner,
+    )
 
 
 def _make_task_tool(
-    parent_agent: "CopilotEval",
+    parent_agent: CopilotEvalConfig,
     custom_agents: list[CopilotCustomAgentConfig],
-    mapper: "EventMapper",
+    mapper: CopilotEventMapper,
+    nested_runner: CopilotNestedRunner,
 ) -> "Tool":
     """Build a ``task`` polyfill tool for the Claude Code persona."""
-    return _make_subagent_dispatch_tool("task", parent_agent, custom_agents, mapper)
+    return _make_subagent_dispatch_tool(
+        "task",
+        parent_agent,
+        custom_agents,
+        mapper,
+        nested_runner,
+    )
 
 
 def _make_subagent_dispatch_tool(
     tool_name: str,
-    parent_agent: "CopilotEval",
+    parent_agent: CopilotEvalConfig,
     custom_agents: list[CopilotCustomAgentConfig],
-    mapper: "EventMapper",
+    mapper: CopilotEventMapper,
+    nested_runner: CopilotNestedRunner,
 ) -> "Tool":
     """Build a subagent dispatch polyfill tool.
 
@@ -342,8 +365,6 @@ def _make_subagent_dispatch_tool(
             subagent lifecycle events.
     """
     from copilot.tools import Tool, ToolResult
-
-    from pytest_skill_engineering.copilot.runner import run_copilot
 
     agent_map: dict[str, CopilotCustomAgentConfig] = {
         require_custom_agent_name(agent): agent for agent in custom_agents
@@ -404,8 +425,7 @@ def _make_subagent_dispatch_tool(
 
         mapper.record_subagent_start(invocation_id=invocation.tool_call_id, name=agent_slug)
 
-        sub_agent = replace(
-            parent_agent,
+        sub_agent = parent_agent.create_subagent(
             name=agent_slug,
             model=agent_cfg.get("model", parent_agent.model),
             reasoning_effort=reasoning_effort,
@@ -413,12 +433,10 @@ def _make_subagent_dispatch_tool(
             timeout_s=min(parent_agent.timeout_s, 600.0),
             max_turns=min(parent_agent.max_turns, 30),
             allowed_tools=allowed_tools,
-            excluded_tools=None,
             mcp_servers=mcp_servers,
-            active_agent=None,
         )
 
-        sub_result = await run_copilot(sub_agent, prompt_text)
+        sub_result = await nested_runner(sub_agent, prompt_text)
 
         if sub_result.success:
             mapper.record_subagent_complete(
@@ -471,7 +489,7 @@ def _make_subagent_dispatch_tool(
 
 
 def _inject_skill_reference_tools(
-    agent: "CopilotEval",
+    agent: CopilotEvalConfig,
     session_config: dict[str, Any],
 ) -> None:
     """Inject ``list_skill_references`` and ``read_skill_reference`` polyfill tools.
