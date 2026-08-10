@@ -19,7 +19,8 @@ class CopilotResultAgent(Protocol):
     """Minimal agent surface stored on :class:`CopilotResult`."""
 
     @property
-    def working_directory(self) -> str | None: ...
+    def working_directory(self) -> str | None:
+        raise NotImplementedError
 
 
 @dataclass(slots=True)
