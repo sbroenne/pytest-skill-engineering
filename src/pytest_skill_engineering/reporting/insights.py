@@ -100,21 +100,19 @@ def _build_analysis_input(
             "In the Winner Card, omit cost or mark it as 'N/A (pricing unavailable)'.\n"
         )
 
-    # Pre-computed agent statistics for AI accuracy (grouped by stable agent ID)
+    from pytest_skill_engineering.reporting.identity import build_report_identities
+
+    identities = build_report_identities(suite_report.tests)
+    # Use the same configuration groups as the rendered leaderboard.
     agent_agg: dict[str, dict[str, Any]] = {}
     has_iterations = any(t.iteration is not None for t in suite_report.tests)
     for test in suite_report.tests:
-        agent_id = test.agent_id
-        if not agent_id:
-            msg = f"Test {test.name!r} missing 'agent_id'"
-            raise ValueError(msg)
-        if not test.eval_name:
-            msg = f"Test {test.name!r} missing 'eval_name'"
-            raise ValueError(msg)
+        identity = identities[id(test)]
+        agent_id = identity.agent_id
 
         if agent_id not in agent_agg:
             agent_agg[agent_id] = {
-                "name": test.eval_name,
+                "name": identity.display_name,
                 "passed": 0,
                 "failed": 0,
                 "total": 0,
@@ -256,12 +254,15 @@ def _build_analysis_input(
 
     # Test results summary
     sections.append("## Test Results\n")
-    for test in suite_report.tests:
+    for test_index, test in enumerate(suite_report.tests, start=1):
         # Use human-readable name: docstring if available, else short test name
         header = f"### {test.display_name}"
         if has_iterations and test.iteration is not None:
             header += f" [iter {test.iteration}/{max_iter}]"
         sections.append(header)
+        sections.append(f"- Evidence reference: test-{test_index}")
+        sections.append(f"- Report eval: {identities[id(test)].display_name}")
+        sections.append(f"- Recorded test properties: {json.dumps(test.properties, default=str)}")
         if test.class_docstring:
             sections.append(f"- Group: {test.class_docstring.split(chr(10))[0].strip()}")
         sections.append(f"- Outcome: {test.outcome}")
@@ -271,6 +272,10 @@ def _build_analysis_input(
             sections.append(f"- Error: {test.error}")
         if test.eval_result is not None:
             ar = test.eval_result
+            sections.append(f"- Session success (not task verification): {ar.success}")
+            sections.append(f"- Evidence complete: {ar.evidence_complete}")
+            sections.append(f"- Capture errors: {json.dumps(ar.capture_errors)}")
+            sections.append(f"- Eval configuration: {json.dumps(ar.configuration, default=str)}")
             # Include agent identity for this specific test (from TestReport, not EvalResult)
             if test.eval_name:
                 sections.append(f"- Eval: {test.eval_name}")
@@ -307,7 +312,9 @@ def _build_analysis_input(
                             sections.append(f"  - Reasoning: {reasoning[:300]}")
             # Include conversation turns
             # In compact mode, omit full conversation for passed tests
-            include_conversation = test.outcome != "passed" or not compact
+            include_conversation = (
+                test.outcome != "passed" or ar.evidence_complete is False or not compact
+            )
             if include_conversation:
                 sections.append("\n**Conversation:**")
                 for turn in ar.turns:
@@ -322,7 +329,13 @@ def _build_analysis_input(
                                 result = tc.result[:500] + "..."
                             else:
                                 result = tc.result
-                            sections.append(f"  → {tc.name}({json.dumps(tc.arguments)}) = {result}")
+                            sections.append(
+                                f"  → [test-{test_index}/call:{tc.call_id}] "
+                                f"{tc.name}({json.dumps(tc.arguments)}) = {result!r}; "
+                                f"completion_received={tc.completion_received}; "
+                                f"success={tc.success}; error={tc.error!r}; "
+                                f"evidence_complete={tc.evidence_complete}"
+                            )
             elif ar.tool_names_called:
                 sections.append(f"\n*Passed — {len(ar.turns)} turns*")
         sections.append("")
@@ -410,7 +423,11 @@ def _build_analysis_input(
         # Compute pass rates per prompt name
         prompt_stats: dict[str, dict[str, int]] = {}
         for test in suite_report.tests:
-            pn = getattr(test.eval_result, "prompt_name", None) if test.eval_result else None
+            pn = (
+                getattr(test.eval_result, "prompt_name", None)
+                if test.eval_result is not None
+                else None
+            )
             if pn:
                 if pn not in prompt_stats:
                     prompt_stats[pn] = {"passed": 0, "total": 0}
@@ -432,7 +449,9 @@ def _build_analysis_input(
         instr_stats: dict[str, dict[str, int]] = {}
         for test in suite_report.tests:
             for inf in (
-                getattr(test.eval_result, "instruction_files", []) if test.eval_result else []
+                getattr(test.eval_result, "instruction_files", [])
+                if test.eval_result is not None
+                else []
             ):
                 if inf.name not in instr_stats:
                     instr_stats[inf.name] = {"passed": 0, "total": 0}
@@ -547,6 +566,7 @@ async def generate_insights(
     min_pass_rate: int | None = None,
     analysis_prompt: str | None = None,
     compact: bool = False,
+    max_attempts: int = 3,
 ) -> InsightsResult:
     """Generate AI insights markdown from test results.
 
@@ -567,6 +587,7 @@ async def generate_insights(
             domain-specific prompts via the ``pytest_skill_engineering_analysis_prompt`` hook.
         compact: When True, omit full conversation turns for passed tests to
             reduce token usage. Failed tests always include full detail.
+        max_attempts: Maximum judge attempts for this invocation, from 1 to 3.
 
     Returns:
         InsightsResult with markdown summary and generation metadata.
@@ -577,6 +598,9 @@ async def generate_insights(
     import asyncio
 
     from pytest_skill_engineering.copilot.judge import copilot_judge  # noqa: PLC0415
+
+    if type(max_attempts) is not int or max_attempts not in (1, 2, 3):
+        raise ValueError("max_attempts must be an integer from 1 to 3")
 
     # Build prompt - LLM returns markdown directly
     prompt_template = analysis_prompt if analysis_prompt else _load_analysis_prompt()
@@ -636,7 +660,7 @@ async def generate_insights(
     # Call with retry
     start_time = time.perf_counter()
 
-    for attempt in range(3):
+    for attempt in range(max_attempts):
         try:
             # Use copilot_judge to call the Copilot SDK
             # Timeout is generous for insights generation
@@ -676,7 +700,7 @@ async def generate_insights(
             )
 
         except Exception as e:
-            if attempt < 2:
+            if attempt + 1 < max_attempts:
                 await asyncio.sleep(2**attempt)
                 continue
             raise InsightsGenerationError(f"AI analysis failed: {e}") from e

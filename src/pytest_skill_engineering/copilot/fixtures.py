@@ -10,8 +10,9 @@ configurations against the same task in isolated directories.
 from __future__ import annotations
 
 import dataclasses
+from copy import deepcopy
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 
 import pytest
 
@@ -108,6 +109,32 @@ def _convert_to_aitest(
         cost_usd=cost_usd,
         effective_system_prompt=agent.instructions or "",
         premium_requests=result.total_premium_requests,
+        evidence_complete=result.evidence_complete,
+        capture_errors=list(result.capture_errors),
+        configuration=deepcopy(
+            {
+                "name": agent.name,
+                "model": agent.model,
+                "instructions": agent.instructions,
+                "system_message_mode": agent.system_message_mode,
+                "reasoning_effort": agent.reasoning_effort,
+                "allowed_tools": agent.allowed_tools,
+                "excluded_tools": agent.excluded_tools,
+                "max_turns": agent.max_turns,
+                "timeout_s": agent.timeout_s,
+                "max_retries": agent.max_retries,
+                "retry_delay_s": agent.retry_delay_s,
+                "auto_confirm": agent.auto_confirm,
+                "mcp_servers": {
+                    name: {"type": config.get("type"), "tools": config.get("tools")}
+                    for name, config in agent.mcp_servers.items()
+                },
+                "skill_directories": agent.skill_directories,
+                "disabled_skills": agent.disabled_skills,
+                "active_agent": agent.active_agent,
+                "persona": type(agent.persona).__name__,
+            }
+        ),
     )
 
     # Create a minimal wrapper with just the fields needed by plugin.py
@@ -145,13 +172,17 @@ def stash_on_item(
     item: Item,
     agent: CopilotEval,
     result: CopilotResult,
+    *,
+    comparison_role: Literal["baseline", "treatment"] | None = None,
 ) -> None:
     """Stash result on the test node for pytest-skill-engineering compatibility.
 
-    pytest-skill-engineering's plugin reads ``node._aitest_result`` and
-    ``node._aitest_agent`` in its ``pytest_runtest_makereport`` hook
-    to build HTML reports. We produce compatible objects so Copilot
-    test results appear in the same reports as synthetic agent tests.
+    The plugin reads ``node._aitest_runs`` to retain every execution.
+    ``node._aitest_result`` and ``node._aitest_agent`` expose the latest
+    execution for other report hooks.
+
+    ``comparison_role`` labels report records only; the runtime config and
+    result's agent back-reference remain unchanged.
 
     Called automatically by the ``copilot_eval`` fixture and by the
     ``pytest_runtest_makereport`` plugin hook; consumers should rarely
@@ -159,8 +190,31 @@ def stash_on_item(
     """
     converted = _convert_to_aitest(agent, result)
     if converted is not None:
+        if comparison_role is not None:
+            report_name = f"{agent.name} ({comparison_role})"
+            converted[1].name = report_name
+            converted[1].id = report_name
+            converted[0].configuration["comparison_role"] = comparison_role
         item._aitest_result = converted[0]  # type: ignore[attr-defined]
         item._aitest_agent = converted[1]  # type: ignore[attr-defined]
+        runs = getattr(item, "_aitest_runs", None)
+        if runs is None:
+            runs = []
+            item._aitest_runs = runs  # type: ignore[attr-defined]
+        runs.append(converted)
+
+
+def _prepare_ab_configs(
+    baseline: CopilotEval, treatment: CopilotEval, tmp_path: Path
+) -> tuple[CopilotEval, CopilotEval]:
+    baseline_dir = tmp_path / "baseline"
+    treatment_dir = tmp_path / "treatment"
+    baseline_dir.mkdir(exist_ok=True)
+    treatment_dir.mkdir(exist_ok=True)
+    return (
+        dataclasses.replace(baseline, working_directory=str(baseline_dir)),
+        dataclasses.replace(treatment, working_directory=str(treatment_dir)),
+    )
 
 
 @pytest.fixture
@@ -172,8 +226,9 @@ def ab_run(
 
     Creates ``baseline/`` and ``treatment/`` subdirectories under
     ``tmp_path``, overrides ``working_directory`` on each agent so they
-    never share a workspace, then runs them sequentially and stashes the
-    treatment result for pytest-skill-engineering reporting.
+    never share a workspace, then runs them sequentially and stashes
+    both results for pytest-skill-engineering reporting. Each side keeps its
+    configuration and trace; the pytest outcome describes the combined test.
 
     Example::
 
@@ -203,23 +258,14 @@ def ab_run(
         treatment: CopilotEval,
         task: str,
     ) -> tuple[CopilotResult, CopilotResult]:
-        baseline_dir = tmp_path / "baseline"
-        treatment_dir = tmp_path / "treatment"
-        baseline_dir.mkdir(exist_ok=True)
-        treatment_dir.mkdir(exist_ok=True)
-
-        # Override working directories to guarantee isolation.
-        # CopilotEval is frozen — dataclasses.replace() creates a new instance.
-        baseline = dataclasses.replace(baseline, working_directory=str(baseline_dir))
-        treatment = dataclasses.replace(treatment, working_directory=str(treatment_dir))
+        baseline, treatment = _prepare_ab_configs(baseline, treatment, tmp_path)
 
         # Run sequentially — agents may write to disk, install packages, etc.
         baseline_result = await run_copilot(baseline, task)
+        stash_on_item(request.node, baseline, baseline_result, comparison_role="baseline")
         treatment_result = await run_copilot(treatment, task)
 
-        # Stash treatment result for pytest-skill-engineering reporting.
-        # Treatment is the config being evaluated; its result is what matters.
-        stash_on_item(request.node, treatment, treatment_result)
+        stash_on_item(request.node, treatment, treatment_result, comparison_role="treatment")
 
         return baseline_result, treatment_result
 

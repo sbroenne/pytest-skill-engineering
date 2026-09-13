@@ -10,6 +10,9 @@ report is functionally equivalent to the HTML report.
 
 from __future__ import annotations
 
+import json
+from html import escape
+
 from mdutils.tools.Header import AtxHeaderLevel, Header
 from mdutils.tools.Table import Table
 
@@ -194,7 +197,13 @@ def _tool_calls_table(tool_calls: list[ToolCallData]) -> str:
     rows: list[list[str]] = [header]
 
     for tc in tool_calls:
-        status = "✅" if tc.success else f"❌ {tc.error or ''}"
+        status = (
+            "Incomplete evidence"
+            if not tc.evidence_complete
+            else "✅"
+            if tc.success
+            else f"❌ {tc.error or ''}"
+        )
         args_str = ""
         if tc.args:
             args_str = ", ".join(f"{k}={v!r}" for k, v in tc.args.items())
@@ -209,6 +218,18 @@ def _tool_calls_table(tool_calls: list[ToolCallData]) -> str:
         text_align=["left", "center", "left"],
     )
     parts.append(table)
+    for tc in tool_calls:
+        output = tc.result if tc.result is not None else "Output not captured"
+        evidence = (
+            f"Call: {tc.call_id}\n"
+            f"Completion received: {tc.completion_received}; tool success: {tc.tool_success}\n"
+            f"Arguments: {json.dumps(tc.args)}\n"
+            f"Output: {output if output else 'Empty output'}\n"
+            f"Error: {tc.error}"
+        )
+        parts.append(
+            f"<details><summary>Call evidence</summary><pre>{escape(evidence)}</pre></details>"
+        )
     return "\n".join(parts)
 
 
@@ -316,6 +337,18 @@ def _test_result_detail(
         parts.append("")
 
     # Tool calls
+    evidence = {
+        "session_success": result.execution_success,
+        "evidence_complete": result.evidence_complete,
+        "capture_errors": result.capture_errors,
+        "properties": result.properties,
+        "configuration": result.configuration,
+    }
+    parts.append(
+        "<details><summary>Execution and verification evidence</summary><pre>"
+        + escape(json.dumps(evidence, indent=2, default=str))
+        + "</pre></details>"
+    )
     if result.tool_calls:
         parts.append(_tool_calls_table(result.tool_calls))
         parts.append("")

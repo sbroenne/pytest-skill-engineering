@@ -21,7 +21,7 @@ class TestAbRunFixture:
     def _no_stash(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Prevent ab_run from registering test reports in the plugin stash."""
         monkeypatch.setattr(
-            "pytest_skill_engineering.copilot.fixtures.stash_on_item", lambda *a: None
+            "pytest_skill_engineering.copilot.fixtures.stash_on_item", lambda *a, **kw: None
         )
 
     @pytest.fixture
@@ -133,24 +133,27 @@ class TestAbRunFixture:
         assert original_baseline.working_directory is None
         assert original_treatment.working_directory is None
 
-    async def test_stashes_treatment_result_for_aitest(self, ab_run, request, tmp_path):
-        """ab_run stashes treatment result on the test node for aitest."""
+    async def test_stashes_both_results_for_aitest(self, ab_run, request, tmp_path):
+        """ab_run stashes both results with report-only comparison roles."""
+        baseline_result = _make_result(success=True)
         treatment_result = _make_result(success=True)
         treatment = CopilotEval(name="treatment")
 
         with (
             patch(
                 "pytest_skill_engineering.copilot.fixtures.run_copilot",
-                new=AsyncMock(side_effect=[_make_result(), treatment_result]),
+                new=AsyncMock(side_effect=[baseline_result, treatment_result]),
             ),
             patch("pytest_skill_engineering.copilot.fixtures.stash_on_item") as mock_stash,
         ):
             await ab_run(CopilotEval(name="baseline"), treatment, "task")
 
-        # stash_on_item called once with treatment result
-        mock_stash.assert_called_once()
-        _, _, stashed_result = mock_stash.call_args[0]
-        assert stashed_result is treatment_result
+        assert mock_stash.call_count == 2
+        baseline_call, treatment_call = mock_stash.call_args_list
+        assert baseline_call.args[2] is baseline_result
+        assert treatment_call.args[2] is treatment_result
+        assert baseline_call.kwargs == {"comparison_role": "baseline"}
+        assert treatment_call.kwargs == {"comparison_role": "treatment"}
 
     async def test_passes_task_to_both_agents(self, ab_run, tmp_path):
         """ab_run passes the same task string to both agents."""

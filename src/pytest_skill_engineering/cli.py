@@ -21,10 +21,11 @@ import os
 import sys
 import tomllib
 from pathlib import Path
+from tempfile import NamedTemporaryFile
 from typing import Any
 
 from pytest_skill_engineering.reporting.collector import SuiteReport
-from pytest_skill_engineering.reporting.generator import generate_html, generate_md
+from pytest_skill_engineering.reporting.generator import generate_html, generate_json, generate_md
 from pytest_skill_engineering.reporting.insights import InsightsResult
 from pytest_skill_engineering.reporting.schema import REPORT_SCHEMA_VERSION
 
@@ -124,6 +125,7 @@ def generate_ai_summary(
     *,
     analysis_prompt: str | None = None,
     compact: bool = False,
+    max_attempts: int = 3,
 ) -> InsightsResult:
     """Generate AI insights for the report.
 
@@ -132,6 +134,7 @@ def generate_ai_summary(
         model: Model string (for example ``copilot/gpt-5.4-mini``)
         analysis_prompt: Custom analysis prompt text (optional)
         compact: Omit full conversation for passed tests to reduce tokens
+        max_attempts: Maximum judge attempts for this invocation, from 1 to 3.
 
     Returns:
         InsightsResult with markdown summary and metadata
@@ -149,9 +152,30 @@ def generate_ai_summary(
             model=model,
             analysis_prompt=analysis_prompt,
             compact=compact,
+            max_attempts=max_attempts,
         )
 
     return asyncio.run(_run())
+
+
+def _summary_checkpoint_path(
+    source: Path, explicit: Path | None, summary_requested: bool
+) -> Path | None:
+    if explicit is not None:
+        return explicit
+    if summary_requested:
+        return source.with_name(f"{source.stem}.summary.json")
+    return None
+
+
+def _save_summary_checkpoint(report: SuiteReport, path: Path, insights: InsightsResult) -> None:
+    with NamedTemporaryFile(dir=path.parent, prefix=f".{path.name}.", delete=False) as handle:
+        temporary = Path(handle.name)
+    try:
+        generate_json(report, temporary, insights=insights)
+        temporary.replace(path)
+    finally:
+        temporary.unlink(missing_ok=True)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -182,6 +206,14 @@ def main(argv: list[str] | None = None) -> int:
     )
 
     parser.add_argument(
+        "--json",
+        metavar="PATH",
+        type=Path,
+        help="Save evidence and insights as reusable report JSON before rendering. "
+        "With --summary, defaults to <input-stem>.summary.json. Must be a new path.",
+    )
+
+    parser.add_argument(
         "--summary",
         action="store_true",
         help="Generate AI-powered summary (requires --summary-model)",
@@ -192,6 +224,15 @@ def main(argv: list[str] | None = None) -> int:
         metavar="MODEL",
         help="Model for AI summary (for example copilot/gpt-5.4-mini). "
         "Can also be set via AITEST_SUMMARY_MODEL env var or pyproject.toml.",
+    )
+
+    parser.add_argument(
+        "--summary-attempts",
+        type=int,
+        choices=(1, 2, 3),
+        default=3,
+        help="Maximum summary attempts in this invocation (default: 3). "
+        "Reduce this when previous invocations have already consumed the budget.",
     )
 
     parser.add_argument(
@@ -231,8 +272,10 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Error: JSON file not found: {args.json_file}", file=sys.stderr)
         return 1
 
-    if not args.html and not args.md:
-        print("Error: at least one of --html or --md is required", file=sys.stderr)
+    if not (args.html or args.md or args.json or args.summary):
+        print(
+            "Error: at least one of --html, --md, --json or --summary is required", file=sys.stderr
+        )
         return 1
 
     if args.summary and not summary_model:
@@ -246,6 +289,31 @@ def main(argv: list[str] | None = None) -> int:
             file=sys.stderr,
         )
         return 1
+
+    checkpoint = _summary_checkpoint_path(args.json_file, args.json, args.summary)
+    outputs = [path.resolve() for path in (args.html, args.md, checkpoint) if path is not None]
+    if args.json_file.resolve() in outputs:
+        print("Error: output paths must differ from the input report", file=sys.stderr)
+        return 1
+    if len(outputs) != len(set(outputs)):
+        print("Error: output paths must be distinct", file=sys.stderr)
+        return 1
+    if checkpoint is not None:
+        if checkpoint.exists():
+            print(
+                f"Error: analysis checkpoint already exists: {checkpoint}. "
+                "Reuse it as input without --summary, or choose a new --json path.",
+                file=sys.stderr,
+            )
+            return 1
+        try:
+            checkpoint.parent.mkdir(parents=True, exist_ok=True)
+            # Fail unwritable destinations before paying for analysis.
+            with NamedTemporaryFile(dir=checkpoint.parent):
+                pass
+        except OSError as e:
+            print(f"Error: Cannot prepare analysis checkpoint: {e}", file=sys.stderr)
+            return 1
 
     # Load report from JSON
     try:
@@ -283,12 +351,16 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Generating AI summary with {summary_model}...")
         try:
             insights = generate_ai_summary(
-                report, summary_model, analysis_prompt=custom_prompt, compact=args.compact
+                report,
+                summary_model,
+                analysis_prompt=custom_prompt,
+                compact=args.compact,
+                max_attempts=args.summary_attempts,
             )
             print("AI summary generated successfully.")
         except Exception as e:
-            print(f"Warning: Failed to generate AI summary: {e}", file=sys.stderr)
-            insights = existing_insights
+            print(f"Error: Failed to generate AI summary: {e}", file=sys.stderr)
+            return 1
 
     # AI insights are mandatory for all report formats
     if insights is None:
@@ -300,16 +372,27 @@ def main(argv: list[str] | None = None) -> int:
         )
         return 1
 
-    # Generate reports
-    if args.html:
-        args.html.parent.mkdir(parents=True, exist_ok=True)
-        generate_html(report, args.html, insights=insights)
-        print(f"HTML report: {args.html}")
+    if checkpoint is not None:
+        try:
+            _save_summary_checkpoint(report, checkpoint, insights)
+        except Exception as e:
+            print(f"Error: Failed to save analysis checkpoint: {e}", file=sys.stderr)
+            return 1
+        print(f"Analysis and evidence saved: {checkpoint}")
 
-    if args.md:
-        args.md.parent.mkdir(parents=True, exist_ok=True)
-        generate_md(report, args.md, insights=insights)
-        print(f"Markdown report: {args.md}")
+    try:
+        if args.html:
+            args.html.parent.mkdir(parents=True, exist_ok=True)
+            generate_html(report, args.html, insights=insights)
+            print(f"HTML report: {args.html}")
+
+        if args.md:
+            args.md.parent.mkdir(parents=True, exist_ok=True)
+            generate_md(report, args.md, insights=insights)
+            print(f"Markdown report: {args.md}")
+    except Exception as e:
+        print(f"Error: Failed to render report: {e}", file=sys.stderr)
+        return 1
 
     return 0
 

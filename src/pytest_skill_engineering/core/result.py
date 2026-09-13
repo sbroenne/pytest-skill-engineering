@@ -34,6 +34,20 @@ class ToolCall:
     duration_ms: float | None = None
     image_content: bytes | None = None
     image_media_type: str | None = None
+    call_id: str | None = None
+    completion_received: bool | None = None
+    success: bool | None = None
+
+    @property
+    def evidence_complete(self) -> bool:
+        """Whether completion, outcome, and returned content or error were captured."""
+        return (
+            self.completion_received is True
+            and self.success is not None
+            and (
+                self.result is not None or self.error is not None or self.image_content is not None
+            )
+        )
 
     def __repr__(self) -> str:
         status = "error" if self.error else "ok"
@@ -250,6 +264,9 @@ class EvalResult:
     custom_agent_info: CustomAgentInfo | None = None
     premium_requests: float = 0.0
     instruction_files: list[InstructionFileInfo] = field(default_factory=list)
+    configuration: dict[str, Any] = field(default_factory=dict)
+    capture_errors: list[str] = field(default_factory=list)
+    evidence_complete: bool | None = None
 
     # Clarification detection
     clarification_stats: ClarificationStats | None = None

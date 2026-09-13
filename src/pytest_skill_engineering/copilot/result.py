@@ -73,6 +73,12 @@ class CopilotResult:
 
     # Raw SDK events for advanced inspection
     raw_events: list[Any] = field(default_factory=list)
+    capture_errors: list[str] = field(default_factory=list)
+
+    @property
+    def evidence_complete(self) -> bool:
+        """Whether every observed call has a complete, correlated record."""
+        return not self.capture_errors and all(c.evidence_complete for c in self.all_tool_calls)
 
     # Back-reference to the agent that produced this result.
     # Set automatically by run_copilot() so the plugin hook can

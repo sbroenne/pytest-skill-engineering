@@ -1438,7 +1438,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "cairosvg", marker = "extra == 'docs'", specifier = ">=2.7" },
-    { name = "github-copilot-sdk", specifier = ">=1.0.6" },
+    { name = "github-copilot-sdk", specifier = ">=1.0.9" },
     { name = "htpy", specifier = ">=25.12.0" },
     { name = "markdown", specifier = ">=3.10.2" },
     { name = "mcp", specifier = ">=1.26" },

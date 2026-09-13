@@ -77,8 +77,11 @@ jobs:
       - name: Install dependencies
         run: uv sync --all-extras
 
+      - name: Run evidence contract tests
+        run: uv run python -m pytest tests/contracts/ -v --tb=short -o addopts=
+
       - name: Run unit tests
-        run: uv run pytest tests/unit/ -v --tb=short
+        run: uv run python -m pytest tests/unit/ -v --tb=short -o addopts=
 
   smoke-test:
     name: Smoke Test

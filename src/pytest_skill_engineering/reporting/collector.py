@@ -47,6 +47,7 @@ class TestReport:
     skill_name: str | None = None
     iteration: int | None = None
     _copilot_test: bool = False
+    properties: list[tuple[str, Any]] = field(default_factory=list)
 
     @property
     def is_passed(self) -> bool:
@@ -75,7 +76,7 @@ class TestReport:
     @property
     def tokens_used(self) -> int:
         """Get total tokens used from eval_result if present."""
-        if self.eval_result:
+        if self.eval_result is not None:
             return self.eval_result.token_usage.get("prompt", 0) + self.eval_result.token_usage.get(
                 "completion", 0
             )
@@ -84,7 +85,7 @@ class TestReport:
     @property
     def tool_calls(self) -> list[str]:
         """Get tool call names from eval_result if present."""
-        if self.eval_result:
+        if self.eval_result is not None:
             return [tc.name for tc in self.eval_result.all_tool_calls]
         return []
 
@@ -120,7 +121,7 @@ class SuiteReport:
         """Sum of all tokens used."""
         total = 0
         for t in self.tests:
-            if t.eval_result:
+            if t.eval_result is not None:
                 total += t.eval_result.token_usage.get("prompt", 0)
                 total += t.eval_result.token_usage.get("completion", 0)
         return total
@@ -128,7 +129,7 @@ class SuiteReport:
     @property
     def total_cost_usd(self) -> float:
         """Sum of all costs in USD."""
-        return sum(t.eval_result.cost_usd for t in self.tests if t.eval_result)
+        return sum(t.eval_result.cost_usd for t in self.tests if t.eval_result is not None)
 
     @property
     def token_stats(self) -> dict[str, int]:
@@ -137,7 +138,7 @@ class SuiteReport:
             t.eval_result.token_usage.get("prompt", 0)
             + t.eval_result.token_usage.get("completion", 0)
             for t in self.tests
-            if t.eval_result
+            if t.eval_result is not None
         ]
         if not tokens:
             return {"min": 0, "max": 0, "avg": 0}
