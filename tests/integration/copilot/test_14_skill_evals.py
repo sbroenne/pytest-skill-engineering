@@ -7,7 +7,7 @@ and exports grading.json.
 This is the bridge between Anthropic's skill-creator interactive authoring
 and our CI/CD testing pipeline.
 
-Run with: pytest tests/integration/copilot/test_14_skill_evals.py -v
+Run with: uv run python -m pytest tests/integration/copilot/test_14_skill_evals.py -v
 """
 
 from __future__ import annotations

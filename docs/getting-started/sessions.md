@@ -1,13 +1,14 @@
 ---
-description: "Test multi-turn conversations where evals maintain context across tests. Validate session continuity, context retention, and sequential workflows."
+description: "Test sequential workflows by providing prior context explicitly in each independent CopilotEval prompt."
 ---
 
-# Multi-Turn Sessions
+# Multi-step workflows
 
-So far, each test is independent—the agent has no memory between tests. **Sessions** let multiple tests share conversation history, simulating real multi-turn interactions.
+Each test is independent—the agent has no memory between tests. To test a
+multi-step interaction, put the required context and actions into the prompt.
 
 !!! note "Context-in-prompt, not stateful sessions"
-    `CopilotEval` has no message-history reuse — the Copilot SDK accepts string prompts only (`send_and_wait(prompt: str)`), so there's no server-side session state to share between tests. Instead, each test embeds whatever prior context it needs directly in its prompt string. See [test_06_sessions.py](https://github.com/sbroenne/pytest-skill-engineering/blob/main/tests/integration/copilot/test_06_sessions.py) for the pattern.
+    Each `copilot_eval` call starts a new Copilot session; the fixture does not reuse conversation history between calls. Embed prior context directly in the prompt. This is a harness lifecycle choice, not a limitation of the SDK's session support. See [test_06_sessions.py](https://github.com/sbroenne/pytest-skill-engineering/blob/main/tests/integration/copilot/test_06_sessions.py) for the pattern.
 
 ## Why Sessions?
 

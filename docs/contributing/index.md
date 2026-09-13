@@ -12,7 +12,7 @@ Resources for contributors and developers working on pytest-skill-engineering it
     ```bash
     git clone https://github.com/sbroenne/pytest-skill-engineering.git
     cd pytest-skill-engineering
-    uv sync --all-extras
+    uv sync --frozen --all-extras
     uv run pre-commit install
     ```
 

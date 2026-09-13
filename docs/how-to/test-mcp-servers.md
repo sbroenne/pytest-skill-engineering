@@ -45,7 +45,7 @@ Use `tools: ["*"]` unless you intentionally want the server itself to expose onl
 REMOTE_MCP = {
     "crm": {
         "url": "http://localhost:8000/sse",
-        "transport": "sse",
+        "type": "sse",
         "tools": ["*"],
     }
 }
@@ -57,7 +57,7 @@ REMOTE_MCP = {
 REMOTE_MCP = {
     "crm": {
         "url": "http://localhost:8000/mcp",
-        "transport": "streamable-http",
+        "type": "http",
         "headers": {"Authorization": "Bearer ${CRM_TOKEN}"},
         "tools": ["*"],
     }

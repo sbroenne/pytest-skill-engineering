@@ -28,7 +28,6 @@ addopts = """
 | `--aitest-summary-compact` | Omit full passing transcripts from AI analysis |
 | `--aitest-print-analysis-prompt` | Print the resolved analysis prompt source |
 | `--llm-model=MODEL` | Copilot model for `llm_assert` / `llm_score` |
-| `--llm-vision-model=MODEL` | Reserved for `llm_assert_image`; the fixture currently raises `NotImplementedError` |
 
 Run pytest with:
 
@@ -46,5 +45,6 @@ Add `--summary --summary-model copilot/gpt-5.4-mini` to refresh AI insights.
 
 ## Environment variables
 
-- `GITHUB_TOKEN` — optional non-interactive Copilot auth
+- `GITHUB_TOKEN` — explicit non-interactive Copilot auth; takes precedence over `GH_TOKEN`
+- `GH_TOKEN` — explicit Copilot auth when `GITHUB_TOKEN` is unset
 - `AITEST_SUMMARY_MODEL` — default summary model for regeneration

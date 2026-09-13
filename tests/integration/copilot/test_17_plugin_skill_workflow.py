@@ -9,7 +9,7 @@ banking-plugin's financial-literacy skill:
 This is the integration test that proves the full pipeline works
 against a real plugin, not just isolated skill directories.
 
-Run with: pytest tests/integration/copilot/test_17_plugin_skill_workflow.py -v
+Run with: uv run python -m pytest tests/integration/copilot/test_17_plugin_skill_workflow.py -v
 """
 
 from __future__ import annotations

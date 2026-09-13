@@ -1,15 +1,17 @@
 ---
-description: "Current state of image assertions with Copilot: tool images are captured, but llm_assert_image is not yet available through the documented SDK path."
+description: "Inspect tool-returned images in Copilot results and reports using structural assertions."
 ---
 
-# Image assertions
+# Tool-returned images
 
 ## Current status
 
 Tool-returned images are captured in results and surfaced in reports.
-You can inspect them with `result.tool_images_for(...)`.
+Inspect `image_content` (bytes) and `image_media_type` on calls returned by
+`result.tool_calls_for(...)`.
 
-`llm_assert_image` exists as a fixture entry point, but it currently raises `NotImplementedError` because the documented Copilot SDK flow does not yet expose image inputs for semantic judging.
+Semantic image judging is not supported. Use ordinary pytest assertions for
+image presence and metadata, and inspect the captured images in the report.
 
 ## What works today
 
@@ -17,11 +19,15 @@ You can inspect them with `result.tool_images_for(...)`.
 async def test_screenshot_tool_returns_png(copilot_eval, agent):
     result = await copilot_eval(agent, "Capture a screenshot of the chart")
 
-    screenshots = result.tool_images_for("screenshot")
+    assert result.success
+    screenshots = [
+        call for call in result.tool_calls_for("screenshot") if call.image_content is not None
+    ]
     assert screenshots
-    assert screenshots[-1].media_type == "image/png"
+    assert screenshots[-1].image_media_type == "image/png"
+    assert screenshots[-1].image_content
 ```
 
-## What to avoid documenting as supported
-
-Do not document `llm_assert_image(...)` as a working semantic-vision assertion until Copilot SDK image input support is available through the public runtime.
+Use the exact tool name captured in your result; MCP tools may have a server
+prefix. Checking media type does not establish that the image shows the
+requested chart.

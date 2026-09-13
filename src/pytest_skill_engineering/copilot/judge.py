@@ -8,37 +8,17 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import os
 from typing import Any
 
+from copilot.generated.session_events import SessionEvent
+
+from pytest_skill_engineering.copilot.client import (
+    approve_all_permissions,
+    create_client,
+    stop_client,
+)
+
 logger = logging.getLogger(__name__)
-
-# Lazy import pattern — copilot SDK may not be installed
-_CopilotClient: type[Any] | None = None
-
-
-def _get_copilot_client() -> type[Any]:
-    """Lazy-load CopilotClient to avoid import errors when SDK not installed."""
-    global _CopilotClient  # noqa: PLW0603
-    if _CopilotClient is None:
-        try:
-            from copilot.client import CopilotClient as _Client  # noqa: PLC0415
-
-            _CopilotClient = _Client
-        except ImportError as exc:
-            msg = (
-                "github-copilot-sdk is required for Copilot-based judge calls. "
-                "Install with: uv add pytest-skill-engineering[copilot]"
-            )
-            raise ImportError(msg) from exc
-    return _CopilotClient
-
-
-def _approve_all_permissions(*_args: Any, **_kwargs: Any) -> Any:
-    """Approve all permission requests using the current SDK result type."""
-    from copilot.generated.rpc import PermissionDecisionApproveOnce  # noqa: PLC0415
-
-    return PermissionDecisionApproveOnce()
 
 
 def _get_data_field(event: Any, field: str, default: Any = None) -> Any:
@@ -66,20 +46,10 @@ async def copilot_judge(
         The assistant's final response text.
 
     Raises:
-        ImportError: If github-copilot-sdk is not installed.
         TimeoutError: If the session takes longer than timeout_seconds.
         RuntimeError: If the Copilot CLI fails to start or session errors.
     """
-    CopilotClient = _get_copilot_client()
-
-    # When None, the SDK falls back to the logged-in gh user.
-    github_token = os.environ.get("GITHUB_TOKEN")
-
-    client = CopilotClient(
-        working_directory=".",
-        log_level="warning",
-        github_token=github_token,
-    )
+    client = create_client()
 
     try:
         # Hard timeout on startup — CLI must start within 60s
@@ -87,21 +57,16 @@ async def copilot_judge(
 
         # Build session config
         session_config: dict[str, Any] = {
-            "on_permission_request": _approve_all_permissions,
+            "on_permission_request": approve_all_permissions,
+            "enable_config_discovery": False,
         }
         if model is not None:
             session_config["model"] = model
 
-        # Create session
-        session = await asyncio.wait_for(
-            client.create_session(**session_config),
-            timeout=30,
-        )
-
         response_parts: list[str] = []
         completed_response = ""
 
-        def on_event(event: Any) -> None:
+        def on_event(event: SessionEvent) -> None:
             """Collect assistant responses from events."""
             event_type = event.type.value if hasattr(event.type, "value") else str(event.type)
 
@@ -122,7 +87,11 @@ async def copilot_judge(
             if event_type == "assistant.turn_end" and response_parts and not completed_response:
                 completed_response = "".join(response_parts)
 
-        session.on(on_event)
+        session_config["on_event"] = on_event
+        session = await asyncio.wait_for(
+            client.create_session(**session_config),
+            timeout=30,
+        )
 
         # Send prompt and wait for completion
         await asyncio.wait_for(
@@ -142,11 +111,4 @@ async def copilot_judge(
         logger.error("Copilot judge failed: %s", exc)
         raise RuntimeError(f"Copilot judge execution failed: {exc}") from exc
     finally:
-        try:
-            await client.stop()
-        except Exception:
-            logger.warning("Failed to stop Copilot CLI cleanly, force stopping")
-            try:
-                await client.force_stop()
-            except Exception:
-                logger.warning("force_stop also failed", exc_info=True)
+        await stop_client(client)

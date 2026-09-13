@@ -7,7 +7,6 @@ from typing import Any
 
 from pytest_skill_engineering.plugin_recording import (
     RecordingLLMAssert,
-    RecordingLLMAssertImage,
     RecordingLLMScore,
 )
 
@@ -54,19 +53,6 @@ class FakeLLMAssertInner:
 
     def __call__(self, content: str, criterion: str) -> FakeAssertionResult:
         self.calls.append((content, criterion))
-        return self.result
-
-
-@dataclass(slots=True)
-class FakeLLMAssertImageInner:
-    """Concrete fake for image assertion wrapper tests."""
-
-    result: FakeAssertionResult
-    calls: list[tuple[Any, str, dict[str, Any]]] = field(default_factory=list)
-    some_attribute: str = "inner-image-attribute"
-
-    def __call__(self, image: Any, criterion: str, **kwargs: Any) -> FakeAssertionResult:
-        self.calls.append((image, criterion, kwargs))
         return self.result
 
 
@@ -151,44 +137,6 @@ class TestRecordingLLMAssert:
         )
 
         assert wrapped.some_attribute == "inner-assert-attribute"
-
-
-class TestRecordingLLMAssertImage:
-    """Tests for RecordingLLMAssertImage."""
-
-    def test_call_passes_kwargs_and_records_image_assertion(self) -> None:
-        result = FakeAssertionResult(
-            criterion="shows a chart",
-            reasoning="A chart is visible in the image.",
-            truthy=True,
-        )
-        inner = FakeLLMAssertImageInner(result=result)
-        store: list[dict[str, Any]] = []
-        wrapped = RecordingLLMAssertImage(inner, store)
-        image = object()
-
-        returned = wrapped(image, "shows a chart", threshold=0.9, mode="strict")
-
-        assert returned is result
-        assert inner.calls == [(image, "shows a chart", {"threshold": 0.9, "mode": "strict"})]
-        assert store == [
-            {
-                "type": "llm_image",
-                "passed": True,
-                "message": "shows a chart",
-                "details": "A chart is visible in the image.",
-            }
-        ]
-
-    def test_getattr_delegates_to_inner(self) -> None:
-        wrapped = RecordingLLMAssertImage(
-            FakeLLMAssertImageInner(
-                result=FakeAssertionResult("criterion", "reasoning", truthy=True)
-            ),
-            [],
-        )
-
-        assert wrapped.some_attribute == "inner-image-attribute"
 
 
 class TestRecordingLLMScore:
@@ -302,12 +250,6 @@ class TestRecordingStoreBehavior:
             ),
             store,
         )
-        image_wrapper = RecordingLLMAssertImage(
-            FakeLLMAssertImageInner(
-                result=FakeAssertionResult("criterion two", "reason two", truthy=False)
-            ),
-            store,
-        )
         score_result = FakeScoreResult(
             scores={"accuracy": 2},
             total=2,
@@ -321,8 +263,7 @@ class TestRecordingStoreBehavior:
         )
 
         assert_wrapper("content", "criterion one")
-        image_wrapper(object(), "criterion two")
         score_wrapper("scored content", [FakeScoreDimension("accuracy", 5, 1.0)])
 
-        assert len(store) == 3
-        assert [entry["type"] for entry in store] == ["llm", "llm_image", "llm_score"]
+        assert len(store) == 2
+        assert [entry["type"] for entry in store] == ["llm", "llm_score"]

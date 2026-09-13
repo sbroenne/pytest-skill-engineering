@@ -14,34 +14,17 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import os
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
+from pytest_skill_engineering.copilot.client import (
+    approve_all_permissions,
+    create_client,
+    stop_client,
+)
 from pytest_skill_engineering.copilot.contracts import CopilotEvalConfig, CopilotRunResult
 from pytest_skill_engineering.copilot.events import EventMapper
 
-CopilotClient: Any
-try:
-    from copilot.client import CopilotClient as _SdkCopilotClient
-except ImportError as _exc:
-    _import_error = _exc
-
-    class _UnavailableCopilotClient:
-        """Placeholder when github-copilot-sdk is not installed."""
-
-        def __init__(self, *args: Any, **kwargs: Any) -> None:
-            msg = (
-                "github-copilot-sdk is required for Copilot agent testing. "
-                "Install with: uv add pytest-skill-engineering[copilot]"
-            )
-            raise ImportError(msg) from _import_error
-
-    CopilotClient = _UnavailableCopilotClient
-else:
-    CopilotClient = _SdkCopilotClient
-
 if TYPE_CHECKING:
-    from copilot.generated.session_events import SessionEvent
     from copilot.session import CopilotSession
 
 logger = logging.getLogger(__name__)
@@ -60,7 +43,8 @@ async def run_copilot(agent: CopilotEvalConfig, prompt: str) -> CopilotRunResult
 
     Authentication is resolved in this order:
     1. ``GITHUB_TOKEN`` environment variable (ideal for CI)
-    2. Logged-in user via ``gh`` CLI / OAuth (local development)
+    2. ``GH_TOKEN`` environment variable
+    3. Logged-in user via ``gh`` CLI / OAuth (local development)
 
     Args:
         agent: CopilotEval configuration.
@@ -111,13 +95,6 @@ _TRANSIENT_PATTERNS = (
 )
 
 
-def _approve_all_permissions(*_args: Any, **_kwargs: Any) -> Any:
-    """Approve all permission requests using the current SDK result type."""
-    from copilot.generated.rpc import PermissionDecisionApproveOnce
-
-    return PermissionDecisionApproveOnce()
-
-
 def _is_transient_error(error: str | None) -> bool:
     """Check if an error message matches a known transient SDK pattern."""
     if not error:
@@ -125,31 +102,9 @@ def _is_transient_error(error: str | None) -> bool:
     return any(pattern in error for pattern in _TRANSIENT_PATTERNS)
 
 
-async def _stop_client_safely(client: Any) -> None:
-    """Best-effort client cleanup that never masks the primary execution result."""
-    try:
-        await client.stop()
-    except Exception:
-        logger.warning("Failed to stop Copilot CLI cleanly, force stopping", exc_info=True)
-        try:
-            await client.force_stop()
-        except Exception:
-            logger.warning("force_stop also failed", exc_info=True)
-
-
 async def _run_copilot_once(agent: CopilotEvalConfig, prompt: str) -> CopilotRunResult:
     """Execute a single attempt of a prompt against GitHub Copilot."""
-    # Pass GITHUB_TOKEN from environment for CI authentication.
-    # When None, the SDK falls back to the logged-in gh user.
-    github_token = os.environ.get("GITHUB_TOKEN")
-    if github_token:
-        logger.info("Using GITHUB_TOKEN from environment for authentication")
-
-    client = CopilotClient(
-        working_directory=agent.working_directory or ".",
-        log_level="warning",
-        github_token=github_token,
-    )
+    client = create_client(agent.working_directory or ".")
 
     mapper = EventMapper()
     loop = asyncio.get_running_loop()
@@ -169,7 +124,9 @@ async def _run_copilot_once(agent: CopilotEvalConfig, prompt: str) -> CopilotRun
 
         # Install permission handler if auto_confirm is enabled
         if agent.auto_confirm:
-            session_config["on_permission_request"] = _approve_all_permissions
+            session_config["on_permission_request"] = approve_all_permissions
+
+        session_config["on_event"] = mapper.handle
 
         # Hard timeout on session creation — 30s is generous.
         session: CopilotSession = await asyncio.wait_for(
@@ -178,20 +135,13 @@ async def _run_copilot_once(agent: CopilotEvalConfig, prompt: str) -> CopilotRun
         )
         logger.info("Session created: %s", session.session_id)
 
-        # Register event listener — captures ALL events
-        session.on(mapper.handle)
-
         # Send prompt and wait for completion.
         # Pass timeout to both send_and_wait (SDK-internal idle wait)
         # and asyncio.wait_for (hard outer limit).
-        result_event: SessionEvent | None = await asyncio.wait_for(
+        await asyncio.wait_for(
             session.send_and_wait(prompt, timeout=agent.timeout_s),
             timeout=agent.timeout_s,
         )
-
-        # If send_and_wait returned a final event, process it too
-        if result_event is not None:
-            mapper.handle(result_event)
 
         logger.info("Prompt execution complete")
 
@@ -218,6 +168,6 @@ async def _run_copilot_once(agent: CopilotEvalConfig, prompt: str) -> CopilotRun
         return result
 
     finally:
-        await _stop_client_safely(client)
+        await stop_client(client)
 
     return mapper.build()

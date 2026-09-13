@@ -3,9 +3,7 @@
 Tests that CopilotEval custom agents produce expected outcomes (file creation)
 and that forced subagent dispatch works when write tools are excluded.
 
-Copilot-exclusive — no pydantic mirror (custom agents are a Copilot SDK feature).
-
-Run with: pytest tests/integration/copilot/test_12_custom_agents.py -v
+Run with: uv run python -m pytest tests/integration/copilot/test_12_custom_agents.py -v
 """
 
 from __future__ import annotations
@@ -74,6 +72,10 @@ class TestCustomAgentOutcomes:
         assert len(test_files) > 0, (
             "No test_*.py file created — test-writer custom agent may not have been invoked"
         )
+        assert any(
+            invocation.name == "test-writer" and invocation.status == "completed"
+            for invocation in result.subagent_invocations
+        ), "The test-writer must complete rather than recursively dispatching itself"
 
     async def test_docs_writer_agent_creates_readme(self, copilot_eval, tmp_path):
         """Custom docs-writer agent produces a README.md for the project."""

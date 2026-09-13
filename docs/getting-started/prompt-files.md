@@ -4,7 +4,12 @@ description: "Test prompt files (slash commands) — verify that .prompt.md file
 
 # Prompt Files (Slash Commands)
 
-**Prompt files** are reusable prompts that users invoke as slash commands (e.g. `/review`, `/explain`). VS Code uses `.prompt.md` files in `.github/prompts/`; Claude Code uses `.md` files in `.claude/commands/`. Testing them means verifying the LLM behaves correctly when the slash command is invoked.
+**Prompt files** are reusable user prompts that editors expose as slash commands
+(e.g. `/review`, `/explain`). VS Code uses `.prompt.md` files in
+`.github/prompts/`; Claude Code uses `.md` files in `.claude/commands/`.
+The loader tests the file's body as a user prompt, not editor slash-command
+registration or variable expansion. A system prompt instead configures agent
+behavior through `CopilotEval.instructions`.
 
 ## Loading a Prompt File
 
@@ -20,13 +25,8 @@ agent = CopilotEval(name="prompt-test")
 async def test_review_command(copilot_eval):
     """The /review slash command produces actionable feedback."""
     prompt = load_prompt_file(".github/prompts/review.prompt.md")
-    result = await copilot_eval(
-        agent,
-        prompt["body"],
-        prompt_name="review",  # tracked in the report
-    )
+    result = await copilot_eval(agent, prompt["body"])
     assert result.success
-    assert result.prompt_name == "review"
 ```
 
 `load_prompt_file()` returns a dict with:
@@ -35,8 +35,8 @@ async def test_review_command(copilot_eval):
 |-----|-------------|
 | `name` | Derived from filename (e.g. `review`) |
 | `body` | The markdown body — what gets sent to the LLM |
-| `description` | From frontmatter `description:` field, or `None` |
-| `metadata` | All other frontmatter fields |
+| `description` | From frontmatter `description:` field, or an empty string |
+| `metadata` | Full frontmatter mapping |
 
 ## Prompt File Format
 
@@ -73,13 +73,8 @@ agent = CopilotEval(name="prompt-test")
 @pytest.mark.parametrize("prompt", PROMPTS, ids=lambda p: p["name"])
 async def test_prompt_files(copilot_eval, prompt):
     """All slash commands produce a successful response."""
-    result = await copilot_eval(
-        agent,
-        prompt["body"],
-        prompt_name=prompt["name"],
-    )
+    result = await copilot_eval(agent, prompt["body"])
     assert result.success
-    assert result.prompt_name == prompt["name"]
 ```
 
 ## VS Code vs Claude Code
@@ -93,37 +88,33 @@ async def test_prompt_files(copilot_eval, prompt):
 
 ## Tracking Prompt Names in Reports
 
-The `prompt_name` kwarg on `copilot_eval` tags the result so reports can group tests by slash command:
+Use pytest parameter IDs, as in the example above, to identify each prompt file
+in test results. `copilot_eval` accepts an eval and a prompt string; it has no
+`prompt_name` keyword, and `CopilotResult` has no `prompt_name` field.
 
-```python
-result = await copilot_eval(agent, prompt["body"], prompt_name=prompt["name"])
-# result.prompt_name == "review"
-```
+## Combining with Tools
 
-This appears in the HTML report's per-prompt breakdown, letting you compare how different slash commands perform across models.
-
-## Combining with MCP Servers
-
-Prompt files often reference tools. Test them with the appropriate MCP servers:
+Prompt files often reference tools. Configure the tools and workspace explicitly.
+This example uses Copilot's file-reading tools rather than an MCP server:
 
 ```python
 from pytest_skill_engineering import load_prompt_file
 from pytest_skill_engineering.copilot import CopilotEval
 
 
-async def test_explain_command(copilot_eval):
+async def test_explain_command(copilot_eval, tmp_path):
     """The /explain command reads the file before explaining."""
     prompt = load_prompt_file(".github/prompts/explain.prompt.md")
-    agent = CopilotEval(name="explain-test")
-    result = await copilot_eval(agent, prompt["body"], prompt_name="explain")
+    (tmp_path / "example.py").write_text("def add(a, b):\n    return a + b\n")
+    agent = CopilotEval(name="explain-test", working_directory=str(tmp_path))
+    result = await copilot_eval(agent, prompt["body"] + "\nRead and explain example.py.")
 
     assert result.success
     assert result.tool_was_called("read_file")
-    assert result.prompt_name == "explain"
 ```
 
 ## Next Steps
 
 - [MCP Server Prompts](mcp-prompts.md) — Test server-side prompt templates
 - [Custom Agents](custom-agents.md) — Test `.agent.md` specialist agent files
-- [EvalResult Reference](../reference/result.md) — All result fields
+- [CopilotResult Reference](../reference/result.md) — All result fields

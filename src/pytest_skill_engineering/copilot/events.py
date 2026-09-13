@@ -457,12 +457,12 @@ class EventMapper:
     def _handle_session_shutdown(self, event: SessionEvent) -> None:
         """Handle session shutdown — capture the total premium request count.
 
-        KNOWN GAP (SDK 1.0.9): ``_total_premium_requests`` exists on
+        KNOWN GAP (verified with SDK 1.0.13): ``_total_premium_requests`` exists on
         ``SessionShutdownData`` per the generated schema, but empirically
         ``session.shutdown`` is never delivered to ``session.on()`` listeners
-        via the ``client.stop()`` teardown path this runner uses — verified
-        by capturing every event in a live session and finding no field
-        containing "premium" anywhere in the stream. So ``premium_requests``
+        via the ``client.stop()`` teardown path this runner uses. The live
+        event integration test recorded zero shutdown events even with
+        its listener registered before session creation. So ``premium_requests``
         stays 0.0 in practice today. This handler is kept because it's
         schema-correct and harmless, in case a future SDK version emits the
         event (or an alternate teardown path does). If this still reads 0.0

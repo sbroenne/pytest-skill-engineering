@@ -31,7 +31,7 @@ import re
 from dataclasses import dataclass, field
 from pathlib import Path
 
-import frontmatter
+from pytest_skill_engineering.core.evals import _extract_frontmatter
 
 
 class SkillError(Exception):
@@ -73,8 +73,8 @@ class SkillMetadata:
         """Validate metadata per agentskills.io spec."""
         # Name validation: lowercase letters, numbers, and hyphens, 1-64 chars
         # Must not start/end with hyphen or contain consecutive hyphens.
-        if not self.name:
-            raise SkillError("Skill name is required")
+        if not isinstance(self.name, str) or not self.name.strip():
+            raise SkillError("Skill name must be a non-empty string")
         if len(self.name) > 64:
             raise SkillError(f"Skill name exceeds 64 characters: {len(self.name)}")
         if not re.match(r"^[a-z0-9]+(?:-[a-z0-9]+)*$", self.name):
@@ -84,20 +84,23 @@ class SkillMetadata:
             )
 
         # Description validation
-        if not self.description:
-            raise SkillError("Skill description is required")
+        if not isinstance(self.description, str) or not self.description.strip():
+            raise SkillError("Skill description must be a non-empty string")
         if len(self.description) > 1024:
             raise SkillError(f"Skill description exceeds 1024 characters: {len(self.description)}")
 
         # Compatibility validation
-        if self.compatibility is not None and len(self.compatibility) > 500:
-            raise SkillError(
-                f"Skill compatibility exceeds 500 characters: {len(self.compatibility)}"
-            )
+        if self.compatibility is not None:
+            if not isinstance(self.compatibility, str):
+                raise SkillError("Skill compatibility must be a string")
+            if len(self.compatibility) > 500:
+                raise SkillError(
+                    f"Skill compatibility exceeds 500 characters: {len(self.compatibility)}"
+                )
 
         # Allowed tools validation
         for tool in self.allowed_tools:
-            if not tool or not tool.strip():
+            if not isinstance(tool, str) or not tool.strip():
                 raise SkillError("allowed_tools entries must be non-empty strings")
 
 
@@ -181,12 +184,21 @@ class Skill:
             raise SkillError(f"SKILL.md not found: {skill_file}")
 
         # Parse SKILL.md
-        raw_content = skill_file.read_text(encoding="utf-8")
-        metadata, content = _parse_skill_md(raw_content)
+        try:
+            raw_content = skill_file.read_text(encoding="utf-8")
+            metadata, content = _parse_skill_md(raw_content)
+        except (SkillError, UnicodeError, OSError) as exc:
+            raise SkillError(f"{skill_file}: {exc}") from exc
         if metadata.name != skill_dir.name:
             raise SkillError(
-                f"Skill name '{metadata.name}' must match directory name '{skill_dir.name}'"
+                f"{skill_file}: Skill name '{metadata.name}' must match "
+                f"directory name '{skill_dir.name}'"
             )
+
+        for name in ("references", "scripts", "assets"):
+            component = skill_dir / name
+            if component.exists() and not component.is_dir():
+                raise SkillError(f"{component}: skill component must be a directory")
 
         # Load references if directory exists
         references: dict[str, str] = {}
@@ -228,25 +240,26 @@ def _parse_skill_md(content: str) -> tuple[SkillMetadata, str]:
 
         # Body content here
     """
-    if not content.lstrip().startswith("---"):
+    if not re.match(r"\A---[ \t]*(?:\r?\n|\Z)", content):
         raise SkillError(
             "Invalid SKILL.md format: must have YAML frontmatter between --- delimiters"
         )
     try:
-        post = frontmatter.loads(content)
-    except Exception as exc:
+        metadata_raw, body = _extract_frontmatter(content)
+    except ValueError as exc:
         raise SkillError(f"Invalid SKILL.md frontmatter: {exc}") from exc
-    body = post.content.strip()
-    metadata_raw = post.metadata
+    body = body.strip()
+    if not body:
+        raise SkillError("SKILL.md must have system prompt content after frontmatter")
 
     # Extract required fields
     name = metadata_raw.get("name")
     description = metadata_raw.get("description")
 
-    if not name:
-        raise SkillError("SKILL.md missing required field: name")
-    if not description:
-        raise SkillError("SKILL.md missing required field: description")
+    if not isinstance(name, str) or not name.strip():
+        raise SkillError("SKILL.md field 'name' must be a non-empty string")
+    if not isinstance(description, str) or not description.strip():
+        raise SkillError("SKILL.md field 'description' must be a non-empty string")
 
     # Extract optional fields
     version = metadata_raw.get("version")
@@ -255,36 +268,50 @@ def _parse_skill_md(content: str) -> tuple[SkillMetadata, str]:
     compatibility = metadata_raw.get("compatibility")
     metadata_entries_raw = metadata_raw.get("metadata", {})
     allowed_tools_raw = metadata_raw.get("allowed-tools", "")
+    for key in ("version", "license", "compatibility"):
+        if key in metadata_raw and (
+            not isinstance(metadata_raw[key], str) or not metadata_raw[key].strip()
+        ):
+            raise SkillError(f"SKILL.md field '{key}' must be a non-empty string")
 
     # Handle tags (could be string or list)
     if isinstance(tags_raw, str):
         tags = tuple(t.strip() for t in tags_raw.split(",") if t.strip())
-    elif isinstance(tags_raw, list):
-        tags = tuple(str(t) for t in tags_raw)
+    elif isinstance(tags_raw, list) and all(
+        isinstance(tag, str) and tag.strip() for tag in tags_raw
+    ):
+        tags = tuple(tags_raw)
     else:
-        tags = ()
+        raise SkillError("SKILL.md field 'tags' must be a string or list of non-empty strings")
 
     # Handle metadata entries (dict → tuple of tuples for frozen dataclass)
-    if isinstance(metadata_entries_raw, dict):
-        metadata_entries = tuple((str(k), str(v)) for k, v in metadata_entries_raw.items())
+    if isinstance(metadata_entries_raw, dict) and all(
+        isinstance(key, str) and isinstance(value, str)
+        for key, value in metadata_entries_raw.items()
+    ):
+        metadata_entries = tuple(metadata_entries_raw.items())
     else:
-        metadata_entries = ()
+        raise SkillError("SKILL.md field 'metadata' must be a string-to-string mapping")
 
     # Handle allowed-tools (space-delimited string or list)
     if isinstance(allowed_tools_raw, str):
         allowed_tools = tuple(t for t in allowed_tools_raw.split() if t)
-    elif isinstance(allowed_tools_raw, list):
-        allowed_tools = tuple(str(t) for t in allowed_tools_raw)
+    elif isinstance(allowed_tools_raw, list) and all(
+        isinstance(tool, str) and tool.strip() for tool in allowed_tools_raw
+    ):
+        allowed_tools = tuple(allowed_tools_raw)
     else:
-        allowed_tools = ()
+        raise SkillError(
+            "SKILL.md field 'allowed-tools' must be a string or list of non-empty strings"
+        )
 
     metadata = SkillMetadata(
-        name=str(name),
-        description=str(description),
-        version=str(version) if version else None,
-        license=str(license_str) if license_str else None,
+        name=name,
+        description=description,
+        version=version,
+        license=license_str,
         tags=tags,
-        compatibility=str(compatibility) if compatibility else None,
+        compatibility=compatibility,
         metadata_entries=metadata_entries,
         allowed_tools=allowed_tools,
     )
@@ -302,17 +329,15 @@ def _load_references(refs_dir: Path) -> dict[str, str]:
 
     for file_path in refs_dir.iterdir():
         if not file_path.is_file():
-            raise SkillError(f"Invalid references entry (must be a file): {file_path.name}")
+            raise SkillError(f"Invalid references entry (must be a file): {file_path}")
         if file_path.suffix.lower() != ".md":
-            raise SkillError(
-                f"Invalid reference file '{file_path.name}': only .md files are allowed"
-            )
+            raise SkillError(f"Invalid reference file '{file_path}': only .md files are allowed")
         try:
             content = file_path.read_text(encoding="utf-8")
         except UnicodeDecodeError as exc:
-            raise SkillError(f"Reference file must be valid UTF-8 text: {file_path.name}") from exc
+            raise SkillError(f"Reference file must be valid UTF-8 text: {file_path}") from exc
         if not content.strip():
-            raise SkillError(f"Reference file must not be empty: {file_path.name}")
+            raise SkillError(f"Reference file must not be empty: {file_path}")
         references[file_path.name] = content
 
     return references
@@ -339,9 +364,9 @@ def _load_scripts(scripts_dir: Path) -> dict[str, str]:
         try:
             content = file_path.read_text(encoding="utf-8")
         except UnicodeDecodeError as exc:
-            raise SkillError(f"Script file must be valid UTF-8 text: {file_path.name}") from exc
+            raise SkillError(f"Script file must be valid UTF-8 text: {file_path}") from exc
         if not content.strip():
-            raise SkillError(f"Script file must not be empty: {file_path.name}")
+            raise SkillError(f"Script file must not be empty: {file_path}")
         scripts[file_path.name] = content
 
     return scripts

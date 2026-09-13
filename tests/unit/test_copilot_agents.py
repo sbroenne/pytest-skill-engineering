@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from pytest_skill_engineering.copilot.evals import (
+from pytest_skill_engineering.core.evals import (
     _extract_frontmatter,
     _name_from_path,
     load_custom_agent,
@@ -58,14 +58,13 @@ class TestExtractFrontmatter:
 
     def test_invalid_yaml(self):
         content = "---\n: invalid: yaml: [unbalanced\n---\n\n# Body"
-        metadata, body = _extract_frontmatter(content)
-        assert metadata == {}
-        assert body.strip() == "# Body"
+        with pytest.raises(ValueError, match="Invalid YAML frontmatter"):
+            _extract_frontmatter(content)
 
     def test_non_dict_yaml(self):
         content = "---\n- just a list\n- not a dict\n---\n\n# Body"
-        metadata, body = _extract_frontmatter(content)
-        assert metadata == {}
+        with pytest.raises(ValueError, match="YAML frontmatter must be a mapping"):
+            _extract_frontmatter(content)
 
 
 # ---------------------------------------------------------------------------

@@ -2,12 +2,9 @@
 
 from __future__ import annotations
 
-import logging
 from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any, Literal, cast
-
-import yaml
 
 from pytest_skill_engineering.copilot.contracts import (
     CopilotCustomAgentConfig,
@@ -15,10 +12,15 @@ from pytest_skill_engineering.copilot.contracts import (
     CopilotPersona,
     CopilotReasoningEffort,
     CopilotSessionHooks,
+    require_custom_agent_name,
 )
 from pytest_skill_engineering.copilot.personas import ClaudeCodePersona, VSCodePersona
-
-_logger = logging.getLogger(__name__)
+from pytest_skill_engineering.core.evals import load_custom_agent, load_instruction_file
+from pytest_skill_engineering.core.plugin import (
+    _discover_skills,
+    _validate_mcp_servers,
+    _validate_skill_reference_names,
+)
 
 
 def _empty_session_hooks() -> CopilotSessionHooks:
@@ -29,34 +31,15 @@ def _parse_agent_file(path: Path) -> CopilotCustomAgentConfig:
     """Parse a ``.agent.md`` file into a ``CustomAgentConfig`` dict.
 
     Handles optional YAML frontmatter for the current SDK-backed custom-agent
-    fields and uses the Markdown body as the agent's prompt.
+    fields and uses the Markdown body as the custom agent's system prompt.
+    Parsing and metadata errors retain the definition's file path.
     """
-    content = path.read_text(encoding="utf-8")
-    lines = content.split("\n")
-
-    frontmatter: dict[str, Any] = {}
-    body = content
-
-    if lines and lines[0].strip() == "---":
-        close_idx: int | None = None
-        for i, line in enumerate(lines[1:], 1):
-            if line.strip() == "---":
-                close_idx = i
-                break
-        if close_idx is not None:
-            try:
-                frontmatter = yaml.safe_load("\n".join(lines[1:close_idx])) or {}
-            except yaml.YAMLError:
-                frontmatter = {}
-            body = "\n".join(lines[close_idx + 1 :]).strip()
-
-    # Derive name from filename when not set in frontmatter
-    stem = path.name
-    if stem.endswith(".agent.md"):
-        stem = stem[: -len(".agent.md")]
-    name: str = str(frontmatter.get("name") or stem)
-
-    agent: CopilotCustomAgentConfig = {"name": name, "prompt": body}
+    loaded = load_custom_agent(path)
+    frontmatter = loaded["metadata"]
+    agent: CopilotCustomAgentConfig = {
+        "name": frontmatter.get("name", loaded["name"]),
+        "prompt": loaded["prompt"],
+    }
     for key in (
         "description",
         "display_name",
@@ -68,10 +51,11 @@ def _parse_agent_file(path: Path) -> CopilotCustomAgentConfig:
     ):
         if key in frontmatter:
             agent[key] = frontmatter[key]
-    if body:
-        agent["prompt"] = body
     if "mcp-servers" in frontmatter:
-        agent["mcp_servers"] = frontmatter["mcp-servers"]
+        agent["mcp_servers"] = cast(
+            dict[str, CopilotMCPServerConfig],
+            _validate_mcp_servers(frontmatter["mcp-servers"], path, field="mcp-servers"),
+        )
 
     return agent
 
@@ -198,7 +182,7 @@ class CopilotEval:
         enforces ``timeout_s`` as the hard limit; ``max_turns`` is advisory
         (not hard-enforced mid-run) and used only to cap subagent turns.
         """
-        config: dict[str, Any] = {}
+        config: dict[str, Any] = {"enable_config_discovery": False}
 
         if self.model is not None:
             config["model"] = self.model
@@ -270,6 +254,9 @@ class CopilotEval:
             excluded_tools=None,
             mcp_servers=mcp_servers,
             active_agent=None,
+            custom_agents=[
+                agent for agent in self.custom_agents if require_custom_agent_name(agent) != name
+            ],
         )
 
     @classmethod
@@ -316,17 +303,23 @@ class CopilotEval:
         """
         root = Path(path).resolve()
         github_dir = root / ".github"
+        if not root.is_dir():
+            raise FileNotFoundError(f"Copilot config root is not a directory: {root}")
+        if github_dir.exists() and not github_dir.is_dir():
+            raise ValueError(f"{github_dir}: Copilot config path must be a directory")
 
         # Load repository-wide instructions
         instructions: str | None = None
         instructions_file = github_dir / "copilot-instructions.md"
         if instructions_file.exists():
-            instructions = instructions_file.read_text(encoding="utf-8").strip() or None
+            instructions = load_instruction_file(instructions_file)["content"]
 
         # Load custom agents — recursive so subagents/ subdirectories are included
         agents: list[CopilotCustomAgentConfig] = []
         agents_dir = github_dir / "agents"
         if agents_dir.exists():
+            if not agents_dir.is_dir():
+                raise ValueError(f"{agents_dir}: custom agents path must be a directory")
             for agent_file in sorted(agents_dir.rglob("*.agent.md")):
                 agents.append(_parse_agent_file(agent_file))
 
@@ -408,7 +401,7 @@ class CopilotEval:
                 persona = _default_persona()
 
         config: dict[str, Any] = {
-            "name": name or plugin.metadata.name or "plugin-eval",
+            "name": name or plugin.metadata.name,
             "model": model or None,
             "instructions": combined_instructions or None,
             "custom_agents": plugin.agents,
@@ -472,14 +465,16 @@ class CopilotEval:
 
         root = Path(path).resolve()
         claude_dir = root / ".claude"
+        if not root.is_dir():
+            raise FileNotFoundError(f"Claude config root is not a directory: {root}")
+        if claude_dir.exists() and not claude_dir.is_dir():
+            raise ValueError(f"{claude_dir}: Claude config path must be a directory")
 
         # 1. Concatenate instructions from CLAUDE.md files
         instruction_parts: list[str] = []
         for md_path in [root / "CLAUDE.md", claude_dir / "CLAUDE.md"]:
-            if md_path.is_file():
-                content = md_path.read_text(encoding="utf-8").strip()
-                if content:
-                    instruction_parts.append(content)
+            if md_path.exists():
+                instruction_parts.append(load_instruction_file(md_path)["content"])
         if instructions:
             instruction_parts.append(instructions)
         combined_instructions = "\n\n".join(instruction_parts) or None
@@ -487,30 +482,23 @@ class CopilotEval:
         # 2. Load custom agents from .claude/agents/
         agents: list[CopilotCustomAgentConfig] = []
         agents_dir = claude_dir / "agents"
-        if agents_dir.is_dir():
+        if agents_dir.exists():
+            if not agents_dir.is_dir():
+                raise ValueError(f"{agents_dir}: custom agents path must be a directory")
             # Claude Code uses plain .md files for agents
             for agent_file in sorted(agents_dir.glob("*.md")):
-                try:
-                    agents.append(_parse_agent_file(agent_file))
-                except (FileNotFoundError, ValueError) as exc:
-                    _logger.warning("Skipping agent file %s: %s", agent_file.name, exc)
+                agents.append(_parse_agent_file(agent_file))
 
         # 3. Discover skill directories from .claude/skills/
-        skill_dirs: list[str] = []
-        skills_dir = claude_dir / "skills"
-        if skills_dir.is_dir():
-            for subdir in sorted(skills_dir.iterdir()):
-                if subdir.is_dir() and (subdir / "SKILL.md").exists():
-                    skill_dirs.append(str(subdir))
+        skills = _discover_skills(claude_dir)
+        _validate_skill_reference_names(skills)
+        skill_dirs = [str(skill.path) for skill in skills]
 
         # 4. Parse .mcp.json if it exists
         mcp_servers: dict[str, dict[str, Any]] = {}
         mcp_config_path = root / ".mcp.json"
-        if mcp_config_path.is_file():
-            try:
-                mcp_servers = load_mcp_config(mcp_config_path)
-            except (ValueError, FileNotFoundError) as exc:
-                _logger.warning("Failed to load .mcp.json: %s", exc)
+        if mcp_config_path.exists():
+            mcp_servers = load_mcp_config(mcp_config_path)
 
         # 5. Default persona to ClaudeCodePersona
         if persona is None:

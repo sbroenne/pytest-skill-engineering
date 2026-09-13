@@ -3,9 +3,7 @@
 Parametrizes models to compare code quality and error handling.
 Report shows model leaderboard.
 
-Mirrors pydantic/test_02_models.py — same level, different harness.
-
-Run with: pytest tests/integration/copilot/test_02_models.py -v
+Run with: uv run python -m pytest tests/integration/copilot/test_02_models.py -v
 """
 
 from __future__ import annotations

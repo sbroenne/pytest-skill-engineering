@@ -4,9 +4,7 @@ Uses llm_score and ScoringDimension to evaluate instruction effectiveness
 on dimensions like instruction adherence, code quality, and actionability.
 Scores flow into the report for comparison across instruction styles.
 
-Mirrors pydantic/test_08_scoring.py — same level, different harness.
-
-Run with: pytest tests/integration/copilot/test_08_scoring.py -v
+Run with: uv run python -m pytest tests/integration/copilot/test_08_scoring.py -v
 """
 
 from __future__ import annotations
