@@ -201,6 +201,7 @@ def manual_aitest(request: pytest.FixtureRequest) -> EvalResult:
         allowed_tools=["beta", "alpha"],
         skill=Skill(name="manual-skill"),
     )
+    request.node._aitest_runs = [(result, request.node._aitest_agent)]
     return result
 
 
@@ -274,6 +275,7 @@ def manual_aitest(request: pytest.FixtureRequest) -> EvalResult:
         id="sessionfinish-id",
         provider=Provider(model="copilot/gpt-5.4-mini"),
     )
+    request.node._aitest_runs = [(result, request.node._aitest_agent)]
     return result
 """
 

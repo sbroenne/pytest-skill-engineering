@@ -129,7 +129,7 @@ def generate_structured_insights(
         prompts: dict[str, str] = {}
 
         for test in report.tests:
-            if test.eval_result:
+            if test.eval_result is not None:
                 # Collect tools (deduplicate by name)
                 seen_tools = {t.name for t in tool_info}
                 for t in getattr(test.eval_result, "available_tools", []) or []:

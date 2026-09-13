@@ -7,6 +7,7 @@ import logging
 import os
 from typing import Any
 
+from copilot import CopilotClientMode
 from copilot.client import CopilotClient
 from copilot.generated.rpc import PermissionDecisionApproveOnce
 
@@ -18,12 +19,19 @@ def get_github_token() -> str | None:
     return os.environ.get("GITHUB_TOKEN") or os.environ.get("GH_TOKEN")
 
 
-def create_client(working_directory: str = ".") -> CopilotClient:
+def create_client(
+    working_directory: str = ".",
+    *,
+    mode: CopilotClientMode = "copilot-cli",
+    base_directory: str | None = None,
+) -> CopilotClient:
     """Create a client using explicit credentials or the SDK's signed-in user."""
     return CopilotClient(
         working_directory=working_directory,
         log_level="warning",
         github_token=get_github_token(),
+        mode=mode,
+        base_directory=base_directory,
     )
 
 

@@ -90,10 +90,10 @@ class EventMapper:
     def __init__(self) -> None:
         self._turns: list[Turn] = []
         self._pending_tool_calls: dict[str, ToolCall] = {}  # tool_call_id → ToolCall
+        self._early_tool_completions: dict[str, list[SessionEvent]] = {}
         self._pending_tool_start_times: dict[str, float] = {}
         self._current_assistant_content: list[str] = []
         self._current_tool_calls: list[ToolCall] = []
-        self._current_tool_call_ids: set[str] = set()  # track call_ids in current turn
         self._usage: list[UsageInfo] = []
         self._reasoning_traces: list[str] = []
         self._reasoning_buffer: list[str] = []
@@ -127,6 +127,11 @@ class EventMapper:
         """Build the final CopilotResult from accumulated events."""
         # Flush any pending assistant content
         self._flush_assistant_turn()
+        for call_id, tool_call in self._pending_tool_calls.items():
+            if not tool_call.completion_received:
+                self._record_contract_error(f"Tool call {call_id} is missing completion")
+        for call_id in self._early_tool_completions:
+            self._record_contract_error(f"Completion for unknown tool call {call_id}")
 
         resolved_subagents = [subagent for subagent in self._subagents if subagent.invocation_id]
         unresolved_subagents = [
@@ -138,16 +143,17 @@ class EventMapper:
                 + ", ".join(unresolved_subagents)
             )
 
-        if self._contract_errors and self._error is None:
-            self._error = "; ".join(self._contract_errors)
+        errors = ([self._error] if self._error else []) + self._contract_errors
+        error = "; ".join(errors) or None
 
         duration_ms = (time.monotonic() - self._start_time) * 1000
-        has_error = self._error is not None
+        has_error = error is not None
 
         return CopilotResult(
             turns=self._turns,
             success=not has_error,
-            error=self._error,
+            error=error,
+            capture_errors=list(self._contract_errors),
             duration_ms=duration_ms,
             usage=self._usage,
             reasoning_traces=self._reasoning_traces,
@@ -191,8 +197,7 @@ class EventMapper:
 
         # Check for tool_requests in the message
         # SDK returns ToolRequest dataclass objects, not dicts
-        # NOTE: tool.execution_start events also create ToolCalls, so
-        # we use _current_tool_call_ids to deduplicate.
+        # Requests and execution events share one call object across turns.
         tool_requests = _get_data_field(event, "tool_requests", None)
         if tool_requests:
             for req in tool_requests:
@@ -206,11 +211,7 @@ class EventMapper:
                         arguments = json.loads(arguments)
                     except json.JSONDecodeError:
                         arguments = {"raw": arguments}
-                if call_id and call_id not in self._current_tool_call_ids:
-                    tc = ToolCall(name=name, arguments=arguments or {})
-                    self._pending_tool_calls[call_id] = tc
-                    self._current_tool_calls.append(tc)
-                    self._current_tool_call_ids.add(call_id)
+                self._track_tool_call(call_id, name, arguments or {})
 
     def _handle_assistant_message_delta(self, event: SessionEvent) -> None:
         """Handle streaming delta — accumulate content."""
@@ -268,6 +269,27 @@ class EventMapper:
     # Tool names that represent subagent dispatch (native SDK tools).
     _SUBAGENT_TOOL_NAMES = frozenset({"runSubagent", "task"})
 
+    def _track_tool_call(self, call_id: str, name: str, arguments: Any) -> ToolCall | None:
+        if not call_id:
+            self._record_contract_error(f"Tool {name} is missing tool_call_id")
+            return None
+        if arguments is None:
+            arguments = {}
+        tc = self._pending_tool_calls.get(call_id)
+        if tc is None:
+            tc = ToolCall(
+                name=name, arguments=arguments, call_id=call_id, completion_received=False
+            )
+            self._pending_tool_calls[call_id] = tc
+            self._current_tool_calls.append(tc)
+            for completion in self._early_tool_completions.pop(call_id, []):
+                self._handle_tool_execution_complete(completion)
+        elif tc.name != name or tc.arguments != arguments:
+            self._record_contract_error(
+                f"Conflicting identity or arguments for tool call {call_id}"
+            )
+        return tc
+
     def _handle_tool_execution_start(self, event: SessionEvent) -> None:
         """Handle tool execution starting."""
         call_id = _get_data_field(event, "tool_call_id", "")
@@ -282,14 +304,10 @@ class EventMapper:
             except json.JSONDecodeError:
                 arguments = {"raw": arguments}
 
-        tc = ToolCall(name=name, arguments=arguments)
-        self._pending_tool_calls[call_id] = tc
+        tc = self._track_tool_call(call_id, name, arguments)
+        if tc is None or tc.completion_received or call_id in self._pending_tool_start_times:
+            return
         self._pending_tool_start_times[call_id] = time.monotonic()
-
-        # Associate with current assistant turn
-        if call_id not in self._current_tool_call_ids:
-            self._current_tool_call_ids.add(call_id)
-            self._current_tool_calls.append(tc)
 
         # Detect subagent dispatch via native tool calls (runSubagent/task).
         # The SDK may or may not emit separate subagent.* events, so we
@@ -312,35 +330,50 @@ class EventMapper:
         result_data = _get_data_field(event, "result", None)
 
         tc = self._pending_tool_calls.get(call_id)
-        if tc:
-            # Extract result text
-            if result_data and hasattr(result_data, "content"):
-                tc.result = str(result_data.content)
-            elif isinstance(result_data, str):
-                tc.result = result_data
-            elif result_data is not None:
-                tc.result = str(result_data)
-
-            # Calculate duration
-            start = self._pending_tool_start_times.pop(call_id, None)
-            if start is not None:
-                tc.duration_ms = (time.monotonic() - start) * 1000
-
-            if not _get_data_field(event, "success", True):
-                tc.error = _stringify_tool_error(_get_data_field(event, "error", None))
+        if tc is None:
+            if not call_id:
+                self._record_contract_error("Tool completion is missing tool_call_id")
+                return
+            self._early_tool_completions.setdefault(call_id, []).append(event)
+            return
+        result_text: str | None = None
+        if result_data is not None and hasattr(result_data, "content"):
+            result_text = result_data.content
+        elif isinstance(result_data, str):
+            result_text = result_data
+        elif result_data is not None:
+            result_text = str(result_data)
+        success = _get_data_field(event, "success", None)
+        error = _stringify_tool_error(_get_data_field(event, "error", None))
+        if tc.completion_received:
+            if (tc.result, tc.success, tc.error) != (result_text, success, error):
+                self._record_contract_error(f"Conflicting completion for tool call {call_id}")
+            return
+        tc.completion_received = True
+        tc.success = success
+        tc.result = result_text
+        tc.error = error
+        if tc.success is None:
+            self._record_contract_error(f"Tool call {call_id} completion is missing success")
+        start = self._pending_tool_start_times.pop(call_id, None)
+        if start is not None:
+            tc.duration_ms = (time.monotonic() - start) * 1000
 
         # Complete subagent tracking from tool call
         agent_name = self._tool_subagent_call_ids.pop(call_id, None)
         if agent_name:
-            if _get_data_field(event, "success", True):
+            if tc.success is True:
                 self.record_subagent_complete(invocation_id=call_id, name=agent_name)
             else:
                 self.record_subagent_failed(invocation_id=call_id, name=agent_name)
 
         # Add a tool turn for reporting
-        tool_name = _get_data_field(event, "tool_name", tc.name if tc else "unknown")
-        result_text = tc.result if tc else str(result_data)
+        tool_name = tc.name
+        result_text = tc.result
         self._turns.append(Turn(role="tool", content=f"[{tool_name}] {result_text or ''}"))
+
+    def _handle_abort(self, event: SessionEvent) -> None:
+        self._error = f"Session aborted: {_get_data_field(event, 'reason', None)}"
 
     # ── Subagent recording (used by runSubagent tool handler) ──
 
@@ -515,7 +548,6 @@ class EventMapper:
             )
             self._current_assistant_content.clear()
             self._current_tool_calls.clear()
-            self._current_tool_call_ids.clear()
 
     def _ensure_subagent_invocation(
         self,
@@ -681,6 +713,7 @@ _EVENT_HANDLERS: dict[str, Any] = {
     "session.error": EventMapper._handle_session_error,
     "session.usage_info": EventMapper._handle_session_usage_info,
     "session.shutdown": EventMapper._handle_session_shutdown,
+    "abort": EventMapper._handle_abort,
     # User
     "user.message": EventMapper._handle_user_message,
     # Permissions

@@ -24,6 +24,7 @@ from pytest_skill_engineering.reporting.components.types import (
     TestResultData,
     ToolCallData,
 )
+from pytest_skill_engineering.reporting.identity import ReportIdentity, build_report_identities
 from pytest_skill_engineering.reporting.schema import REPORT_SCHEMA_VERSION
 
 if TYPE_CHECKING:
@@ -37,31 +38,6 @@ def _sanitize_mermaid_text(text: str, limit: int) -> str:
     cleaned = cleaned.replace('"', "'")
     cleaned = " ".join(cleaned.split())
     return cleaned[:limit]
-
-
-def _resolve_agent_id(test: TestReport) -> str:
-    """Get the agent ID from TestReport."""
-    agent_id = test.agent_id
-    if not agent_id:
-        msg = f"Test {test.name!r} missing 'agent_id'"
-        raise ValueError(msg)
-    return agent_id
-
-
-def _resolve_eval_name(test: TestReport) -> str:
-    """Get the presentation label from TestReport."""
-    if not test.eval_name:
-        msg = f"Test {test.name!r} missing 'eval_name'"
-        raise ValueError(msg)
-    return test.eval_name
-
-
-def _resolve_model_name(test: TestReport) -> str:
-    """Get the display model from TestReport."""
-    if not test.model:
-        msg = f"Test {test.name!r} missing 'model'"
-        raise ValueError(msg)
-    return test.model
 
 
 def _case_display_name(test: TestReport) -> str:
@@ -201,9 +177,11 @@ def generate_mermaid_sequence(result: EvalResult) -> str:
                     if tc.error:
                         err_preview = _sanitize_mermaid_text(str(tc.error), 60)
                         lines.append(f'    Tools--xEval: "Error: {err_preview}"')
-                    elif tc.result:
+                    elif tc.result is not None:
                         result_preview = _sanitize_mermaid_text(tc.result, 60)
                         lines.append(f'    Tools-->>Eval: "{result_preview}"')
+                    if not tc.evidence_complete:
+                        lines.append("    Note over Tools,Eval: Incomplete evidence")
             else:
                 content = _sanitize_mermaid_text(turn.content, 80)
                 lines.append(f'    Eval->>User: "{content}"')
@@ -242,7 +220,9 @@ def _build_report_context(
     from pytest_skill_engineering.execution.cost import models_without_pricing
 
     # Sum premium requests across all tests
-    total_pr = sum((t.eval_result.premium_requests or 0) for t in report.tests if t.eval_result)
+    total_pr = sum(
+        (t.eval_result.premium_requests or 0) for t in report.tests if t.eval_result is not None
+    )
 
     report_meta = ReportMetadata(
         name=report.name,
@@ -261,7 +241,8 @@ def _build_report_context(
         models_without_pricing=sorted(models_without_pricing),
     )
 
-    agents, agents_by_id = _build_agents(report, min_pass_rate=min_pass_rate)
+    identities = build_report_identities(report.tests)
+    agents, agents_by_id = _build_agents(report, min_pass_rate=min_pass_rate, identities=identities)
     all_agent_ids = [a.agent_id for a in agents]
 
     agents_by_coverage = sorted(
@@ -269,7 +250,9 @@ def _build_report_context(
     )
     selected_agent_ids = [a.agent_id for a in agents_by_coverage[:2]]
 
-    test_groups = _build_test_groups_typed(report, all_agent_ids, agents_by_id)
+    test_groups = _build_test_groups_typed(
+        report, all_agent_ids, agents_by_id, identities=identities
+    )
 
     insights_data = AIInsightsData(markdown_summary=insights.markdown_summary)
 
@@ -286,9 +269,14 @@ def _build_report_context(
 
 
 def _build_agents(
-    report: SuiteReport, *, min_pass_rate: int | None = None
+    report: SuiteReport,
+    *,
+    min_pass_rate: int | None = None,
+    identities: dict[int, ReportIdentity] | None = None,
 ) -> tuple[list[AgentData], dict[str, AgentData]]:
     """Build agent data from test results."""
+    if identities is None:
+        identities = build_report_identities(report.tests)
     agent_stats: dict[str, dict[str, Any]] = defaultdict(
         lambda: {
             "passed": 0,
@@ -299,26 +287,15 @@ def _build_agents(
             "tokens": 0,
             "duration_ms": 0,
             "display_name": None,
-            "model": None,
         }
     )
 
     for test in report.tests:
-        agent_id = _resolve_agent_id(test)
-        model = _resolve_model_name(test)
-        eval_name = _resolve_eval_name(test)
+        identity = identities[id(test)]
+        agent_id = identity.agent_id
 
         stats = agent_stats[agent_id]
-        if stats["display_name"] is None:
-            stats["display_name"] = eval_name
-        elif stats["display_name"] != eval_name:
-            msg = f"Agent ID {agent_id!r} has conflicting eval_name values"
-            raise ValueError(msg)
-        if stats["model"] is None:
-            stats["model"] = model
-        elif stats["model"] != model:
-            msg = f"Agent ID {agent_id!r} has conflicting model values"
-            raise ValueError(msg)
+        stats["display_name"] = identity.display_name
         stats["total"] += 1
 
         if test.outcome == "passed":
@@ -329,7 +306,7 @@ def _build_agents(
         if test.duration_ms:
             stats["duration_ms"] += test.duration_ms
 
-        if test.eval_result:
+        if test.eval_result is not None:
             if test.eval_result.cost_usd:
                 stats["cost"] += test.eval_result.cost_usd
             if test.eval_result.premium_requests:
@@ -397,6 +374,8 @@ def _build_test_groups_typed(
     report: SuiteReport,
     all_agent_ids: list[str],
     agents_by_id: dict[str, AgentData],
+    *,
+    identities: dict[int, ReportIdentity] | None = None,
 ) -> list[TestGroupData]:
     """Build typed test groups for htpy components.
 
@@ -405,6 +384,8 @@ def _build_test_groups_typed(
     :class:`TestResultData` with per-iteration breakdown in its
     ``iterations`` list and an ``iteration_pass_rate``.
     """
+    if identities is None:
+        identities = build_report_identities(report.tests)
     test_groups: dict[str, dict[str, list[TestReport]]] = defaultdict(lambda: defaultdict(list))
 
     for test in report.tests:
@@ -440,7 +421,7 @@ def _build_test_groups_typed(
             # Group variants by agent, then aggregate iterations per agent.
             variants_by_agent: dict[str, list[TestReport]] = defaultdict(list)
             for test in test_variants:
-                agent_id = _resolve_agent_id(test)
+                agent_id = identities[id(test)].agent_id
                 if agent_id in all_agent_ids:
                     variants_by_agent[agent_id].append(test)
 
@@ -531,19 +512,23 @@ def _extract_test_result_fields(
 ]:
     """Extract tool calls, assertions, scores, and metadata from a single TestReport."""
     tool_calls = []
-    if test.eval_result and test.eval_result.turns:
+    if test.eval_result is not None and test.eval_result.turns:
         for turn in test.eval_result.turns:
             if turn.tool_calls:
                 for tc in turn.tool_calls:
                     tool_calls.append(
                         ToolCallData(
                             name=tc.name,
-                            success=tc.error is None,
+                            success=tc.success is True and tc.evidence_complete,
                             error=tc.error,
                             args=tc.arguments,
                             result=tc.result,
                             image_content=tc.image_content,
                             image_media_type=tc.image_media_type,
+                            call_id=tc.call_id,
+                            completion_received=tc.completion_received,
+                            tool_success=tc.success,
+                            evidence_complete=tc.evidence_complete,
                         )
                     )
 
@@ -561,15 +546,15 @@ def _extract_test_result_fields(
 
     scores_data = _extract_scores(test.assertions)
 
-    turn_count = len(test.eval_result.turns) if test.eval_result and test.eval_result.turns else 0
+    turn_count = len(test.eval_result.turns) if test.eval_result is not None else 0
     tokens = 0
-    if test.eval_result and test.eval_result.token_usage:
+    if test.eval_result is not None and test.eval_result.token_usage:
         usage = test.eval_result.token_usage
         tokens = usage.get("prompt", 0) + usage.get("completion", 0)
 
     eval_result = test.eval_result
-    mermaid = generate_mermaid_sequence(eval_result) if eval_result else None
-    final_resp = eval_result.final_response if eval_result else None
+    mermaid = generate_mermaid_sequence(eval_result) if eval_result is not None else None
+    final_resp = eval_result.final_response if eval_result is not None else None
 
     return tool_calls, assertions_data, scores_data, turn_count, tokens, mermaid, final_resp
 
@@ -594,7 +579,7 @@ def _build_result_for_agent(agent_tests: list[TestReport]) -> TestResultData:
             passed=outcome == "passed",
             duration_s=duration_ms / 1000,
             tokens=tokens,
-            cost=test.eval_result.cost_usd if test.eval_result else 0,
+            cost=test.eval_result.cost_usd if test.eval_result is not None else 0,
             tool_calls=tool_calls,
             tool_count=len(tool_calls),
             turns=turns,
@@ -603,7 +588,16 @@ def _build_result_for_agent(agent_tests: list[TestReport]) -> TestResultData:
             error=test.error,
             assertions=assertions,
             scores=scores,
-            premium_requests=test.eval_result.premium_requests if test.eval_result else 0.0,
+            premium_requests=test.eval_result.premium_requests
+            if test.eval_result is not None
+            else 0.0,
+            properties=test.properties,
+            configuration=test.eval_result.configuration if test.eval_result is not None else {},
+            execution_success=test.eval_result.success if test.eval_result is not None else None,
+            evidence_complete=test.eval_result.evidence_complete
+            if test.eval_result is not None
+            else None,
+            capture_errors=test.eval_result.capture_errors if test.eval_result is not None else [],
         )
 
     # Multiple iterations — aggregate.
@@ -618,11 +612,11 @@ def _build_result_for_agent(agent_tests: list[TestReport]) -> TestResultData:
         outcome = test.outcome or "unknown"
         duration_ms = test.duration_ms or 0
         tokens = 0
-        if test.eval_result and test.eval_result.token_usage:
+        if test.eval_result is not None and test.eval_result.token_usage:
             usage = test.eval_result.token_usage
             tokens = usage.get("prompt", 0) + usage.get("completion", 0)
-        cost = test.eval_result.cost_usd if test.eval_result else 0.0
-        pr = test.eval_result.premium_requests if test.eval_result else 0.0
+        cost = test.eval_result.cost_usd if test.eval_result is not None else 0.0
+        pr = test.eval_result.premium_requests if test.eval_result is not None else 0.0
 
         passed = outcome == "passed"
         if passed:
@@ -676,4 +670,11 @@ def _build_result_for_agent(agent_tests: list[TestReport]) -> TestResultData:
         iterations=iterations,
         iteration_pass_rate=pass_rate,
         premium_requests=total_premium_requests,
+        properties=last.properties,
+        configuration=last.eval_result.configuration if last.eval_result is not None else {},
+        execution_success=last.eval_result.success if last.eval_result is not None else None,
+        evidence_complete=last.eval_result.evidence_complete
+        if last.eval_result is not None
+        else None,
+        capture_errors=last.eval_result.capture_errors if last.eval_result is not None else [],
     )

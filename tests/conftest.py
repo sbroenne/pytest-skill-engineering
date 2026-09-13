@@ -6,6 +6,8 @@ import pytest
 from _pytest.config import Config
 from _pytest.config.argparsing import Parser
 
+pytest_plugins = ["pytester"]
+
 
 def pytest_addoption(parser: Parser) -> None:
     """Add an opt-in flag for slow tests in this repository."""

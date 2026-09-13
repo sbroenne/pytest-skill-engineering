@@ -43,6 +43,10 @@ class ToolCallData:
     result: str | None = None
     image_content: bytes | None = None
     image_media_type: str | None = None
+    call_id: str | None = None
+    completion_received: bool | None = None
+    tool_success: bool | None = None
+    evidence_complete: bool = False
 
 
 @dataclass(slots=True)
@@ -114,6 +118,11 @@ class TestResultData:
     iterations: list[IterationData] = field(default_factory=list)
     iteration_pass_rate: float | None = None
     premium_requests: float = 0.0
+    properties: list[tuple[str, Any]] = field(default_factory=list)
+    configuration: dict[str, Any] = field(default_factory=dict)
+    execution_success: bool | None = None
+    evidence_complete: bool | None = None
+    capture_errors: list[str] = field(default_factory=list)
 
 
 @dataclass(slots=True)

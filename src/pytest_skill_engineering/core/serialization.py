@@ -99,6 +99,9 @@ def deserialize_suite_report(data: dict[str, Any]) -> SuiteReport:
                             duration_ms=tc_data.get("duration_ms"),
                             image_content=image_content,
                             image_media_type=tc_data.get("image_media_type"),
+                            call_id=tc_data.get("call_id"),
+                            completion_received=tc_data.get("completion_received"),
+                            success=tc_data.get("success"),
                         )
                     )
 
@@ -232,6 +235,9 @@ def deserialize_suite_report(data: dict[str, Any]) -> SuiteReport:
                 custom_agent_info=custom_agent_info,
                 premium_requests=_require_key(ar_data, "premium_requests", context="EvalResult"),
                 instruction_files=instruction_files,
+                configuration=ar_data.get("configuration", {}),
+                capture_errors=ar_data.get("capture_errors", []),
+                evidence_complete=ar_data.get("evidence_complete"),
             )
 
         agent_id = _require_key(test_data, "agent_id", context="TestReport")
@@ -256,6 +262,7 @@ def deserialize_suite_report(data: dict[str, Any]) -> SuiteReport:
             system_prompt_name=system_prompt_name,
             skill_name=skill_name,
             iteration=test_data.get("iteration"),
+            properties=[(key, value) for key, value in test_data.get("properties", [])],
         )
         tests.append(test_report)
 

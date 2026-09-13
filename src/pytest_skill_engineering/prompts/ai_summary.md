@@ -43,6 +43,26 @@ You will receive:
 
 ## Output Requirements
 
+### Evidence requirements
+
+Every recommendation must cite the supplied test reference and, when available,
+the call ID or recorded verification property/artifact. Never invent a reference.
+Separate **Observed facts** from **Inferred advice**. State the proposed change,
+the likely owner (product, framework, scenario, or environment), and uncertainty
+or missing evidence. A truncated response is not the complete output.
+
+Session success and a model's final response do not establish task success.
+Use independent verification properties and pytest assertion outcomes; when
+verification is absent, say **not verified**. An A/B test's pytest outcome is
+shared by both runs and is not a separate verdict for each side. Use side-specific
+verification properties when available; do not invent per-side verdicts.
+
+Missing completion or output is a capture limitation, not proof of a product
+defect. Repeated calls and help lookups are observations, not automatically
+failures. A configured tool list is not proof of which tools were available.
+One execution is exploratory evidence, not a reliability estimate. If the
+evidence does not justify a product improvement, explicitly say so.
+
 Output **markdown** that will be rendered directly in an HTML report. The report supports:
 - Standard markdown (headings, bold, lists, tables, code blocks)
 - **Mermaid diagrams** via fenced code blocks (````mermaid`). The report loads Mermaid.js v10 and auto-renders them.

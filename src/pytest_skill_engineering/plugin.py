@@ -315,18 +315,12 @@ def pytest_runtest_makereport(item: Item, call: Any) -> Any:
     if any(m.name == "aitest_skip_report" for m in item.iter_markers()):
         return
 
-    # Get agent result if available
-    eval_result = getattr(item, "_aitest_result", None)
+    runs = getattr(item, "_aitest_runs", [])
 
     # Only collect tests that actually used aitest (have an agent result)
     # This prevents unit tests from triggering AI analysis for reports
-    if eval_result is None:
+    if not runs:
         return
-
-    # Get agent identity directly from the Eval object stashed by the fixture
-    agent = getattr(item, "_aitest_agent", None)
-    if agent is None:
-        raise ValueError(f"aitest result for {item.nodeid!r} is missing required agent metadata")
 
     # Get test function docstring if available
     docstring = None
@@ -376,36 +370,32 @@ def pytest_runtest_makereport(item: Item, call: Any) -> Any:
     if callspec and "_aitest_iteration" in callspec.params:
         iteration = callspec.params["_aitest_iteration"]
 
-    agent_id, eval_name, model, system_prompt_name, skill_name = _build_agent_identity(
-        agent, eval_result
-    )
-
-    # Create test report with typed identity fields
-    test_report = TestReport(
-        name=_build_case_name(item),
-        outcome=report.outcome,
-        duration_ms=report.duration * 1000,
-        eval_result=eval_result,
-        error=error_msg,
-        assertions=assertions,
-        docstring=docstring,
-        class_docstring=class_docstring,
-        agent_id=agent_id,
-        eval_name=eval_name,
-        model=model,
-        system_prompt_name=system_prompt_name,
-        skill_name=skill_name,
-        iteration=iteration,
-    )
-
-    # Flag copilot tests for analysis prompt selection
-    if any(m.name == "copilot" for m in item.iter_markers()):
-        test_report._copilot_test = True
-
-    tests.append(test_report)
-
-    # Enrich JUnit XML with agent metadata (user_properties → <property> elements)
-    _add_junit_properties(report, eval_result, agent)
+    properties = list(report.user_properties)
+    for eval_result, agent in runs:
+        agent_id, eval_name, model, system_prompt_name, skill_name = _build_agent_identity(
+            agent, eval_result
+        )
+        test_report = TestReport(
+            name=_build_case_name(item),
+            outcome=report.outcome,
+            duration_ms=eval_result.duration_ms if len(runs) > 1 else report.duration * 1000,
+            eval_result=eval_result,
+            error=error_msg,
+            assertions=assertions,
+            properties=properties,
+            docstring=docstring,
+            class_docstring=class_docstring,
+            agent_id=agent_id,
+            eval_name=eval_name,
+            model=model,
+            system_prompt_name=system_prompt_name,
+            skill_name=skill_name,
+            iteration=iteration,
+        )
+        if any(m.name == "copilot" for m in item.iter_markers()):
+            test_report._copilot_test = True
+        tests.append(test_report)
+        _add_junit_properties(report, eval_result, agent)
 
 
 def _add_junit_properties(
@@ -547,15 +537,13 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
     log_report_path(config, "JSON", json_output_path)
 
     # Generate AI insights + HTML/MD reports. JSON is already safely written
-    # above, so any failure here is best-effort: log and continue so the
-    # min-pass-rate gate and cleanup below always run.
+    # above. Report failures fail the command without skipping pass-rate
+    # enforcement or cleanup.
     summary_model = config.getoption("--aitest-summary-model")
     try:
         insights = None
         if html_path or md_path or summary_model:
-            insights = generate_structured_insights(
-                config, suite_report, required=bool(html_path or md_path)
-            )
+            insights = generate_structured_insights(config, suite_report, required=True)
 
         # Update JSON with insights if analysis succeeded
         if insights is not None:
@@ -589,6 +577,8 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
             )
             log_report_path(config, "Markdown", md_output_path)
     except Exception:
+        if session.exitstatus == pytest.ExitCode.OK:
+            session.exitstatus = pytest.ExitCode.TESTS_FAILED
         _logger.warning(
             "Report rendering failed after JSON was written to %s; "
             "continuing with pass-rate enforcement and cleanup",

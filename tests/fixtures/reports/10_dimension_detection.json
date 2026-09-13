@@ -25,7 +25,10 @@
                 "error": null,
                 "duration_ms": 180.0,
                 "image_content": null,
-                "image_media_type": null
+                "image_media_type": null,
+                "call_id": null,
+                "completion_received": null,
+                "success": null
               }
             ]
           },
@@ -53,6 +56,9 @@
         "custom_agent_info": null,
         "premium_requests": 1.0,
         "instruction_files": [],
+        "configuration": {},
+        "capture_errors": [],
+        "evidence_complete": null,
         "clarification_stats": null
       },
       "error": null,
@@ -64,7 +70,8 @@
       "model": "gpt-5.4-mini",
       "system_prompt_name": "concise",
       "skill_name": null,
-      "iteration": null
+      "iteration": null,
+      "properties": []
     },
     {
       "name": "tests/fixtures/scenario_10_dimension_detection.py::TestDimensionDetection::test_balance_with_all_permutations[detailed-gpt-5.4-mini]",
@@ -88,7 +95,10 @@
                 "error": null,
                 "duration_ms": 180.0,
                 "image_content": null,
-                "image_media_type": null
+                "image_media_type": null,
+                "call_id": null,
+                "completion_received": null,
+                "success": null
               }
             ]
           },
@@ -116,6 +126,9 @@
         "custom_agent_info": null,
         "premium_requests": 1.0,
         "instruction_files": [],
+        "configuration": {},
+        "capture_errors": [],
+        "evidence_complete": null,
         "clarification_stats": null
       },
       "error": null,
@@ -127,7 +140,8 @@
       "model": "gpt-5.4-mini",
       "system_prompt_name": "detailed",
       "skill_name": null,
-      "iteration": null
+      "iteration": null,
+      "properties": []
     },
     {
       "name": "tests/fixtures/scenario_10_dimension_detection.py::TestDimensionDetection::test_balance_with_all_permutations[concise-claude-haiku-4.5]",
@@ -151,7 +165,10 @@
                 "error": null,
                 "duration_ms": 180.0,
                 "image_content": null,
-                "image_media_type": null
+                "image_media_type": null,
+                "call_id": null,
+                "completion_received": null,
+                "success": null
               }
             ]
           },
@@ -179,6 +196,9 @@
         "custom_agent_info": null,
         "premium_requests": 1.0,
         "instruction_files": [],
+        "configuration": {},
+        "capture_errors": [],
+        "evidence_complete": null,
         "clarification_stats": null
       },
       "error": null,
@@ -190,7 +210,8 @@
       "model": "claude-haiku-4.5",
       "system_prompt_name": "concise",
       "skill_name": null,
-      "iteration": null
+      "iteration": null,
+      "properties": []
     },
     {
       "name": "tests/fixtures/scenario_10_dimension_detection.py::TestDimensionDetection::test_balance_with_all_permutations[detailed-claude-haiku-4.5]",
@@ -214,7 +235,10 @@
                 "error": null,
                 "duration_ms": 180.0,
                 "image_content": null,
-                "image_media_type": null
+                "image_media_type": null,
+                "call_id": null,
+                "completion_received": null,
+                "success": null
               }
             ]
           },
@@ -242,6 +266,9 @@
         "custom_agent_info": null,
         "premium_requests": 1.0,
         "instruction_files": [],
+        "configuration": {},
+        "capture_errors": [],
+        "evidence_complete": null,
         "clarification_stats": null
       },
       "error": null,
@@ -253,7 +280,8 @@
       "model": "claude-haiku-4.5",
       "system_prompt_name": "detailed",
       "skill_name": null,
-      "iteration": null
+      "iteration": null,
+      "properties": []
     }
   ],
   "passed": 4,

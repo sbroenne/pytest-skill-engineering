@@ -25,7 +25,10 @@
                 "error": null,
                 "duration_ms": 180.0,
                 "image_content": null,
-                "image_media_type": null
+                "image_media_type": null,
+                "call_id": null,
+                "completion_received": null,
+                "success": null
               }
             ]
           },
@@ -53,6 +56,9 @@
         "custom_agent_info": null,
         "premium_requests": 1.0,
         "instruction_files": [],
+        "configuration": {},
+        "capture_errors": [],
+        "evidence_complete": null,
         "clarification_stats": null
       },
       "error": null,
@@ -64,7 +70,8 @@
       "model": "gpt-5.4-mini",
       "system_prompt_name": null,
       "skill_name": null,
-      "iteration": null
+      "iteration": null,
+      "properties": []
     },
     {
       "name": "tests/fixtures/scenario_03_sessions.py::TestBankingWorkflow::test_check_balance[claude-haiku-4.5]",
@@ -88,7 +95,10 @@
                 "error": null,
                 "duration_ms": 180.0,
                 "image_content": null,
-                "image_media_type": null
+                "image_media_type": null,
+                "call_id": null,
+                "completion_received": null,
+                "success": null
               }
             ]
           },
@@ -116,6 +126,9 @@
         "custom_agent_info": null,
         "premium_requests": 1.0,
         "instruction_files": [],
+        "configuration": {},
+        "capture_errors": [],
+        "evidence_complete": null,
         "clarification_stats": null
       },
       "error": null,
@@ -127,7 +140,8 @@
       "model": "claude-haiku-4.5",
       "system_prompt_name": null,
       "skill_name": null,
-      "iteration": null
+      "iteration": null,
+      "properties": []
     },
     {
       "name": "tests/fixtures/scenario_03_sessions.py::TestBankingWorkflow::test_transfer_funds[gpt-5.4-mini]",
@@ -155,7 +169,10 @@
                 "error": null,
                 "duration_ms": 180.0,
                 "image_content": null,
-                "image_media_type": null
+                "image_media_type": null,
+                "call_id": null,
+                "completion_received": null,
+                "success": null
               }
             ]
           },
@@ -183,6 +200,9 @@
         "custom_agent_info": null,
         "premium_requests": 1.0,
         "instruction_files": [],
+        "configuration": {},
+        "capture_errors": [],
+        "evidence_complete": null,
         "clarification_stats": null
       },
       "error": null,
@@ -194,7 +214,8 @@
       "model": "gpt-5.4-mini",
       "system_prompt_name": null,
       "skill_name": null,
-      "iteration": null
+      "iteration": null,
+      "properties": []
     },
     {
       "name": "tests/fixtures/scenario_03_sessions.py::TestBankingWorkflow::test_transfer_funds[claude-haiku-4.5]",
@@ -222,7 +243,10 @@
                 "error": null,
                 "duration_ms": 180.0,
                 "image_content": null,
-                "image_media_type": null
+                "image_media_type": null,
+                "call_id": null,
+                "completion_received": null,
+                "success": null
               }
             ]
           },
@@ -250,6 +274,9 @@
         "custom_agent_info": null,
         "premium_requests": 1.0,
         "instruction_files": [],
+        "configuration": {},
+        "capture_errors": [],
+        "evidence_complete": null,
         "clarification_stats": null
       },
       "error": null,
@@ -261,7 +288,8 @@
       "model": "claude-haiku-4.5",
       "system_prompt_name": null,
       "skill_name": null,
-      "iteration": null
+      "iteration": null,
+      "properties": []
     }
   ],
   "passed": 4,

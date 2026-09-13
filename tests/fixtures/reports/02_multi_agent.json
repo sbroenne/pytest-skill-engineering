@@ -25,7 +25,10 @@
                 "error": null,
                 "duration_ms": 180.0,
                 "image_content": null,
-                "image_media_type": null
+                "image_media_type": null,
+                "call_id": null,
+                "completion_received": null,
+                "success": null
               }
             ]
           },
@@ -53,6 +56,9 @@
         "custom_agent_info": null,
         "premium_requests": 1.0,
         "instruction_files": [],
+        "configuration": {},
+        "capture_errors": [],
+        "evidence_complete": null,
         "clarification_stats": null
       },
       "error": null,
@@ -64,7 +70,8 @@
       "model": "gpt-5.4-mini",
       "system_prompt_name": null,
       "skill_name": null,
-      "iteration": null
+      "iteration": null,
+      "properties": []
     },
     {
       "name": "tests/fixtures/scenario_02_multi_agent.py::test_check_balance[claude-haiku-4.5]",
@@ -88,7 +95,10 @@
                 "error": null,
                 "duration_ms": 180.0,
                 "image_content": null,
-                "image_media_type": null
+                "image_media_type": null,
+                "call_id": null,
+                "completion_received": null,
+                "success": null
               }
             ]
           },
@@ -116,6 +126,9 @@
         "custom_agent_info": null,
         "premium_requests": 1.0,
         "instruction_files": [],
+        "configuration": {},
+        "capture_errors": [],
+        "evidence_complete": null,
         "clarification_stats": null
       },
       "error": null,
@@ -127,7 +140,8 @@
       "model": "claude-haiku-4.5",
       "system_prompt_name": null,
       "skill_name": null,
-      "iteration": null
+      "iteration": null,
+      "properties": []
     },
     {
       "name": "tests/fixtures/scenario_02_multi_agent.py::test_error_handling[gpt-5.4-mini]",
@@ -154,7 +168,10 @@
                 "error": "Insufficient funds",
                 "duration_ms": 180.0,
                 "image_content": null,
-                "image_media_type": null
+                "image_media_type": null,
+                "call_id": null,
+                "completion_received": null,
+                "success": null
               }
             ]
           },
@@ -182,6 +199,9 @@
         "custom_agent_info": null,
         "premium_requests": 1.0,
         "instruction_files": [],
+        "configuration": {},
+        "capture_errors": [],
+        "evidence_complete": null,
         "clarification_stats": null
       },
       "error": null,
@@ -193,7 +213,8 @@
       "model": "gpt-5.4-mini",
       "system_prompt_name": null,
       "skill_name": null,
-      "iteration": null
+      "iteration": null,
+      "properties": []
     },
     {
       "name": "tests/fixtures/scenario_02_multi_agent.py::test_error_handling[claude-haiku-4.5]",
@@ -230,6 +251,9 @@
         "custom_agent_info": null,
         "premium_requests": 1.0,
         "instruction_files": [],
+        "configuration": {},
+        "capture_errors": [],
+        "evidence_complete": null,
         "clarification_stats": null
       },
       "error": "AssertionError: withdraw tool was never called",
@@ -248,7 +272,8 @@
       "model": "claude-haiku-4.5",
       "system_prompt_name": null,
       "skill_name": null,
-      "iteration": null
+      "iteration": null,
+      "properties": []
     }
   ],
   "passed": 3,

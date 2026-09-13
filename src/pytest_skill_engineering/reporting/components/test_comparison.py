@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import base64
+import json
 
-from htpy import Node, button, code, div, img, span
+from htpy import Node, button, code, details, div, img, pre, span, summary
 
 from .agent_leaderboard import format_cost
 from .types import AgentData, AssertionData, TestData, TestResultData, ToolCallData
@@ -75,6 +76,10 @@ def _tool_call_item(tc: ToolCallData) -> Node:
     bg_class = "bg-green-500/5" if tc.success else "bg-red-500/5"
     status_class = "text-green-400" if tc.success else "text-red-400"
     status_icon = "✅" if tc.success else "❌"
+    if not tc.evidence_complete:
+        status_icon = "Incomplete evidence"
+        status_class = "text-text-muted"
+        bg_class = "bg-surface-elevated"
 
     error_node = None
     if tc.error:
@@ -99,10 +104,20 @@ def _tool_call_item(tc: ToolCallData) -> Node:
         error_node,
     ]
 
-    if image_node:
-        return div[call_row, div(".pl-8.pb-1")[image_node]]
-
-    return call_row
+    output = (
+        tc.result if tc.result else "Empty output" if tc.result == "" else "Output not captured"
+    )
+    return div[
+        call_row,
+        details(".pl-8.pb-1")[
+            summary[f"Call {tc.call_id or '(identity not captured)'}"],
+            div[f"Completion received: {tc.completion_received}; tool success: {tc.tool_success}"],
+            pre[json.dumps(tc.args, indent=2)],
+            pre[output],
+            pre[tc.error] if tc.error is not None else None,
+            image_node,
+        ],
+    ]
 
 
 def _tool_calls_section(result: TestResultData) -> Node | None:
@@ -307,12 +322,26 @@ def _result_content(result: TestResultData) -> Node:
     """Render the full content for a result."""
     return [
         _metrics_row(result),
+        _evidence_section(result),
         _mermaid_diagram(result),
         _tool_calls_section(result),
         _assertions_section(result),
         _scores_section(result),
         _response_section(result),
         _error_section(result),
+    ]
+
+
+def _evidence_section(result: TestResultData) -> Node:
+    return details(".mb-4")[
+        summary["Execution and verification evidence"],
+        div[f"Session success: {result.execution_success}"],
+        div[f"Evidence complete: {result.evidence_complete}"],
+        pre["\n".join(result.capture_errors)] if result.capture_errors else None,
+        div["Recorded test properties (independent verification belongs here)"],
+        pre[json.dumps(result.properties, indent=2, default=str)],
+        div["Eval configuration (not proof of available tools)"],
+        pre[json.dumps(result.configuration, indent=2, default=str)],
     ]
 
 
