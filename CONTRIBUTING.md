@@ -44,18 +44,18 @@ is current with `pyproject.toml`; dependency changes must regenerate and validat
 the lock explicitly. Use `--frozen` on local validation commands when consuming
 the existing lock in an environment with a different default registry.
 
-The current dependency refresh was resolved through the environment's Microsoft
-package-feed proxy. Public PyPI metadata was reachable, but artifact downloads
-from `files.pythonhosted.org` failed TLS handshakes, including with system
-certificates. The lock therefore records mirror artifact URLs; it is not a claim
-that every dependency is the latest public PyPI release.
+This development environment intentionally uses
+`https://packagefeedproxy.microsoft.io/pypi/simple/`. Resolve updates through the
+configured proxy rather than overriding it with the public PyPI index. The
+committed lock records proxy artifact URLs and hashes; installations from it
+have succeeded locally and on GitHub-hosted CI runners. Direct access to
+`files.pythonhosted.org` is not required for this verified installation path.
 
-Frozen installation preserves those URLs and hashes; it does not make the mirror
-reachable from another machine. A clean GitHub-hosted install remains a required
-portability check before release. If those URLs cannot be downloaded there,
-regenerate the lock from public PyPI in an environment with working TLS and
-validate it. Do not rewrite lock URLs by hand, disable certificate verification,
-or add repository-wide mirror configuration to hide the limitation.
+Package availability on the proxy may lag public PyPI. An update therefore uses
+the newest compatible releases available through the configured source, not
+necessarily the newest public releases. Refresh the lock through the proxy when
+newer versions become available. Do not rewrite lock URLs by hand or disable
+certificate verification.
 
 ### Source-only changes
 

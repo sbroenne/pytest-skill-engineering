@@ -17,6 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Dependency refresh** — upgraded GitHub Copilot SDK to 1.0.13, MCP to 2.1.1, Syrupy to 6, and Ruff to 0.16.6.
 - **Shared locked developer toolchain** — Ruff pre-commit hooks now use local system hooks invoking `uv run --frozen ruff`, sharing the repository's locked version instead of a separately versioned hook environment. Pyright and documentation hooks also use frozen execution.
 - **Exact-lock CI installs** — CI, integration, hero-test, and documentation workflows use `uv sync --frozen` and `uv run --frozen`, avoiding re-resolution against a different default registry.
+- **Configured package source** — dependency updates use the intended Microsoft package-feed proxy. The committed proxy-based lock installs successfully locally and on GitHub-hosted runners; direct public PyPI artifact access is not required for this installation path.
 - **Current API documentation** — corrected stale harness and command examples, distinguished system prompts from user prompts, and documented tool-image inspection without advertising semantic image judging.
 - **Shared Copilot client lifecycle** — eval and judge execution now use one typed client, permission, and cleanup helper instead of duplicate lazy SDK wrappers. Explicit credentials use `GITHUB_TOKEN`, then `GH_TOKEN`; otherwise the SDK uses its signed-in user.
 - **Explicit configuration discovery** — eval sessions disable ambient SDK configuration discovery by default so unrelated personal MCP servers are not silently attached. Opt in with `extra_config={"enable_config_discovery": True}` when discovery itself is under test.
@@ -38,10 +39,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Legacy custom-agent loader module** — removed `pytest_skill_engineering.copilot.evals`; import loaders from `pytest_skill_engineering` or `pytest_skill_engineering.core.evals`.
 - **No-op Copilot client shutdown hook** — removed the unused shared-client cleanup function and caller.
 - **Squad CI workflows** — removed the 11 `squad-*.yml` / `sync-squad-labels.yml` GitHub Actions workflows and the `.squad/templates/workflows/` copies that could regenerate them.
-
-### Known Issues
-
-- **Dependency registry portability** — this environment can resolve through its Microsoft package-feed proxy, but public PyPI artifact downloads fail TLS handshakes. The refreshed lock contains mirror URLs and accessible releases, not necessarily every latest public release. Frozen installs preserve that lock but do not guarantee mirror access on GitHub-hosted runners; validate a clean CI install before release or regenerate against public PyPI where TLS works. No certificate checks were disabled and no repository-wide mirror configuration was added.
 
 ## [0.6.14] - 2026-07-14
 
