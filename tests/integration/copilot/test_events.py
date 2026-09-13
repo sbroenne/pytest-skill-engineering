@@ -88,8 +88,8 @@ class TestUsageTracking:
         )
         assert usage["total"] == usage["prompt"] + usage["completion"]
 
-    async def test_premium_requests_non_negative(self, copilot_eval, tmp_path):
-        """Premium requests from the SDK is non-negative."""
+    async def test_premium_requests_match_sdk_events(self, copilot_eval, tmp_path, record_property):
+        """Premium request totals must come from actual SDK shutdown events."""
         agent = CopilotEval(
             name="cost-check",
             model=DEFAULT_MODEL,
@@ -98,7 +98,15 @@ class TestUsageTracking:
         )
         result = await copilot_eval(agent, "Create hello.py with print('hello')")
         assert result.success
-        assert result.total_premium_requests >= 0.0
+        shutdown_events = [
+            event for event in result.raw_events if event.type.value == "session.shutdown"
+        ]
+        record_property("shutdown_events_seen", len(shutdown_events))
+        if shutdown_events:
+            reported = shutdown_events[-1].data._total_premium_requests
+            assert result.total_premium_requests == float(reported or 0)
+        else:
+            assert result.total_premium_requests == 0.0
 
     async def test_model_used_captured(self, copilot_eval, tmp_path):
         """model_used is populated from the SDK session or usage events."""
@@ -110,10 +118,7 @@ class TestUsageTracking:
         )
         result = await copilot_eval(agent, "Create hi.py with print('hi')")
         assert result.success
-        # model_used may be None if session.start event didn't fire,
-        # but when populated it must be a non-empty string
-        if result.model_used is not None:
-            assert len(result.model_used) > 0
+        assert result.model_used, "Expected model metadata from the session event stream"
 
 
 @pytest.mark.copilot
@@ -131,6 +136,10 @@ class TestEventCapture:
         result = await copilot_eval(agent, "Create note.txt with 'test note'")
         assert result.success
         assert len(result.raw_events) > 0, "Expected raw events to be captured"
+        event_types = {event.type.value for event in result.raw_events}
+        assert "session.start" in event_types, "Session creation events must not be lost"
+        event_ids = [event.id for event in result.raw_events]
+        assert len(event_ids) == len(set(event_ids)), "Events must be recorded exactly once"
 
     async def test_all_tool_calls_captured(self, copilot_eval, tmp_path):
         """Tool calls are captured in result.all_tool_calls."""

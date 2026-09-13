@@ -3,7 +3,7 @@
 Runs the same task across every configured model and two distinct system
 prompts. The report exposes both dimensions for side-by-side comparison.
 
-Run with: pytest tests/integration/copilot/test_04_matrix.py -v
+Run with: uv run python -m pytest tests/integration/copilot/test_04_matrix.py -v
 """
 
 from __future__ import annotations

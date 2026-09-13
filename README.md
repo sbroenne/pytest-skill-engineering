@@ -30,15 +30,18 @@ pytest-skill-engineering validates the **full skill engineering stack** that shi
 
 - **MCP Server Tools** — Can Copilot discover and call your tools correctly?
 - **Agent Skills** ([agentskills.io](https://agentskills.io) spec-compliant) — Does domain knowledge improve performance?
-- **Custom Agents** (`.agent.md` files) — Do your specialist instructions trigger proper subagent dispatch?
+- **Custom Agents** (`.agent.md` files) — Do your specialist instructions trigger proper custom agent dispatch?
 - **MCP Prompt Templates** — Do server-side templates produce the right behavior?
 - **CLI Tools** — Can Copilot use command-line interfaces effectively?
 
-Plus **A/B testing**, **multi-turn sessions**, and **AI-powered reports** that tell you exactly what to fix.
+Plus **A/B testing**, **multi-step workflows with explicit context**, and **AI-powered reports** that tell you exactly what to fix.
 
 ## How It Works
 
 Write tests as prompts. Run them with the real GitHub Copilot coding agent. Assert on what happened:
+
+A **system prompt** configures behavior (`CopilotEval.instructions` or a custom
+agent's body). A **prompt** is the user task passed to `copilot_eval`.
 
 ```python
 from pytest_skill_engineering.copilot import CopilotEval
@@ -60,7 +63,7 @@ async def test_balance_query(copilot_eval):
 1. **Write a test** — a prompt that describes what a user would say
 2. **Run it** — GitHub Copilot tries to use your tools
 3. **Fix the interface** — improve tool descriptions, skills, or agent instructions until it passes
-4. **AI analysis tells you what to optimize** — cost, redundant calls, better prompts
+4. **AI analysis tells you what to optimize** — cost, redundant calls, better system prompts
 
 If a test fails, your AI interface needs work, not your code.
 
@@ -92,7 +95,7 @@ uv add pytest-skill-engineering
 gh auth login
 
 # Run tests
-pytest tests/
+uv run python -m pytest tests/
 ```
 
 ### Configure AI Analysis (optional but recommended)
@@ -110,21 +113,22 @@ You can also use Azure OpenAI or other providers if you prefer — see [Configur
 
 - **MCP Server Testing** — Test tools, prompt templates, and bundled skills with real Copilot sessions
 - **Agent Skills** — Full [agentskills.io](https://agentskills.io) spec compliance (compatibility, metadata, allowed-tools, evals bridge)
-- **Custom Agents** — Test `.agent.md` files and validate subagent dispatch
+- **Custom Agents** — Test `.agent.md` files and validate custom agent dispatch
 - **CLI Tool Testing** — Verify Copilot can use command-line interfaces
 - **Plugin Testing** — Load complete plugin directories (plugin.json, .github/, .claude/ layouts) with auto-discovery
 - **A/B Testing** — Compare instructions, skills, custom agent versions, or tool configurations
 - **Eval Leaderboard** — Auto-ranked by pass rate and cost
 - **Multi-Turn Sessions** — Test conversations that build on context
-- **LLM Assertions** — Semantic checks with `llm_assert`, multi-dimension scoring with `llm_score`, image evaluation with `llm_assert_image`
-- **AI-Powered Reports** — Actionable feedback on tool descriptions, prompts, and costs
+- **LLM Assertions** — Semantic checks with `llm_assert` and multi-dimension scoring with `llm_score`
+- **Tool Images** — Capture tool-returned images for inspection in results and reports
+- **AI-Powered Reports** — Actionable feedback on tool descriptions, system prompts, and costs
 - **Cost Tracking** — Copilot premium request tracking + USD estimation via `pricing.toml`
 
 ## Who This Is For
 
 - **MCP server authors** — Validate that GitHub Copilot can actually use your tools
 - **Agent Skills authors** — Test skills exactly as users experience them in Copilot
-- **Custom agent builders** — Validate `.agent.md` instructions and subagent dispatch
+- **Custom agent builders** — Validate `.agent.md` instructions and custom agent dispatch
 - **Plugin developers** — Test complete GitHub Copilot CLI plugins end-to-end
 - **Teams shipping Copilot integrations** — Catch skill stack regressions in CI/CD
 

@@ -14,12 +14,34 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
+- **Dependency refresh** — upgraded GitHub Copilot SDK to 1.0.13, MCP to 2.1.1, Syrupy to 6, and Ruff to 0.16.6.
+- **Shared locked developer toolchain** — Ruff pre-commit hooks now use local system hooks invoking `uv run --frozen ruff`, sharing the repository's locked version instead of a separately versioned hook environment. Pyright and documentation hooks also use frozen execution.
+- **Exact-lock CI installs** — CI, integration, hero-test, and documentation workflows use `uv sync --frozen` and `uv run --frozen`, avoiding re-resolution against a different default registry.
+- **Current API documentation** — corrected stale harness and command examples, distinguished system prompts from user prompts, and documented tool-image inspection without advertising semantic image judging.
+- **Shared Copilot client lifecycle** — eval and judge execution now use one typed client, permission, and cleanup helper instead of duplicate lazy SDK wrappers. Explicit credentials use `GITHUB_TOKEN`, then `GH_TOKEN`; otherwise the SDK uses its signed-in user.
+- **Explicit configuration discovery** — eval sessions disable ambient SDK configuration discovery by default so unrelated personal MCP servers are not silently attached. Opt in with `extra_config={"enable_config_discovery": True}` when discovery itself is under test.
 - **`--strict-markers` is now enforced** — unregistered pytest markers now fail collection instead of silently passing, preventing typo'd markers.
 - **Report generation is more resilient** — in `pytest_sessionfinish`, AI-insight and HTML/Markdown rendering are wrapped so a rendering failure no longer discards the already-written JSON, skips the `--aitest-min-pass-rate` gate, or bypasses session cleanup.
 
+### Fixed
+
+- **Copilot event capture** — register the event handler during session creation so initial SDK events are captured, and stop mapping the `send_and_wait` return a second time after `on_event` already recorded it. Integration assertions cover `session.start`, model metadata, and unique raw event IDs.
+- **Recursive custom agent dispatch** — remove the dispatched custom agent from the child registry. The registry shrinks along each nested dispatch path, preventing self-dispatch and cycles without an arbitrary depth cap.
+- **SDK cleanup attempts** — bound graceful client shutdown and force-stop attempts rather than allowing cleanup to wait indefinitely.
+- **Integration authentication checks** — recognize `GH_TOKEN` and check `gh` authentication specifically for `github.com`.
+- **Skill greeting coverage** — give the test skill a discoverable description and explicitly request `simple-assistant` in the treatment system prompt without revealing its greeting rule. The test now checks application of that rule rather than assuming implicit activation.
+- **Clarification response assertion** — replace brittle phrase matching in the integration test with the existing semantic `llm_assert` fixture, accepting equivalent clarification wording without adding automatic clarification detection.
+
 ### Removed
 
+- **Unfinished image assertions** — removed the `llm_assert_image` fixture, its recording wrapper, and `--llm-vision-model`. Tool-returned image capture and report rendering remain supported.
+- **Legacy custom-agent loader module** — removed `pytest_skill_engineering.copilot.evals`; import loaders from `pytest_skill_engineering` or `pytest_skill_engineering.core.evals`.
+- **No-op Copilot client shutdown hook** — removed the unused shared-client cleanup function and caller.
 - **Squad CI workflows** — removed the 11 `squad-*.yml` / `sync-squad-labels.yml` GitHub Actions workflows and the `.squad/templates/workflows/` copies that could regenerate them.
+
+### Known Issues
+
+- **Dependency registry portability** — this environment can resolve through its Microsoft package-feed proxy, but public PyPI artifact downloads fail TLS handshakes. The refreshed lock contains mirror URLs and accessible releases, not necessarily every latest public release. Frozen installs preserve that lock but do not guarantee mirror access on GitHub-hosted runners; validate a clean CI install before release or regenerate against public PyPI where TLS works. No certificate checks were disabled and no repository-wide mirror configuration was added.
 
 ## [0.6.14] - 2026-07-14
 

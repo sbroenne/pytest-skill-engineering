@@ -34,8 +34,10 @@ result.tool_was_called("get_balance")
 result.tool_call_count("get_balance")
 result.tool_calls_for("get_balance")
 result.tool_was_called_with("transfer", amount=500.0)
-result.tool_images_for("screenshot")
 ```
+
+Tool-returned images are available on individual tool calls as `image_content`
+(bytes) and `image_media_type`. See [Tool-returned images](../how-to/image-assertions.md).
 
 ## Token helpers
 

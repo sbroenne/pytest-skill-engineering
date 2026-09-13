@@ -38,6 +38,11 @@ async def test_dispatches_to_reviewer(copilot_eval):
 
 `result.subagent_invocations` reports runtime subagent events such as `selected`, `started`, and `completed`.
 
+Each nested invocation receives the remaining custom agent registry without its
+own definition. That registry shrinks along the dispatch path, so a custom agent
+cannot dispatch back to itself or an ancestor. Sibling invocations can still use
+the definitions available in their parent's registry.
+
 ## Load a directory of custom agents
 
 ```python

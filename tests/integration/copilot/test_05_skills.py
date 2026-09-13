@@ -3,9 +3,7 @@
 Same task, two configs — baseline (no skill) vs treatment (with skill).
 Assertions verify the skill caused the observable difference.
 
-Mirrors pydantic/test_05_skills.py — same level, different harness.
-
-Run with: pytest tests/integration/copilot/test_05_skills.py -v
+Run with: uv run python -m pytest tests/integration/copilot/test_05_skills.py -v
 """
 
 from __future__ import annotations
@@ -88,8 +86,8 @@ class TestSkillABComparison:
             f"Baseline (no skill) unexpectedly contains return annotations.\nBaseline output:\n{content_a}"
         )
 
-    async def test_simple_assistant_skill_injects_greeting_rule(self, copilot_eval, tmp_path):
-        """Skill body should inject its greeting rule into the treatment config."""
+    async def test_simple_assistant_skill_applies_greeting_rule(self, copilot_eval, tmp_path):
+        """Loading the greeting skill should apply its rule to the response."""
         shared_instructions = (
             "Reply with exactly one short greeting sentence. Do not use the word 'Hello' "
             "unless a loaded skill requires it."
@@ -110,8 +108,8 @@ class TestSkillABComparison:
             name="treatment",
             model=SKILL_MODEL,
             instructions=(
-                f"{shared_instructions} Read your loaded skills carefully and obey any "
-                "additional greeting requirements they impose."
+                f"{shared_instructions} Use the simple-assistant skill for this greeting "
+                "and obey its additional greeting requirements."
             ),
             working_directory=str(treatment_dir),
             skill_directories=[str(_SKILLS_DIR / "simple-assistant")],

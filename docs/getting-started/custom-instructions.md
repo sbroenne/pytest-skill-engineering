@@ -87,18 +87,19 @@ You are working in a Python monorepo. Always:
 3. Follow the project's naming conventions in docs/conventions.md
 ```
 
-## Testing with `Eval.from_instruction_files()`
+## Testing loaded instructions
 
-The `from_instruction_files()` factory loads one or more instruction files and
-combines their content into the agent instructions:
+Load the file and pass its content as the system prompt. `CopilotEval` does not
+have a `from_instruction_files()` factory:
 
 ```python
-import pytest
+from pytest_skill_engineering import load_instruction_file
 from pytest_skill_engineering.copilot import CopilotEval
 
-agent = CopilotEval.from_instruction_files(
-    [".github/copilot-instructions.md"],
+instruction = load_instruction_file(".github/copilot-instructions.md")
+agent = CopilotEval(
     name="conventions-test",
+    instructions=instruction["content"],
 )
 
 
@@ -112,13 +113,15 @@ async def test_naming_conventions(copilot_eval):
 ### Combining Multiple Instruction Files
 
 ```python
-agent = CopilotEval.from_instruction_files(
-    [
-        ".github/copilot-instructions.md",
-        ".github/instructions/python-style.instructions.md",
-        ".github/instructions/testing-conventions.instructions.md",
-    ],
-    name="full-conventions",  # optional — auto-derived from file names
+paths = [
+    ".github/copilot-instructions.md",
+    ".github/instructions/python-style.instructions.md",
+    ".github/instructions/testing-conventions.instructions.md",
+]
+instructions = [load_instruction_file(path) for path in paths]
+agent = CopilotEval(
+    name="full-conventions",
+    instructions="\n\n".join(item["content"] for item in instructions),
 )
 ```
 
@@ -166,14 +169,14 @@ INSTRUCTIONS = load_instruction_files(
 
 ## Instruction File Info in Reports
 
-When you use `CopilotEval.from_instruction_files()`, the report tracks which instruction
-files were used and their pass rates in the **Custom Instruction Files** section
-of the AI analysis. The AI will assess whether the LLM followed each convention,
-cite specific tests where rules were violated, and suggest changes to improve
-adherence.
+Use descriptive eval names and pytest parameter IDs to identify instruction
+variants. The combined system prompt is included in the eval configuration for
+analysis, but passing file content through `instructions` does not automatically
+preserve file names or create per-file pass rates. Assert the required behavior
+in each test.
 
 ## Next Steps
 
 - [Prompt Files](prompt-files.md) — Test user-facing slash commands
 - [Custom Agents](custom-agents.md) — Test `.agent.md` specialist agent files
-- [EvalResult Reference](../reference/result.md) — All result fields
+- [CopilotResult Reference](../reference/result.md) — All result fields

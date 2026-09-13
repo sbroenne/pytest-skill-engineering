@@ -3,7 +3,7 @@
 Tests the skill_refiner fixture that analyzes eval failures and produces
 actionable SKILL.md improvement suggestions.
 
-Run with: pytest tests/integration/copilot/test_15_skill_refinement.py -v
+Run with: uv run python -m pytest tests/integration/copilot/test_15_skill_refinement.py -v
 """
 
 from __future__ import annotations

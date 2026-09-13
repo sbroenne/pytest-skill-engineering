@@ -6,12 +6,10 @@ config files (``.mcp.json``, ``.vscode/mcp.json``).
 
 from __future__ import annotations
 
-import json
-import logging
 from pathlib import Path
 from typing import Any
 
-_logger = logging.getLogger(__name__)
+from pytest_skill_engineering.core.plugin import _read_json, _validate_mcp_servers
 
 
 def load_mcp_config(path: str | Path) -> dict[str, dict[str, Any]]:
@@ -22,6 +20,9 @@ def load_mcp_config(path: str | Path) -> dict[str, dict[str, Any]]:
 
     * ``mcpServers`` — Claude Code / standard MCP convention
     * ``servers`` — VS Code ``mcp.json`` convention
+
+    Exactly one supported key must be present. An explicit empty mapping is valid;
+    missing keys, conflicting keys, and malformed server definitions raise errors.
 
     Returns:
         Dict of ``server_name → config`` compatible with
@@ -43,25 +44,14 @@ def load_mcp_config(path: str | Path) -> dict[str, dict[str, Any]]:
         msg = f"MCP config file not found: {path}"
         raise FileNotFoundError(msg)
 
-    try:
-        raw = json.loads(path.read_text(encoding="utf-8"))
-    except json.JSONDecodeError as exc:
-        msg = f"Invalid JSON in MCP config {path}: {exc}"
-        raise ValueError(msg) from exc
+    raw = _read_json(path)
 
     if not isinstance(raw, dict):
-        msg = f"MCP config must be a JSON object, got {type(raw).__name__}"
+        msg = f"{path}: MCP config must be a JSON object, got {type(raw).__name__}"
         raise ValueError(msg)
 
-    # Try standard keys in priority order
-    servers: dict[str, Any] | None = None
-    for key in ("mcpServers", "servers"):
-        if key in raw and isinstance(raw[key], dict):
-            servers = raw[key]
-            break
+    fields = [key for key in ("mcpServers", "servers") if key in raw]
+    if len(fields) != 1:
+        raise ValueError(f"{path}: specify exactly one of 'mcpServers' and 'servers'")
 
-    if servers is None:
-        _logger.warning("No 'mcpServers' or 'servers' key found in %s", path)
-        return {}
-
-    return dict(servers)
+    return _validate_mcp_servers(raw[fields[0]], path, field=fields[0])

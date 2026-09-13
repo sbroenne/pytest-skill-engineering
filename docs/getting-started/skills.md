@@ -45,12 +45,10 @@ For detailed budgeting advice, use the reference document.
 
 ## Skill References
 
-References are documents the agent can look up **on demand** rather than having them always in context. When a skill has a `references/` directory, two virtual tools are automatically injected:
-
-| Tool | Description |
-|------|-------------|
-| `list_skill_references` | Lists available reference documents |
-| `read_skill_reference` | Reads a specific document by filename |
+References are documents the agent can look up **on demand** rather than having
+them always in context. Copilot loads skills natively and can read their
+`references/` files using its file tools. The plugin does not inject synthetic
+reference tools.
 
 ### Example Reference Document
 
@@ -74,11 +72,11 @@ References are documents the agent can look up **on demand** rather than having 
 
 When you tell the skill to "use the reference document for budgeting advice", the agent will:
 
-1. Call `list_skill_references()` → sees `budgeting-guide.md`
-2. Call `read_skill_reference(filename="budgeting-guide.md")` → gets the content
+1. Read the skill's guidance about when to consult references
+2. Read `references/budgeting-guide.md` with its available file tools
 3. Use that content to formulate a detailed response
 
-This keeps your base prompt lean while providing detailed information when needed.
+This keeps the skill's main instructions lean while providing detail when needed.
 
 ### When to Use References vs Instructions
 
@@ -144,9 +142,9 @@ The report shows whether the skill improves performance.
 
 ## Copilot Skills
 
-> **Are you testing a skill for GitHub Copilot?** Use `CopilotEval` with `skill_directories` instead — **not** `Eval` + `Skill.from_path()`.
-
-The `Eval` + `Skill` approach above tests whether a *generic LLM* can leverage skill content via injected tools. It does **not** test how GitHub Copilot itself loads and uses the skill.
+Use `CopilotEval` with `skill_directories` to test native skill loading.
+`Skill.from_path()` loads skill metadata for inspection and other skill workflows;
+it is not a `CopilotEval` constructor argument.
 
 When your skill is built for Copilot (e.g. distributed via `npx skills add`), you want the real Copilot agent to load it — exactly as end users will experience it:
 
@@ -165,6 +163,9 @@ async def test_skill_presents_scenarios(copilot_eval):
     assert "baseline" in result.final_response.lower()
 ```
 
-Copilot loads the skill natively — no synthetic tool injection. MCP servers configured in `~/.copilot/mcp-config.json` (or via the session's `mcp_servers`) are available automatically.
+Copilot loads the skill natively — no synthetic tool injection. Attach required
+MCP servers through `mcp_servers`; ambient SDK configuration discovery is disabled
+by default. See [Configuration](../reference/configuration.md) for the explicit
+discovery opt-in.
 
 See [Test Coding Agents](../how-to/test-coding-agents.md#testing-skills) for a full example.

@@ -235,15 +235,6 @@ def generate_structured_insights(
         return None
 
 
-def shutdown_copilot_model_client() -> None:
-    """Shut down any shared Copilot model client state.
-
-    The current Copilot-only runtime does not keep a shared client here, so
-    shutdown is a no-op.
-    """
-    return None
-
-
 # ── Coding agent analysis prompt ──
 
 _CODING_AGENT_ANALYSIS_PROMPT_PATH = Path(__file__).parent / "prompts" / "coding_agent_analysis.md"

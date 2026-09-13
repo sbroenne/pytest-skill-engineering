@@ -64,7 +64,6 @@ OPTION_SPECS = [
         metavar="N",
     ),
     OptionSpec("--llm-model", "copilot/gpt-5.4-mini", "llm_model"),
-    OptionSpec("--llm-vision-model", None, "llm_vision_model"),
 ]
 
 
@@ -132,7 +131,6 @@ class TestAddAitestOptionsConfig:
             "--aitest-min-pass-rate=80",
             "--aitest-iterations=3",
             "--llm-model=copilot/gpt-5.5",
-            "--llm-vision-model=copilot/gpt-4.1",
         )
 
         assert config.getoption("--aitest-summary-model") == "copilot/gpt-5.5"
@@ -143,7 +141,6 @@ class TestAddAitestOptionsConfig:
         assert config.getoption("--aitest-min-pass-rate") == 80
         assert config.getoption("--aitest-iterations") == 3
         assert config.getoption("--llm-model") == "copilot/gpt-5.5"
-        assert config.getoption("--llm-vision-model") == "copilot/gpt-4.1"
 
     @pytest.mark.parametrize(
         ("flag_name", "dest"),

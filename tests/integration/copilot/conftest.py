@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-import os
 import subprocess
 
 import pytest
+
+from pytest_skill_engineering.copilot.client import get_github_token
 
 # Default model for integration tests
 DEFAULT_MODEL: str = "gpt-5.4-mini"
@@ -22,11 +23,11 @@ DEFAULT_MAX_TURNS: int = 25
 
 def _has_github_auth() -> bool:
     """Check whether GitHub auth is available for Copilot SDK."""
-    if os.environ.get("GITHUB_TOKEN"):
+    if get_github_token():
         return True
     try:
         result = subprocess.run(  # noqa: S603
-            ["gh", "auth", "status"],
+            ["gh", "auth", "status", "--hostname", "github.com"],
             check=False,
             capture_output=True,
             text=True,
@@ -42,5 +43,5 @@ def _check_github_auth():
     if not _has_github_auth():
         pytest.skip(
             "GitHub auth required for Copilot integration tests. "
-            "Set GITHUB_TOKEN or run `gh auth login`."
+            "Set GITHUB_TOKEN or GH_TOKEN, or run `gh auth login --hostname github.com`."
         )

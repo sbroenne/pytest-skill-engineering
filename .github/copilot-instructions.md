@@ -27,7 +27,7 @@
 - **Prompt** = What you tell the agent to execute (the test query / user message)
 - **Custom Agent** = A `.agent.md` file that defines a specialist agent (name, description, instructions, tools). It is a **definition**, not a runtime concept.
 - **Subagent Dispatch** = The runtime mechanism where Copilot's orchestrator routes a task to a custom agent. A custom agent becomes a subagent *when dispatched to* — but it is NOT inherently a "subagent."
-- **Eval** = The test harness/configuration (`Eval` or `CopilotEval`). Not the thing being tested.
+- **Eval** = The test harness/configuration (`CopilotEval`). Not the thing being tested.
 - **Coding Agent** = The real GitHub Copilot agent that runs user sessions.
 
 Always say "system prompt" when referring to agent instructions. Never abbreviate to just "prompt".
@@ -65,9 +65,9 @@ In documentation, always show `uv add` instead of `pip install`.
 - **MCP Servers** — Can an LLM understand and use these tools?
 - **CLI Tools** — Can an LLM operate this command-line interface?
 - **Eval Skills** — Does this domain knowledge improve performance?
-- **Custom Agents** — Do these `.agent.md` instructions produce the right behavior and subagent dispatch?
+- **Custom Agents** — Do these `.agent.md` instructions produce the right behavior and custom agent dispatch?
 
-**System prompts are NOT a standalone test concept.** A custom agent's body IS its system prompt. Testing agent instructions = testing a custom agent file. The `system_prompt=` param on `Eval` exists for raw synthetic tests only — not a primary concept.
+**System prompts configure behavior.** A custom agent's body IS its system prompt. Use `CopilotEval.instructions` when comparing raw system prompt variants; there is no public `Eval` harness or `system_prompt=` parameter.
 
 **The Eval is the test harness**, not the thing being tested. It bundles an LLM provider with the tools/prompts/skills/custom agents you want to evaluate.
 
@@ -88,7 +88,7 @@ For LLMs, your API isn't functions and types — it's **tool descriptions, syste
 
 ## CRITICAL: HTML Report Development Workflow
 
-**MANDATORY STEPS AFTER EVERY CODE CHANGE:**
+**For report rendering changes, regenerate from existing JSON without live LLM calls:**
 
 1. **REGENERATE ALL REPORTS** (non-negotiable)
    ```bash
@@ -97,12 +97,12 @@ For LLMs, your API isn't functions and types — it's **tool descriptions, syste
    - Generates fixture reports in docs/reports/
    - Do NOT skip this step
 
-2. **RUN HTML INTEGRATION TESTS** (non-negotiable)
+2. **RUN COPILOT INTEGRATION TESTS WHEN EXECUTION BEHAVIOR CHANGES**
    ```bash
    uv run python -m pytest tests/integration/copilot/test_01_basic.py -q
    ```
-   - Verifies end-to-end report generation
-   - Fix ALL failures — no exceptions
+   - Run relevant test files sequentially when eval, tool, or engine behavior changes
+   - Do not re-run live tests just for templates, CSS, JS, or documentation edits
 
 3. **VERIFY CHANGES IN ACTUAL HTML** (non-negotiable)
    ```bash
@@ -243,7 +243,7 @@ if TYPE_CHECKING:
 
 4. **Multi-Turn Context**: Test compound instructions that span multiple tool calls in one turn
    - Each test is independent — context is provided in the prompt
-   - Chain tool-use assertions: `result.tool_was_called_in_order(["get_balance", "transfer"])`
+   - Inspect call order with `[call.name for call in result.all_tool_calls]`
 
 5. **Skill Testing**: Validate eval domain knowledge
    - Load skills from markdown files with `Skill.from_path()`
@@ -251,15 +251,12 @@ if TYPE_CHECKING:
    - Reports analyze skill effectiveness and suggest improvements
 
 6. **Custom Agent Testing**: Test `.agent.md` custom agent files (VS Code / Claude Code format)
-   - `load_custom_agent(path)` + `CopilotEval(custom_agents=[...])` — test real subagent dispatch through Copilot
+   - `load_custom_agent(path)` + `CopilotEval(custom_agents=[...])` — test real custom agent dispatch through Copilot
    - Tests whether custom agents are invoked correctly and produce the expected behavior
 
-7. **Clarification Detection**: Catch evals that ask questions instead of acting
-   - LLM-as-judge detects "Would you like me to...?" style responses
-   - Configure with `ClarificationDetection(enabled=True)` on Eval
-   - Assert with `result.asked_for_clarification` / `result.clarification_count`
-   - Levels: INFO (log only), WARNING (default), ERROR (fail test)
-   - Uses separate judge LLM call (defaults to agent's own model)
+7. **Semantic Assertions**: Check response behavior with `llm_assert`
+   - For example, assert that the response answers the request rather than asking an unnecessary question
+   - There is no automatic clarification-detection configuration on `CopilotEval`
 
 ### AI Analysis (KEY DIFFERENTIATOR)
 
@@ -275,28 +272,28 @@ Reports include:
 
 ```bash
 # Run tests with AI analysis (mandatory --aitest-summary-model)
-pytest tests/ --aitest-html=report.html --aitest-summary-model=copilot/gpt-5.5
+uv run python -m pytest tests/ --aitest-html=report.html --aitest-summary-model=copilot/gpt-5.5
 
 # Regenerate report with new AI insights from existing JSON (no re-run)
-pytest-skill-engineering-report results.json --html report.html --summary --summary-model copilot/gpt-5.5
+uv run pytest-skill-engineering-report results.json --html report.html --summary --summary-model copilot/gpt-5.5
 ```
 
 ### Key Types
 
 ```python
 from pytest_skill_engineering.copilot import CopilotEval
-from pytest_skill_engineering import Skill, load_custom_agent
+from pytest_skill_engineering import load_custom_agent
 
 # Define an eval
 agent = CopilotEval(
     name="financial-assistant",
     model="gpt-5.4-mini",
     instructions="You are a helpful financial assistant.",
-    skill=Skill.from_path("skills/financial-advisor"),  # Optional domain knowledge
+    skill_directories=["skills/financial-advisor"],  # Optional domain knowledge
     max_turns=10,
 )
 
-# Load a custom agent as a subagent for CopilotEval (real Copilot dispatch)
+# Register a custom agent definition for Copilot to dispatch to at runtime
 copilot_agent = CopilotEval(
     name="coder",
     model="gpt-5.4-mini",
@@ -419,14 +416,14 @@ uv run python -m pytest tests/integration/copilot/test_01_basic.py -v
 
 ## Copilot SDK
 
-Uses GitHub Copilot SDK for all LLM calls. Requires Copilot auth (`gh auth login` or `GITHUB_TOKEN`).
+Uses GitHub Copilot SDK for all LLM calls. Authenticate with `gh auth login --hostname github.com` or an explicit token. Eval and judge sessions select `GITHUB_TOKEN` first, then `GH_TOKEN`; otherwise the SDK uses its signed-in user.
 
 ```bash
 # Use Copilot for AI insights
-pytest tests/ --aitest-summary-model=gpt-5.4-mini
+uv run python -m pytest tests/ --aitest-summary-model=gpt-5.4-mini
 
 # Use Copilot for llm_assert / llm_score
-pytest tests/ --llm-model=gpt-5.4-mini
+uv run python -m pytest tests/ --llm-model=gpt-5.4-mini
 ```
 
 The Copilot SDK is REQUIRED (not optional). All eval execution goes through it.
@@ -444,7 +441,7 @@ src/pytest_skill_engineering/
 │   ├── result.py          # CopilotResult - test result data
 │   ├── runner.py          # Copilot SDK agent execution
 │   ├── fixtures.py        # copilot_eval fixture
-│   └── judge.py           # LLM judge (llm_assert, clarification detection)
+│   └── judge.py           # LLM judge (llm_assert, llm_score)
 ├── execution/             # MCP/CLI server process management
 │   └── servers.py         # MCPServer, CLIServer, MCPServerProcess, CLIServerProcess
 ├── fixtures/              # Additional pytest fixtures
@@ -482,7 +479,7 @@ tests/
 │   │   ├── test_02_models.py      # Model comparison
 │   │   ├── test_03_instructions.py # Instruction differentiation + excluded_tools
 │   │   ├── test_05_skills.py      # Skill A/B comparison
-│   │   └── test_12_custom_agents.py # Custom agents + forced subagent dispatch
+│   │   └── test_12_custom_agents.py # Custom agent definitions and dispatch
 │   ├── agents/            # .agent.md test fixtures (banking-advisor, todo-manager, minimal)
 │   └── skills/            # Test skills
 └── unit/                  # Pure logic only (no mocking LLMs)
@@ -604,7 +601,7 @@ To modify styles:
    - `test_09_cli.py` → CLI server testing
    - `test_10_ab_servers.py` → A/B server comparison
    - `test_11_iterations.py` → Iteration reliability
-   - `test_12_custom_agents.py` → Custom agent files (Eval.from_agent_file)
+   - `test_12_custom_agents.py` → Custom agent files (`load_custom_agent`, `CopilotEval.custom_agents`)
 
 2. **Showcase tests for hero report** - Located in `tests/showcase/`:
    - `test_hero.py` → Curated tests for README showcase
@@ -705,5 +702,3 @@ This workflow is **instant and free** - no LLM calls, no API costs.
 - **No horizontal rules (`---`)** - Headings provide sufficient visual separation
 - Use `##` headings for major sections, `###` for subsections
 - Horizontal rules inside code blocks are fine (e.g., YAML frontmatter examples)
-
-

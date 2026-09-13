@@ -6,7 +6,7 @@ for the Copilot SDK harness.
 Copilot-exclusive — CopilotEval.from_plugin() maps plugin components
 to SDK session config fields (custom_agents, instructions, skill_directories).
 
-Run with: pytest tests/integration/copilot/test_13_plugins.py -v
+Run with: uv run python -m pytest tests/integration/copilot/test_13_plugins.py -v
 """
 
 from __future__ import annotations

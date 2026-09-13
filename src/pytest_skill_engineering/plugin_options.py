@@ -113,14 +113,3 @@ def add_aitest_options(group: OptionGroup) -> None:
             "Defaults to --aitest-summary-model if set, otherwise copilot/gpt-5.4-mini."
         ),
     )
-
-    # Vision model for llm_assert_image fixture
-    group.addoption(
-        "--llm-vision-model",
-        default=None,
-        help=(
-            "Vision-capable model for llm_assert_image assertions. "
-            "Defaults to --llm-model if not set. "
-            "Use a model that supports image input (e.g., gpt-4o, claude-sonnet-4)."
-        ),
-    )

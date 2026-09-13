@@ -3,9 +3,7 @@
 Tests that the Copilot coding agent can create production-quality Python
 modules and refactor existing code using the shared economical default model.
 
-Mirrors pydantic/test_01_basic.py — same level, different harness.
-
-Run with: pytest tests/integration/copilot/test_01_basic.py -v
+Run with: uv run python -m pytest tests/integration/copilot/test_01_basic.py -v
 """
 
 from __future__ import annotations

@@ -20,10 +20,11 @@ You are not re-testing your Python functions. You are testing whether Copilot ca
 
 ```bash
 uv add pytest-skill-engineering
-gh auth login
+gh auth login --hostname github.com
 ```
 
-In CI, set `GITHUB_TOKEN` instead.
+In CI, set `GITHUB_TOKEN` or `GH_TOKEN` instead. The runtime selects
+`GITHUB_TOKEN` first when both are set.
 
 ## First complete example
 

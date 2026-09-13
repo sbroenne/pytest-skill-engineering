@@ -4,9 +4,7 @@ Uses the --aitest-iterations=N CLI flag to run each test multiple times.
 The report aggregates iterations per test and shows iteration pass rate,
 enabling flakiness detection and reliability baselines.
 
-Mirrors pydantic/test_11_iterations.py — same level, different harness.
-
-Run with: pytest tests/integration/copilot/test_11_iterations.py -v --aitest-iterations=3
+Run with: uv run python -m pytest tests/integration/copilot/test_11_iterations.py -v --aitest-iterations=3
 """
 
 from __future__ import annotations

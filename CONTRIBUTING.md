@@ -5,17 +5,19 @@ Thanks for improving pytest-skill-engineering.
 ## Development setup
 
 ```bash
-uv sync
-uv run pre-commit install
+uv sync --frozen --all-extras
+uv run --frozen pre-commit install
 ```
 
 Authenticate Copilot with either:
 
 ```bash
-gh auth login
+gh auth login --hostname github.com
 ```
 
-or `GITHUB_TOKEN` in your environment.
+or an explicit token in your environment. Eval and judge sessions use
+`GITHUB_TOKEN` first, then `GH_TOKEN`; when neither is set, the SDK uses its
+signed-in user.
 
 ## What this project validates
 
@@ -33,6 +35,28 @@ The main harness is `CopilotEval`. Keep new contributions on the current Copilot
 
 Use the smallest command that proves the change you made.
 
+### Locked dependency environment
+
+CI, integration, hero-test, and documentation workflows use `uv sync --frozen`
+and `uv run --frozen` to consume the committed lock without resolving against a
+runner's different default registry. `--frozen` does not check whether the lock
+is current with `pyproject.toml`; dependency changes must regenerate and validate
+the lock explicitly. Use `--frozen` on local validation commands when consuming
+the existing lock in an environment with a different default registry.
+
+The current dependency refresh was resolved through the environment's Microsoft
+package-feed proxy. Public PyPI metadata was reachable, but artifact downloads
+from `files.pythonhosted.org` failed TLS handshakes, including with system
+certificates. The lock therefore records mirror artifact URLs; it is not a claim
+that every dependency is the latest public PyPI release.
+
+Frozen installation preserves those URLs and hashes; it does not make the mirror
+reachable from another machine. A clean GitHub-hosted install remains a required
+portability check before release. If those URLs cannot be downloaded there,
+regenerate the lock from public PyPI in an environment with working TLS and
+validate it. Do not rewrite lock URLs by hand, disable certificate verification,
+or add repository-wide mirror configuration to hide the limitation.
+
 ### Source-only changes
 
 For report generation, serialization, and documentation source changes, run focused deterministic checks:
@@ -40,7 +64,7 @@ For report generation, serialization, and documentation source changes, run focu
 ```bash
 uv run ruff check src tests
 uv run ruff format --check src tests
-uv run pyright src
+uv run pyright
 uv run mkdocs build --strict
 uv run python scripts/generate_fixture_html.py
 ```

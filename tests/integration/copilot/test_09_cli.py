@@ -1,13 +1,10 @@
 """Level 09 — CLI / shell tool usage: verify Copilot can run shell commands.
 
-The Pydantic harness wraps shell commands via CLIServer (custom toolset).
-Copilot has NATIVE terminal/shell tools built in — no CLIServer needed.
+Copilot has native terminal/shell tools built in — no CLIServer needed.
 We simply instruct the agent and verify it uses shell commands to complete
 file-system and pipeline tasks.
 
-Mirrors pydantic/test_09_cli.py — same level, different harness.
-
-Run with: pytest tests/integration/copilot/test_09_cli.py -v
+Run with: uv run python -m pytest tests/integration/copilot/test_09_cli.py -v
 """
 
 from __future__ import annotations

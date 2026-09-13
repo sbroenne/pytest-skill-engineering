@@ -3,7 +3,7 @@
 Provides ``CopilotEval``, ``CopilotResult``, ``run_copilot``, and IDE
 personas for testing real coding agents via the GitHub Copilot SDK.
 
-Install with: ``uv add pytest-skill-engineering[copilot]``
+Install with: ``uv add pytest-skill-engineering``
 """
 
 from __future__ import annotations
@@ -11,7 +11,6 @@ from __future__ import annotations
 from pytest_skill_engineering.copilot.api import run_copilot
 from pytest_skill_engineering.copilot.config import load_mcp_config
 from pytest_skill_engineering.copilot.eval import CopilotEval
-from pytest_skill_engineering.copilot.evals import load_custom_agent, load_custom_agents
 from pytest_skill_engineering.copilot.fixtures import copilot_eval
 from pytest_skill_engineering.copilot.personas import (
     ClaudeCodePersona,
@@ -21,6 +20,7 @@ from pytest_skill_engineering.copilot.personas import (
     VSCodePersona,
 )
 from pytest_skill_engineering.copilot.result import CopilotResult
+from pytest_skill_engineering.core.evals import load_custom_agent, load_custom_agents
 
 __all__ = [
     "CopilotEval",
