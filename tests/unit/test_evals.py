@@ -26,7 +26,7 @@ class TestLoadPromptFile:
 
     def test_name_strips_prompt_md_suffix(self, tmp_path) -> None:
         f = tmp_path / "summarize.prompt.md"
-        f.write_text("---\n---\nSummarize the following.")
+        f.write_text("Summarize the following.")
         result = load_prompt_file(f)
         assert result["name"] == "summarize"
 
@@ -36,12 +36,12 @@ class TestLoadPromptFile:
         result = load_prompt_file(f)
         assert result["metadata"]["author"] == "test"
 
-    def test_empty_frontmatter(self, tmp_path) -> None:
+    @pytest.mark.parametrize("metadata", ["", "description: \n"])
+    def test_invalid_frontmatter_metadata_raises(self, tmp_path, metadata: str) -> None:
         f = tmp_path / "simple.prompt.md"
-        f.write_text("---\ndescription: \n---\nJust a prompt body.")
-        result = load_prompt_file(f)
-        assert result["body"] == "Just a prompt body."
-        assert not result["description"]  # None or empty string when not set
+        f.write_text(f"---\n{metadata}---\nJust a prompt body.")
+        with pytest.raises(ValueError, match=r"simple\.prompt\.md"):
+            load_prompt_file(f)
 
     def test_no_frontmatter(self, tmp_path) -> None:
         f = tmp_path / "plain.prompt.md"
@@ -61,8 +61,8 @@ class TestLoadPromptFiles:
     """Tests for load_prompt_files()."""
 
     def test_multiple_files(self, tmp_path) -> None:
-        (tmp_path / "a.prompt.md").write_text("---\n---\nPrompt A")
-        (tmp_path / "b.prompt.md").write_text("---\n---\nPrompt B")
+        (tmp_path / "a.prompt.md").write_text("Prompt A")
+        (tmp_path / "b.prompt.md").write_text("Prompt B")
         results = load_prompt_files(tmp_path)
         assert len(results) == 2
         names = [r["name"] for r in results]
@@ -80,15 +80,15 @@ class TestLoadPromptFiles:
         assert results[0]["name"] == "review"
 
     def test_exclude_by_name(self, tmp_path) -> None:
-        (tmp_path / "a.prompt.md").write_text("---\n---\nA")
-        (tmp_path / "b.prompt.md").write_text("---\n---\nB")
+        (tmp_path / "a.prompt.md").write_text("A")
+        (tmp_path / "b.prompt.md").write_text("B")
         results = load_prompt_files(tmp_path, exclude={"a"})
         assert len(results) == 1
         assert results[0]["name"] == "b"
 
     def test_include_by_name(self, tmp_path) -> None:
-        (tmp_path / "a.prompt.md").write_text("---\n---\nA")
-        (tmp_path / "b.prompt.md").write_text("---\n---\nB")
+        (tmp_path / "a.prompt.md").write_text("A")
+        (tmp_path / "b.prompt.md").write_text("B")
         results = load_prompt_files(tmp_path, include={"a"})
         assert len(results) == 1
         assert results[0]["name"] == "a"

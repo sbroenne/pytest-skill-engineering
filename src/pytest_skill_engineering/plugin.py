@@ -12,7 +12,6 @@ import pytest
 from pytest_skill_engineering.plugin_options import add_aitest_options
 from pytest_skill_engineering.plugin_recording import (
     RecordingLLMAssert,
-    RecordingLLMAssertImage,
     RecordingLLMScore,
 )
 from pytest_skill_engineering.plugin_report import (
@@ -21,7 +20,6 @@ from pytest_skill_engineering.plugin_report import (
     get_analysis_prompt,
     get_analysis_prompt_details,
     log_report_path,
-    shutdown_copilot_model_client,
 )
 from pytest_skill_engineering.reporting import (
     TestReport,
@@ -59,7 +57,7 @@ __all__ = [
 
 @pytest.hookimpl(hookwrapper=True)
 def pytest_pyfunc_call(pyfuncitem: Item) -> Any:
-    """Wrap llm_assert and llm_assert_image fixture values before test function execution."""
+    """Wrap semantic assertion and scoring fixtures before test function execution."""
     funcargs = getattr(pyfuncitem, "funcargs", {})
 
     # Ensure assertion store exists
@@ -72,11 +70,6 @@ def pytest_pyfunc_call(pyfuncitem: Item) -> Any:
     llm_assert = funcargs.get("llm_assert")
     if llm_assert is not None and not isinstance(llm_assert, RecordingLLMAssert):
         pyfuncitem.funcargs["llm_assert"] = RecordingLLMAssert(llm_assert, store)  # type: ignore[index]
-
-    # Wrap llm_assert_image
-    llm_assert_image = funcargs.get("llm_assert_image")
-    if llm_assert_image is not None and not isinstance(llm_assert_image, RecordingLLMAssertImage):
-        pyfuncitem.funcargs["llm_assert_image"] = RecordingLLMAssertImage(llm_assert_image, store)  # type: ignore[index]
 
     # Wrap llm_score
     llm_score = funcargs.get("llm_score")
@@ -621,11 +614,6 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
         reset_rate_limiters()
     except Exception:
         _logger.warning("Rate limiter cleanup failed", exc_info=True)
-
-    try:
-        shutdown_copilot_model_client()
-    except Exception:
-        _logger.warning("Copilot client cleanup failed", exc_info=True)
 
 
 # ── Coding agent analysis prompt ──

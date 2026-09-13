@@ -8,62 +8,50 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import os
 from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import TYPE_CHECKING, Any
+from typing import Any, TypedDict
 
-if TYPE_CHECKING:
-    from copilot.generated.rpc import PermissionDecisionReject
+from copilot import CopilotClientMode
+from copilot.client import CopilotClient
+from copilot.generated.rpc import PermissionDecisionReject
+from copilot.generated.session_events import SessionEvent
+
+from pytest_skill_engineering.copilot.client import (
+    create_client,
+    stop_client,
+)
 
 logger = logging.getLogger(__name__)
 
-# Lazy import pattern — copilot SDK may not be installed
-_CopilotClient: type[Any] | None = None
 
-
-def _get_copilot_client() -> type[Any]:
-    """Lazy-load CopilotClient to avoid import errors when SDK not installed."""
-    global _CopilotClient  # noqa: PLW0603
-    if _CopilotClient is None:
-        try:
-            from copilot.client import CopilotClient as _Client  # noqa: PLC0415
-
-            _CopilotClient = _Client
-        except ImportError as exc:
-            msg = (
-                "github-copilot-sdk is required for Copilot-based judge calls. "
-                "Install with: uv add pytest-skill-engineering[copilot]"
-            )
-            raise ImportError(msg) from exc
-    return _CopilotClient
+class _JudgeClientOptions(TypedDict):
+    working_directory: str
+    base_directory: str
+    mode: CopilotClientMode
 
 
 def _deny_all_permissions(*_args: Any, **_kwargs: Any) -> PermissionDecisionReject:
     """Reject every requested action, including reads and MCP operations."""
-    from copilot.generated.rpc import PermissionDecisionReject
-
     return PermissionDecisionReject(feedback="Judges may only evaluate supplied evidence.")
 
 
 @contextmanager
 def _judge_environment(
     model: str | None,
-) -> Iterator[tuple[dict[str, Any], dict[str, Any]]]:
+) -> Iterator[tuple[_JudgeClientOptions, dict[str, Any]]]:
     with TemporaryDirectory(prefix="pytest-skill-engineering-judge-") as directory:
         root = Path(directory).resolve()
         working = root / "work"
         storage = root / "copilot"
         working.mkdir()
         storage.mkdir()
-        client_options = {
+        client_options: _JudgeClientOptions = {
             "working_directory": str(working),
             "base_directory": str(storage),
             "mode": "empty",
-            "log_level": "warning",
-            "github_token": os.environ.get("GITHUB_TOKEN"),
         }
         session_options: dict[str, Any] = {
             "working_directory": str(working),
@@ -132,19 +120,16 @@ async def copilot_judge(
         The assistant's final response text.
 
     Raises:
-        ImportError: If github-copilot-sdk is not installed.
         TimeoutError: If the session takes longer than timeout_seconds.
         RuntimeError: If the Copilot CLI fails to start or session errors.
     """
-    CopilotClient = _get_copilot_client()
-
     with _judge_environment(model) as (client_options, session_options):
-        client = CopilotClient(**client_options)
+        client = create_client(**client_options)
         return await _run_judge(client, session_options, prompt, timeout_seconds)
 
 
 async def _run_judge(
-    client: Any,
+    client: CopilotClient,
     session_options: dict[str, Any],
     prompt: str,
     timeout_seconds: float,
@@ -153,16 +138,10 @@ async def _run_judge(
         # Hard timeout on startup — CLI must start within 60s
         await asyncio.wait_for(client.start(), timeout=60)
 
-        # Create session
-        session = await asyncio.wait_for(
-            client.create_session(**session_options),
-            timeout=30,
-        )
-
         response_parts: list[str] = []
         completed_response = ""
 
-        def on_event(event: Any) -> None:
+        def on_event(event: SessionEvent) -> None:
             """Collect assistant responses from events."""
             event_type = event.type.value if hasattr(event.type, "value") else str(event.type)
 
@@ -183,7 +162,11 @@ async def _run_judge(
             if event_type == "assistant.turn_end" and response_parts and not completed_response:
                 completed_response = "".join(response_parts)
 
-        session.on(on_event)
+        session_options["on_event"] = on_event
+        session = await asyncio.wait_for(
+            client.create_session(**session_options),
+            timeout=30,
+        )
 
         # Send prompt and wait for completion
         await asyncio.wait_for(
@@ -200,11 +183,4 @@ async def _run_judge(
         logger.error("Copilot judge failed: %s", exc)
         raise RuntimeError(f"Copilot judge execution failed: {exc}") from exc
     finally:
-        try:
-            await client.stop()
-        except Exception:
-            logger.warning("Failed to stop Copilot CLI cleanly, force stopping")
-            try:
-                await client.force_stop()
-            except Exception:
-                logger.warning("force_stop also failed", exc_info=True)
+        await stop_client(client)

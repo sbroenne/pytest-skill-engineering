@@ -5,17 +5,19 @@ Thanks for improving pytest-skill-engineering.
 ## Development setup
 
 ```bash
-uv sync
-uv run pre-commit install
+uv sync --frozen --all-extras
+uv run --frozen pre-commit install
 ```
 
 Authenticate Copilot with either:
 
 ```bash
-gh auth login
+gh auth login --hostname github.com
 ```
 
-or `GITHUB_TOKEN` in your environment.
+or an explicit token in your environment. Eval and judge sessions use
+`GITHUB_TOKEN` first, then `GH_TOKEN`; when neither is set, the SDK uses its
+signed-in user.
 
 ## What this project validates
 
@@ -33,6 +35,28 @@ The main harness is `CopilotEval`. Keep new contributions on the current Copilot
 
 Use the smallest command that proves the change you made.
 
+### Locked dependency environment
+
+CI, integration, hero-test, and documentation workflows use `uv sync --frozen`
+and `uv run --frozen` to consume the committed lock without resolving against a
+runner's different default registry. `--frozen` does not check whether the lock
+is current with `pyproject.toml`; dependency changes must regenerate and validate
+the lock explicitly. Use `--frozen` on local validation commands when consuming
+the existing lock in an environment with a different default registry.
+
+This development environment intentionally uses
+`https://packagefeedproxy.microsoft.io/pypi/simple/`. Resolve updates through the
+configured proxy rather than overriding it with the public PyPI index. The
+committed lock records proxy artifact URLs and hashes; installations from it
+have succeeded locally and on GitHub-hosted CI runners. Direct access to
+`files.pythonhosted.org` is not required for this verified installation path.
+
+Package availability on the proxy may lag public PyPI. An update therefore uses
+the newest compatible releases available through the configured source, not
+necessarily the newest public releases. Refresh the lock through the proxy when
+newer versions become available. Do not rewrite lock URLs by hand or disable
+certificate verification.
+
 ### Source-only changes
 
 For report generation, serialization, and documentation source changes, run focused deterministic checks:
@@ -40,7 +64,7 @@ For report generation, serialization, and documentation source changes, run focu
 ```bash
 uv run ruff check src tests
 uv run ruff format --check src tests
-uv run pyright src
+uv run pyright
 uv run mkdocs build --strict
 uv run python scripts/generate_fixture_html.py
 ```

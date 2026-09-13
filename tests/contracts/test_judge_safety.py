@@ -12,7 +12,13 @@ import pytest
 from copilot.client import CopilotClient
 
 from pytest_skill_engineering.copilot import judge
-from pytest_skill_engineering.fixtures.llm_assert_image import LLMAssertImage
+from pytest_skill_engineering.copilot.client import create_client
+from pytest_skill_engineering.core.result import EvalResult, ToolCall, Turn
+from pytest_skill_engineering.core.serialization import (
+    deserialize_suite_report,
+    serialize_dataclass,
+)
+from pytest_skill_engineering.reporting.collector import TestReport as CaseReport
 from pytest_skill_engineering.reporting.collector import build_suite_report
 from pytest_skill_engineering.reporting.generator import generate_json
 from pytest_skill_engineering.reporting.insights import InsightsResult
@@ -21,6 +27,7 @@ from pytest_skill_engineering.reporting.insights import InsightsResult
 def test_judge_configuration_uses_supported_sdk_keys_and_no_tools() -> None:
     with judge._judge_environment("test-model") as (client_options, session_options):
         inspect.signature(CopilotClient).bind(**client_options)
+        inspect.signature(create_client).bind(**client_options)
         inspect.signature(CopilotClient.create_session).bind(None, **session_options)
         assert client_options["mode"] == "empty"
         assert session_options["available_tools"] == []
@@ -68,9 +75,34 @@ def test_judge_working_and_config_directories_are_temporary() -> None:
     assert not storage.exists()
 
 
-def test_image_assertion_remains_explicitly_unsupported() -> None:
-    with pytest.raises(NotImplementedError, match="Image assertions are not yet supported"):
-        LLMAssertImage("test-model")(b"image", "criterion")
+def test_recorded_tool_images_survive_report_serialization() -> None:
+    image = b"recorded-image-bytes"
+    call = ToolCall(
+        name="screenshot",
+        arguments={},
+        call_id="image-call",
+        image_content=image,
+        image_media_type="image/png",
+        completion_received=True,
+        success=True,
+    )
+    result = EvalResult(turns=[Turn(role="assistant", content="", tool_calls=[call])], success=True)
+    report = build_suite_report(
+        [CaseReport(name="image", outcome="passed", duration_ms=1, eval_result=result)],
+        name="Tool image evidence",
+    )
+    restored = deserialize_suite_report(serialize_dataclass(report)).tests[0].eval_result
+    assert restored is not None
+    assert restored.tool_images_for("screenshot")[0].data == image
+    assert restored.all_tool_calls[0].evidence_complete
+
+
+def test_shared_client_preserves_judge_empty_mode_without_starting_runtime() -> None:
+    with judge._judge_environment("test-model") as (client_options, _):
+        client = create_client(**client_options)
+        assert client._options.mode == "empty"
+        assert client._options.working_directory == client_options["working_directory"]
+        assert client._options.base_directory == client_options["base_directory"]
 
 
 def test_requested_summary_failure_does_not_reuse_old_insights(tmp_path: Path) -> None:

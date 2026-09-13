@@ -43,10 +43,11 @@ uv run pytest-skill-engineering-report aitest-reports/results.json   --html aite
 The judge uses SDK empty mode, an explicit empty tool allowlist, no attached MCP
 or custom tools, disabled configuration/skill/hook discovery, and temporary
 working and Copilot storage directories. Every permission request is rejected.
-These settings require `github-copilot-sdk>=1.0.9`. They restrict the judge's
+These settings use `github-copilot-sdk>=1.0.13`. They restrict the judge's
 capabilities through the SDK; they are not an operating-system sandbox.
 
-Supply authentication through `GITHUB_TOKEN` in the report process. Empty mode
+Supply authentication through `GITHUB_TOKEN` or `GH_TOKEN` in the report process;
+`GITHUB_TOKEN` takes precedence. Empty mode
 disables the usual Copilot keychain probe, and temporary storage does not contain
 the user's saved Copilot configuration. Do not copy credential files into the
 temporary directory or include tokens in report arguments or properties.
@@ -125,10 +126,13 @@ is explicitly requested.
 async def test_saved_document(copilot_eval, record_property, eval_config, expected_file):
     result = await copilot_eval(eval_config, "Save the requested document.")
     verified = expected_file.is_file() and expected_file.read_text() == "Expected text"
-    record_property("verification", {
-        "status": "verified" if verified else "failed",
-        "artifact": expected_file.name,
-    })
+    record_property(
+        "verification",
+        {
+            "status": "verified" if verified else "failed",
+            "artifact": expected_file.name,
+        },
+    )
     assert verified, "Independent file check failed"
     assert result.success
     assert result.evidence_complete

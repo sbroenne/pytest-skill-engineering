@@ -4,7 +4,7 @@ description: "Test MCP server prompt templates — verify that bundled slash com
 
 # MCP Server Prompts
 
-MCP servers can bundle **prompt templates** alongside their tools — reusable message templates that surface in VS Code as slash commands (e.g. `/mcp.servername.code_review`). The plugin discovers and tests these templates so you can verify they produce the expected LLM behavior.
+MCP servers can bundle **prompt templates** alongside their tools — reusable message templates that surface in VS Code as slash commands (e.g. `/mcp.servername.code_review`). Discover and render them explicitly with `MCPServerProcess`, then pass the rendered text to `copilot_eval`.
 
 ## What are MCP Prompts?
 
@@ -19,20 +19,20 @@ A prompt template is a server-side message recipe. When a user invokes `/mcp.mys
 Use `MCPServerProcess.list_prompts()` to discover what templates your server exposes:
 
 ```python
-import pytest
-from pytest_skill_engineering.copilot import CopilotEval
+import sys
+from pytest_skill_engineering import MCPServer
+from pytest_skill_engineering.execution.servers import MCPServerProcess
 
 
-@pytest.fixture(scope="module")
-def banking_server():
-    # MCP server setup handled by CopilotEval
-    pass
-
-
-async def test_prompts_are_discoverable(banking_server):
+async def test_prompts_are_discoverable():
     """Server exposes the expected prompt templates."""
-    # Note: Copilot SDK provides built-in MCP server integration
-    # Prompt discovery is automatic
+    config = MCPServer(
+        command=sys.executable,
+        args=["-m", "pytest_skill_engineering.testing.banking_mcp"],
+    )
+    async with MCPServerProcess(config) as server:
+        prompts = await server.list_prompts()
+        assert "account_summary" in {prompt.name for prompt in prompts}
 ```
 
 `list_prompts()` returns `list[MCPPrompt]`. Each `MCPPrompt` has:
@@ -40,44 +40,31 @@ async def test_prompts_are_discoverable(banking_server):
 | Field | Type | Description |
 |-------|------|-------------|
 | `name` | `str` | Template identifier |
-| `description` | `str \| None` | Human-readable description |
+| `description` | `str` | Human-readable description (empty if omitted) |
 | `arguments` | `list[MCPPromptArgument]` | Template parameters |
 
 ## Rendering and Testing a Prompt
 
-Use `CopilotEval` with the Copilot SDK's built-in MCP integration:
+Render a template using its advertised arguments:
 
 ```python
-async def test_balance_summary_prompt(copilot_eval):
-    """The balance_summary prompt produces a coherent LLM response."""
-    agent = CopilotEval(
-        name="banking-test",
-        instructions="You are a banking assistant. Use MCP tools to access account data.",
+async def test_account_summary_template():
+    config = MCPServer(
+        command=sys.executable,
+        args=["-m", "pytest_skill_engineering.testing.banking_mcp"],
     )
-    result = await copilot_eval(agent, "Get a balance summary for checking account")
-
-    assert result.success
-    assert "balance" in result.final_response.lower()
+    async with MCPServerProcess(config) as server:
+        messages = await server.get_prompt("account_summary", {"account": "checking"})
+    assert messages
+    assert messages[0]["role"] == "user"
+    assert "checking" in messages[0]["content"]
 ```
 
-`get_prompt()` returns `list[{"role": str, "content": str}]` — the assembled messages produced by the template. Use `messages[0]["content"]` as the test prompt.
-
-## Asserting on Rendered Content
-
-Before running through the LLM, check that the template filled arguments correctly:
-
-```python
-async def test_code_review_template_renders(banking_server):
-    """Template arguments are substituted into the rendered prompt."""
-    messages = await banking_server.get_prompt(
-        "code_review",
-        {"code": "def foo(): pass", "language": "python"},
-    )
-    assert len(messages) > 0
-    content = messages[0]["content"]
-    assert "foo" in content  # argument was injected
-    assert "python" in content.lower()
-```
+`get_prompt()` returns a list of dictionaries with `role` and `content` keys.
+The banking template returns one user message, which can be sent directly.
+For templates with several messages, explicitly decide how to represent their
+roles and context in the single prompt string accepted by `copilot_eval`; do
+not silently discard all but the first message.
 
 ## Testing the Full Flow
 
@@ -87,40 +74,41 @@ Combine MCP tools with LLM behavioral assertions:
 from pytest_skill_engineering.copilot import CopilotEval
 
 
-async def test_code_review_prompt(copilot_eval):
-    """The code review slash command produces actionable feedback."""
-    agent = CopilotEval(
-        name="code-reviewer",
-        instructions="You are a code reviewer. Use MCP tools to read files and provide feedback.",
+async def test_account_summary_prompt(copilot_eval):
+    """The rendered account-summary prompt produces a balance response."""
+    config = MCPServer(
+        command=sys.executable,
+        args=["-m", "pytest_skill_engineering.testing.banking_mcp"],
     )
-    result = await copilot_eval(agent, "Review this code: def foo(): pass")
-
+    async with MCPServerProcess(config) as server:
+        messages = await server.get_prompt("account_summary", {"account": "checking"})
+    assert len(messages) == 1
+    assert messages[0]["role"] == "user"
+    agent = CopilotEval(
+        name="account-summary",
+        instructions="You are a banking assistant. Use MCP tools for account data.",
+        mcp_servers={
+            "banking": {
+                "type": "local",
+                "command": sys.executable,
+                "args": ["-m", "pytest_skill_engineering.testing.banking_mcp"],
+                "tools": ["*"],
+            }
+        },
+    )
+    result = await copilot_eval(agent, messages[0]["content"])
     assert result.success
-    assert "review" in result.final_response.lower()
+    assert "balance" in (result.final_response or "").lower()
 ```
 
-## EvalResult Fields
+## Naming tests
 
-When running with an MCP server that exposes prompts, `EvalResult` includes:
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `mcp_prompts` | `list[MCPPrompt]` | Prompt templates discovered from all MCP servers |
-| `prompt_name` | `str \| None` | Name of the prompt used (set via `prompt_name=` kwarg) |
-
-Track which prompt was tested using the `prompt_name` kwarg on `copilot_eval`:
-
-```python
-result = await copilot_eval(
-    agent,
-    "Get a balance summary",
-    prompt_name="balance_summary",  # tracked in the report
-)
-assert result.prompt_name == "balance_summary"
-```
+Use descriptive test names or pytest parameter IDs to identify templates in
+reports. `CopilotResult` does not expose discovered MCP prompts or a
+`prompt_name` field; `copilot_eval` does not accept a `prompt_name` keyword.
 
 ## Next Steps
 
 - [Prompt Files](prompt-files.md) — Test user-facing slash commands (`.prompt.md` files)
 - [Test MCP Servers](../how-to/test-mcp-servers.md) — Full guide for MCP server testing
-- [EvalResult Reference](../reference/result.md) — All result fields
+- [CopilotResult Reference](../reference/result.md) — All result fields

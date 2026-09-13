@@ -1,5 +1,5 @@
 ---
-description: "Assertions for CopilotResult objects: structural assertions, semantic assertions, scoring, and current image-assertion limits."
+description: "Assertions for CopilotResult objects: structural assertions, semantic assertions, scoring, and tool-returned images."
 ---
 
 # Assertions
@@ -29,7 +29,9 @@ Use `llm_score` when you want a rubric score instead of a boolean assertion.
 
 ## Images
 
-- `result.tool_images_for("tool_name")` is supported
-- `llm_assert_image` currently raises `NotImplementedError` with the documented Copilot SDK path
+Inspect images on each tool call with `result.tool_calls_for("tool_name")`
+and the call's `image_content` and `image_media_type` fields. Images are also
+included in reports.
 
-Use structural checks on returned images until Copilot SDK image-input support is exposed publicly.
+Use structural checks on image metadata; there is no semantic image-assertion fixture.
+See [Tool-returned images](../how-to/image-assertions.md).

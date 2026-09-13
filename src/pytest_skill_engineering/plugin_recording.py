@@ -1,6 +1,6 @@
 """Recording wrappers for LLM assertion and scoring fixtures.
 
-These classes wrap the raw llm_assert / llm_assert_image / llm_score fixtures
+These classes wrap the raw llm_assert / llm_score fixtures
 so that every assertion result is captured for inclusion in test reports.
 """
 
@@ -21,29 +21,6 @@ class RecordingLLMAssert:
         self._store.append(
             {
                 "type": "llm",
-                "passed": bool(result),
-                "message": result.criterion,
-                "details": result.reasoning,
-            }
-        )
-        return result
-
-    def __getattr__(self, name: str) -> Any:
-        return getattr(self._inner, name)
-
-
-class RecordingLLMAssertImage:
-    """Wrapper that records LLM image assertions for report rendering."""
-
-    def __init__(self, inner: Any, store: list[dict[str, Any]]) -> None:
-        self._inner = inner
-        self._store = store
-
-    def __call__(self, image: Any, criterion: str, **kwargs: Any) -> Any:
-        result = self._inner(image, criterion, **kwargs)
-        self._store.append(
-            {
-                "type": "llm_image",
                 "passed": bool(result),
                 "message": result.criterion,
                 "details": result.reasoning,

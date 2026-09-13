@@ -5,9 +5,7 @@ servers), A/B comparison tests instruction variants rather than server
 variants. Same task, different configs — the report shows which performs
 better.
 
-Mirrors pydantic/test_10_ab_servers.py — same level, different harness.
-
-Run with: pytest tests/integration/copilot/test_10_ab_servers.py -v
+Run with: uv run python -m pytest tests/integration/copilot/test_10_ab_servers.py -v
 """
 
 from __future__ import annotations

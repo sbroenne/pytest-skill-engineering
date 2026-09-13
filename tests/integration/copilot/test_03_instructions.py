@@ -4,9 +4,7 @@ Tests that CopilotEval instructions measurably change behavior:
 verbose vs concise documentation, framework steering, defensive coding.
 Also tests excluded_tools for tool restriction.
 
-Mirrors pydantic/test_03_prompts.py — same level, different harness.
-
-Run with: pytest tests/integration/copilot/test_03_instructions.py -v
+Run with: uv run python -m pytest tests/integration/copilot/test_03_instructions.py -v
 """
 
 from __future__ import annotations

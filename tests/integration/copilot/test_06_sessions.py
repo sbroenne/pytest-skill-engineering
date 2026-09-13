@@ -1,18 +1,16 @@
 """Level 06 — Sessions: context retention via single-prompt embedding.
 
-**SDK limitation:** CopilotEval has NO message history reuse — each
+**Harness behavior:** CopilotEval does not reuse message history — each
 ``copilot_eval()`` call starts a fresh Copilot session with a string
-prompt.  True multi-turn sessions (as in the Pydantic harness with
-``@pytest.mark.session``) are not possible.
+prompt. The SDK supports persistent sessions, but this fixture keeps
+individual eval calls independent.
 
 **Approach:** We test "context in a single prompt" — embed prior context
 directly in the prompt and verify the agent references it.  This proves
 the agent can follow contextual cues, even though the context doesn't
 come from a prior conversation turn.
 
-Mirrors pydantic/test_06_sessions.py — same level, different harness.
-
-Run with: pytest tests/integration/copilot/test_06_sessions.py -v
+Run with: uv run python -m pytest tests/integration/copilot/test_06_sessions.py -v
 """
 
 from __future__ import annotations

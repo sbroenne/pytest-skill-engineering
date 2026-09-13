@@ -61,27 +61,29 @@ Also provides prompt file loaders for VS Code prompt files
 
 from __future__ import annotations
 
-import logging
 import re
 from pathlib import Path
 from typing import Any
 
 import yaml
 
-_logger = logging.getLogger(__name__)
+_FRONTMATTER_RE = re.compile(
+    r"\A---[ \t]*\r?\n(.*?)^---[ \t]*(?:\r?\n|\Z)", re.DOTALL | re.MULTILINE
+)
 
-_FRONTMATTER_RE = re.compile(r"^---\s*\n(.*?)\n---\s*\n", re.DOTALL)
 
-
-def _extract_frontmatter(content: str) -> tuple[dict[str, Any], str]:
+def _extract_frontmatter(content: str, *, path: Path | None = None) -> tuple[dict[str, Any], str]:
     """Split content into parsed frontmatter dict and body.
 
     Returns:
         Tuple of (frontmatter_dict, body). Frontmatter dict is empty
-        if no frontmatter block is present or parsing fails.
+        if no frontmatter block is present. Malformed frontmatter raises
+        ValueError rather than being treated as system prompt content.
     """
     match = _FRONTMATTER_RE.match(content)
     if not match:
+        if re.match(r"\A---[ \t]*(?:\r?\n|\Z)", content):
+            raise ValueError(f"{path}: YAML frontmatter is missing its closing --- delimiter")
         return {}, content
 
     raw = match.group(1)
@@ -89,14 +91,44 @@ def _extract_frontmatter(content: str) -> tuple[dict[str, Any], str]:
 
     try:
         parsed = yaml.safe_load(raw)
-    except yaml.YAMLError:
-        _logger.warning("Failed to parse YAML frontmatter, treating as plain content")
-        return {}, body
+    except yaml.YAMLError as exc:
+        raise ValueError(f"{path}: Invalid YAML frontmatter: {exc}") from exc
 
     if not isinstance(parsed, dict):
-        return {}, body
+        raise ValueError(f"{path}: YAML frontmatter must be a mapping")
+    if any(not isinstance(key, str) for key in parsed):
+        raise ValueError(f"{path}: YAML frontmatter keys must be strings")
 
     return parsed, body
+
+
+def _validate_metadata(metadata: dict[str, Any], path: Path) -> None:
+    """Validate supported common metadata without coercing malformed values."""
+    for field in ("name", "description", "applyTo", "model"):
+        if field in metadata and (
+            not isinstance(metadata[field], str) or not metadata[field].strip()
+        ):
+            raise ValueError(f"{path}: '{field}' must be a non-empty string")
+    if "tools" in metadata:
+        tools = metadata["tools"]
+        if not (
+            isinstance(tools, str)
+            and tools.strip()
+            or isinstance(tools, list)
+            and all(isinstance(tool, str) and tool.strip() for tool in tools)
+        ):
+            raise ValueError(f"{path}: 'tools' must be a string or a list of non-empty strings")
+
+
+def _read_markdown(path: Path) -> tuple[dict[str, Any], str]:
+    """Read configuration as UTF-8 and retain the source path on parse errors."""
+    try:
+        content = path.read_text(encoding="utf-8")
+    except UnicodeError as exc:
+        raise ValueError(f"{path}: configuration must be valid UTF-8: {exc}") from exc
+    metadata, body = _extract_frontmatter(content, path=path)
+    _validate_metadata(metadata, path)
+    return metadata, body.strip()
 
 
 def _name_from_path(path: Path) -> str:
@@ -144,9 +176,7 @@ def load_custom_agent(
         msg = f"Eval file not found: {path}"
         raise FileNotFoundError(msg)
 
-    content = path.read_text(encoding="utf-8")
-    metadata, body = _extract_frontmatter(content)
-    body = body.strip()
+    metadata, body = _read_markdown(path)
 
     if not body:
         msg = f"Eval file has no content after frontmatter: {path}"
@@ -162,6 +192,10 @@ def load_custom_agent(
     if overrides:
         config.update(overrides)
 
+    for field in ("name", "prompt"):
+        if not isinstance(config[field], str) or not config[field].strip():
+            raise ValueError(f"{path}: '{field}' must be a non-empty string")
+    _validate_metadata({**metadata, **(overrides or {})}, path)
     return config
 
 
@@ -240,7 +274,7 @@ def load_prompt_file(path: Path | str) -> dict[str, Any]:
 
     Raises:
         FileNotFoundError: If the file does not exist.
-        ValueError: If the file has no body after frontmatter stripping.
+        ValueError: If frontmatter is invalid or the file has no body.
 
     Example::
 
@@ -259,9 +293,7 @@ def load_prompt_file(path: Path | str) -> dict[str, Any]:
         msg = f"Prompt file not found: {path}"
         raise FileNotFoundError(msg)
 
-    content = path.read_text(encoding="utf-8")
-    metadata, body = _extract_frontmatter(content)
-    body = body.strip()
+    metadata, body = _read_markdown(path)
 
     if not body:
         msg = f"Prompt file has no body after frontmatter: {path}"
@@ -333,17 +365,15 @@ def load_prompt_files(
         if path.name.endswith(".prompt.md"):
             continue  # already handled above
         name = _prompt_name_from_path(path)
-        if name in seen:
-            continue
         if include is not None and name not in include:
             continue
         if exclude is not None and name in exclude:
             continue
-        try:
-            prompts.append(load_prompt_file(path))
-            seen.add(name)
-        except ValueError:
-            continue  # skip empty files
+        prompt = load_prompt_file(path)
+        if name in seen:
+            raise ValueError(f"{path}: Duplicate prompt name '{name}'")
+        prompts.append(prompt)
+        seen.add(name)
 
     return sorted(prompts, key=lambda p: p["name"])
 
@@ -385,9 +415,7 @@ def load_instruction_file(path: Path | str) -> dict[str, Any]:
         msg = f"Instruction file not found: {path}"
         raise FileNotFoundError(msg)
 
-    content = path.read_text(encoding="utf-8")
-    metadata, body = _extract_frontmatter(content)
-    body = body.strip()
+    metadata, body = _read_markdown(path)
 
     if not body:
         msg = f"Instruction file has no content after frontmatter: {path}"
@@ -441,11 +469,8 @@ def load_instruction_files(
             continue
         if exclude is not None and name in exclude:
             continue
-        try:
-            instructions.append(load_instruction_file(path))
-            seen.add(name)
-        except ValueError:
-            continue  # skip empty files
+        instructions.append(load_instruction_file(path))
+        seen.add(name)
 
     # Also check for well-known files: copilot-instructions.md, AGENTS.md, CLAUDE.md
     well_known = ["copilot-instructions.md", "AGENTS.md", "CLAUDE.md"]
@@ -454,16 +479,14 @@ def load_instruction_files(
         if not path.exists():
             continue
         name = _instruction_name_from_path(path)
-        if name in seen:
-            continue
         if include is not None and name not in include:
             continue
         if exclude is not None and name in exclude:
             continue
-        try:
-            instructions.append(load_instruction_file(path))
-            seen.add(name)
-        except ValueError:
-            continue  # skip empty files
+        instruction = load_instruction_file(path)
+        if name in seen:
+            raise ValueError(f"{path}: Duplicate instruction name '{name}'")
+        instructions.append(instruction)
+        seen.add(name)
 
     return sorted(instructions, key=lambda p: p["name"])

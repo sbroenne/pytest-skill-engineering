@@ -1,6 +1,6 @@
 ---
 name: simple-assistant
-description: A simple helpful assistant skill
+description: Greeting rules for a helpful assistant. Use when the user asks for a greeting or says hello.
 version: 1.0.0
 ---
 

@@ -29,14 +29,14 @@ Example::
 from __future__ import annotations
 
 import json
-import logging
+import math
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlsplit
 
+from pytest_skill_engineering.core.evals import load_custom_agent, load_instruction_file
 from pytest_skill_engineering.core.skill import Skill
-
-_logger = logging.getLogger(__name__)
 
 
 @dataclass(slots=True, frozen=True)
@@ -148,19 +148,14 @@ def load_plugin(path: str | Path) -> Plugin:
 
 def _load_from_manifest(path: Path, manifest_path: Path) -> Plugin:
     """Load a plugin from a plugin.json manifest."""
-    try:
-        raw = manifest_path.read_text(encoding="utf-8")
-        manifest = json.loads(raw)
-    except json.JSONDecodeError as exc:
-        msg = f"Invalid plugin.json in {path}: {exc}"
-        raise ValueError(msg) from exc
+    manifest = _read_json(manifest_path)
 
     if not isinstance(manifest, dict):
-        msg = f"plugin.json must be a JSON object, got {type(manifest).__name__}"
+        msg = f"{manifest_path}: must be a JSON object, got {type(manifest).__name__}"
         raise ValueError(msg)
 
     # Parse metadata
-    metadata = _parse_metadata(manifest, fallback_name=path.name)
+    metadata = _parse_metadata(manifest, manifest_path)
 
     # Discover agents
     agents = _discover_agents(path)
@@ -170,7 +165,7 @@ def _load_from_manifest(path: Path, manifest_path: Path) -> Plugin:
     _validate_skill_reference_names(skills)
 
     # Parse MCP servers from manifest
-    mcp_servers = _parse_mcp_servers(manifest)
+    mcp_servers = _parse_mcp_servers(manifest, manifest_path)
 
     # Parse hooks
     hooks = _parse_hooks(path, manifest)
@@ -247,73 +242,83 @@ def _load_project_directory(path: Path, *, format_hint: str) -> Plugin:
     )
 
 
-def _append_file_content(parts: list[str], file_path: Path) -> None:
-    """Append file content to parts list if file exists and is non-empty."""
-    if file_path.is_file():
-        content = file_path.read_text(encoding="utf-8").strip()
-        if content:
-            parts.append(content)
+def _append_file_content(parts: list[str], file_path: Path, *, required: bool = False) -> None:
+    """Load instructions, allowing absence only for conventionally discovered files."""
+    if required or file_path.exists():
+        parts.append(load_instruction_file(file_path)["content"])
 
 
-def _parse_metadata(manifest: dict[str, Any], *, fallback_name: str) -> PluginMetadata:
+def _string_field(
+    data: dict[str, Any],
+    field: str,
+    source: Path,
+    *,
+    required: bool = False,
+    allow_empty: bool = False,
+) -> str:
+    """Read a string field, distinguishing optional absence from invalid content."""
+    if field not in data and not required:
+        return ""
+    value = data.get(field)
+    if not isinstance(value, str) or (not allow_empty and not value.strip()):
+        raise ValueError(f"{source}: '{field}' must be a non-empty string")
+    return value
+
+
+def _parse_metadata(manifest: dict[str, Any], source: Path) -> PluginMetadata:
     """Extract metadata from plugin.json manifest."""
     return PluginMetadata(
-        name=str(manifest.get("name", fallback_name)),
-        version=str(manifest.get("version", "")),
-        description=str(manifest.get("description", "")),
-        author=str(manifest.get("author", "")),
+        name=_string_field(manifest, "name", source, required=True),
+        version=_string_field(manifest, "version", source),
+        description=_string_field(manifest, "description", source),
+        author=_string_field(manifest, "author", source),
     )
 
 
 def _load_claude_project_mcp_servers(mcp_json: Path) -> dict[str, dict[str, Any]]:
     """Load MCP server definitions from a Claude project ``.mcp.json`` file."""
-    try:
-        raw = json.loads(mcp_json.read_text(encoding="utf-8"))
-    except json.JSONDecodeError as exc:
-        _logger.warning("Failed to parse %s: %s", mcp_json, exc)
-        return {}
+    raw = _read_json(mcp_json)
 
     if not isinstance(raw, dict):
-        _logger.warning("%s must contain a JSON object", mcp_json)
-        return {}
+        raise ValueError(f"{mcp_json}: must contain a JSON object")
+    if "mcpServers" not in raw and "mcp_servers" not in raw:
+        raise ValueError(f"{mcp_json}: missing MCP server mapping ('mcpServers' or 'mcp_servers')")
 
-    servers = raw.get("mcpServers", raw.get("mcp_servers", {}))
-    if not isinstance(servers, dict):
-        _logger.warning("%s has invalid mcpServers payload; expected an object", mcp_json)
-        return {}
+    return _parse_mcp_servers(raw, mcp_json)
 
-    return dict(servers)
+
+def _read_json(path: Path) -> Any:
+    """Decode configuration with a file-specific error for invalid JSON or UTF-8."""
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, UnicodeError) as exc:
+        raise ValueError(f"{path}: Invalid JSON configuration: {exc}") from exc
 
 
 def _discover_agents(plugin_dir: Path) -> list[dict[str, Any]]:
     """Discover and load custom agents from agents/ subdirectory."""
-    from pytest_skill_engineering.core.evals import load_custom_agent  # noqa: PLC0415
-
     agents_dir = plugin_dir / "agents"
-    if not agents_dir.is_dir():
+    if not agents_dir.exists():
         return []
+    if not agents_dir.is_dir():
+        raise ValueError(f"{agents_dir}: custom agents path must be a directory")
 
     agents: list[dict[str, Any]] = []
 
     # Load .agent.md files (VS Code / Copilot format)
     for agent_file in sorted(agents_dir.glob("*.agent.md")):
-        try:
-            agents.append(load_custom_agent(agent_file))
-        except (FileNotFoundError, ValueError) as exc:
-            _logger.warning("Skipping agent file %s: %s", agent_file.name, exc)
+        agents.append(load_custom_agent(agent_file))
 
     # Load plain .md files (Claude Code format) that aren't .agent.md
     seen_names = {a["name"] for a in agents}
     for agent_file in sorted(agents_dir.glob("*.md")):
         if agent_file.name.endswith(".agent.md"):
             continue
-        try:
-            agent = load_custom_agent(agent_file)
-            if agent["name"] not in seen_names:
-                agents.append(agent)
-                seen_names.add(agent["name"])
-        except (FileNotFoundError, ValueError) as exc:
-            _logger.warning("Skipping agent file %s: %s", agent_file.name, exc)
+        agent = load_custom_agent(agent_file)
+        if agent["name"] in seen_names:
+            raise ValueError(f"{agent_file}: Duplicate custom agent name '{agent['name']}'")
+        agents.append(agent)
+        seen_names.add(agent["name"])
 
     return agents
 
@@ -321,20 +326,16 @@ def _discover_agents(plugin_dir: Path) -> list[dict[str, Any]]:
 def _discover_skills(plugin_dir: Path) -> list[Skill]:
     """Discover and load skills from skills/ subdirectory."""
     skills_dir = plugin_dir / "skills"
-    if not skills_dir.is_dir():
+    if not skills_dir.exists():
         return []
+    if not skills_dir.is_dir():
+        raise ValueError(f"{skills_dir}: skills path must be a directory")
 
     skills: list[Skill] = []
     for skill_dir in sorted(skills_dir.iterdir()):
         if not skill_dir.is_dir():
             continue
-        skill_md = skill_dir / "SKILL.md"
-        if not skill_md.exists():
-            continue
-        try:
-            skills.append(Skill.from_path(skill_dir))
-        except Exception as exc:
-            _logger.warning("Skipping skill %s: %s", skill_dir.name, exc)
+        skills.append(Skill.from_path(skill_dir))
 
     return skills
 
@@ -355,51 +356,100 @@ def _validate_skill_reference_names(skills: list[Skill]) -> None:
             owners[reference_name] = skill.name
 
 
-def _parse_mcp_servers(manifest: dict[str, Any]) -> dict[str, dict[str, Any]]:
-    """Parse MCP server configurations from plugin.json."""
-    raw = manifest.get("mcp_servers", manifest.get("mcpServers", {}))
-    if not isinstance(raw, dict):
+def _parse_mcp_servers(manifest: dict[str, Any], source: Path) -> dict[str, dict[str, Any]]:
+    """Validate Copilot and Claude MCP mappings without discarding invalid entries."""
+    fields = [field for field in ("mcp_servers", "mcpServers") if field in manifest]
+    if not fields:
         return {}
+    if len(fields) != 1:
+        raise ValueError(f"{source}: specify only one of 'mcp_servers' and 'mcpServers'")
+    return _validate_mcp_servers(manifest[fields[0]], source, field=fields[0])
+
+
+def _validate_mcp_servers(raw: Any, source: Path, *, field: str) -> dict[str, dict[str, Any]]:
+    """Validate the shared server mapping contract for plugin and MCP config files."""
+    if not isinstance(raw, dict):
+        raise ValueError(f"{source}: '{field}' must be an object")
+    for name, config in raw.items():
+        label = f"MCP server '{name}'"
+        if not isinstance(name, str) or not name.strip() or not isinstance(config, dict):
+            raise ValueError(f"{source}: {label} must have a non-empty name and object config")
+        transport = config.get("type")
+        if "type" in config and transport not in ("stdio", "local", "http", "sse"):
+            raise ValueError(f"{source}: {label} has unsupported transport type {transport!r}")
+        has_command = "command" in config
+        has_url = "url" in config
+        if has_command == has_url:
+            raise ValueError(f"{source}: {label} requires exactly one of 'command' or 'url'")
+        if (
+            transport in ("http", "sse")
+            and not has_url
+            or (transport in ("stdio", "local") and not has_command)
+        ):
+            raise ValueError(f"{source}: {label} transport does not match command/url")
+        for key in ("command", "url", "cwd"):
+            if key in config:
+                _string_field(config, key, source, required=True)
+        if has_url:
+            try:
+                url = urlsplit(config["url"])
+                if url.scheme not in ("http", "https") or not url.hostname:
+                    raise ValueError("expected an absolute HTTP(S) URL")
+                _ = url.port
+            except ValueError as exc:
+                raise ValueError(f"{source}: {label} invalid 'url': {exc}") from exc
+        for key in ("args", "tools"):
+            if key in config and (
+                not isinstance(config[key], list)
+                or any(not isinstance(item, str) for item in config[key])
+            ):
+                raise ValueError(f"{source}: {label} '{key}' must be a list of strings")
+        if "tools" in config and any(not tool.strip() for tool in config["tools"]):
+            raise ValueError(f"{source}: {label} 'tools' entries must be non-empty strings")
+        for key in ("env", "headers"):
+            if key in config and (
+                not isinstance(config[key], dict)
+                or any(
+                    not isinstance(k, str) or not isinstance(v, str) for k, v in config[key].items()
+                )
+            ):
+                raise ValueError(f"{source}: {label} '{key}' must be a string-to-string object")
+        if "timeout" in config and (
+            isinstance(config["timeout"], bool)
+            or not isinstance(config["timeout"], (int, float))
+            or not math.isfinite(config["timeout"])
+            or config["timeout"] <= 0
+        ):
+            raise ValueError(f"{source}: {label} 'timeout' must be a positive number")
     return dict(raw)
 
 
 def _parse_hooks(plugin_dir: Path, manifest: dict[str, Any]) -> list[HookDefinition]:
     """Parse hooks from hooks.json or plugin.json hooks field."""
-    hooks: list[HookDefinition] = []
-
-    # Try hooks.json first
     hooks_file = plugin_dir / "hooks.json"
-    if hooks_file.is_file():
-        try:
-            raw = json.loads(hooks_file.read_text(encoding="utf-8"))
-            if isinstance(raw, list):
-                for entry in raw:
-                    hooks.append(_hook_from_dict(entry))
-                return hooks
-        except (json.JSONDecodeError, KeyError, TypeError) as exc:
-            _logger.warning("Failed to parse hooks.json: %s", exc)
-
-    # Fall back to plugin.json hooks field
-    raw_hooks = manifest.get("hooks", [])
-    if isinstance(raw_hooks, list):
-        for entry in raw_hooks:
-            try:
-                hooks.append(_hook_from_dict(entry))
-            except (KeyError, TypeError) as exc:
-                _logger.warning("Skipping invalid hook entry: %s", exc)
-
+    source = plugin_dir / "plugin.json"
+    raw = manifest.get("hooks", [])
+    # Validate both declared sources; a valid file cannot hide invalid inline hooks.
+    if not isinstance(raw, list):
+        raise ValueError(f"{source}: 'hooks' must be a list")
+    hooks = [_hook_from_dict(entry, source) for entry in raw]
+    if hooks_file.exists():
+        raw = _read_json(hooks_file)
+        if not isinstance(raw, list):
+            raise ValueError(f"{hooks_file}: hooks must be a list")
+        return [_hook_from_dict(entry, hooks_file) for entry in raw]
     return hooks
 
 
-def _hook_from_dict(data: Any) -> HookDefinition:
+def _hook_from_dict(data: Any, source: Path) -> HookDefinition:
     """Create a HookDefinition from a dict."""
     if not isinstance(data, dict):
-        msg = f"Hook entry must be a dict, got {type(data).__name__}"
-        raise TypeError(msg)
+        msg = f"{source}: Hook entry must be an object, got {type(data).__name__}"
+        raise ValueError(msg)
     return HookDefinition(
-        event=str(data["event"]),
-        command=str(data["command"]),
-        pattern=str(data.get("pattern", "")),
+        event=_string_field(data, "event", source, required=True),
+        command=_string_field(data, "command", source, required=True),
+        pattern=_string_field(data, "pattern", source, allow_empty=True),
     )
 
 
@@ -414,12 +464,16 @@ def _discover_instructions(plugin_dir: Path, manifest: dict[str, Any]) -> str:
 
     # Files listed in plugin.json instructions field
     listed = manifest.get("instructions", [])
-    if isinstance(listed, list):
-        for entry in listed:
-            filepath = plugin_dir / str(entry)
-            _append_file_content(parts, filepath)
-    elif isinstance(listed, str):
-        _append_file_content(parts, plugin_dir / listed)
+    if isinstance(listed, str):
+        listed = [listed]
+    if not isinstance(listed, list) or any(
+        not isinstance(entry, str) or not entry.strip() for entry in listed
+    ):
+        raise ValueError(
+            f"{plugin_dir / 'plugin.json'}: 'instructions' must be a path or list of paths"
+        )
+    for entry in listed:
+        _append_file_content(parts, plugin_dir / entry, required=True)
 
     return "\n\n".join(parts)
 

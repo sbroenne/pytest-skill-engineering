@@ -8,8 +8,12 @@ description: "Configure CopilotEval, MCP servers, report output, and assertion m
 
 Supported authentication paths:
 
-- `gh auth login`
-- `GITHUB_TOKEN` in CI or automation
+- `gh auth login --hostname github.com`
+- `GITHUB_TOKEN` or `GH_TOKEN` in CI or automation
+
+Eval and judge sessions select `GITHUB_TOKEN` first, then `GH_TOKEN`. If neither
+is set, the SDK uses its signed-in user. Tokens must authorize the intended
+GitHub account and Copilot access.
 
 No separate provider classes or third-party provider auth configuration is required.
 
@@ -25,8 +29,8 @@ agent = CopilotEval(
     instructions="Use the banking tools before answering.",
     mcp_servers={},
     allowed_tools=None,
-    custom_agents=None,
-    skill_directories=None,
+    custom_agents=[],
+    skill_directories=[],
     working_directory=None,
     max_turns=5,
     max_retries=2,
@@ -44,12 +48,30 @@ agent = CopilotEval(
 | `allowed_tools` | Optional global tool allow-list |
 | `custom_agents` | Loaded `.agent.md` definitions |
 | `skill_directories` | Skill packages to inject |
-| `max_turns` | Session turn limit |
+| `max_turns` | Advisory top-level turn budget; used for subagent turn caps |
+| `timeout_s` | Hard wall-clock limit for the run |
 | `max_retries` | Retry count for transient runtime failures; default `2` |
 
 ## MCP server config shape
 
 Attach servers directly to `CopilotEval(mcp_servers={...})`.
+
+SDK configuration discovery is disabled by default. Personal or ambient MCP
+configuration is not automatically attached to eval sessions. Supply servers,
+skills, and custom agents explicitly, or use the configuration loaders for the
+project under test.
+
+To test SDK discovery deliberately, opt in:
+
+```python
+agent = CopilotEval(
+    name="configuration-discovery",
+    extra_config={"enable_config_discovery": True},
+)
+```
+
+This opt-in can expose machine-specific tools and configuration; avoid it in
+tests intended to be reproducible across developer machines and CI.
 
 ```python
 import sys
@@ -68,7 +90,7 @@ Remote transports use the same mapping:
 ```python
 REMOTE_MCP = {
     "crm": {
-        "transport": "streamable-http",
+        "type": "http",
         "url": "https://mcp.example.com/mcp",
         "headers": {"Authorization": "Bearer ${CRM_TOKEN}"},
         "tools": ["*"],

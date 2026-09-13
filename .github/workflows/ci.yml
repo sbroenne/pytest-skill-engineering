@@ -28,13 +28,13 @@ jobs:
           python-version: "3.13"
 
       - name: Install dependencies
-        run: uv sync --all-extras
+        run: uv sync --frozen --all-extras
 
       - name: Run ruff linter
-        run: uv run ruff check .
+        run: uv run --frozen ruff check .
 
       - name: Run ruff formatter check
-        run: uv run ruff format --check .
+        run: uv run --frozen ruff format --check .
 
   type-check:
     name: Type Check
@@ -53,10 +53,10 @@ jobs:
           python-version: "3.13"
 
       - name: Install dependencies
-        run: uv sync --all-extras
+        run: uv sync --frozen --all-extras
 
       - name: Run pyright
-        run: uv run pyright
+        run: uv run --frozen pyright
 
   unit-tests:
     name: Unit Tests
@@ -75,13 +75,13 @@ jobs:
           python-version: "3.13"
 
       - name: Install dependencies
-        run: uv sync --all-extras
+        run: uv sync --frozen --all-extras
 
       - name: Run evidence contract tests
-        run: uv run python -m pytest tests/contracts/ -v --tb=short -o addopts=
+        run: uv run --frozen python -m pytest tests/contracts/ -v --tb=short -o addopts=
 
       - name: Run unit tests
-        run: uv run python -m pytest tests/unit/ -v --tb=short -o addopts=
+        run: uv run --frozen python -m pytest tests/unit/ -v --tb=short -o addopts=
 
   smoke-test:
     name: Smoke Test
@@ -100,8 +100,8 @@ jobs:
           python-version: "3.13"
 
       - name: Install dependencies
-        run: uv sync --all-extras
+        run: uv sync --frozen --all-extras
 
       - name: Verify package imports
         run: |
-          uv run python -c "from pytest_skill_engineering import plugin; print('Import successful')"
+          uv run --frozen python -c "from pytest_skill_engineering import plugin; print('Import successful')"

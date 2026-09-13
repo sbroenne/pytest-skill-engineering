@@ -1,13 +1,10 @@
 """Level 07 — Clarification detection: catch agents that ask instead of acting.
 
-CopilotEval does NOT have engine-level ClarificationDetection like the
-Pydantic harness.  Instead, we detect clarification patterns by inspecting
+These tests detect clarification patterns by inspecting
 ``result.final_response`` — either with simple substring checks or with
 the ``llm_assert`` fixture for semantic evaluation.
 
-Mirrors pydantic/test_07_clarification.py — same level, different harness.
-
-Run with: pytest tests/integration/copilot/test_07_clarification.py -v
+Run with: uv run python -m pytest tests/integration/copilot/test_07_clarification.py -v
 """
 
 from __future__ import annotations
@@ -110,14 +107,12 @@ class TestClarificationDetection:
         response = result.final_response or ""
 
         acted = len(created_files) > 0
-        asked = _has_clarification(response)
-
-        assert acted or asked, (
-            "Agent neither created files nor asked for clarification on an "
-            "ambiguous request — it did nothing useful.\n"
-            f"Response: {response}\n"
-            f"Files created: {[f.name for f in created_files]}"
-        )
+        if not acted:
+            assert llm_assert(
+                response,
+                "Asks the user a relevant clarifying question about the web app "
+                "they want, such as its purpose, features, design, or technology.",
+            )
 
     async def test_actionable_instructions_suppress_clarification(
         self, copilot_eval, tmp_path, llm_assert
