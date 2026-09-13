@@ -38,12 +38,18 @@
           'available_tools': list([
             '<empty>',
           ]),
+          'capture_errors': list([
+            '<empty>',
+          ]),
           'clarification_stats': 'NoneType',
+          'configuration': dict({
+          }),
           'cost_usd': 'float',
           'custom_agent_info': 'NoneType',
           'duration_ms': 'float',
           'effective_system_prompt': 'str',
           'error': 'NoneType',
+          'evidence_complete': 'NoneType',
           'instruction_files': list([
             '<empty>',
           ]),
@@ -73,6 +79,9 @@
         'model': 'str',
         'name': 'str',
         'outcome': 'str',
+        'properties': list([
+          '<empty>',
+        ]),
         'skill_name': 'NoneType',
         'system_prompt_name': 'NoneType',
       }),
@@ -114,12 +123,18 @@
           'available_tools': list([
             '<empty>',
           ]),
+          'capture_errors': list([
+            '<empty>',
+          ]),
           'clarification_stats': 'NoneType',
+          'configuration': dict({
+          }),
           'cost_usd': 'float',
           'custom_agent_info': 'NoneType',
           'duration_ms': 'float',
           'effective_system_prompt': 'str',
           'error': 'NoneType',
+          'evidence_complete': 'NoneType',
           'instruction_files': list([
             '<empty>',
           ]),
@@ -149,6 +164,9 @@
         'model': 'str',
         'name': 'str',
         'outcome': 'str',
+        'properties': list([
+          '<empty>',
+        ]),
         'skill_name': 'NoneType',
         'system_prompt_name': 'NoneType',
       }),
@@ -190,12 +208,18 @@
           'available_tools': list([
             '<empty>',
           ]),
+          'capture_errors': list([
+            '<empty>',
+          ]),
           'clarification_stats': 'NoneType',
+          'configuration': dict({
+          }),
           'cost_usd': 'float',
           'custom_agent_info': 'NoneType',
           'duration_ms': 'float',
           'effective_system_prompt': 'str',
           'error': 'NoneType',
+          'evidence_complete': 'NoneType',
           'instruction_files': list([
             '<empty>',
           ]),
@@ -225,6 +249,9 @@
         'model': 'str',
         'name': 'str',
         'outcome': 'str',
+        'properties': list([
+          '<empty>',
+        ]),
         'skill_name': 'NoneType',
         'system_prompt_name': 'NoneType',
       }),
@@ -266,12 +293,18 @@
           'available_tools': list([
             '<empty>',
           ]),
+          'capture_errors': list([
+            '<empty>',
+          ]),
           'clarification_stats': 'NoneType',
+          'configuration': dict({
+          }),
           'cost_usd': 'float',
           'custom_agent_info': 'NoneType',
           'duration_ms': 'float',
           'effective_system_prompt': 'str',
           'error': 'NoneType',
+          'evidence_complete': 'NoneType',
           'instruction_files': list([
             '<empty>',
           ]),
@@ -301,6 +334,9 @@
         'model': 'str',
         'name': 'str',
         'outcome': 'str',
+        'properties': list([
+          '<empty>',
+        ]),
         'skill_name': 'NoneType',
         'system_prompt_name': 'NoneType',
       }),
@@ -342,12 +378,18 @@
           'available_tools': list([
             '<empty>',
           ]),
+          'capture_errors': list([
+            '<empty>',
+          ]),
           'clarification_stats': 'NoneType',
+          'configuration': dict({
+          }),
           'cost_usd': 'float',
           'custom_agent_info': 'NoneType',
           'duration_ms': 'float',
           'effective_system_prompt': 'str',
           'error': 'NoneType',
+          'evidence_complete': 'NoneType',
           'instruction_files': list([
             '<empty>',
           ]),
@@ -377,6 +419,9 @@
         'model': 'str',
         'name': 'str',
         'outcome': 'str',
+        'properties': list([
+          '<empty>',
+        ]),
         'skill_name': 'NoneType',
         'system_prompt_name': 'str',
       }),
@@ -418,12 +463,18 @@
           'available_tools': list([
             '<empty>',
           ]),
+          'capture_errors': list([
+            '<empty>',
+          ]),
           'clarification_stats': 'NoneType',
+          'configuration': dict({
+          }),
           'cost_usd': 'float',
           'custom_agent_info': 'NoneType',
           'duration_ms': 'float',
           'effective_system_prompt': 'str',
           'error': 'NoneType',
+          'evidence_complete': 'NoneType',
           'instruction_files': list([
             '<empty>',
           ]),
@@ -453,6 +504,9 @@
         'model': 'str',
         'name': 'str',
         'outcome': 'str',
+        'properties': list([
+          '<empty>',
+        ]),
         'skill_name': 'NoneType',
         'system_prompt_name': 'str',
       }),
@@ -499,12 +553,18 @@
           'available_tools': list([
             '<empty>',
           ]),
+          'capture_errors': list([
+            '<empty>',
+          ]),
           'clarification_stats': 'NoneType',
+          'configuration': dict({
+          }),
           'cost_usd': 'float',
           'custom_agent_info': 'NoneType',
           'duration_ms': 'float',
           'effective_system_prompt': 'str',
           'error': 'str',
+          'evidence_complete': 'NoneType',
           'instruction_files': list([
             '<empty>',
           ]),
@@ -534,6 +594,9 @@
         'model': 'str',
         'name': 'str',
         'outcome': 'str',
+        'properties': list([
+          '<empty>',
+        ]),
         'skill_name': 'NoneType',
         'system_prompt_name': 'NoneType',
       }),
@@ -575,12 +638,18 @@
           'available_tools': list([
             '<empty>',
           ]),
+          'capture_errors': list([
+            '<empty>',
+          ]),
           'clarification_stats': 'NoneType',
+          'configuration': dict({
+          }),
           'cost_usd': 'float',
           'custom_agent_info': 'NoneType',
           'duration_ms': 'float',
           'effective_system_prompt': 'str',
           'error': 'NoneType',
+          'evidence_complete': 'NoneType',
           'instruction_files': list([
             '<empty>',
           ]),
@@ -610,6 +679,9 @@
         'model': 'str',
         'name': 'str',
         'outcome': 'str',
+        'properties': list([
+          '<empty>',
+        ]),
         'skill_name': 'NoneType',
         'system_prompt_name': 'NoneType',
       }),
@@ -651,12 +723,18 @@
           'available_tools': list([
             '<empty>',
           ]),
+          'capture_errors': list([
+            '<empty>',
+          ]),
           'clarification_stats': 'NoneType',
+          'configuration': dict({
+          }),
           'cost_usd': 'float',
           'custom_agent_info': 'NoneType',
           'duration_ms': 'float',
           'effective_system_prompt': 'str',
           'error': 'NoneType',
+          'evidence_complete': 'NoneType',
           'instruction_files': list([
             '<empty>',
           ]),
@@ -686,6 +764,9 @@
         'model': 'str',
         'name': 'str',
         'outcome': 'str',
+        'properties': list([
+          '<empty>',
+        ]),
         'skill_name': 'NoneType',
         'system_prompt_name': 'str',
       }),
@@ -727,12 +808,18 @@
           'available_tools': list([
             '<empty>',
           ]),
+          'capture_errors': list([
+            '<empty>',
+          ]),
           'clarification_stats': 'NoneType',
+          'configuration': dict({
+          }),
           'cost_usd': 'float',
           'custom_agent_info': 'NoneType',
           'duration_ms': 'float',
           'effective_system_prompt': 'str',
           'error': 'NoneType',
+          'evidence_complete': 'NoneType',
           'instruction_files': list([
             '<empty>',
           ]),
@@ -762,6 +849,9 @@
         'model': 'str',
         'name': 'str',
         'outcome': 'str',
+        'properties': list([
+          '<empty>',
+        ]),
         'skill_name': 'NoneType',
         'system_prompt_name': 'str',
       }),
@@ -800,12 +890,18 @@
           'available_tools': list([
             '<empty>',
           ]),
+          'capture_errors': list([
+            '<empty>',
+          ]),
           'clarification_stats': 'NoneType',
+          'configuration': dict({
+          }),
           'cost_usd': 'float',
           'custom_agent_info': 'NoneType',
           'duration_ms': 'float',
           'effective_system_prompt': 'str',
           'error': 'NoneType',
+          'evidence_complete': 'NoneType',
           'instruction_files': list([
             '<empty>',
           ]),
@@ -835,6 +931,9 @@
         'model': 'str',
         'name': 'str',
         'outcome': 'str',
+        'properties': list([
+          '<empty>',
+        ]),
         'skill_name': 'NoneType',
         'system_prompt_name': 'NoneType',
       }),
@@ -868,12 +967,18 @@
           'available_tools': list([
             '<empty>',
           ]),
+          'capture_errors': list([
+            '<empty>',
+          ]),
           'clarification_stats': 'NoneType',
+          'configuration': dict({
+          }),
           'cost_usd': 'float',
           'custom_agent_info': 'NoneType',
           'duration_ms': 'float',
           'effective_system_prompt': 'str',
           'error': 'NoneType',
+          'evidence_complete': 'NoneType',
           'instruction_files': list([
             '<empty>',
           ]),
@@ -903,6 +1008,9 @@
         'model': 'str',
         'name': 'str',
         'outcome': 'str',
+        'properties': list([
+          '<empty>',
+        ]),
         'skill_name': 'NoneType',
         'system_prompt_name': 'NoneType',
       }),
@@ -936,12 +1044,18 @@
           'available_tools': list([
             '<empty>',
           ]),
+          'capture_errors': list([
+            '<empty>',
+          ]),
           'clarification_stats': 'NoneType',
+          'configuration': dict({
+          }),
           'cost_usd': 'float',
           'custom_agent_info': 'NoneType',
           'duration_ms': 'float',
           'effective_system_prompt': 'str',
           'error': 'NoneType',
+          'evidence_complete': 'NoneType',
           'instruction_files': list([
             '<empty>',
           ]),
@@ -971,6 +1085,9 @@
         'model': 'str',
         'name': 'str',
         'outcome': 'str',
+        'properties': list([
+          '<empty>',
+        ]),
         'skill_name': 'NoneType',
         'system_prompt_name': 'NoneType',
       }),
@@ -1004,12 +1121,18 @@
           'available_tools': list([
             '<empty>',
           ]),
+          'capture_errors': list([
+            '<empty>',
+          ]),
           'clarification_stats': 'NoneType',
+          'configuration': dict({
+          }),
           'cost_usd': 'float',
           'custom_agent_info': 'NoneType',
           'duration_ms': 'float',
           'effective_system_prompt': 'str',
           'error': 'NoneType',
+          'evidence_complete': 'NoneType',
           'instruction_files': list([
             '<empty>',
           ]),
@@ -1039,6 +1162,9 @@
         'model': 'str',
         'name': 'str',
         'outcome': 'str',
+        'properties': list([
+          '<empty>',
+        ]),
         'skill_name': 'NoneType',
         'system_prompt_name': 'NoneType',
       }),
@@ -1072,12 +1198,18 @@
           'available_tools': list([
             '<empty>',
           ]),
+          'capture_errors': list([
+            '<empty>',
+          ]),
           'clarification_stats': 'NoneType',
+          'configuration': dict({
+          }),
           'cost_usd': 'float',
           'custom_agent_info': 'NoneType',
           'duration_ms': 'float',
           'effective_system_prompt': 'str',
           'error': 'NoneType',
+          'evidence_complete': 'NoneType',
           'instruction_files': list([
             '<empty>',
           ]),
@@ -1107,6 +1239,9 @@
         'model': 'str',
         'name': 'str',
         'outcome': 'str',
+        'properties': list([
+          '<empty>',
+        ]),
         'skill_name': 'NoneType',
         'system_prompt_name': 'str',
       }),
@@ -1140,12 +1275,18 @@
           'available_tools': list([
             '<empty>',
           ]),
+          'capture_errors': list([
+            '<empty>',
+          ]),
           'clarification_stats': 'NoneType',
+          'configuration': dict({
+          }),
           'cost_usd': 'float',
           'custom_agent_info': 'NoneType',
           'duration_ms': 'float',
           'effective_system_prompt': 'str',
           'error': 'NoneType',
+          'evidence_complete': 'NoneType',
           'instruction_files': list([
             '<empty>',
           ]),
@@ -1175,6 +1316,9 @@
         'model': 'str',
         'name': 'str',
         'outcome': 'str',
+        'properties': list([
+          '<empty>',
+        ]),
         'skill_name': 'NoneType',
         'system_prompt_name': 'str',
       }),
@@ -1213,12 +1357,18 @@
           'available_tools': list([
             '<empty>',
           ]),
+          'capture_errors': list([
+            '<empty>',
+          ]),
           'clarification_stats': 'NoneType',
+          'configuration': dict({
+          }),
           'cost_usd': 'float',
           'custom_agent_info': 'NoneType',
           'duration_ms': 'float',
           'effective_system_prompt': 'str',
           'error': 'str',
+          'evidence_complete': 'NoneType',
           'instruction_files': list([
             '<empty>',
           ]),
@@ -1248,6 +1398,9 @@
         'model': 'str',
         'name': 'str',
         'outcome': 'str',
+        'properties': list([
+          '<empty>',
+        ]),
         'skill_name': 'NoneType',
         'system_prompt_name': 'NoneType',
       }),
@@ -1281,12 +1434,18 @@
           'available_tools': list([
             '<empty>',
           ]),
+          'capture_errors': list([
+            '<empty>',
+          ]),
           'clarification_stats': 'NoneType',
+          'configuration': dict({
+          }),
           'cost_usd': 'float',
           'custom_agent_info': 'NoneType',
           'duration_ms': 'float',
           'effective_system_prompt': 'str',
           'error': 'NoneType',
+          'evidence_complete': 'NoneType',
           'instruction_files': list([
             '<empty>',
           ]),
@@ -1316,6 +1475,9 @@
         'model': 'str',
         'name': 'str',
         'outcome': 'str',
+        'properties': list([
+          '<empty>',
+        ]),
         'skill_name': 'NoneType',
         'system_prompt_name': 'NoneType',
       }),
@@ -1349,12 +1511,18 @@
           'available_tools': list([
             '<empty>',
           ]),
+          'capture_errors': list([
+            '<empty>',
+          ]),
           'clarification_stats': 'NoneType',
+          'configuration': dict({
+          }),
           'cost_usd': 'float',
           'custom_agent_info': 'NoneType',
           'duration_ms': 'float',
           'effective_system_prompt': 'str',
           'error': 'NoneType',
+          'evidence_complete': 'NoneType',
           'instruction_files': list([
             '<empty>',
           ]),
@@ -1384,6 +1552,9 @@
         'model': 'str',
         'name': 'str',
         'outcome': 'str',
+        'properties': list([
+          '<empty>',
+        ]),
         'skill_name': 'NoneType',
         'system_prompt_name': 'str',
       }),
@@ -1417,12 +1588,18 @@
           'available_tools': list([
             '<empty>',
           ]),
+          'capture_errors': list([
+            '<empty>',
+          ]),
           'clarification_stats': 'NoneType',
+          'configuration': dict({
+          }),
           'cost_usd': 'float',
           'custom_agent_info': 'NoneType',
           'duration_ms': 'float',
           'effective_system_prompt': 'str',
           'error': 'NoneType',
+          'evidence_complete': 'NoneType',
           'instruction_files': list([
             '<empty>',
           ]),
@@ -1452,6 +1629,9 @@
         'model': 'str',
         'name': 'str',
         'outcome': 'str',
+        'properties': list([
+          '<empty>',
+        ]),
         'skill_name': 'NoneType',
         'system_prompt_name': 'str',
       }),

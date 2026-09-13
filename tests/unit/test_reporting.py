@@ -522,7 +522,7 @@ class TestReportContextGrouping:
         assert ctx.agents[0].display_name == "Economy eval"
         assert ctx.agents[0].total == 2
 
-    def test_conflicting_eval_names_for_same_agent_id_raise(self) -> None:
+    def test_distinct_eval_names_for_same_agent_id_have_separate_report_groups(self) -> None:
         report = SuiteReport(
             name="suite",
             timestamp="2026-08-10T12:00:00Z",
@@ -550,8 +550,15 @@ class TestReportContextGrouping:
             passed=2,
         )
 
-        with pytest.raises(ValueError, match="conflicting eval_name"):
-            _build_report_context(report, insights=_TEST_INSIGHTS)
+        ctx = _build_report_context(report, insights=_TEST_INSIGHTS)
+        assert len(ctx.agents) == 2
+        assert len({agent.agent_id for agent in ctx.agents}) == 2
+        assert {agent.display_name for agent in ctx.agents} == {
+            "First name [gpt-5.4-mini]",
+            "Second name [gpt-5.4-mini]",
+        }
+        assert all(agent.total == 1 for agent in ctx.agents)
+        assert all(test.agent_id == "agent-stable" for test in report.tests)
 
     def test_parameter_ids_remain_distinct_except_synthetic_iterations(self) -> None:
         report = SuiteReport(

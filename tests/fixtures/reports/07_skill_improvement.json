@@ -38,6 +38,9 @@
         "custom_agent_info": null,
         "premium_requests": 1.0,
         "instruction_files": [],
+        "configuration": {},
+        "capture_errors": [],
+        "evidence_complete": null,
         "clarification_stats": null
       },
       "error": "AssertionError: expected banking terminology was missing",
@@ -56,7 +59,8 @@
       "model": "gpt-5.4-mini",
       "system_prompt_name": null,
       "skill_name": null,
-      "iteration": null
+      "iteration": null,
+      "properties": []
     },
     {
       "name": "tests/fixtures/scenario_07_skill_improvement.py::test_with_skill",
@@ -80,7 +84,10 @@
                 "error": null,
                 "duration_ms": 180.0,
                 "image_content": null,
-                "image_media_type": null
+                "image_media_type": null,
+                "call_id": null,
+                "completion_received": null,
+                "success": null
               }
             ]
           },
@@ -108,6 +115,9 @@
         "custom_agent_info": null,
         "premium_requests": 1.0,
         "instruction_files": [],
+        "configuration": {},
+        "capture_errors": [],
+        "evidence_complete": null,
         "clarification_stats": null
       },
       "error": null,
@@ -126,7 +136,8 @@
       "model": "gpt-5.4-mini",
       "system_prompt_name": null,
       "skill_name": "financial-literacy",
-      "iteration": null
+      "iteration": null,
+      "properties": []
     }
   ],
   "passed": 1,
