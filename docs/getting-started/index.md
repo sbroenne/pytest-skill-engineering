@@ -28,7 +28,7 @@ uv run pytest-skill-engineering doctor
 In CI, set `GITHUB_TOKEN` or `GH_TOKEN` instead. The runtime selects
 `GITHUB_TOKEN` first when both are set.
 
-`init` makes two explicit changes:
+`init` makes three explicit changes:
 
 - creates `tests/test_copilot_eval.py`
 - adds `asyncio_mode`, HTML output, JSON output, and the `gpt-5.6-sol` analysis
