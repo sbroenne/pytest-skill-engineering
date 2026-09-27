@@ -26,5 +26,5 @@ Use the user message you send into `copilot_eval(...)` to test realistic task ph
 
 ## Vary the model carefully
 
-Start with `gpt-5.4-mini`.
+Start with `gpt-5.6-sol`.
 Only add more expensive models when the extra comparison answers a real product question.

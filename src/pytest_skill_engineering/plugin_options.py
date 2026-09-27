@@ -24,7 +24,7 @@ def add_aitest_options(group: OptionGroup) -> None:
         default=None,
         help=(
             "Model for AI analysis. Required when generating reports. "
-            "Use the most capable model you can afford (e.g., gpt-5.5, claude-opus-4)."
+            "Use the most capable model you can afford (e.g., gpt-5.6-sol)."
         ),
     )
 
@@ -107,9 +107,9 @@ def add_aitest_options(group: OptionGroup) -> None:
     # LLM judge model for llm_assert fixture
     group.addoption(
         "--llm-model",
-        default="copilot/gpt-5.4-mini",
+        default="copilot/gpt-5.6-sol",
         help=(
             "Model for llm_assert semantic assertions. "
-            "Defaults to --aitest-summary-model if set, otherwise copilot/gpt-5.4-mini."
+            "Defaults to --aitest-summary-model if set, otherwise copilot/gpt-5.6-sol."
         ),
     )

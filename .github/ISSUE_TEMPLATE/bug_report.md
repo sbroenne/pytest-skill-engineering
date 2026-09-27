@@ -10,7 +10,8 @@ assignees: ''
 A clear description of what the bug is.
 
 ## To Reproduce
-Steps to reproduce:
+Provide a minimal eval and the exact command:
+
 1. ...
 2. ...
 
@@ -21,10 +22,13 @@ What you expected to happen.
 What actually happened.
 
 ## Environment
-- pytest-skill-engineering version: 
-- Python version: 
-- OS: 
-- LLM provider/model: 
+- pytest-skill-engineering version:
+- Python version:
+- OS:
+- Copilot model:
+- Authentication mode (`gh`, `GITHUB_TOKEN`, or `GH_TOKEN`):
+- Command:
+- Report output requested (`html`, `json`, `md`, or none):
 
 ## Code Example
 ```python
@@ -33,7 +37,7 @@ What actually happened.
 
 ## Error Output
 ```
-# Paste any error messages or tracebacks
+# Paste sanitized errors or tracebacks. Remove tokens and private prompts.
 ```
 
 ## Additional Context

@@ -22,7 +22,7 @@ Example::
 
     agent = CopilotEval.from_plugin(
         "my-plugin/",
-        model="gpt-5.4-mini",
+        model="gpt-5.6-sol",
     )
 """
 

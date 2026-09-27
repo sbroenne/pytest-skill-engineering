@@ -20,7 +20,7 @@ reviewer = load_custom_agent(".github/agents/reviewer.agent.md")
 
 agent = CopilotEval(
     name="orchestrator",
-    model="gpt-5.4-mini",
+    model="gpt-5.6-sol",
     instructions="Delegate code review requests to the reviewer custom agent.",
     custom_agents=[reviewer],
 )
@@ -70,7 +70,7 @@ async def test_review_agent_variant(copilot_eval, agent_file):
     reviewer = load_custom_agent(agent_file)
     agent = CopilotEval(
         name=agent_file.stem,
-        model="gpt-5.4-mini",
+        model="gpt-5.6-sol",
         instructions="Delegate code review tasks to the reviewer custom agent.",
         custom_agents=[reviewer],
     )

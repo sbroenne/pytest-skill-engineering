@@ -25,7 +25,7 @@ from pytest_skill_engineering.copilot import CopilotEval
 
 agent = CopilotEval(
     name="banking-default",
-    model="gpt-5.4-mini",
+    model="gpt-5.6-sol",
     instructions="Use the banking tools before answering.",
     mcp_servers={},
     allowed_tools=None,
@@ -42,7 +42,7 @@ agent = CopilotEval(
 | Field | Meaning |
 |---|---|
 | `name` | Human-readable report label |
-| `model` | Copilot model name such as `gpt-5.4-mini` |
+| `model` | Copilot model name such as `gpt-5.6-sol` |
 | `instructions` | System prompt content |
 | `mcp_servers` | Copilot SDK server config mapping |
 | `allowed_tools` | Optional global tool allow-list |
@@ -113,12 +113,17 @@ server = CLIServer(command="git", tool_prefix="git")
 
 ```toml
 [tool.pytest.ini_options]
+asyncio_mode = "auto"
 addopts = """
---aitest-summary-model=copilot/gpt-5.4-mini
+--aitest-summary-model=copilot/gpt-5.6-sol
 --aitest-html=aitest-reports/report.html
---llm-model=copilot/gpt-5.4-mini
+--aitest-json=aitest-reports/results.json
+--llm-model=copilot/gpt-5.6-sol
 """
 ```
+
+`pytest-skill-engineering init` adds the first three settings to an existing
+project. It reports conflicting values instead of replacing them.
 
 ## Notes
 

@@ -15,7 +15,7 @@ from pytest_skill_engineering.copilot import CopilotEval
 
 agent = CopilotEval(
     name="banking-concise",
-    model="gpt-5.4-mini",
+    model="gpt-5.6-sol",
     instructions="Be brief. Use the banking tools before answering.",
 )
 ```
@@ -38,7 +38,7 @@ SYSTEM_PROMPTS = {
 async def test_balance_prompt(copilot_eval, system_prompt_name, system_prompt):
     agent = CopilotEval(
         name=f"banking-{system_prompt_name}",
-        model="gpt-5.4-mini",
+        model="gpt-5.6-sol",
         instructions=system_prompt,
     )
     result = await copilot_eval(agent, "What's my checking balance?")

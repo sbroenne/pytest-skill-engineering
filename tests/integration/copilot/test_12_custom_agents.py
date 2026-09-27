@@ -13,8 +13,8 @@ import pytest
 from pytest_skill_engineering.copilot.eval import CopilotEval
 
 pytestmark = [pytest.mark.copilot]
-CUSTOM_AGENT_MODEL = "gpt-5.5"
-FORCED_SUBAGENT_MODEL = "gpt-5.4-mini"
+CUSTOM_AGENT_MODEL = "gpt-5.6-sol"
+FORCED_SUBAGENT_MODEL = "gpt-5.6-luna"
 _NATIVE_SUBAGENT_TOOLS = ["task"]
 
 # Tools that let the orchestrator write files directly.
@@ -79,12 +79,16 @@ class TestCustomAgentOutcomes:
 
     async def test_docs_writer_agent_creates_readme(self, copilot_eval, tmp_path):
         """Custom docs-writer agent produces a README.md for the project."""
+        (tmp_path / "greeting.py").write_text(
+            'def greet(name: str) -> str:\n    return f"Hello, {name}!"\n',
+            encoding="utf-8",
+        )
         agent = CopilotEval(
             name="with-docs-writer",
             model=CUSTOM_AGENT_MODEL,
             instructions=(
-                "You are a project lead. Create the requested code, then "
-                "delegate README documentation to the docs-writer agent. "
+                "You are a project lead. Delegate README documentation for the existing "
+                "greeting.py module to the docs-writer agent. "
                 "The docs-writer must save its output to README.md in the project root."
             ),
             working_directory=str(tmp_path),
@@ -99,14 +103,12 @@ class TestCustomAgentOutcomes:
                         "Save the documentation to README.md in the project root."
                     ),
                     "description": "Writes README.md project documentation.",
-                    "tools": ["create_file", "read_file", "insert_edit_into_file"],
                 }
             ],
         )
         result = await copilot_eval(
             agent,
-            "Create greeting.py with a greet(name: str) -> str function that returns "
-            "'Hello, {name}!', then have documentation written for the project.",
+            "Have the docs-writer document the existing greeting.py project.",
         )
         assert result.success, f"Failed: {result.error}"
         assert any(inv.name == "docs-writer" for inv in result.subagent_invocations), (

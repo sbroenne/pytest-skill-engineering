@@ -10,7 +10,7 @@ pricing for models. Models without pricing return ``0.0``.
     # fraction of the normal input rate.
     [models]
     "claude-sonnet-4" = { input = 3.00, output = 15.00, cache_read = 0.30 }
-    "copilot/gpt-5.4-mini" = { input = 2.00, output = 8.00 }
+    "gpt-5.6-sol" = { input = 5.00, output = 30.00, cache_read = 0.50 }
 """
 
 from __future__ import annotations

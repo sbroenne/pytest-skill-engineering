@@ -26,7 +26,7 @@ from pytest_skill_engineering.copilot import CopilotEval
 
 agent = CopilotEval(
     name="banking-default",
-    model="gpt-5.4-mini",
+    model="gpt-5.6-sol",
     instructions="Use the banking tools before answering.",
 )
 

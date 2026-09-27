@@ -6,7 +6,7 @@
 #
 # Use this file to keep optional cost comparisons honest when you choose to run
 # more expensive model benchmarks. Routine day-to-day testing should usually
-# start with gpt-5.4-mini.
+# start with gpt-5.6-sol.
 #
 # Format:
 #   "model-key" = { input = <per_million_input>, output = <per_million_output>, cache_read = <per_million_cache_read> }
@@ -19,5 +19,5 @@
 "gpt-5.6-sol" = { input = 5.00, output = 30.00, cache_read = 0.50 }
 
 # Examples (uncomment and adjust as needed):
-# "gpt-5.5" = { input = 1.25, output = 5.00 }
+# "gpt-5.6-luna" = { input = 1.25, output = 5.00 }
 # "my-private-model" = { input = 2.00, output = 8.00 }

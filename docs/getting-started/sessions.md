@@ -105,7 +105,7 @@ You can combine sessions with model comparison, but those runs are intentionally
 
 ```python
 @pytest.mark.slow
-@pytest.mark.parametrize("model", ["gpt-5.5", "claude-sonnet-5"])
+@pytest.mark.parametrize("model", ["gpt-5.6-luna", "claude-sonnet-5"])
 class TestShoppingWorkflow:
     """Test the same conversation flow with different models."""
 
@@ -135,7 +135,7 @@ Run that file with `uv run python -m pytest path/to/test_file.py --run-slow`.
 
 This creates two separate parametrized runs, each with its own browse → select prompts:
 
-- `test_browse[gpt-5.5]` / `test_select[gpt-5.5]`
+- `test_browse[gpt-5.6-luna]` / `test_select[gpt-5.6-luna]`
 - `test_browse[claude-sonnet-5]` / `test_select[claude-sonnet-5]`
 
 The report shows each model's turns side by side for comparison.

@@ -51,7 +51,7 @@ jobs:
           uv run --frozen python -m pytest tests/showcase/ -v \
             --aitest-html=docs/demo/hero-report.html \
             --junitxml=hero-results.xml \
-            -o "addopts=--aitest-summary-model=copilot/gpt-5.5"
+            -o "addopts=--aitest-summary-model=copilot/gpt-5.6-sol"
 
       - name: Publish JUnit results
         uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3

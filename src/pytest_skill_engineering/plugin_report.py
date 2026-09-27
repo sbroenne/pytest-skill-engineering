@@ -114,8 +114,7 @@ def generate_structured_insights(
                 raise pytest.UsageError(
                     "AI analysis is required for report generation.\n"
                     "Please specify --aitest-summary-model with a capable model.\n"
-                    "Economical default: --aitest-summary-model=copilot/gpt-5.4-mini\n"
-                    "Higher-quality option: --aitest-summary-model=copilot/gpt-5.5"
+                    "Recommended default: --aitest-summary-model=copilot/gpt-5.6-sol"
                 )
             return None
 

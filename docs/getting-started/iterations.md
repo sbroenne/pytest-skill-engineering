@@ -22,7 +22,7 @@ Add `--aitest-iterations=N` to your pytest command:
 
 ```bash
 # Run each test 3 times
-uv run python -m pytest tests/ --aitest-iterations=3 --aitest-html=report.html --aitest-summary-model=copilot/gpt-5.4-mini
+uv run python -m pytest tests/ --aitest-iterations=3 --aitest-html=report.html --aitest-summary-model=copilot/gpt-5.6-sol
 ```
 
 No code changes needed. Every test automatically runs N times.
@@ -63,7 +63,7 @@ uv run python -m pytest tests/ --aitest-iterations=5
 [tool.pytest.ini_options]
 addopts = """
 --aitest-iterations=3
---aitest-summary-model=copilot/gpt-5.4-mini
+--aitest-summary-model=copilot/gpt-5.6-sol
 --aitest-html=aitest-reports/report.html
 """
 ```

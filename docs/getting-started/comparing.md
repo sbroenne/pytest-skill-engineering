@@ -62,7 +62,7 @@ Generate configurations from all permutations for systematic testing:
 from pathlib import Path
 from pytest_skill_engineering.copilot import CopilotEval
 
-MODELS = ["gpt-5.4-mini", "gpt-4.1"]
+MODELS = ["gpt-5.6-sol", "gpt-5.6-luna"]
 SKILL_VERSIONS = [path.stem for path in Path("skills").iterdir() if path.is_dir()]
 
 # Generate all combinations: 2 models × N skill versions
@@ -87,7 +87,7 @@ async def test_balance_query(copilot_eval, agent):
 **Use generated configurations when:**
 
 - Testing all combinations systematically
-- Looking for interactions (e.g., "skill v2 works with gpt-4.1 but fails with gpt-5.4-mini")
+- Looking for interactions (e.g., "skill v2 works with gpt-5.6-luna but fails with gpt-5.6-sol")
 - Comparing multiple dimensions at once
 
 ## What the Report Shows
@@ -96,10 +96,10 @@ The report shows an **Eval Leaderboard** (auto-detected when multiple agents are
 
 | Eval | Pass Rate | Tokens | Cost |
 |-------|-----------|--------|------|
-| gpt-5.4-mini-v2 | 100% | 747 | $0.002 |
-| gpt-4.1-v2 | 100% | 560 | $0.008 |
-| gpt-5.4-mini-v1 | 90% | 1,203 | $0.004 |
-| gpt-4.1-v1 | 90% | 892 | $0.012 |
+| gpt-5.6-sol-v2 | 100% | 747 | $0.002 |
+| gpt-5.6-luna-v2 | 100% | 560 | $0.008 |
+| gpt-5.6-sol-v1 | 90% | 1,203 | $0.004 |
+| gpt-5.6-luna-v1 | 90% | 892 | $0.012 |
 
 **Winning eval:** Highest pass rate → lowest cost (tiebreaker).
 

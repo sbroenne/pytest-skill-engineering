@@ -19,7 +19,7 @@ def skill_factory() -> Callable[[Path | str], Skill]:
             skill = skill_factory("path/to/my-skill")
             agent = CopilotEval(
                 skill_directories=[str(skill.path)],
-                model="gpt-5.4-mini",
+                model="gpt-5.6-sol",
             )
             result = await eval_run(agent, "Do something with the skill")
             assert result.success

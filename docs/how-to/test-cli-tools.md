@@ -15,7 +15,7 @@ from pytest_skill_engineering.copilot import CopilotEval
 async def test_git_status(copilot_eval, tmp_path):
     agent = CopilotEval(
         name="git-helper",
-        model="gpt-5.4-mini",
+        model="gpt-5.6-sol",
         instructions="Use terminal tools to inspect the repository state.",
         working_directory=str(tmp_path),
     )
@@ -77,7 +77,7 @@ GIT_MCP = {
 async def test_git_log(copilot_eval):
     agent = CopilotEval(
         name="git-mcp",
-        model="gpt-5.4-mini",
+        model="gpt-5.6-sol",
         instructions="Use the git tools to inspect repository history.",
         mcp_servers=GIT_MCP,
     )

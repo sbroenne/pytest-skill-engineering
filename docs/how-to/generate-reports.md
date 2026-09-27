@@ -9,12 +9,12 @@ description: "Generate HTML and Markdown reports from pytest runs or from saved 
 ```toml
 [tool.pytest.ini_options]
 addopts = """
---aitest-summary-model=copilot/gpt-5.4-mini
+--aitest-summary-model=copilot/gpt-5.6-sol
 --aitest-html=aitest-reports/report.html
 """
 ```
 
-Start with `copilot/gpt-5.4-mini` for routine report analysis. Opt into larger models only when you need a more expensive comparison or deeper write-up.
+Start with `copilot/gpt-5.6-sol` for routine report analysis. Opt into larger models only when you need a more expensive comparison or deeper write-up.
 
 ## Run pytest
 
@@ -35,7 +35,7 @@ uv run pytest-skill-engineering-report aitest-reports/results.json   --html aite
 ## Refresh AI insights
 
 ```bash
-uv run pytest-skill-engineering-report aitest-reports/results.json   --html aitest-reports/report.html   --summary   --summary-model copilot/gpt-5.4-mini
+uv run pytest-skill-engineering-report aitest-reports/results.json   --html aitest-reports/report.html   --summary   --summary-model copilot/gpt-5.6-sol
 ```
 
 ## Evidence-only summaries and separate assessment

@@ -16,7 +16,7 @@ from pytest_skill_engineering.copilot.eval import CopilotEval
 
 pytestmark = [pytest.mark.copilot]
 _SKILLS_DIR = Path(__file__).resolve().parents[1] / "skills"
-SKILL_MODEL = "gpt-5.5"
+SKILL_MODEL = "gpt-5.6-sol"
 
 
 def _write_skill(parent: Path, name: str, body: str) -> str:
@@ -38,14 +38,18 @@ class TestSkillABComparison:
             tmp_path,
             "type-hints",
             "# Python Type Hint Standards\n\n"
-            "Every function MUST annotate every parameter and return value.\n\n"
+            "For every arithmetic function, every parameter and return value MUST use "
+            "the exact `float` annotation. Never use `int`, unions, or a broader type.\n\n"
             "Example:\n"
             "    def add(a: float, b: float) -> float:\n"
             "        return a + b\n\n"
             "Unannotated functions are non-compliant.\n",
         )
 
-        task = "Create math_ops.py with functions: add(a, b), subtract(a, b)."
+        task = (
+            "Create math_ops.py with functions: add(a, b), subtract(a, b). "
+            "Follow any loaded skill's exact annotation types."
+        )
 
         baseline_dir = tmp_path / "baseline"
         baseline_dir.mkdir()
@@ -62,9 +66,8 @@ class TestSkillABComparison:
             name="treatment",
             model=SKILL_MODEL,
             instructions=(
-                "Write a Python module. Read your loaded skills carefully and obey every "
-                "required literal code pattern exactly. Apply all type hint standards from "
-                "your skills with no omissions."
+                "Write a Python module. You MUST use the loaded type-hints skill for this "
+                "task. Read it before writing code and obey its exact annotation types."
             ),
             working_directory=str(treatment_dir),
             skill_directories=[skill_dir],
@@ -78,12 +81,13 @@ class TestSkillABComparison:
         content_a = (baseline_dir / "math_ops.py").read_text()
         content_b = (treatment_dir / "math_ops.py").read_text()
 
-        assert "->" in content_b and ": " in content_b, (
-            "Type hint skill should have added annotations — not found in treatment.\n"
+        assert content_b.count(": float") >= 4 and content_b.count("-> float") >= 2, (
+            "Type hint skill should have added exact float annotations.\n"
             f"Treatment output:\n{content_b}"
         )
-        assert "->" not in content_a, (
-            f"Baseline (no skill) unexpectedly contains return annotations.\nBaseline output:\n{content_a}"
+        assert ": float" not in content_a, (
+            "Baseline unexpectedly contains the skill-only float annotations.\n"
+            f"Baseline output:\n{content_a}\nTreatment output:\n{content_b}"
         )
 
     async def test_simple_assistant_skill_applies_greeting_rule(self, copilot_eval, tmp_path):

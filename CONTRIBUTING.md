@@ -5,9 +5,15 @@ Thanks for improving pytest-skill-engineering.
 ## Development setup
 
 ```bash
+git clone https://github.com/sbroenne/pytest-skill-engineering.git
+cd pytest-skill-engineering
 uv sync --frozen --all-extras
 uv run --frozen pre-commit install
+uv run --frozen pytest-skill-engineering --version
+uv run --frozen python -m pytest tests/contracts/ -q -o addopts=
 ```
+
+The final command is a deterministic setup check and does not call Copilot.
 
 Authenticate Copilot with either:
 
@@ -35,6 +41,14 @@ The main harness is `CopilotEval`. Keep new contributions on the current Copilot
 
 Use the smallest command that proves the change you made.
 
+| Change | Required validation |
+|---|---|
+| Python source | Ruff, Ruff format, Pyright, relevant contract checks, then relevant Copilot integration file |
+| Copilot execution or system prompt | Relevant `tests/integration/copilot/` file with a real model |
+| Docs only | `uv run --frozen python -X utf8 -m mkdocs build --strict` |
+| Report Python, CSS, or JavaScript | Regenerate every fixture report, inspect the rendered HTML, and run relevant deterministic checks |
+| Dependencies | Refresh `uv.lock`, then run the checks for the affected source |
+
 ### Locked dependency environment
 
 CI, integration, hero-test, and documentation workflows use `uv sync --frozen`
@@ -57,16 +71,16 @@ necessarily the newest public releases. Refresh the lock through the proxy when
 newer versions become available. Do not rewrite lock URLs by hand or disable
 certificate verification.
 
-### Source-only changes
+### Deterministic checks
 
-For report generation, serialization, and documentation source changes, run focused deterministic checks:
+Run the checks that cover the changed surface:
 
 ```bash
-uv run ruff check src tests
-uv run ruff format --check src tests
-uv run pyright
-uv run mkdocs build --strict
-uv run python scripts/generate_fixture_html.py
+uv run --frozen ruff check src tests
+uv run --frozen ruff format --check src tests
+uv run --frozen pyright
+uv run --frozen python -X utf8 -m mkdocs build --strict
+uv run --frozen python scripts/generate_fixture_html.py
 ```
 
 These checks validate source correctness, but they do **not** prove agent behavior.
@@ -87,6 +101,9 @@ uv run python -m pytest tests/integration/copilot/test_02_models.py -v --run-slo
 ```
 
 Do not claim success from mock-only tests.
+
+Run integration files one at a time. Fix every failure before moving to the
+next file, and use `--lf` rather than repeating successful, paid runs.
 
 ## Report development
 
@@ -111,3 +128,13 @@ Use these terms consistently:
 - **custom agent** — a `.agent.md` definition
 - **custom agent dispatch** — when Copilot routes work to a custom agent
 - **subagent** — only the runtime invocation/result event
+
+## Good first contributions
+
+Documentation corrections, a focused diagnostics check, and a single missing
+contract assertion are good starting points. Comment on an issue before taking
+larger work so the intended behavior and validation scope are explicit.
+
+Every pull request should explain the user-visible outcome and list the exact
+commands run. Do not include credentials, raw tokens, or unsanitized private
+prompts in issues or reports.
