@@ -1,6 +1,22 @@
 name: Deploy Documentation
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - "docs/**"
+      - "mkdocs.yml"
+      - "pyproject.toml"
+      - "uv.lock"
+      - "src/pytest_skill_engineering/**"
+  pull_request:
+    branches: [main]
+    paths:
+      - "docs/**"
+      - "mkdocs.yml"
+      - "pyproject.toml"
+      - "uv.lock"
+      - "src/pytest_skill_engineering/**"
   workflow_call:
     inputs:
       version:
@@ -86,6 +102,7 @@ jobs:
           path: site
 
   deploy:
+    if: github.event_name != 'pull_request'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
