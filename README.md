@@ -87,27 +87,35 @@ AI analyzes your results and tells you **what to fix**: which configuration to d
 
 ## Quick Start
 
+You need Python 3.11+, [uv](https://docs.astral.sh/uv/), the GitHub CLI, and a
+GitHub account with Copilot access.
+
 ```bash
-# Install
+# Add the package to an existing Python project
 uv add pytest-skill-engineering
 
-# Authenticate (one-time)
-gh auth login
+# Authenticate once, then create and verify the starter
+gh auth login --hostname github.com
+uv run pytest-skill-engineering init
+uv run pytest-skill-engineering doctor
 
-# Run tests
-uv run python -m pytest tests/
+# Run one real Copilot eval
+uv run python -m pytest tests/test_copilot_eval.py -v
 ```
 
-### Configure AI Analysis (optional but recommended)
+`init` creates `tests/test_copilot_eval.py`, adds explicit pytest settings to
+`pyproject.toml`, and records `gpt-5.6-sol` cost rates in `pricing.toml`. It
+refuses to overwrite an existing starter or conflicting report configuration
+and preserves existing model pricing. The starter invokes the bundled Todo MCP
+server and may consume Copilot premium requests.
 
-The AI-powered report needs a model to generate insights. Configure it in `pyproject.toml`:
+After the run, open:
 
-```toml
-[tool.pytest.ini_options]
-addopts = "--aitest-summary-model=copilot/gpt-5.4-mini"
-```
+- `aitest-reports/report.html` — rendered results and required AI analysis
+- `aitest-reports/results.json` — raw execution evidence
 
-You can also use Azure OpenAI or other providers if you prefer — see [Configuration](https://sbroenne.github.io/pytest-skill-engineering/reference/configuration/).
+See the [complete quickstart](https://sbroenne.github.io/pytest-skill-engineering/getting-started/)
+or run the standalone [`examples/quickstart`](examples/quickstart/) project.
 
 ## Features
 

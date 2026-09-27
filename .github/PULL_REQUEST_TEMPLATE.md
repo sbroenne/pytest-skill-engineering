@@ -11,14 +11,21 @@ Brief description of the changes.
 
 ## Checklist
 
-- [ ] I have run `pre-commit run --all-files` and all checks pass
-- [ ] I have added tests that prove my fix/feature works
-- [ ] I have updated the documentation if needed
-- [ ] My changes generate no new warnings
+- [ ] I ran the deterministic checks required for this change
+- [ ] I ran the relevant real-Copilot integration file when behavior changed
+- [ ] I added contract or integration coverage that proves the outcome
+- [ ] I updated user and contributor documentation where needed
+- [ ] I did not include credentials or unsanitized private prompts
 
 ## Testing
 
-Describe the tests you added or ran.
+List the exact commands you ran and their results. If a real-Copilot integration
+run was not required, explain why.
+
+```text
+command
+result
+```
 
 ## Related Issues
 

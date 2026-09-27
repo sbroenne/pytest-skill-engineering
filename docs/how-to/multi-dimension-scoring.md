@@ -34,11 +34,11 @@ The judge model resolves in this order:
 
 1. `--llm-model`
 2. `--aitest-summary-model`
-3. `copilot/gpt-5.4-mini`
+3. `copilot/gpt-5.6-sol`
 
 Examples:
 
 ```bash
-uv run python -m pytest tests/ --llm-model=copilot/gpt-5.4-mini
-uv run python -m pytest tests/ --aitest-summary-model=copilot/gpt-5.4-mini
+uv run python -m pytest tests/ --llm-model=copilot/gpt-5.6-sol
+uv run python -m pytest tests/ --aitest-summary-model=copilot/gpt-5.6-sol
 ```

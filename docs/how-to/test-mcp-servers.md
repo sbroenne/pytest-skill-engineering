@@ -26,7 +26,7 @@ BANKING_MCP = {
 async def test_balance(copilot_eval):
     agent = CopilotEval(
         name="banking-default",
-        model="gpt-5.4-mini",
+        model="gpt-5.6-sol",
         instructions="Use the banking tools for account requests.",
         mcp_servers=BANKING_MCP,
     )
@@ -90,7 +90,7 @@ ASSISTANT_MCP = {
 ```python
 agent = CopilotEval(
     name="balance-only",
-    model="gpt-5.4-mini",
+    model="gpt-5.6-sol",
     instructions="Use balance tools only.",
     mcp_servers=BANKING_MCP,
     allowed_tools=["get_balance", "get_all_balances"],

@@ -164,7 +164,7 @@ class EvalResult:
 async def test_create_file(copilot_eval, tmp_path):
     agent = CopilotEval(
         name="coder",
-        model="gpt-5.4-mini",
+        model="gpt-5.6-luna",
         instructions="You are a Python developer.",
         working_directory=str(tmp_path),
     )
@@ -272,10 +272,10 @@ Reports include:
 
 ```bash
 # Run tests with AI analysis (mandatory --aitest-summary-model)
-uv run python -m pytest tests/ --aitest-html=report.html --aitest-summary-model=copilot/gpt-5.5
+uv run python -m pytest tests/ --aitest-html=report.html --aitest-summary-model=copilot/gpt-5.6-sol
 
 # Regenerate report with new AI insights from existing JSON (no re-run)
-uv run pytest-skill-engineering-report results.json --html report.html --summary --summary-model copilot/gpt-5.5
+uv run pytest-skill-engineering-report results.json --html report.html --summary --summary-model copilot/gpt-5.6-sol
 ```
 
 ### Key Types
@@ -287,7 +287,7 @@ from pytest_skill_engineering import load_custom_agent
 # Define an eval
 agent = CopilotEval(
     name="financial-assistant",
-    model="gpt-5.4-mini",
+    model="gpt-5.6-luna",
     instructions="You are a helpful financial assistant.",
     skill_directories=["skills/financial-advisor"],  # Optional domain knowledge
     max_turns=10,
@@ -296,7 +296,7 @@ agent = CopilotEval(
 # Register a custom agent definition for Copilot to dispatch to at runtime
 copilot_agent = CopilotEval(
     name="coder",
-    model="gpt-5.4-mini",
+    model="gpt-5.6-luna",
     instructions="You are a coding assistant.",
     custom_agents=[load_custom_agent("skills/my-skill/agent.md")],
 )
@@ -323,7 +323,7 @@ INSTRUCTIONS = {
 async def test_with_instructions(copilot_eval, instruction_name, instructions):
     agent = CopilotEval(
         name=f"assistant-{instruction_name}",
-        model="gpt-5.4-mini",
+        model="gpt-5.6-luna",
         instructions=instructions,
     )
     result = await copilot_eval(agent, "What's my balance?")
@@ -366,7 +366,7 @@ uv run python -m pytest --lf tests/integration/copilot/ -v
 - ✅ Run `tests/integration/copilot/` after EVERY code change — one file at a time, sequentially
 - ✅ Start with `test_01_basic.py`, fix failures, then `test_02_models.py`, etc.
 - ✅ Write integration tests that call real GitHub Copilot models
-- ✅ Use the cheapest model (`gpt-5.4-mini`) via Copilot
+- ✅ Use the cheapest model (`gpt-5.6-luna`) via Copilot
 - ✅ Test with Banking or Todo MCP server (built-in test harnesses)
 - ✅ Accept that integration tests take 5–30+ seconds per test
 - ✅ Run integration tests BEFORE declaring a feature complete
@@ -420,10 +420,10 @@ Uses GitHub Copilot SDK for all LLM calls. Authenticate with `gh auth login --ho
 
 ```bash
 # Use Copilot for AI insights
-uv run python -m pytest tests/ --aitest-summary-model=gpt-5.4-mini
+uv run python -m pytest tests/ --aitest-summary-model=gpt-5.6-luna
 
 # Use Copilot for llm_assert / llm_score
-uv run python -m pytest tests/ --llm-model=gpt-5.4-mini
+uv run python -m pytest tests/ --llm-model=gpt-5.6-luna
 ```
 
 The Copilot SDK is REQUIRED (not optional). All eval execution goes through it.
@@ -491,8 +491,8 @@ Integration tests use centralized constants from `tests/integration/copilot/conf
 
 ```python
 # Models
-DEFAULT_MODEL = "gpt-5.5"  # Default integration model
-MODELS = ["gpt-5.5", "gpt-5.4-mini"]  # For model comparison
+DEFAULT_MODEL = "gpt-5.6-sol"  # Default integration model
+MODELS = ["gpt-5.6-sol", "gpt-5.6-luna"]  # For model comparison
 
 # Turn limits
 DEFAULT_MAX_TURNS = 5
@@ -611,7 +611,7 @@ To modify styles:
 3. **Report config is in pyproject.toml**:
    ```toml
    addopts = """
-    --aitest-summary-model=copilot/gpt-5.5
+    --aitest-summary-model=copilot/gpt-5.6-sol
    --aitest-html=aitest-reports/report.html
    """
    ```

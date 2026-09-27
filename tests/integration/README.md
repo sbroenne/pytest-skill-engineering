@@ -66,7 +66,7 @@ from pytest_skill_engineering.copilot import CopilotEval
 async def test_my_feature(copilot_eval, tmp_path):
     agent = CopilotEval(
         name="my-feature",
-        model="gpt-5.4-mini",
+        model="gpt-5.6-sol",
         instructions="Create files as requested.",
         working_directory=str(tmp_path),
     )

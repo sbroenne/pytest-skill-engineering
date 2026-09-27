@@ -63,7 +63,7 @@ OPTION_SPECS = [
         expected_type=int,
         metavar="N",
     ),
-    OptionSpec("--llm-model", "copilot/gpt-5.4-mini", "llm_model"),
+    OptionSpec("--llm-model", "copilot/gpt-5.6-sol", "llm_model"),
 ]
 
 

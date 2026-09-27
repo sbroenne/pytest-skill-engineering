@@ -1,0 +1,13 @@
+[project]
+name = "pytest-skill-engineering-quickstart"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = ["pytest-skill-engineering"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+addopts = """
+--aitest-summary-model=copilot/gpt-5.6-sol
+--aitest-html=aitest-reports/report.html
+--aitest-json=aitest-reports/results.json
+"""

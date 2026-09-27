@@ -9,10 +9,10 @@ import pytest
 from pytest_skill_engineering.copilot.client import get_github_token
 
 # Default model for integration tests
-DEFAULT_MODEL: str = "gpt-5.4-mini"
+DEFAULT_MODEL: str = "gpt-5.6-sol"
 
 # Frontier flagship models for parametrized tests
-MODELS: list[str] = ["gpt-5.5", "claude-sonnet-5"]
+MODELS: list[str] = ["gpt-5.6-sol", "gpt-5.6-luna"]
 
 # Timeouts
 DEFAULT_TIMEOUT_S: float = 300.0

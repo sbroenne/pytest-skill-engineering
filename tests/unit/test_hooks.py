@@ -305,8 +305,7 @@ class TestCompactSummaryOption:
             _generate_structured_insights(config, report, required=True)
 
         message = str(exc_info.value)
-        assert "copilot/gpt-5.4-mini" in message
-        assert "copilot/gpt-5.5" in message
+        assert "copilot/gpt-5.6-sol" in message
         assert "azure/" not in message
         assert "openai/" not in message
         assert "anthropic/" not in message

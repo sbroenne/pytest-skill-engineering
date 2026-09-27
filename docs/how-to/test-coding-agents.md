@@ -18,7 +18,7 @@ from pytest_skill_engineering.copilot import CopilotEval
 async def test_creates_module(copilot_eval, tmp_path):
     agent = CopilotEval(
         name="coder",
-        model="gpt-5.4-mini",
+        model="gpt-5.6-sol",
         instructions="Create production-quality Python code.",
         working_directory=str(tmp_path),
     )
@@ -37,7 +37,7 @@ async def test_creates_module(copilot_eval, tmp_path):
 ```python
 agent = CopilotEval(
     name="my-agent",
-    model="gpt-5.4-mini",
+    model="gpt-5.6-sol",
     instructions="Your system prompt.",
     working_directory=str(tmp_path),
     max_turns=10,
@@ -73,7 +73,7 @@ reviewer = load_custom_agent(".github/agents/reviewer.agent.md")
 
 agent = CopilotEval(
     name="orchestrator",
-    model="gpt-5.4-mini",
+    model="gpt-5.6-sol",
     instructions="Delegate code review requests to the reviewer custom agent.",
     custom_agents=[reviewer],
 )
@@ -86,7 +86,7 @@ The `.agent.md` file defines a **custom agent**. It becomes a **subagent** only 
 ```python
 agent = CopilotEval(
     name="with-skill",
-    model="gpt-5.4-mini",
+    model="gpt-5.6-sol",
     instructions="Use the available skills.",
     skill_directories=["skills/banking-advisor"],
 )
@@ -104,4 +104,4 @@ or `GITHUB_TOKEN` in CI.
 
 ## Models
 
-Start with `gpt-5.4-mini` for routine tests. Add larger models only for targeted comparisons.
+Start with `gpt-5.6-sol` for routine tests. Add larger models only for targeted comparisons.

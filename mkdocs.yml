@@ -72,6 +72,7 @@ nav:
   - Home: index.md
   - Getting Started:
     - Overview: getting-started/index.md
+    - Troubleshooting: getting-started/troubleshooting.md
     - System Prompts: getting-started/system-prompts.md
     - Custom Agents: getting-started/custom-agents.md
     - Plugin Testing: getting-started/plugins.md

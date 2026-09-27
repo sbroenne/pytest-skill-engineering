@@ -30,7 +30,7 @@ SYSTEM_PROMPTS = {
 async def test_balance(copilot_eval, system_prompt_name, system_prompt):
     agent = CopilotEval(
         name=f"banking-{system_prompt_name}",
-        model="gpt-5.4-mini",
+        model="gpt-5.6-sol",
         instructions=system_prompt,
         mcp_servers=BANKING_MCP,
     )
@@ -44,7 +44,7 @@ async def test_balance(copilot_eval, system_prompt_name, system_prompt):
 Run it with:
 
 ```bash
-uv run python -m pytest tests/test_banking.py -v   --aitest-summary-model=copilot/gpt-5.4-mini   --aitest-html=aitest-reports/report.html
+uv run python -m pytest tests/test_banking.py -v   --aitest-summary-model=copilot/gpt-5.6-sol   --aitest-html=aitest-reports/report.html
 ```
 
 This produces a report that compares the two system prompt variants side by side.

@@ -71,8 +71,8 @@ async def test_balance_check(copilot_eval, llm_assert):
 
 ```python
 AGENTS = [
-    CopilotEval(name="gpt-5.4-mini"),
-    CopilotEval(name="gpt-5.5"),
+    CopilotEval(name="gpt-5.6-sol"),
+    CopilotEval(name="gpt-5.6-luna"),
 ]
 
 
@@ -107,9 +107,9 @@ Each test is independent; complex multi-step behavior is captured in a single pr
 
 ```python
 AGENTS = [
-    CopilotEval(name="gpt-5.4-mini"),
-    CopilotEval(name="gpt-5.5"),
-    CopilotEval(name="gpt-5.4-mini+skill", skill_directories=["skills/financial"]),
+    CopilotEval(name="gpt-5.6-sol"),
+    CopilotEval(name="gpt-5.6-luna"),
+    CopilotEval(name="gpt-5.6-sol+skill", skill_directories=["skills/financial"]),
 ]
 
 

@@ -4,7 +4,7 @@ Usage:
     pytest-skill-engineering-report results.json --html report.html
     pytest-skill-engineering-report results.json --md report.md
     pytest-skill-engineering-report results.json --html report.html \
-        --summary --summary-model copilot/gpt-5.4-mini
+        --summary --summary-model copilot/gpt-5.6-sol
 
 Configuration (in order of precedence):
     1. CLI arguments (highest)
@@ -131,7 +131,7 @@ def generate_ai_summary(
 
     Args:
         report: The suite report to summarize
-        model: Model string (for example ``copilot/gpt-5.4-mini``)
+        model: Model string (for example ``copilot/gpt-5.6-sol``)
         analysis_prompt: Custom analysis prompt text (optional)
         compact: Omit full conversation for passed tests to reduce tokens
         max_attempts: Maximum judge attempts for this invocation, from 1 to 3.
@@ -222,7 +222,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--summary-model",
         metavar="MODEL",
-        help="Model for AI summary (for example copilot/gpt-5.4-mini). "
+        help="Model for AI summary (for example copilot/gpt-5.6-sol). "
         "Can also be set via AITEST_SUMMARY_MODEL env var or pyproject.toml.",
     )
 
@@ -281,11 +281,11 @@ def main(argv: list[str] | None = None) -> int:
     if args.summary and not summary_model:
         print("Error: --summary requires --summary-model to be specified", file=sys.stderr)
         print("Options:", file=sys.stderr)
-        print("  --summary-model copilot/gpt-5.4-mini", file=sys.stderr)
-        print("  AITEST_SUMMARY_MODEL=copilot/gpt-5.4-mini", file=sys.stderr)
+        print("  --summary-model copilot/gpt-5.6-sol", file=sys.stderr)
+        print("  AITEST_SUMMARY_MODEL=copilot/gpt-5.6-sol", file=sys.stderr)
         print(
             "  pyproject.toml: [tool.pytest-skill-engineering-report]"
-            " summary-model = 'copilot/gpt-5.4-mini'",
+            " summary-model = 'copilot/gpt-5.6-sol'",
             file=sys.stderr,
         )
         return 1

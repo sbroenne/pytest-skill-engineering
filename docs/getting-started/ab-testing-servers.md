@@ -140,7 +140,7 @@ async def test_ambiguous_query(copilot_eval, agent):
 Test servers across multiple models to find interactions:
 
 ```python
-MODELS = ["gpt-5.4-mini", "gpt-4.1"]
+MODELS = ["gpt-5.6-sol", "gpt-5.6-luna"]
 
 AGENTS = [
     CopilotEval(
@@ -156,8 +156,8 @@ AGENTS = [
 ```
 
 This reveals interactions like:
-- "v2 works great with gpt-4.1 but fails with gpt-5.4-mini"
-- "gpt-5.4-mini needs better tool descriptions to match gpt-4.1 performance"
+- "v2 works great with gpt-5.6-luna but fails with gpt-5.6-sol"
+- "gpt-5.6-sol needs better tool descriptions to match gpt-5.6-luna performance"
 
 ## AI Insights for Server Comparison
 

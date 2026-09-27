@@ -16,14 +16,25 @@ Resources for contributors and developers working on pytest-skill-engineering it
     uv run pre-commit install
     ```
 
-2. Run checks:
+2. Verify the deterministic development environment:
     ```bash
-    uv run pre-commit run --all-files               # Lint, format, type check, docs build
-    uv run python -m pytest tests/unit/test_reporting.py tests/unit/test_html_reports.py tests/unit/test_cli.py -v
-    uv run python -m pytest tests/integration/copilot/ -v  # Real Copilot behavior checks
+    uv run pytest-skill-engineering --version
+    uv run python -m pytest tests/contracts/ -q -o addopts=
     ```
 
-All PRs are **squash merged**. See [CONTRIBUTING.md](https://github.com/sbroenne/pytest-skill-engineering/blob/main/CONTRIBUTING.md) for the full guide.
+3. Use the validation path for your change:
+
+    | Change | Validate with |
+    |---|---|
+    | Python source | Ruff, formatting, Pyright, contracts, then the relevant Copilot integration file |
+    | Copilot behavior | One relevant `tests/integration/copilot/` file at a time |
+    | Documentation | Strict MkDocs build |
+    | Report rendering | Regenerate all fixture HTML and inspect the output |
+
+All PRs are **squash merged**. The
+[full contribution guide](https://github.com/sbroenne/pytest-skill-engineering/blob/main/CONTRIBUTING.md)
+contains the exact commands and explains when a paid real-Copilot run is
+required.
 
 ## Guides
 
