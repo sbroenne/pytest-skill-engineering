@@ -138,6 +138,16 @@ async def _run_copilot_once(agent: CopilotEvalConfig, prompt: str) -> CopilotRes
         # Empty mode must not read persona instruction files or inject tools.
         if agent.client_mode != "empty":
             agent.persona.apply(agent, session_config, mapper, run_copilot)
+        if audit is not None:
+            capi = session_config.get("capi")
+            if capi is not None and not isinstance(capi, dict):
+                raise ValueError("Request auditing requires capi to be an options dictionary")
+            capi = dict(capi) if capi is not None else {}
+            if capi.get("enable_web_socket_responses", False) is not False:
+                raise ValueError("Request auditing requires capi.enable_web_socket_responses=False")
+            # CAPI otherwise selects WebSockets for models advertising ws:/responses.
+            capi["enable_web_socket_responses"] = False
+            session_config["capi"] = capi
         controls.install(session_config, caller_hooks)
         if agent.auto_confirm and "on_permission_request" not in session_config:
             session_config["on_permission_request"] = approve_all_permissions

@@ -126,7 +126,13 @@ cannot be overridden by an allow decision. Caller permission handlers are not
 replaced by automatic approval. Conflicting non-pre-tool hooks fail explicitly.
 
 Request auditing supports HTTP OpenAI Responses and Chat Completions payloads
-with function tools. WebSocket inference, other provider schemas, malformed
+with function tools. When either `audit_requests=True` or `image_detail` is set,
+the runner forces HTTP for Copilot API requests using the SDK's supported
+`capi={"enable_web_socket_responses": False}` session option. Other `capi`
+options are preserved; a conflicting WebSocket setting fails before startup.
+Ordinary runs without these controls retain the SDK's transport defaults.
+This setting is specific to the Copilot API; custom providers must also use HTTP.
+WebSocket inference, other provider schemas, malformed
 requests, and runs with no observed request are explicitly unsupported. Use an
 HTTP inference route; do not disable auditing to make a benchmark appear valid.
 The audit stores no raw messages, image bytes, credentials, URLs, or headers.
