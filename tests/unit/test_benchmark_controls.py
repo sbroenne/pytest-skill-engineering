@@ -239,6 +239,37 @@ async def test_timeout_drains_handler_and_preserves_incomplete_evidence(
     await asyncio.gather(*external)
 
 
+async def test_startup_completion_cannot_swallow_execution_cancellation(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    async def behavior(session: FakeSession) -> None:
+        pass
+
+    client, _ = fake_client(monkeypatch, behavior)
+    create_session = client.create_session
+
+    async def create_after_yield(**config: Any) -> FakeSession:
+        await asyncio.sleep(0)
+        return await create_session(**config)
+
+    async def cancel_before_start_returns() -> None:
+        execution = next(
+            task
+            for task in asyncio.all_tasks()
+            if getattr(task.get_coro(), "__qualname__", "").endswith(
+                "_run_copilot_once.<locals>.execute"
+            )
+        )
+        execution.cancel()
+
+    monkeypatch.setattr(client, "start", cancel_before_start_returns)
+    monkeypatch.setattr(client, "create_session", create_after_yield)
+    with pytest.raises(asyncio.CancelledError):
+        await run_copilot(CopilotEval(max_retries=0, timeout_s=1), "go")
+    assert client.stopped
+    assert client.session is None
+
+
 @pytest.mark.parametrize("shape", ["responses", "chat"])
 async def test_audit_rewrites_actual_payload_and_headers(shape: str) -> None:
     from pytest_skill_engineering.copilot.requests import RequestAuditHandler
@@ -621,16 +652,6 @@ async def test_streamed_request_rebuilds_length_and_developer_hash() -> None:
     await handler.aclose()
 
 
-async def test_websocket_audit_is_explicitly_unsupported() -> None:
-    from pytest_skill_engineering.copilot.requests import RequestAuditHandler
-
-    handler = RequestAuditHandler(image_detail="high", audit=True)
-    with pytest.raises(ValueError, match="WebSocket"):
-        await handler.open_websocket(context())
-    assert handler.failed.is_set()
-    assert handler.records == []
-
-
 def test_missing_usage_is_not_claimed_zero() -> None:
     mapper = EventMapper()
     mapper.handle(event("assistant.usage", model="actual"))
@@ -742,12 +763,16 @@ def test_sdk_usage_fields_are_preserved() -> None:
         {"audit_requests": True, "image_detail": "high"},
     ],
 )
-async def test_audited_execution_forces_http_before_inference(
+@pytest.mark.parametrize("websockets", [True, False, None])
+async def test_audited_execution_preserves_transport_options(
     monkeypatch: pytest.MonkeyPatch,
     settings: dict[str, Any],
+    websockets: bool | None,
 ) -> None:
     options: dict[str, Any]
-    supplied_capi = {"auto_tier": "intelligence"}
+    supplied_capi: dict[str, Any] = {"auto_tier": "intelligence"}
+    if websockets is not None:
+        supplied_capi["enable_web_socket_responses"] = websockets
     observed: list[httpx.Request] = []
 
     async def send(request: httpx.Request) -> httpx.Response:
@@ -755,12 +780,8 @@ async def test_audited_execution_forces_http_before_inference(
         return httpx.Response(200)
 
     async def behavior(session: FakeSession) -> None:
-        # Model-capable SDKs select WebSockets by default unless explicitly disabled.
         handler = options["request_handler"]
-        if session.config.get("capi", {}).get("enable_web_socket_responses", True):
-            await handler.open_websocket(context())
-            return
-        assert session.config["capi"]["auto_tier"] == "intelligence"
+        assert session.config["capi"] == supplied_capi
         handler.http = httpx.AsyncClient(transport=httpx.MockTransport(send))
         await handler.send_request(
             httpx.Request(
@@ -792,7 +813,7 @@ async def test_audited_execution_forces_http_before_inference(
     assert result.stop_reason == "completed"
     assert result.evidence_complete
     assert len(observed) == 1
-    assert supplied_capi == {"auto_tier": "intelligence"}
+    assert supplied_capi.get("enable_web_socket_responses") is websockets
     if settings.get("audit_requests"):
         assert result.request_audit[0].model == "actual-model"
         assert result.request_audit[0].tool_names == ["act"]
@@ -804,27 +825,6 @@ async def test_audited_execution_forces_http_before_inference(
         )
     if settings.get("image_detail"):
         assert b'"detail":"high"' in observed[0].content
-
-
-@pytest.mark.parametrize(
-    "capi", [True, {"enable_web_socket_responses": True}, {"enable_web_socket_responses": "false"}]
-)
-async def test_audited_execution_rejects_conflicting_capi_before_client_start(
-    monkeypatch: pytest.MonkeyPatch,
-    capi: Any,
-) -> None:
-    async def behavior(session: FakeSession) -> None:
-        pytest.fail("Invalid audit config must not reach session creation")
-
-    client, options = fake_client(monkeypatch, behavior)
-    result = await run_copilot(
-        CopilotEval(audit_requests=True, extra_config={"capi": capi}, max_retries=0), "go"
-    )
-    assert result.stop_reason == "execution_error"
-    assert not result.success
-    assert "capi" in (result.error or "")
-    assert client.session is None
-    assert options == {}
 
 
 @pytest.mark.parametrize("capi", [None, {"enable_web_socket_responses": True}])
@@ -842,7 +842,7 @@ async def test_ordinary_execution_keeps_sdk_transport_default(
     assert result.success
 
 
-async def test_actual_sdk_serializes_http_override_without_network(
+async def test_actual_sdk_serializes_caller_http_preference_without_network(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     from copilot import CopilotClient
@@ -873,7 +873,11 @@ async def test_actual_sdk_serializes_http_override_without_network(
     fake_client(monkeypatch, behavior)
     result = await run_copilot(
         CopilotEval(
-            image_detail="high", extra_config={"capi": {"auto_tier": "intelligence"}}, max_retries=0
+            image_detail="high",
+            extra_config={
+                "capi": {"auto_tier": "intelligence", "enable_web_socket_responses": False}
+            },
+            max_retries=0,
         ),
         "go",
     )

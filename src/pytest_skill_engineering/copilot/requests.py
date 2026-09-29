@@ -5,11 +5,18 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import json
+from contextlib import suppress
 from dataclasses import dataclass
 from typing import Any, Literal
 
 import httpx
-from copilot import CopilotRequestContext, CopilotRequestHandler, CopilotWebSocketHandler
+from copilot import (
+    CopilotRequestContext,
+    CopilotRequestHandler,
+    CopilotWebSocketCloseStatus,
+    CopilotWebSocketForwarder,
+    CopilotWebSocketHandler,
+)
 
 ImageDetail = Literal["auto", "low", "high"]
 
@@ -132,8 +139,88 @@ def _audit_payload(payload: Any, request_id: str, detail: ImageDetail | None) ->
     )
 
 
+class _AuditedWebSocket(CopilotWebSocketForwarder):
+    """Audit each Responses message before the SDK forwards it."""
+
+    def __init__(self, context: CopilotRequestContext, owner: RequestAuditHandler) -> None:
+        super().__init__(context)
+        self.owner = owner
+
+    async def open(self) -> None:
+        if self.owner.failed.is_set():
+            raise ValueError("Request audit already failed")
+        try:
+            await super().open()
+        except Exception as exc:
+            message = f"WebSocket transport open failed: {type(exc).__name__}"
+            self.owner.fail(message)
+            raise ValueError(message) from None
+
+    async def send_request_message(self, data: str | bytes) -> None:
+        if self.owner.failed.is_set():
+            raise ValueError("Request audit already failed")
+        try:
+            if not isinstance(data, str):
+                raise ValueError("Unsupported WebSocket frame: expected JSON text")
+            payload = json.loads(data)
+            if not isinstance(payload, dict) or payload.get("type") != "response.create":
+                raise ValueError("Unsupported WebSocket frame: expected response.create")
+            if "input" not in payload or "messages" in payload:
+                raise ValueError("Unsupported WebSocket Responses request")
+            if payload.get("previous_response_id") is not None and not all(
+                field in payload for field in ("model", "instructions", "tools")
+            ):
+                raise ValueError("Unsupported continuation: request settings must be explicit")
+            record = _audit_payload(payload, self.context.request_id, self.owner.image_detail)
+            content = json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
+        except (ValueError, TypeError, UnicodeError) as exc:
+            message = (
+                "Unsupported WebSocket request: invalid JSON"
+                if isinstance(exc, json.JSONDecodeError)
+                else str(exc)
+            )
+            self.owner.fail(message)
+            raise ValueError(message) from None
+        if self._upstream is None or self._closed:
+            self.owner.fail("WebSocket transport is not open")
+            raise ValueError(self.owner.error)
+        self.owner.observed_requests += 1
+        if self.owner.audit:
+            self.owner.records.append(record)
+        try:
+            await super().send_request_message(content)
+        except Exception as exc:
+            message = f"WebSocket transport send failed: {type(exc).__name__}"
+            self.owner.fail(message)
+            raise ValueError(message) from None
+
+    async def close(self, status: CopilotWebSocketCloseStatus | None = None) -> None:
+        if status is not None and status.error is not None:
+            message = f"WebSocket transport failed: {type(status.error).__name__}"
+            self.owner.fail(message)
+            status = CopilotWebSocketCloseStatus(description=message, error=ValueError(message))
+        try:
+            if self._upstream is not None:
+                await self._upstream.close()
+        finally:
+            await CopilotWebSocketHandler.close(self, status)
+
+    async def aclose(self) -> None:
+        try:
+            if self._suppress_close_on_dispose:
+                if self._upstream is not None:
+                    await self._upstream.close()
+            else:
+                await self.close()
+        finally:
+            if self._receive_task is not None:
+                self._receive_task.cancel()
+                with suppress(asyncio.CancelledError):
+                    await self._receive_task
+
+
 class RequestAuditHandler(CopilotRequestHandler):
-    """Inspect HTTP inference requests; reject transports we cannot audit."""
+    """Inspect HTTP requests and WebSocket Responses messages before forwarding."""
 
     def __init__(self, *, image_detail: ImageDetail | None, audit: bool) -> None:
         self.image_detail: ImageDetail | None = image_detail
@@ -143,6 +230,7 @@ class RequestAuditHandler(CopilotRequestHandler):
         self.failed = asyncio.Event()
         self.error: str | None = None
         self.http: httpx.AsyncClient | None = None
+        self.websockets: list[_AuditedWebSocket] = []
 
     def fail(self, message: str) -> None:
         self.error = message
@@ -192,9 +280,17 @@ class RequestAuditHandler(CopilotRequestHandler):
         return await self.http.send(request, stream=True)
 
     async def open_websocket(self, ctx: CopilotRequestContext) -> CopilotWebSocketHandler:
-        self.fail("Unsupported request audit transport: WebSocket; use HTTP inference")
-        raise ValueError(self.error)
+        if self.failed.is_set():
+            raise ValueError("Request audit already failed")
+        socket = _AuditedWebSocket(ctx, self)
+        self.websockets.append(socket)
+        return socket
 
     async def aclose(self) -> None:
+        closes = [socket.aclose() for socket in self.websockets]
         if self.http is not None:
-            await self.http.aclose()
+            closes.append(self.http.aclose())
+        outcomes = await asyncio.gather(*closes, return_exceptions=True)
+        errors = [outcome for outcome in outcomes if isinstance(outcome, BaseException)]
+        if errors:
+            raise BaseExceptionGroup("Request transport cleanup failed", errors)

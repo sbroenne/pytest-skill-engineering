@@ -138,16 +138,6 @@ async def _run_copilot_once(agent: CopilotEvalConfig, prompt: str) -> CopilotRes
         # Empty mode must not read persona instruction files or inject tools.
         if agent.client_mode != "empty":
             agent.persona.apply(agent, session_config, mapper, run_copilot)
-        if audit is not None:
-            capi = session_config.get("capi")
-            if capi is not None and not isinstance(capi, dict):
-                raise ValueError("Request auditing requires capi to be an options dictionary")
-            capi = dict(capi) if capi is not None else {}
-            if capi.get("enable_web_socket_responses", False) is not False:
-                raise ValueError("Request auditing requires capi.enable_web_socket_responses=False")
-            # CAPI otherwise selects WebSockets for models advertising ws:/responses.
-            capi["enable_web_socket_responses"] = False
-            session_config["capi"] = capi
         controls.install(session_config, caller_hooks)
         if agent.auto_confirm and "on_permission_request" not in session_config:
             session_config["on_permission_request"] = approve_all_permissions
@@ -172,10 +162,10 @@ async def _run_copilot_once(agent: CopilotEvalConfig, prompt: str) -> CopilotRes
         async def execute() -> None:
             nonlocal session
             assert client is not None
-            await asyncio.wait_for(client.start(), timeout=min(60, agent.timeout_s))
-            session = await asyncio.wait_for(
-                client.create_session(**session_config), timeout=min(30, agent.timeout_s)
-            )
+            async with asyncio.timeout(min(60, agent.timeout_s)):
+                await client.start()
+            async with asyncio.timeout(min(30, agent.timeout_s)):
+                session = await client.create_session(**session_config)
             await session.send_and_wait(prompt, timeout=agent.timeout_s)
 
         execution = asyncio.create_task(execute())

@@ -111,6 +111,14 @@ messages; text blocks within a message are also joined with two newlines.
 An empty instruction sequence hashes the empty string. This hash is calculated
 from the final outgoing request, not from `CopilotEval.instructions`.
 
+For WebSocket Responses, there is one record per validated outgoing `response.create`
+message. `request_id` is the SDK's connection identifier, so it repeats when
+messages share a connection. Images count only those transmitted in that
+message, not earlier images referenced through `previous_response_id`.
+Continuation settings must be explicit; omitted settings are not copied from
+earlier records. Unsupported messages are rejected before forwarding and add
+no audit record.
+
 The native JSON result preserves `request_audit`, `stop_reason`, `usage`,
 `tool_calls_admitted`, and capture completeness, including failed runs. Custom
 tool configuration records include names, descriptions, parameter schemas, and

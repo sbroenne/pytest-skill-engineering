@@ -102,7 +102,7 @@ There is no framework-specific tool wrapper to implement.
 |---|---|
 | `client_mode="empty"` | Owns temporary runtime storage, disables inherited configuration, instructions and file hooks, and skips persona injection. Defaults to no available tools unless explicitly supplied. |
 | `max_tool_calls=80` | Admits at most 80 calls after caller pre-tool guards. The next attempted call is denied and the session is aborted with `tool_budget_exceeded`, rather than asking the model to keep trying. Zero permits no calls. |
-| `image_detail="high"` | Rewrites actual outgoing OpenAI image content before HTTP dispatch. `None` leaves detail unchanged. |
+| `image_detail="high"` | Rewrites actual outgoing OpenAI image content before HTTP or WebSocket dispatch. `None` leaves detail unchanged. |
 | `audit_requests=True` | Records actual outgoing model, tool names, reasoning effort, image details and system prompt hash; unsupported requests fail rather than inventing evidence. |
 | `max_retries=0` | Disables framework retries. Independently, failures after tool admission or observed tool activity are never retried. |
 
@@ -125,18 +125,36 @@ Caller pre-tool guards are retained alongside persona pre-tool guards; denials
 cannot be overridden by an allow decision. Caller permission handlers are not
 replaced by automatic approval. Conflicting non-pre-tool hooks fail explicitly.
 
-Request auditing supports HTTP OpenAI Responses and Chat Completions payloads
-with function tools. When either `audit_requests=True` or `image_detail` is set,
-the runner forces HTTP for Copilot API requests using the SDK's supported
-`capi={"enable_web_socket_responses": False}` session option. Other `capi`
-options are preserved; a conflicting WebSocket setting fails before startup.
-Ordinary runs without these controls retain the SDK's transport defaults.
-This setting is specific to the Copilot API; custom providers must also use HTTP.
-WebSocket inference, other provider schemas, malformed
-requests, and runs with no observed request are explicitly unsupported. Use an
-HTTP inference route; do not disable auditing to make a benchmark appear valid.
+Request auditing supports HTTP OpenAI Responses and Chat Completions payloads,
+and WebSocket Responses `response.create` text messages, with function tools.
+The SDK's transport selection and caller `capi` options are left unchanged.
+Auditing does not rely on the SDK's HTTP preference: consumer execution with
+SDK 1.0.15 still selected WebSockets when that preference was supplied.
+
+Every outgoing WebSocket message is checked and rewritten before forwarding,
+including repeated requests on a persistent connection. Continuations with
+`previous_response_id` must explicitly supply model, instructions, tools and
+input; missing settings are rejected, not reconstructed from earlier messages.
+Unsupported frames, binary frames, other provider schemas, malformed requests,
+and runs with no observed request fail explicitly. WebSocket transport errors
+also fail closed, blocking subsequent inference forwarding rather than silently
+retrying over HTTP. Do not disable auditing to make a benchmark appear valid.
 The audit stores no raw messages, image bytes, credentials, URLs, or headers.
 Normal native reports still contain their ordinary conversation/tool evidence.
+
+An offline regression runs the actual cached runtime through `copilot_eval`
+against a loopback WebSocket server and an in-memory image tool. It covers
+continuations, image rewriting, tool budgets, transport failure and timeout cleanup without
+real credentials, model calls or desktop input. Set `PYTEST_COPILOT_RUNTIME_PATH`
+to an already cached runtime executable, then run:
+
+```powershell
+uv run python -m pytest tests\unit\test_request_websocket_runtime.py -q -o addopts=""
+```
+
+Without that explicit path, the runtime regression is skipped rather than
+downloading or launching an unspecified runtime. These checks validate control
+behavior, not model performance or the live Copilot API's transport selection.
 
 For a JSON-only benchmark with no paid report analysis, explicitly override
 repository report defaults:
