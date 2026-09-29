@@ -19,12 +19,15 @@ from pytest_skill_engineering.copilot.personas import (
     Persona,
     VSCodePersona,
 )
-from pytest_skill_engineering.copilot.result import CopilotResult
+from pytest_skill_engineering.copilot.requests import RequestAudit
+from pytest_skill_engineering.copilot.result import CopilotResult, UsageInfo
 from pytest_skill_engineering.core.evals import load_custom_agent, load_custom_agents
 
 __all__ = [
     "CopilotEval",
     "CopilotResult",
+    "RequestAudit",
+    "UsageInfo",
     "ClaudeCodePersona",
     "CopilotCLIPersona",
     "HeadlessPersona",

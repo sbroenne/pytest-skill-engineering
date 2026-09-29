@@ -55,6 +55,8 @@ def deserialize_suite_report(data: dict[str, Any]) -> SuiteReport:
 
     Reconstructs the full dataclass hierarchy from the serialized format.
     """
+    from pytest_skill_engineering.copilot.requests import RequestAudit
+    from pytest_skill_engineering.copilot.result import UsageInfo
     from pytest_skill_engineering.core.result import EvalResult, ToolCall, Turn
     from pytest_skill_engineering.reporting.collector import SuiteReport, TestReport
 
@@ -238,6 +240,12 @@ def deserialize_suite_report(data: dict[str, Any]) -> SuiteReport:
                 configuration=ar_data.get("configuration", {}),
                 capture_errors=ar_data.get("capture_errors", []),
                 evidence_complete=ar_data.get("evidence_complete"),
+                request_audit=[
+                    RequestAudit(**record) for record in ar_data.get("request_audit", [])
+                ],
+                stop_reason=ar_data.get("stop_reason"),
+                usage=[UsageInfo(**record) for record in ar_data.get("usage", [])],
+                tool_calls_admitted=ar_data.get("tool_calls_admitted", 0),
             )
 
         agent_id = _require_key(test_data, "agent_id", context="TestReport")

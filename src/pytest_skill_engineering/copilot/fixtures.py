@@ -94,9 +94,10 @@ def _convert_to_aitest(
             usage.model or result.model_used or "",
             usage.input_tokens,
             usage.output_tokens,
-            usage.cache_read_tokens,
+            usage.cache_read_tokens or 0,
         )
         for usage in result.usage
+        if usage.input_tokens is not None and usage.output_tokens is not None
     )
 
     # Turns already use aitest's Turn/ToolCall types — pass through directly
@@ -111,6 +112,10 @@ def _convert_to_aitest(
         premium_requests=result.total_premium_requests,
         evidence_complete=result.evidence_complete,
         capture_errors=list(result.capture_errors),
+        request_audit=list(result.request_audit),
+        stop_reason=result.stop_reason,
+        usage=list(result.usage),
+        tool_calls_admitted=result.tool_calls_admitted,
         configuration=deepcopy(
             {
                 "name": agent.name,
@@ -118,6 +123,19 @@ def _convert_to_aitest(
                 "instructions": agent.instructions,
                 "system_message_mode": agent.system_message_mode,
                 "reasoning_effort": agent.reasoning_effort,
+                "client_mode": agent.client_mode,
+                "image_detail": agent.image_detail,
+                "audit_requests": agent.audit_requests,
+                "max_tool_calls": agent.max_tool_calls,
+                "tools": [
+                    {
+                        "name": tool.name,
+                        "description": tool.description,
+                        "parameters": tool.parameters,
+                        "metadata": tool.metadata,
+                    }
+                    for tool in agent.extra_config.get("tools", [])
+                ],
                 "allowed_tools": agent.allowed_tools,
                 "excluded_tools": agent.excluded_tools,
                 "max_turns": agent.max_turns,

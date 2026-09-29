@@ -3,7 +3,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from pytest_skill_engineering.copilot.requests import RequestAudit
+    from pytest_skill_engineering.copilot.result import StopReason, UsageInfo
 
 
 @dataclass(slots=True)
@@ -267,6 +271,10 @@ class EvalResult:
     configuration: dict[str, Any] = field(default_factory=dict)
     capture_errors: list[str] = field(default_factory=list)
     evidence_complete: bool | None = None
+    request_audit: list[RequestAudit] = field(default_factory=list)
+    stop_reason: StopReason | None = None
+    usage: list[UsageInfo] = field(default_factory=list)
+    tool_calls_admitted: int = 0
 
     # Clarification detection
     clarification_stats: ClarificationStats | None = None

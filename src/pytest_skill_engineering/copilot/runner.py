@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from tempfile import TemporaryDirectory
 from typing import TYPE_CHECKING
 
 from pytest_skill_engineering.copilot.client import (
@@ -22,9 +23,14 @@ from pytest_skill_engineering.copilot.client import (
     stop_client,
 )
 from pytest_skill_engineering.copilot.contracts import CopilotEvalConfig, CopilotRunResult
+from pytest_skill_engineering.copilot.controls import RunControls
 from pytest_skill_engineering.copilot.events import EventMapper
+from pytest_skill_engineering.copilot.requests import RequestAuditHandler
+from pytest_skill_engineering.copilot.result import CopilotResult, StopReason
 
 if TYPE_CHECKING:
+    from copilot.client import CopilotClient
+    from copilot.generated.session_events import SessionEvent
     from copilot.session import CopilotSession
 
 logger = logging.getLogger(__name__)
@@ -63,7 +69,13 @@ async def run_copilot(agent: CopilotEvalConfig, prompt: str) -> CopilotRunResult
         result = await _run_copilot_once(agent, prompt)
         result.agent = agent  # Back-reference for automated report stashing
 
-        if result.success or not _is_transient_error(result.error):
+        if (
+            result.success
+            or result.stop_reason != "execution_error"
+            or result.tool_calls_admitted
+            or result.all_tool_calls
+            or not _is_transient_error(result.error)
+        ):
             return result
 
         last_result = result
@@ -102,72 +114,137 @@ def _is_transient_error(error: str | None) -> bool:
     return any(pattern in error for pattern in _TRANSIENT_PATTERNS)
 
 
-async def _run_copilot_once(agent: CopilotEvalConfig, prompt: str) -> CopilotRunResult:
+async def _run_copilot_once(agent: CopilotEvalConfig, prompt: str) -> CopilotResult:
     """Execute a single attempt of a prompt against GitHub Copilot."""
-    client = create_client(agent.working_directory or ".")
-
     mapper = EventMapper()
-    loop = asyncio.get_running_loop()
-    _start = loop.time()
-
+    controls = RunControls(agent.max_tool_calls)
+    audit = (
+        RequestAuditHandler(image_detail=agent.image_detail, audit=agent.audit_requests)
+        if agent.audit_requests or agent.image_detail is not None
+        else None
+    )
+    storage: TemporaryDirectory[str] | None = None
+    client: CopilotClient | None = None
+    session: CopilotSession | None = None
+    execution: asyncio.Task[None] | None = None
+    watchers: list[asyncio.Task[bool]] = []
+    reason: StopReason = "completed"
+    error: str | None = None
+    cleanup_errors: list[str] = []
     try:
-        # Hard timeout on startup — CLI must start within 60s.
-        await asyncio.wait_for(client.start(), timeout=60)
-        logger.info("Copilot CLI started")
-
-        # Build session config from agent
         session_config = agent.build_session_config()
-
-        # Apply the persona: injects polyfill tools and system-message
-        # additions that match the target IDE environment.
-        agent.persona.apply(agent, session_config, mapper, run_copilot)
-
-        # Install permission handler if auto_confirm is enabled
-        if agent.auto_confirm:
+        caller_hooks = dict(session_config.get("hooks") or {})
+        session_config["hooks"] = dict(caller_hooks)
+        # Empty mode must not read persona instruction files or inject tools.
+        if agent.client_mode != "empty":
+            agent.persona.apply(agent, session_config, mapper, run_copilot)
+        controls.install(session_config, caller_hooks)
+        if agent.auto_confirm and "on_permission_request" not in session_config:
             session_config["on_permission_request"] = approve_all_permissions
 
-        session_config["on_event"] = mapper.handle
+        caller_event = session_config.get("on_event")
 
-        # Hard timeout on session creation — 30s is generous.
-        session: CopilotSession = await asyncio.wait_for(
-            client.create_session(**session_config),
-            timeout=30,
+        def capture(event: SessionEvent) -> None:
+            mapper.handle(event)
+            if caller_event is not None:
+                caller_event(event)
+
+        session_config["on_event"] = capture
+        if agent.client_mode == "empty":
+            storage = TemporaryDirectory(prefix="pytest-copilot-")
+        client = create_client(
+            agent.working_directory or ".",
+            mode=agent.client_mode,
+            base_directory=storage.name if storage else None,
+            request_handler=audit,
         )
-        logger.info("Session created: %s", session.session_id)
 
-        # Send prompt and wait for completion.
-        # Pass timeout to both send_and_wait (SDK-internal idle wait)
-        # and asyncio.wait_for (hard outer limit).
-        await asyncio.wait_for(
-            session.send_and_wait(prompt, timeout=agent.timeout_s),
-            timeout=agent.timeout_s,
+        async def execute() -> None:
+            nonlocal session
+            assert client is not None
+            await asyncio.wait_for(client.start(), timeout=min(60, agent.timeout_s))
+            session = await asyncio.wait_for(
+                client.create_session(**session_config), timeout=min(30, agent.timeout_s)
+            )
+            await session.send_and_wait(prompt, timeout=agent.timeout_s)
+
+        execution = asyncio.create_task(execute())
+        watchers = [
+            asyncio.create_task(controls.budget_exceeded.wait()),
+            asyncio.create_task(controls.failed.wait()),
+        ]
+        if audit is not None:
+            watchers.append(asyncio.create_task(audit.failed.wait()))
+        done, _ = await asyncio.wait(
+            [execution, *watchers], timeout=agent.timeout_s, return_when=asyncio.FIRST_COMPLETED
         )
-
-        logger.info("Prompt execution complete")
+        if audit is not None and audit.failed.is_set():
+            reason, error = "request_audit_error", audit.error
+        elif controls.failed.is_set():
+            reason, error = "execution_error", controls.error
+        elif controls.budget_exceeded.is_set():
+            reason = "tool_budget_exceeded"
+            error = f"Tool-call budget exhausted ({agent.max_tool_calls})"
+        elif execution in done:
+            await execution
+        else:
+            raise TimeoutError
 
     except TimeoutError:
-        elapsed = loop.time() - _start
-        # Distinguish our asyncio.wait_for timeout from SDK-internal timeouts.
-        # If elapsed is within 90% of timeout_s, it's likely our timeout.
-        # Otherwise, the SDK raised TimeoutError internally.
-        if elapsed >= agent.timeout_s * 0.9:
-            msg = f"Timeout after {agent.timeout_s}s"
-        else:
-            msg = f"SDK TimeoutError after {elapsed:.0f}s (limit was {agent.timeout_s}s)"
-        logger.error("Prompt execution timed out: %s", msg)
-        result = mapper.build()
-        result.success = False
-        result.error = msg
-        return result
-
+        reason, error = "timeout", f"Timeout (eval limit {agent.timeout_s}s)"
     except Exception as exc:
         logger.error("Copilot execution failed: %s", exc)
-        result = mapper.build()
-        result.success = False
-        result.error = str(exc)
-        return result
-
+        reason, error = "execution_error", str(exc)
     finally:
-        await stop_client(client)
+        controls.closed = True
+        for watcher in watchers:
+            watcher.cancel()
+        if watchers:
+            await asyncio.gather(*watchers, return_exceptions=True)
+        if session is not None and (error is not None or execution is None or not execution.done()):
+            try:
+                await asyncio.wait_for(session.abort(), timeout=30)
+            except Exception as exc:
+                logger.error("Failed to abort Copilot session", exc_info=True)
+                cleanup_errors.append(f"Session abort failed: {type(exc).__name__}")
+        if execution is not None:
+            if not execution.done():
+                execution.cancel()
+            await asyncio.gather(execution, return_exceptions=True)
+        cleanup_errors.extend(await controls.drain())
+        if client is not None:
+            cleanup_errors.extend(await stop_client(client))
+        if audit is not None:
+            try:
+                await audit.aclose()
+            except Exception as exc:
+                logger.error("Failed to close model request transport", exc_info=True)
+                cleanup_errors.append(f"Request transport cleanup failed: {type(exc).__name__}")
+        if storage is not None:
+            try:
+                storage.cleanup()
+            except OSError as exc:
+                logger.error("Failed to remove isolated runtime storage", exc_info=True)
+                cleanup_errors.append(f"Isolated storage cleanup failed: {type(exc).__name__}")
 
-    return mapper.build()
+    result = mapper.build()
+    result.tool_calls_admitted = controls.admitted
+    if audit is not None:
+        result.request_audit = list(audit.records)
+        if audit.error or (session is not None and not audit.observed_requests):
+            audit_error = audit.error or "No outbound model requests captured; audit unsupported"
+            result.capture_errors.append(audit_error)
+            if reason == "completed" or audit.error:
+                reason, error = "request_audit_error", audit_error
+    if cleanup_errors:
+        result.capture_errors.extend(cleanup_errors)
+        reason = "cleanup_error"
+    errors = [message for message in [result.error, error, *cleanup_errors] if message]
+    if result.capture_errors:
+        errors.extend(message for message in result.capture_errors if message not in errors)
+    result.error = "; ".join(errors) or None
+    result.success = result.error is None
+    result.stop_reason = (
+        "execution_error" if reason == "completed" and not result.success else reason
+    )
+    return result

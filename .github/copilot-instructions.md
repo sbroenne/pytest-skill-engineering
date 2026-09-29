@@ -1,5 +1,14 @@
 # Copilot Instructions for pytest-skill-engineering
 
+## Benchmark execution belongs in the framework
+
+- Benchmark consumers must use `CopilotEval` and the `copilot_eval` pytest fixture.
+- Never add a bespoke SDK runner, model retry loop, usage collector, or parallel report format.
+- Consumers own application fixtures, guarded tool adapters, and independent output verification.
+  The framework owns model sessions, request controls, captured evidence, usage, and native reports.
+- When paid calls or desktop input are forbidden, validate framework boundaries with offline
+  fake-SDK and request-handler tests. These prove control behavior, not model performance.
+
 ## CRITICAL: No Backward Compatibility
 
 **NO LEGACY CODE. NO FALLBACKS. CLEAN CODE ONLY.**
