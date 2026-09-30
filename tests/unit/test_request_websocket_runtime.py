@@ -171,6 +171,8 @@ async def respond_with_parallel_tools(socket: ServerConnection) -> None:
         "timeout",
         "tool_budget_exceeded",
         "exact_budget_slow_handler",
+        "exact_budget_many_turns",
+        "exact_budget_without_audit",
     ],
 )
 async def test_native_runtime_websocket_audit(
@@ -223,6 +225,8 @@ async def test_native_runtime_websocket_audit(
     response_count = (
         7
         if outcome == "peer_closed_after_completed"
+        else 81
+        if outcome == "exact_budget_many_turns"
         else 1
         if outcome == "exact_budget_slow_handler"
         else 2
@@ -259,9 +263,11 @@ async def test_native_runtime_websocket_audit(
                 else:
                     await socket.wait_closed()
             else:
-                request_tool = outcome == "tool_budget_exceeded" or (
-                    outcome == "peer_closed_after_completed" and len(frames) < response_count
-                )
+                request_tool = outcome in (
+                    "tool_budget_exceeded",
+                    "exact_budget_many_turns",
+                    "exact_budget_without_audit",
+                ) or (outcome == "peer_closed_after_completed" and len(frames) < response_count)
                 await respond(socket, len(frames), request_tool=request_tool)
                 if outcome == "peer_closed_after_completed" and len(frames) == response_count:
                     await socket.close()
@@ -286,11 +292,13 @@ async def test_native_runtime_websocket_audit(
                 system_message_mode="replace",
                 working_directory=str(tmp_path),
                 reasoning_effort="medium",
-                audit_requests=True,
-                image_detail="high",
-                max_tool_calls=1 if outcome == "exact_budget_slow_handler" else response_count - 1,
+                audit_requests=outcome != "exact_budget_without_audit",
+                image_detail=None if outcome == "exact_budget_without_audit" else "high",
+                max_tool_calls=(
+                    1 if outcome == "exact_budget_slow_handler" else response_count - 1
+                ),
                 max_retries=0,
-                timeout_s=5 if outcome == "timeout" else 20,
+                timeout_s=15 if outcome == "timeout" else 60,
                 allowed_tools=["memory_image"],
                 extra_config={
                     "model_capabilities": ModelCapabilitiesOverride(
@@ -324,14 +332,24 @@ async def test_native_runtime_websocket_audit(
                     "request_audit_error"
                     if outcome == "disconnected"
                     else "tool_budget_exceeded"
-                    if outcome == "exact_budget_slow_handler"
+                    if outcome
+                    in (
+                        "exact_budget_slow_handler",
+                        "exact_budget_many_turns",
+                        "exact_budget_without_audit",
+                    )
                     else outcome
                 )
                 assert result.stop_reason == expected, result.error
                 assert result.usage
                 if outcome == "disconnected":
                     assert not result.evidence_complete
-                if outcome in ("tool_budget_exceeded", "exact_budget_slow_handler"):
+                if outcome in (
+                    "tool_budget_exceeded",
+                    "exact_budget_slow_handler",
+                    "exact_budget_many_turns",
+                    "exact_budget_without_audit",
+                ):
                     assert result.evidence_complete, result.capture_errors
             expected_tool_calls = (
                 1 if outcome == "exact_budget_slow_handler" else response_count - 1
@@ -341,17 +359,40 @@ async def test_native_runtime_websocket_audit(
             assert result.usage[0].input_tokens == 10
             assert result.usage[0].output_tokens == 5
             assert len(connections) == 1
-            assert len(frames) == len(result.request_audit) == response_count
+            assert len(frames) == response_count
+            if outcome == "exact_budget_without_audit":
+                assert result.request_audit == []
+            else:
+                assert len(result.request_audit) == response_count
+            if outcome == "exact_budget_many_turns":
+                event_types = [
+                    event.type.value if hasattr(event.type, "value") else str(event.type)
+                    for event in result.raw_events
+                ]
+                assert event_types.count("tool.execution_start") == 81
+                assert event_types.count("tool.execution_complete") == 81
+                assert event_types.index("abort") > max(
+                    index
+                    for index, event_type in enumerate(event_types)
+                    if event_type == "tool.execution_complete"
+                )
             if len(frames) > 1:
                 assert frames[1]["previous_response_id"] == "response-1"
+            if outcome == "exact_budget_without_audit":
+                return
             first, *remaining = result.request_audit
             assert all(record.model == "offline-model" for record in result.request_audit)
             assert all(record.tool_names == ["memory_image"] for record in result.request_audit)
             assert all(record.reasoning_effort == "medium" for record in result.request_audit)
             assert first.image_count == 0
-            if outcome != "exact_budget_slow_handler":
+            if outcome not in ("exact_budget_slow_handler", "exact_budget_many_turns"):
                 assert all(record.image_count == 1 for record in remaining)
                 assert all(record.image_details == ["high"] for record in remaining)
+            elif outcome == "exact_budget_many_turns":
+                assert sum(record.image_count for record in remaining) >= response_count - 2
+                assert all(
+                    detail == "high" for record in remaining for detail in record.image_details
+                )
             assert all(
                 record.instructions_sha256 == first.instructions_sha256 for record in remaining
             )

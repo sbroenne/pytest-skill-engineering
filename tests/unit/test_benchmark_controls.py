@@ -83,6 +83,44 @@ class FakeSession:
         )
         return True
 
+    async def dispatch_runtime_order(self, number: int) -> bool:
+        self.config["on_event"](
+            event("tool.execution_start", tool_call_id=str(number), tool_name="act", arguments={})
+        )
+        hook = self.config["hooks"]["on_pre_tool_use"]
+        decision = await hook(
+            {
+                "sessionId": self.session_id,
+                "timestamp": datetime.now(timezone.utc),
+                "workingDirectory": ".",
+                "toolName": "act",
+                "toolArgs": {"number": number},
+            },
+            {},
+        )
+        if decision and decision.get("permissionDecision") == "deny":
+            await asyncio.sleep(0)
+            self.config["on_event"](
+                event(
+                    "tool.execution_complete",
+                    tool_call_id=str(number),
+                    success=False,
+                    result={"content": "denied"},
+                )
+            )
+            return False
+        tool = self.config["tools"][0]
+        await tool.handler(ToolInvocation(tool_call_id=str(number), tool_name="act", arguments={}))
+        self.config["on_event"](
+            event(
+                "tool.execution_complete",
+                tool_call_id=str(number),
+                success=True,
+                result={"content": "done"},
+            )
+        )
+        return True
+
 
 class FakeClient:
     def __init__(self, behavior: Any) -> None:
@@ -229,6 +267,35 @@ async def test_budget_waits_for_last_admitted_completion(
     assert result.tool_calls_admitted == 1
     assert result.evidence_complete, result.capture_errors
     assert result.all_tool_calls[0].completion_received
+    assert client.session is not None and client.session.aborted
+
+
+async def test_budget_waits_for_denied_call_completion_in_runtime_event_order(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    async def handler(invocation: ToolInvocation) -> ToolResult:
+        return ToolResult(text_result_for_llm="done")
+
+    async def behavior(session: FakeSession) -> None:
+        assert await session.dispatch_runtime_order(1)
+        assert not await session.dispatch_runtime_order(2)
+        await asyncio.Event().wait()
+
+    client, _ = fake_client(monkeypatch, behavior)
+    result = await run_copilot(
+        CopilotEval(
+            max_tool_calls=1,
+            max_retries=0,
+            timeout_s=1,
+            extra_config={"tools": [Tool("act", "act", handler)]},
+        ),
+        "go",
+    )
+    assert result.stop_reason == "tool_budget_exceeded"
+    assert result.tool_calls_admitted == 1
+    assert result.evidence_complete, result.capture_errors
+    assert len(result.all_tool_calls) == 2
+    assert all(call.completion_received for call in result.all_tool_calls)
     assert client.session is not None and client.session.aborted
 
 
@@ -458,8 +525,12 @@ async def test_parallel_admissions_never_exceed_cap() -> None:
     )
     assert controls.admitted == 80
     assert not controls.budget_exceeded.is_set()
+    for index in range(81):
+        controls.observe(event("tool.execution_start", tool_call_id=str(index)))
     for index in range(80):
         controls.observe(event("tool.execution_complete", tool_call_id=str(index)))
+    assert not controls.budget_exceeded.is_set()
+    controls.observe(event("tool.execution_complete", tool_call_id="80"))
     assert controls.budget_exceeded.is_set()
 
 
@@ -580,6 +651,11 @@ async def test_timeout_keeps_missing_completion_incomplete(monkeypatch: pytest.M
     assert data["stop_reason"] == "timeout"
     assert data["evidence_complete"] is False
     assert "missing completion" in data["capture_errors"][0]
+    assert (
+        data["capture_errors"][1]
+        == "Tool lifecycle incomplete: call=lost, start_ordinal=1, admitted=0, "
+        "handler=not_started, sdk_completion=missing, abort_phase=timeout"
+    )
     assert data["usage"][-1]["input_tokens"] == 5
 
 

@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.6.23] - 2026-09-30
+
+### Fixed
+
+- **Denied-call budget finalization** — exact tool-budget exhaustion now waits for the SDK completion of the over-budget denied call, not only admitted calls, before aborting. Provider forwarding closes at that completion boundary so the runtime cannot start another model request while the abort task is scheduled.
+- **Safe lifecycle diagnostics** — incomplete tool evidence now includes the call ID, start ordinal, admitted count, handler state, SDK-completion state, and abort phase without retaining tool arguments, model content, requests, or credentials.
+
 ## [0.6.22] - 2026-09-30
 
 ### Fixed
