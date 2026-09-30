@@ -194,6 +194,44 @@ async def test_budget_stops_instead_of_repeating_denials(monkeypatch: pytest.Mon
     assert result.usage[-1].input_tokens == 5  # Cleanup events must not be lost.
 
 
+async def test_budget_waits_for_last_admitted_completion(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    entered = asyncio.Event()
+    release = asyncio.Event()
+
+    async def handler(invocation: ToolInvocation) -> ToolResult:
+        entered.set()
+        await release.wait()
+        return ToolResult(text_result_for_llm="done")
+
+    async def behavior(session: FakeSession) -> None:
+        admitted = asyncio.create_task(session.dispatch(1))
+        await entered.wait()
+        assert not await session.dispatch(2)
+        await asyncio.sleep(0)
+        assert not session.aborted
+        release.set()
+        assert await admitted
+        await asyncio.Event().wait()
+
+    client, _ = fake_client(monkeypatch, behavior)
+    result = await run_copilot(
+        CopilotEval(
+            max_tool_calls=1,
+            max_retries=0,
+            timeout_s=1,
+            extra_config={"tools": [Tool("act", "act", handler)]},
+        ),
+        "go",
+    )
+    assert result.stop_reason == "tool_budget_exceeded"
+    assert result.tool_calls_admitted == 1
+    assert result.evidence_complete, result.capture_errors
+    assert result.all_tool_calls[0].completion_received
+    assert client.session is not None and client.session.aborted
+
+
 async def test_caller_guard_survives_budget(monkeypatch: pytest.MonkeyPatch) -> None:
     async def deny(data: Any, ctx: Any) -> PreToolUseHookOutput:
         return {"permissionDecision": "deny", "permissionDecisionReason": "owned window only"}
@@ -419,7 +457,34 @@ async def test_parallel_admissions_never_exceed_cap() -> None:
         sum(not output or output.get("permissionDecision") != "deny" for output in outcomes) == 80
     )
     assert controls.admitted == 80
+    assert not controls.budget_exceeded.is_set()
+    for index in range(80):
+        controls.observe(event("tool.execution_complete", tool_call_id=str(index)))
     assert controls.budget_exceeded.is_set()
+
+
+async def test_admitted_handler_starts_after_budget_closes_dispatch() -> None:
+    from pytest_skill_engineering.copilot.controls import RunControls
+
+    invoked = False
+
+    async def handler(invocation: ToolInvocation) -> ToolResult:
+        nonlocal invoked
+        invoked = True
+        return ToolResult(text_result_for_llm="done")
+
+    controls = RunControls(1)
+    config: dict[str, Any] = {"tools": [Tool("act", "act", handler)]}
+    controls.install(config, {})
+    before = config["hooks"]["on_pre_tool_use"]
+    assert await before({}, {}) is None
+    denied = await before({}, {})
+    assert denied["permissionDecision"] == "deny"
+
+    wrapped = config["tools"][0]
+    assert wrapped.handler is not None
+    await wrapped.handler(ToolInvocation(tool_call_id="admitted", tool_name="act", arguments={}))
+    assert invoked
 
 
 async def test_persona_and_user_guards_compose_without_mutation() -> None:

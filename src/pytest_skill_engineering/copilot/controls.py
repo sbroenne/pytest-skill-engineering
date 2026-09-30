@@ -24,7 +24,9 @@ class RunControls:
     def __init__(self, max_tool_calls: int | None) -> None:
         self.limit = max_tool_calls
         self.admitted = 0
+        self.completed = 0
         self.closed = False
+        self._budget_exhausted = False
         self.budget_exceeded = asyncio.Event()
         self.failed = asyncio.Event()
         self.error: str | None = None
@@ -56,7 +58,8 @@ class RunControls:
                     }
                 if self.limit is not None and self.admitted >= self.limit:
                     self.closed = True
-                    self.budget_exceeded.set()
+                    self._budget_exhausted = True
+                    self._signal_budget_when_complete()
                     return {
                         "permissionDecision": "deny",
                         "permissionDecisionReason": "Eval tool-call budget exhausted",
@@ -106,15 +109,24 @@ class RunControls:
         config["hooks"] = hooks
         config["tools"] = [self.wrap(tool) for tool in config.get("tools", [])]
 
+    def observe(self, event: Any) -> None:
+        """Release a pending budget stop only after admitted calls complete."""
+        event_type = event.type.value if hasattr(event.type, "value") else str(event.type)
+        if event_type != "tool.execution_complete":
+            return
+        self.completed += 1
+        self._signal_budget_when_complete()
+
+    def _signal_budget_when_complete(self) -> None:
+        if self._budget_exhausted and self.completed >= self.admitted:
+            self.budget_exceeded.set()
+
     def wrap(self, tool: Tool) -> Tool:
         handler = tool.handler
         if handler is None:
             return tool
 
         async def invoke(invocation: ToolInvocation) -> ToolResult:
-            if self.closed:
-                return ToolResult(result_type="denied", error="Eval stopped")
-
             async def execute() -> ToolResult:
                 return await resolve(handler(invocation))
 
