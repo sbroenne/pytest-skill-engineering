@@ -99,7 +99,7 @@ def test_pricing_cache_invalidates_when_pricing_file_changes(
 
     pricing.write_text('[models]\n"model" = { input = 7, output = 8, cache_read = 9 }\n')
     stat = pricing.stat()
-    os.utime(pricing, ns=(stat.st_atime_ns, stat.st_mtime_ns + 1))
+    os.utime(pricing, ns=(stat.st_atime_ns, stat.st_mtime_ns + 1_000_000_000))
 
     assert cost._load_user_overrides()["model"] == (7.0, 8.0, 9.0)
     assert len(cost._pricing_cache.tables) == 2

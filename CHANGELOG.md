@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.6.21] - 2026-09-30
+
+### Changed
+
+- **Dependency refresh** — upgraded the locked dependency set to the latest compatible releases, including GitHub Copilot SDK 1.0.15, MCP 2.2.0, Ruff 0.16.9, Pyright 1.1.414, and Syrupy 6.1.1.
+
+### Fixed
+
+- **WebSocket request-audit finalization** — close audited model transports before stopping the SDK client that owns their response bridge, preventing a completed multi-tool response from being reclassified as `request_audit_error` during normal shutdown. Sanitized transport errors now identify the failed phase and safe category or close code without retaining provider messages, raw requests, or credentials.
+
 ## [0.6.20] - 2026-09-30
 
 ### Added
