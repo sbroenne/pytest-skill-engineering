@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.6.22] - 2026-09-30
+
+### Fixed
+
+- **Exact tool-budget completion** — reaching `max_tool_calls` now closes only new admission, lets every already-admitted custom handler start, and waits for their SDK completion events before aborting the session. Exact-cap failures retain complete evidence and no longer stop a benchmark matrix as infrastructure failures.
+
 ## [0.6.21] - 2026-09-30
 
 ### Changed

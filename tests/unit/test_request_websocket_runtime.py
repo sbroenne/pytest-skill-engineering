@@ -112,6 +112,56 @@ async def respond(socket: ServerConnection, index: int, *, request_tool: bool = 
         await socket.send(json.dumps({**event, "sequence_number": sequence}))
 
 
+async def respond_with_parallel_tools(socket: ServerConnection) -> None:
+    response = {
+        "id": "response-1",
+        "object": "response",
+        "model": "offline-model",
+        "status": "in_progress",
+        "output": [],
+    }
+    items = [
+        {
+            "id": f"tool-{index}",
+            "type": "function_call",
+            "call_id": f"call-{index}",
+            "name": "memory_image",
+            "arguments": "{}",
+            "status": "completed",
+        }
+        for index in range(2)
+    ]
+    events: list[dict[str, Any]] = [{"type": "response.created", "response": response}]
+    for output_index, item in enumerate(items):
+        events.extend(
+            [
+                {
+                    "type": "response.output_item.added",
+                    "output_index": output_index,
+                    "item": item,
+                },
+                {
+                    "type": "response.output_item.done",
+                    "output_index": output_index,
+                    "item": item,
+                },
+            ]
+        )
+    events.append(
+        {
+            "type": "response.completed",
+            "response": {
+                **response,
+                "status": "completed",
+                "output": items,
+                "usage": {"input_tokens": 10, "output_tokens": 5, "total_tokens": 15},
+            },
+        }
+    )
+    for sequence, event in enumerate(events):
+        await socket.send(json.dumps({**event, "sequence_number": sequence}))
+
+
 @pytest.mark.parametrize(
     "outcome",
     [
@@ -120,6 +170,7 @@ async def respond(socket: ServerConnection, index: int, *, request_tool: bool = 
         "disconnected",
         "timeout",
         "tool_budget_exceeded",
+        "exact_budget_slow_handler",
     ],
 )
 async def test_native_runtime_websocket_audit(
@@ -169,7 +220,13 @@ async def test_native_runtime_websocket_audit(
     frames: list[dict[str, Any]] = []
     connections: list[ServerConnection] = []
     tools_called: list[str] = []
-    response_count = 7 if outcome == "peer_closed_after_completed" else 2
+    response_count = (
+        7
+        if outcome == "peer_closed_after_completed"
+        else 1
+        if outcome == "exact_budget_slow_handler"
+        else 2
+    )
     client_stop_started = asyncio.Event()
     original_stop_client = runner_module.stop_client
     original_close_audit = RequestAuditHandler.aclose
@@ -196,6 +253,11 @@ async def test_native_runtime_websocket_audit(
                 await socket.close(1011, "synthetic upstream failure")
             elif len(frames) == 2 and outcome == "timeout":
                 await socket.wait_closed()
+            elif outcome == "exact_budget_slow_handler":
+                if len(frames) == 1:
+                    await respond_with_parallel_tools(socket)
+                else:
+                    await socket.wait_closed()
             else:
                 request_tool = outcome == "tool_budget_exceeded" or (
                     outcome == "peer_closed_after_completed" and len(frames) < response_count
@@ -206,6 +268,8 @@ async def test_native_runtime_websocket_audit(
 
     async def image(invocation: ToolInvocation) -> ToolResult:
         tools_called.append(invocation.tool_name)
+        if outcome == "exact_budget_slow_handler":
+            await asyncio.sleep(0.1)
         return ToolResult(
             text_result_for_llm="In-memory image; no desktop access.",
             binary_results_for_llm=[
@@ -224,7 +288,7 @@ async def test_native_runtime_websocket_audit(
                 reasoning_effort="medium",
                 audit_requests=True,
                 image_detail="high",
-                max_tool_calls=response_count - 1,
+                max_tool_calls=1 if outcome == "exact_budget_slow_handler" else response_count - 1,
                 max_retries=0,
                 timeout_s=5 if outcome == "timeout" else 20,
                 allowed_tools=["memory_image"],
@@ -256,34 +320,48 @@ async def test_native_runtime_websocket_audit(
                 assert result.evidence_complete, result.capture_errors
             else:
                 assert not result.success
-                expected = "request_audit_error" if outcome == "disconnected" else outcome
+                expected = (
+                    "request_audit_error"
+                    if outcome == "disconnected"
+                    else "tool_budget_exceeded"
+                    if outcome == "exact_budget_slow_handler"
+                    else outcome
+                )
                 assert result.stop_reason == expected, result.error
                 assert result.usage
                 if outcome == "disconnected":
                     assert not result.evidence_complete
-            assert tools_called == ["memory_image"] * (response_count - 1)
-            assert result.tool_calls_admitted == response_count - 1
+                if outcome in ("tool_budget_exceeded", "exact_budget_slow_handler"):
+                    assert result.evidence_complete, result.capture_errors
+            expected_tool_calls = (
+                1 if outcome == "exact_budget_slow_handler" else response_count - 1
+            )
+            assert tools_called == ["memory_image"] * expected_tool_calls
+            assert result.tool_calls_admitted == expected_tool_calls
             assert result.usage[0].input_tokens == 10
             assert result.usage[0].output_tokens == 5
             assert len(connections) == 1
             assert len(frames) == len(result.request_audit) == response_count
-            assert frames[1]["previous_response_id"] == "response-1"
-            first, second, *remaining = result.request_audit
+            if len(frames) > 1:
+                assert frames[1]["previous_response_id"] == "response-1"
+            first, *remaining = result.request_audit
             assert all(record.model == "offline-model" for record in result.request_audit)
             assert all(record.tool_names == ["memory_image"] for record in result.request_audit)
             assert all(record.reasoning_effort == "medium" for record in result.request_audit)
             assert first.image_count == 0
-            assert all(record.image_count == 1 for record in [second, *remaining])
-            assert all(record.image_details == ["high"] for record in [second, *remaining])
+            if outcome != "exact_budget_slow_handler":
+                assert all(record.image_count == 1 for record in remaining)
+                assert all(record.image_details == ["high"] for record in remaining)
             assert all(
-                record.instructions_sha256 == first.instructions_sha256
-                for record in [second, *remaining]
+                record.instructions_sha256 == first.instructions_sha256 for record in remaining
             )
-            assert '"detail": "high"' in json.dumps(frames[1])
+            if len(frames) > 1 and outcome != "exact_budget_slow_handler":
+                assert '"detail": "high"' in json.dumps(frames[1])
             native = _convert_to_aitest(agent, result)
             assert native is not None
             converted = serialize_dataclass(native[0])
-            assert converted["request_audit"][1]["image_details"] == ["high"]
+            if len(frames) > 1 and outcome != "exact_budget_slow_handler":
+                assert converted["request_audit"][1]["image_details"] == ["high"]
             audit_json = json.dumps(converted["request_audit"])
             assert PNG not in audit_json
             assert "offline-provider-token" not in audit_json

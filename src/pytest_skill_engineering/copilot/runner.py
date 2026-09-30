@@ -146,6 +146,7 @@ async def _run_copilot_once(agent: CopilotEvalConfig, prompt: str) -> CopilotRes
 
         def capture(event: SessionEvent) -> None:
             mapper.handle(event)
+            controls.observe(event)
             if caller_event is not None:
                 caller_event(event)
 
