@@ -212,14 +212,14 @@ async def _run_copilot_once(agent: CopilotEvalConfig, prompt: str) -> CopilotRes
                 execution.cancel()
             await asyncio.gather(execution, return_exceptions=True)
         cleanup_errors.extend(await controls.drain())
-        if client is not None:
-            cleanup_errors.extend(await stop_client(client))
         if audit is not None:
             try:
                 await audit.aclose()
             except Exception as exc:
                 logger.error("Failed to close model request transport", exc_info=True)
                 cleanup_errors.append(f"Request transport cleanup failed: {type(exc).__name__}")
+        if client is not None:
+            cleanup_errors.extend(await stop_client(client))
         if storage is not None:
             try:
                 storage.cleanup()

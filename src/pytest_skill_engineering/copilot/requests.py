@@ -19,6 +19,7 @@ from copilot import (
 )
 
 ImageDetail = Literal["auto", "low", "high"]
+TransportPhase = Literal["open", "send", "receive"]
 
 
 @dataclass(slots=True, frozen=True)
@@ -32,6 +33,26 @@ class RequestAudit:
     image_details: list[str | None]
     image_count: int
     instructions_sha256: str
+
+
+def _transport_failure_message(phase: TransportPhase, error: BaseException) -> str:
+    """Describe transport failures without retaining provider messages or request data."""
+    details: list[str] = []
+    if isinstance(error, RuntimeError):
+        category = {
+            "Copilot request response used after RPC connection closed.": "sdk_rpc_closed",
+            "Copilot request was cancelled by the runtime.": "runtime_cancelled",
+            "Copilot request response write() called after end()/error().": "response_finished",
+        }.get(str(error), "runtime_error")
+        details.append(f"category={category}")
+    received = getattr(error, "rcvd", None)
+    close_code = getattr(received, "code", None)
+    if isinstance(close_code, int):
+        details.append(f"close_code={close_code}")
+    if error.__cause__ is not None:
+        details.append(f"cause={type(error.__cause__).__name__}")
+    suffix = f" ({', '.join(details)})" if details else ""
+    return f"WebSocket transport {phase} failed: {type(error).__name__}{suffix}"
 
 
 def _instruction_text(content: Any) -> str:
@@ -152,7 +173,7 @@ class _AuditedWebSocket(CopilotWebSocketForwarder):
         try:
             await super().open()
         except Exception as exc:
-            message = f"WebSocket transport open failed: {type(exc).__name__}"
+            message = _transport_failure_message("open", exc)
             self.owner.fail(message)
             raise ValueError(message) from None
 
@@ -190,13 +211,13 @@ class _AuditedWebSocket(CopilotWebSocketForwarder):
         try:
             await super().send_request_message(content)
         except Exception as exc:
-            message = f"WebSocket transport send failed: {type(exc).__name__}"
+            message = _transport_failure_message("send", exc)
             self.owner.fail(message)
             raise ValueError(message) from None
 
     async def close(self, status: CopilotWebSocketCloseStatus | None = None) -> None:
         if status is not None and status.error is not None:
-            message = f"WebSocket transport failed: {type(status.error).__name__}"
+            message = _transport_failure_message("receive", status.error)
             self.owner.fail(message)
             status = CopilotWebSocketCloseStatus(description=message, error=ValueError(message))
         try:

@@ -21,7 +21,9 @@ from copilot.tools import Tool, ToolBinaryResult, ToolInvocation, ToolResult
 from websockets.asyncio.server import ServerConnection, serve
 
 from pytest_skill_engineering.copilot import CopilotEval
+from pytest_skill_engineering.copilot import runner as runner_module
 from pytest_skill_engineering.copilot.fixtures import _convert_to_aitest
+from pytest_skill_engineering.copilot.requests import RequestAuditHandler
 from pytest_skill_engineering.core.serialization import serialize_dataclass
 
 PNG = (
@@ -111,7 +113,14 @@ async def respond(socket: ServerConnection, index: int, *, request_tool: bool = 
 
 
 @pytest.mark.parametrize(
-    "outcome", ["completed", "disconnected", "timeout", "tool_budget_exceeded"]
+    "outcome",
+    [
+        "completed",
+        "peer_closed_after_completed",
+        "disconnected",
+        "timeout",
+        "tool_budget_exceeded",
+    ],
 )
 async def test_native_runtime_websocket_audit(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path, copilot_eval: Any, outcome: str
@@ -160,19 +169,40 @@ async def test_native_runtime_websocket_audit(
     frames: list[dict[str, Any]] = []
     connections: list[ServerConnection] = []
     tools_called: list[str] = []
+    response_count = 7 if outcome == "peer_closed_after_completed" else 2
+    client_stop_started = asyncio.Event()
+    original_stop_client = runner_module.stop_client
+    original_close_audit = RequestAuditHandler.aclose
+
+    async def stop_client(client: CopilotClient) -> list[str]:
+        client_stop_started.set()
+        return await original_stop_client(client)
+
+    async def close_audit(handler: RequestAuditHandler) -> None:
+        assert not client_stop_started.is_set(), "Audit transport must close before its SDK bridge"
+        await original_close_audit(handler)
+
+    if outcome == "peer_closed_after_completed":
+        monkeypatch.setattr(runner_module, "stop_client", stop_client)
+        monkeypatch.setattr(RequestAuditHandler, "aclose", close_audit)
 
     async def upstream(socket: ServerConnection) -> None:
         connections.append(socket)
         async for message in socket:
             frame = json.loads(message)
             frames.append(frame)
-            assert len(frames) <= 2, "Runtime must not retry the local test responses"
+            assert len(frames) <= response_count, "Runtime must not retry the local test responses"
             if len(frames) == 2 and outcome == "disconnected":
                 await socket.close(1011, "synthetic upstream failure")
             elif len(frames) == 2 and outcome == "timeout":
                 await socket.wait_closed()
             else:
-                await respond(socket, len(frames), request_tool=outcome == "tool_budget_exceeded")
+                request_tool = outcome == "tool_budget_exceeded" or (
+                    outcome == "peer_closed_after_completed" and len(frames) < response_count
+                )
+                await respond(socket, len(frames), request_tool=request_tool)
+                if outcome == "peer_closed_after_completed" and len(frames) == response_count:
+                    await socket.close()
 
     async def image(invocation: ToolInvocation) -> ToolResult:
         tools_called.append(invocation.tool_name)
@@ -194,7 +224,7 @@ async def test_native_runtime_websocket_audit(
                 reasoning_effort="medium",
                 audit_requests=True,
                 image_detail="high",
-                max_tool_calls=1,
+                max_tool_calls=response_count - 1,
                 max_retries=0,
                 timeout_s=5 if outcome == "timeout" else 20,
                 allowed_tools=["memory_image"],
@@ -220,7 +250,7 @@ async def test_native_runtime_websocket_audit(
                 },
             )
             result = await copilot_eval(agent, "Read the in-memory image and report ready.")
-            if outcome == "completed":
+            if outcome in ("completed", "peer_closed_after_completed"):
                 assert result.success, result.error
                 assert result.stop_reason == "completed"
                 assert result.evidence_complete, result.capture_errors
@@ -231,21 +261,24 @@ async def test_native_runtime_websocket_audit(
                 assert result.usage
                 if outcome == "disconnected":
                     assert not result.evidence_complete
-            assert tools_called == ["memory_image"]
-            assert result.tool_calls_admitted == 1
+            assert tools_called == ["memory_image"] * (response_count - 1)
+            assert result.tool_calls_admitted == response_count - 1
             assert result.usage[0].input_tokens == 10
             assert result.usage[0].output_tokens == 5
             assert len(connections) == 1
-            assert len(frames) == len(result.request_audit) == 2
+            assert len(frames) == len(result.request_audit) == response_count
             assert frames[1]["previous_response_id"] == "response-1"
-            first, second = result.request_audit
-            assert first.model == second.model == "offline-model"
-            assert first.tool_names == second.tool_names == ["memory_image"]
-            assert first.reasoning_effort == second.reasoning_effort == "medium"
+            first, second, *remaining = result.request_audit
+            assert all(record.model == "offline-model" for record in result.request_audit)
+            assert all(record.tool_names == ["memory_image"] for record in result.request_audit)
+            assert all(record.reasoning_effort == "medium" for record in result.request_audit)
             assert first.image_count == 0
-            assert second.image_count == 1, json.dumps(frames[1])
-            assert second.image_details == ["high"]
-            assert first.instructions_sha256 == second.instructions_sha256
+            assert all(record.image_count == 1 for record in [second, *remaining])
+            assert all(record.image_details == ["high"] for record in [second, *remaining])
+            assert all(
+                record.instructions_sha256 == first.instructions_sha256
+                for record in [second, *remaining]
+            )
             assert '"detail": "high"' in json.dumps(frames[1])
             native = _convert_to_aitest(agent, result)
             assert native is not None

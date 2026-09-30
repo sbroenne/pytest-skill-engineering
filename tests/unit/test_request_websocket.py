@@ -193,6 +193,9 @@ async def test_websocket_transport_failure_blocks_http_fallback() -> None:
             await socket.send_request_message(json.dumps(request_payload()))
             await asyncio.wait_for(owner.failed.wait(), 2)
             assert "secret" not in (owner.error or "")
+            assert owner.error == (
+                "WebSocket transport receive failed: ConnectionClosedError (close_code=1011)"
+            )
             with pytest.raises(ValueError, match="already failed"):
                 await owner.send_request(
                     httpx.Request(
