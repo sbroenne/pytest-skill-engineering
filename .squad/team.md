@@ -14,7 +14,7 @@
 |------|------|---------|--------|
 | Keaton | Lead | `.squad/agents/keaton/charter.md` | ✅ Active |
 | Fenster | Core Dev | `.squad/agents/fenster/charter.md` | ✅ Active |
-| McManus | Report Dev | `.squad/agents/mcmanus/charter.md` | ✅ Active |
+| McManus | Evidence Dev | `.squad/agents/mcmanus/charter.md` | ✅ Active |
 | Hockney | Tester | `.squad/agents/hockney/charter.md` | ✅ Active |
 | Verbal | Copilot SDK Dev | `.squad/agents/verbal/charter.md` | ✅ Active |
 | Scribe | Session Logger | `.squad/agents/scribe/charter.md` | 📋 Silent |
@@ -29,6 +29,6 @@
 ## Project Context
 
 - **Owner:** sbroenne
-- **Stack:** Python 3.11+, PydanticAI, pydantic-evals, MCP, pytest, htpy, async, uv, hatch, ruff, pyright
-- **Description:** Pytest plugin for testing MCP servers and CLIs with real LLMs. AI analyzes results and tells you what to fix.
+- **Stack:** Python 3.11+, GitHub Copilot SDK, MCP, pytest, dataclasses, async, uv, hatch, ruff, pyright
+- **Description:** Pytest runner for real Copilot tasks with ordinary assertions and native JSON evidence. The current coding agent interprets results; there are no judges, advisers, or report renderers.
 - **Created:** 2026-03-21

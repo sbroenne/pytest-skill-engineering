@@ -1,75 +1,47 @@
----
-description: "Diagnose authentication, model access, MCP startup, and report generation failures."
----
-
 # Troubleshooting
 
-Start with:
+Start with `uv run pytest-skill-engineering doctor` for installation,
+project configuration, authentication, SDK startup, and starter-model access.
 
-```bash
-uv run pytest-skill-engineering doctor
-```
+## Authentication or model access
 
-The command validates the local project, GitHub authentication, Copilot SDK
-startup, and access to `gpt-5.6-sol`. It exits nonzero when any check fails.
-
-## GitHub authentication fails
-
-For local development, authenticate the GitHub CLI:
-
-```bash
+```powershell
 gh auth login --hostname github.com
 gh auth status --hostname github.com
 ```
 
-For CI, set `GITHUB_TOKEN` or `GH_TOKEN`. `GITHUB_TOKEN` takes precedence when
-both exist. The selected account must have GitHub Copilot access.
+The runtime selects `GITHUB_TOKEN` before `GH_TOKEN`, then the SDK's signed-in
+user. The selected account needs Copilot access. The starter requires
+`gpt-5.6-sol`; unavailable models are reported, not silently substituted.
 
-## The model is unavailable
+## MCP startup
 
-The starter requires `gpt-5.6-sol`. `doctor` prints the model IDs available to
-the authenticated account when that model is absent. Model access is controlled
-by GitHub Copilot and organization policy; pytest-skill-engineering does not
-silently substitute a different model.
+Run the configured server command in the same environment. Check imports,
+permissions, and protocol output. Logs belong on stderr, not protocol stdout.
+Do not "fix" a startup failure by weakening the output criterion.
 
-## An MCP server does not start
+## Retired arguments or old reports
 
-Run the exact command from the eval's `mcp_servers` entry in the same virtual
-environment. For a Python module:
+Version 1.0 removed HTML/Markdown, summary, analysis, and judge flags. Remove them from
+configuration and CI using the [migration guide](../migration.md).
+Old JSON schemas are rejected; rerun their producer with 1.x. Never hand-edit
+JSON or invent missing fields.
 
-```bash
-uv run python -m your_package.your_mcp_module
-```
+## Saving evidence fails
 
-Check that the command exists, imports succeed, and the process writes protocol
-messages—not logs—to standard output.
+Check the destination path, directory permissions, and the printed error.
+Verification properties must contain JSON-compatible values. Failed publication
+keeps a previous file intact but makes the current command return nonzero.
+An old output file is not evidence that this run succeeded.
 
-## Report generation requires a model
+## Session succeeds but the test fails
 
-HTML and Markdown reports require AI analysis. Configure it explicitly:
+Session success is not task correctness. Inspect actual outputs and
+`record_property` checks. Check call completion, operation errors, capture
+errors, fixture state, and the source. Ask your current coding agent to use the
+[companion skill](companion-skill.md) for an evidence-backed investigation.
 
-```toml
-[tool.pytest.ini_options]
-addopts = """
---aitest-summary-model=copilot/gpt-5.6-sol
---aitest-html=aitest-reports/report.html
---aitest-json=aitest-reports/results.json
-"""
-```
+## Initialization conflicts
 
-If analysis fails after test execution, the JSON evidence is still written.
-Regenerate the report after fixing authentication or model access:
-
-```bash
-uv run pytest-skill-engineering-report aitest-reports/results.json \
-  --html aitest-reports/report.html \
-  --summary \
-  --summary-model copilot/gpt-5.6-sol
-```
-
-## Initialization reports a conflict
-
-`pytest-skill-engineering init` does not overwrite
-`tests/test_copilot_eval.py` or replace existing values for its report flags.
-The error names the conflicting file or option. Reconcile it explicitly, then
-run `init` again.
+`init` refuses an existing starter or conflicting report settings. Reconcile
+the named conflict explicitly, then retry. It does not overwrite your project.

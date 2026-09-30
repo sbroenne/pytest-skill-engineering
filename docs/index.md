@@ -1,50 +1,36 @@
----
-description: "Test MCP servers, CLI workflows, skills, prompt files, and custom agents with the real GitHub Copilot coding agent."
----
-
 # pytest-skill-engineering
 
-pytest-skill-engineering helps you test whether **GitHub Copilot can actually use what you built**.
+A test runner and evidence recorder for people working with coding agents.
 
-It focuses on the AI-facing surface area:
-
-- tool descriptions and schemas
-- system prompts
-- skills
-- custom agents
-- prompt files
-- report quality and remediation guidance
+Run real Copilot tasks against MCP servers, CLI tools, skills, system prompts,
+plugins, and custom agents. Check the actual result with ordinary pytest
+assertions. Let your existing coding agent investigate the evidence and source.
+The framework has no separate AI judge, report adviser, or skill refiner.
 
 ## First useful result
 
-```bash
+```powershell
 uv add pytest-skill-engineering
 gh auth login --hostname github.com
 uv run pytest-skill-engineering init
 uv run pytest-skill-engineering doctor
-uv run python -m pytest tests/test_copilot_eval.py -v
+uv run python -m pytest "tests\test_copilot_eval.py" -v
 ```
 
-This creates and runs one real `gpt-5.6-sol` eval against a bundled Todo MCP
-server. Open `aitest-reports/report.html` to inspect the tool call and AI
-analysis. The run may consume Copilot premium requests.
-
-## Core ideas
-
-- **Copilot-only execution** — the public harness is `CopilotEval`
-- **Current default** — the generated starter uses `gpt-5.6-sol`
-- **Opt-in expensive comparisons** — add larger models only when the comparison is worth the cost
-- **Report-first debugging** — failures should tell you what to fix next
+Live execution may consume premium requests. pytest shows whether your checks
+passed; saved JSON records the execution. Your coding agent interprets that
+evidence alongside the source. A completed session is not independently
+verified task success: define concrete output checks.
 
 ## Choose your path
 
 | Goal | Start here |
-|---|---|
-| Prove the installation works | [Getting Started](getting-started/index.md) |
-| Test an MCP server | [Test MCP Servers](how-to/test-mcp-servers.md) |
-| Test a CLI | [Test CLI Tools](how-to/test-cli-tools.md) |
-| Test an Agent Skill | [Test Coding Agents](how-to/test-coding-agents.md#testing-skills) |
-| Test a custom agent | [Custom Agents](getting-started/custom-agents.md) |
-| Test a complete plugin | [Test Plugins](how-to/test-plugins.md) |
-| Understand or regenerate reports | [Generate Reports](how-to/generate-reports.md) |
-| Diagnose a failed first run | [Troubleshooting](getting-started/troubleshooting.md) |
+| --- | --- |
+| Run a first test | [Getting started](getting-started/index.md) |
+| Help your coding agent use the framework | [Companion skill](getting-started/companion-skill.md) |
+| Test an MCP server | [MCP server testing](how-to/test-mcp-servers.md) |
+| Test a CLI | [CLI testing](how-to/test-cli-tools.md) |
+| Compare a skill or system prompt | [Comparisons](getting-started/comparing.md) |
+| Test a custom agent definition | [Custom agents](getting-started/custom-agents.md) |
+| Investigate saved execution | [Inspect evidence](how-to/inspect-evidence.md) |
+| Upgrade from 0.6.x | [1.0 migration](migration.md) |

@@ -16,8 +16,7 @@ from pytest_skill_engineering.copilot.fixtures import _convert_to_aitest
 from pytest_skill_engineering.core.serialization import deserialize_suite_report
 from pytest_skill_engineering.reporting.collector import TestReport as Report
 from pytest_skill_engineering.reporting.collector import build_suite_report
-from pytest_skill_engineering.reporting.generator import generate_html, generate_json, generate_md
-from pytest_skill_engineering.reporting.insights import InsightsResult, _build_analysis_input
+from pytest_skill_engineering.reporting.generator import generate_json, load_suite_report
 
 
 def event(kind: str, **data: Any) -> SessionEvent:
@@ -86,7 +85,7 @@ def test_call_identity_survives_event_order_and_duplicates(sequence: list[Sessio
 
 
 @pytest.mark.parametrize("content", ["", "Usage: app", "<script>alert('x')</script>"])
-def test_capture_survives_conversion_json_reload_and_html(tmp_path: Path, content: str) -> None:
+def test_capture_survives_conversion_and_json_reload(tmp_path: Path, content: str) -> None:
     mapper = EventMapper()
     for item in [request(), start(), complete(content)]:
         mapper.handle(item)
@@ -117,23 +116,7 @@ def test_capture_survives_conversion_json_reload_and_html(tmp_path: Path, conten
     assert call.call_id == "call-1"
     assert call.completion_received is True
     assert call.success is True
-    html = tmp_path / "report.html"
-    generate_html(
-        loaded,
-        html,
-        insights=InsightsResult(markdown_summary="No model analysis requested.", model="none"),
-    )
-    rendered = html.read_text(encoding="utf-8")
-    assert "call-1" in rendered
-    assert "app --help" in rendered
-    assert "<script>alert('x')</script>" not in rendered
-    assert (
-        "Empty output"
-        if content == ""
-        else "Usage: app"
-        if content.startswith("Usage")
-        else "&lt;script&gt;"
-    ) in rendered
+    assert call.arguments == {"command": "app --help"}
 
 
 @pytest.mark.parametrize("terminal", [None, event("abort", reason="user_initiated")])
@@ -210,7 +193,7 @@ def test_orphan_completion_is_not_silently_accepted() -> None:
     assert result.error is not None and "call-1" in result.error
 
 
-def test_failed_session_keeps_incomplete_trace_in_html(tmp_path: Path) -> None:
+def test_failed_session_keeps_incomplete_trace_in_json(tmp_path: Path) -> None:
     mapper = EventMapper()
     mapper.handle(start())
     converted = _convert_to_aitest(CopilotEval(name="CLI", model="test-model"), mapper.build())
@@ -229,14 +212,13 @@ def test_failed_session_keeps_incomplete_trace_in_html(tmp_path: Path) -> None:
         ],
         name="Usage evidence",
     )
-    output = tmp_path / "report.html"
-    generate_html(
-        suite, output, insights=InsightsResult(markdown_summary="Not requested.", model="none")
-    )
-    rendered = output.read_text(encoding="utf-8")
-    assert "powershell" in rendered
-    assert "Incomplete evidence" in rendered
-    assert "call-1" in rendered
+    output = tmp_path / "evidence.json"
+    generate_json(suite, output)
+    restored = load_suite_report(output).tests[0].eval_result
+    assert restored is not None and not restored.evidence_complete
+    call = restored.all_tool_calls[0]
+    assert call.name == "powershell" and call.call_id == "call-1"
+    assert call.result is None and call.completion_received is False
 
 
 def test_multiple_runs_and_verification_properties_reach_native_report(
@@ -274,14 +256,10 @@ def test_multiple_runs_and_verification_properties_reach_native_report(
     assert restored.tests[0].properties == [
         ("verification", {"status": "failed", "artifact": "expected.txt"})
     ]
-    output = pytester.path / "report.html"
-    generate_html(
-        restored, output, insights=InsightsResult(markdown_summary="Not requested.", model="none")
-    )
-    assert "expected.txt" in output.read_text(encoding="utf-8")
+    assert restored.tests[0].properties[0][1]["artifact"] == "expected.txt"
 
 
-def test_analysis_references_and_markdown_preserve_incomplete_evidence(tmp_path: Path) -> None:
+def test_json_distinguishes_empty_output_from_incomplete_evidence(tmp_path: Path) -> None:
     tests = []
     for name, finish in [("baseline", True), ("treatment", False)]:
         mapper = EventMapper()
@@ -303,22 +281,15 @@ def test_analysis_references_and_markdown_preserve_incomplete_evidence(tmp_path:
             )
         )
     suite = build_suite_report(tests, name="Evidence")
-    analysis = _build_analysis_input(suite, [], [], {}, compact=False)
-    assert "[test-1/call:call-1]" in analysis
-    assert "[test-2/call:call-1]" in analysis
-    assert "completion_received=False" in analysis
-    assert "not verified" in analysis
-    compact = _build_analysis_input(suite, [], [], {}, compact=True)
-    assert "[test-2/call:call-1]" in compact
-    output = tmp_path / "report.md"
-    generate_md(
-        suite, output, insights=InsightsResult(markdown_summary="Not requested.", model="none")
-    )
-    markdown = output.read_text(encoding="utf-8")
-    assert "Incomplete evidence" in markdown
-    assert "Empty output" in markdown
-    assert "call-1" in markdown
-    assert "not verified" in markdown
+    output = tmp_path / "evidence.json"
+    generate_json(suite, output)
+    loaded = load_suite_report(output)
+    baseline, treatment = (case.eval_result for case in loaded.tests)
+    assert baseline is not None and baseline.evidence_complete
+    assert baseline.all_tool_calls[0].result == ""
+    assert treatment is not None and not treatment.evidence_complete
+    assert treatment.all_tool_calls[0].result is None
+    assert loaded.tests[1].properties == [("verification", {"status": "not verified"})]
 
 
 def test_configuration_is_a_snapshot_without_connection_secrets() -> None:
@@ -425,9 +396,8 @@ def test_tool_repr_preserves_existing_status_format() -> None:
     assert not error.evidence_complete
 
 
-def test_diagram_retains_output_when_completion_status_is_unknown() -> None:
+def test_native_evidence_retains_output_when_completion_status_is_unknown(tmp_path: Path) -> None:
     from pytest_skill_engineering.core.result import EvalResult, ToolCall, Turn
-    from pytest_skill_engineering.reporting.generator import generate_mermaid_sequence
 
     result = EvalResult(
         turns=[
@@ -439,6 +409,15 @@ def test_diagram_retains_output_when_completion_status_is_unknown() -> None:
         ],
         success=True,
     )
-    diagram = generate_mermaid_sequence(result)
-    assert 'Tools-->>Eval: "file contents here"' in diagram
-    assert "Incomplete evidence" in diagram
+    suite = build_suite_report(
+        [Report(name="test_read", outcome="passed", duration_ms=1, eval_result=result)],
+        name="Unknown completion",
+    )
+    path = tmp_path / "evidence.json"
+    generate_json(suite, path)
+    restored = load_suite_report(path).tests[0].eval_result
+    assert restored is not None
+    call = restored.all_tool_calls[0]
+    assert call.result == "file contents here"
+    assert call.completion_received is None and call.success is None
+    assert not call.evidence_complete

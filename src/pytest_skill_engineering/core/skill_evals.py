@@ -1,17 +1,8 @@
 """Bridge between Anthropic's skill-creator eval format and pytest-skill-engineering.
 
 Loads evals/evals.json from skill directories and converts them to test cases
-that can be parametrized with pytest and validated with llm_assert.
-
-Example:
-    cases = load_skill_evals("skills/my-skill/")
-
-    @pytest.mark.parametrize("case", cases, ids=lambda c: c.name)
-    async def test_skill(copilot_eval, llm_assert, case):
-        agent = CopilotEval(skill_directories=["skills/my-skill/"], ...)
-        result = await copilot_eval(agent, case.prompt)
-        for expectation in case.expectations:
-            assert llm_assert(result.final_response, expectation)
+that can be parametrized with pytest. Consumers define explicit output checks;
+free-text expectations are descriptions, not automatically executed assertions.
 """
 
 from __future__ import annotations
@@ -31,7 +22,7 @@ class SkillEvalCase:
         name: Human-readable name derived from the prompt
         prompt: The user prompt to send to the agent
         expected_output: Description of expected result (for documentation)
-        expectations: Semantic assertions to validate against the response
+        expectations: Descriptions to translate into explicit output checks
         files: Paths to files referenced by this eval case
     """
 

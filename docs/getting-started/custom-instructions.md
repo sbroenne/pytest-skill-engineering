@@ -33,7 +33,7 @@ async def test_follows_naming_conventions(copilot_eval):
     )
     result = await copilot_eval(agent, "Write a function that adds two numbers")
     assert result.success
-    assert "add_numbers" in result.final_response  # snake_case enforced
+    assert "add_numbers" in result.final_response  # Checks wording only, not code correctness.
 ```
 
 `load_instruction_file()` returns a dict with:
@@ -167,13 +167,17 @@ INSTRUCTIONS = load_instruction_files(
 )
 ```
 
-## Instruction File Info in Reports
+## Instruction file evidence
 
 Use descriptive eval names and pytest parameter IDs to identify instruction
-variants. The combined system prompt is included in the eval configuration for
-analysis, but passing file content through `instructions` does not automatically
+variants. The combined system prompt is included in the saved eval configuration,
+but passing file content through `instructions` does not automatically
 preserve file names or create per-file pass rates. Assert the required behavior
 in each test.
+
+The examples above are smoke or wording checks. To validate a coding convention,
+inspect the generated source (for example with Python's AST) and execute its
+required behavior independently.
 
 ## Next Steps
 

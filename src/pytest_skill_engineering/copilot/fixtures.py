@@ -34,8 +34,8 @@ def copilot_eval(
     """Execute a prompt against a CopilotEval and capture results.
 
     Results are automatically stashed on the test node for pytest-skill-engineering's
-    reporting plugin. This gives you full HTML reports —
-    leaderboard, AI insights, Mermaid diagrams — for free.
+    evidence collector. Native JSON preserves execution alongside ordinary pytest
+    outcomes; the coding agent interprets it together with source and test criteria.
 
     Example:
         async def test_file_creation(copilot_eval, tmp_path):
@@ -88,7 +88,7 @@ def _convert_to_aitest(
 
     # Estimate USD cost from captured token usage and pricing.toml.
     # Models without pricing contribute 0.0 and are recorded in
-    # execution.cost.models_without_pricing (surfaced in AI insights).
+    # execution.cost.models_without_pricing (saved with report evidence).
     cost_usd = sum(
         estimate_cost(
             usage.model or result.model_used or "",

@@ -1,5 +1,4 @@
-"""Showcase tests for hero report demonstration.
+"""Real-tool examples with ordinary outcome checks and native JSON evidence.
 
-These tests are designed to produce a comprehensive report
-showcasing ALL pytest-skill-engineering capabilities for the README.
+These examples demonstrate framework execution, not report generation or AI judging.
 """

@@ -29,7 +29,7 @@ Resources for contributors and developers working on pytest-skill-engineering it
     | Python source | Ruff, formatting, Pyright, contracts, then the relevant Copilot integration file |
     | Copilot behavior | One relevant `tests/integration/copilot/` file at a time |
     | Documentation | Strict MkDocs build |
-    | Report rendering | Regenerate all fixture HTML and inspect the output |
+    | Evidence persistence | Native JSON round-trip and failure-path contracts |
 
 All PRs are **squash merged**. The
 [full contribution guide](https://github.com/sbroenne/pytest-skill-engineering/blob/main/CONTRIBUTING.md)
@@ -39,4 +39,4 @@ required.
 ## Guides
 
 - **[Architecture](architecture.md)** — How the engine executes tests and dispatches tools
-- **[Report Structure](report-structure.md)** — Visual components, layout behavior, and design spec
+- **[Evidence Structure](evidence-structure.md)** — Captured data, serialization, and persistence checks

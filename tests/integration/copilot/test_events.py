@@ -72,7 +72,7 @@ class TestUsageTracking:
         """token_usage property returns a pytest-skill-engineering compatible dict.
 
         pytest-skill-engineering reads prompt/completion/total keys from this dict
-        for its AI analysis report. The keys must match exactly.
+        for saved execution evidence. The keys must match exactly.
         """
         agent = CopilotEval(
             name="token-dict",

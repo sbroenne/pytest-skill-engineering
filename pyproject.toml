@@ -4,8 +4,8 @@ build-backend = "hatchling.build"
 
 [project]
 name = "pytest-skill-engineering"
-version = "0.6.23"
-description = "The testing framework for skill engineering. Test tool descriptions, prompt templates, agent skills, and custom agents with real LLMs. AI analyzes results and tells you what to fix."
+version = "1.0.0"
+description = "Reliable Copilot execution and evidence for coding-agent-led testing of MCP servers, CLI tools, skills, and custom agents."
 readme = "README.md"
 license = { text = "MIT" }
 requires-python = ">=3.11"
@@ -29,11 +29,7 @@ dependencies = [
     "pytest>=9.0",
     "mcp>=2.1.1",
     "pydantic>=2.0",
-    "markdown>=3.10.2",
-    "htpy>=25.12.0",
-    "mdutils>=1.8.1",
     "python-frontmatter>=1.1.0",
-    "nh3>=0.3.3",
     "github-copilot-sdk>=1.0.13",
     "httpx>=0.28.1",
     "trio>=0.33.0",
@@ -64,7 +60,6 @@ docs = [
 
 [project.scripts]
 pytest-skill-engineering = "pytest_skill_engineering.onboarding:main"
-pytest-skill-engineering-report = "pytest_skill_engineering.cli:main"
 
 [project.entry-points.pytest11]
 aitest = "pytest_skill_engineering.plugin"
@@ -83,9 +78,6 @@ packages = ["src/pytest_skill_engineering"]
 include = [
     "src/pytest_skill_engineering/**/*.py",
     "src/pytest_skill_engineering/**/*.md",
-    "src/pytest_skill_engineering/**/*.html",
-    "src/pytest_skill_engineering/**/*.css",
-    "src/pytest_skill_engineering/**/*.js",
 ]
 
 [tool.ruff]
@@ -125,8 +117,6 @@ filterwarnings = [
 # LLM auth is handled by the GitHub Copilot SDK (gh auth login or GITHUB_TOKEN)
 addopts = """
 --strict-markers
---aitest-summary-model=copilot/gpt-5.6-sol
---aitest-html=aitest-reports/report.html
 """
 markers = [
     "integration: marks tests as integration tests (require LLM credentials)",
@@ -138,7 +128,6 @@ markers = [
     "skill: tests with skills",
     "session_test: multi-turn session tests",
     "clarification: clarification detection tests",
-    "scoring: LLM scoring / rubric tests",
     "iterations: iteration reliability tests",
     "abtest: A/B server comparison tests",
     "cli: CLI server tests",

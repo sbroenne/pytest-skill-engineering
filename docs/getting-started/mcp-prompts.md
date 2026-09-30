@@ -70,6 +70,10 @@ not silently discard all but the first message.
 
 Combine MCP tools with LLM behavioral assertions:
 
+The wording check below is deliberately limited: it checks that "balance"
+appears, not that the answer is correct. Also verify the actual returned account
+data for an independently checked full-flow test.
+
 ```python
 from pytest_skill_engineering.copilot import CopilotEval
 

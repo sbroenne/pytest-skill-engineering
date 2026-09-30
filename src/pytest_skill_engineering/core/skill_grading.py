@@ -1,13 +1,7 @@
 """Export eval results in skill-creator compatible grading.json format.
 
-This enables our CI/CD results to be consumed by skill-creator's
-eval-viewer and analysis agents.
-
-Example:
-    result = await copilot_eval(agent, case.prompt)
-    passed = [llm_assert(result.final_response, e) for e in case.expectations]
-    grading = export_grading(result, case.expectations, passed)
-    Path("grading.json").write_text(json.dumps(grading, indent=2))
+This only formats explicitly supplied booleans and evidence. It does not run,
+interpret, or grade a task. Consumers own their ordinary output assertions.
 """
 
 from __future__ import annotations

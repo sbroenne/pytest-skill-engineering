@@ -1,75 +1,61 @@
----
-description: "pytest and report-regeneration CLI options for pytest-skill-engineering."
----
-
 # CLI options
 
 ## Project setup
 
-Create a first eval and explicit report configuration in an existing Python
-project:
-
-```bash
+```powershell
 uv run pytest-skill-engineering init [PROJECT_DIR]
-```
-
-The command requires an existing `pyproject.toml`. It creates
-`tests/test_copilot_eval.py`, sets `asyncio_mode = "auto"`, adds HTML, JSON, and
-`gpt-5.6-sol` analysis options, and records explicit cost rates in
-`pricing.toml`. Existing model rates are preserved. It fails without changing
-existing content when the starter file or one of the pytest settings conflicts.
-
-Validate the complete first-run environment:
-
-```bash
 uv run pytest-skill-engineering doctor [PROJECT_DIR]
 ```
 
-`doctor` checks Python and package versions, starter configuration, GitHub
-credentials, Copilot SDK startup, and `gpt-5.6-sol` availability. Each failed
-check is printed and produces a nonzero exit code.
+`init` requires an existing `pyproject.toml`. It creates
+`tests\test_copilot_eval.py`, sets `asyncio_mode = "auto"`, adds a JSON evidence
+destination, and records explicit starter-model pricing. Existing rates are
+preserved; conflicts fail without overwriting existing content.
 
-## Recommended defaults
-
-```toml
-[tool.pytest.ini_options]
-addopts = """
---aitest-summary-model=copilot/gpt-5.6-sol
---aitest-html=aitest-reports/report.html
-"""
-```
+`doctor` checks installation, project settings, authentication, SDK startup,
+and starter-model availability. It contacts Copilot but does not execute a task
+under test. Failed checks produce a nonzero exit code.
 
 ## pytest options
 
 | Option | Meaning |
-|---|---|
-| `--aitest-summary-model=MODEL` | Copilot model for AI insights |
-| `--aitest-html=PATH` | Write HTML report |
-| `--aitest-md=PATH` | Write Markdown report |
-| `--aitest-json=PATH` | Write JSON report |
-| `--aitest-min-pass-rate=N` | Fail if overall pass rate drops below `N` |
-| `--aitest-iterations=N` | Run each test `N` times; reports strip only the synthetic iteration suffix |
-| `--aitest-analysis-prompt=PATH` | Override the AI analysis system prompt file |
-| `--aitest-summary-compact` | Omit full passing transcripts from AI analysis |
-| `--aitest-print-analysis-prompt` | Print the resolved analysis prompt source |
-| `--llm-model=MODEL` | Copilot model for `llm_assert` / `llm_score` |
+| --- | --- |
+| `--aitest-json=PATH` | Save captured execution evidence and pytest outcomes |
+| `--aitest-min-pass-rate=N` | Fail when the saved eval outcomes fall below N percent |
+| `--aitest-iterations=N` | Repeat each test N times with newly created pytest fixtures |
 
-Run pytest with:
-
-```bash
-uv run python -m pytest tests/ -v
+```powershell
+uv run python -m pytest "tests\test_tools.py" -v --aitest-json=results.json
 ```
 
-## Report regeneration CLI
+pytest prints ordinary results and assertion failures. Without an explicit JSON
+path, runs containing eval results save a timestamped file under `aitest-reports`.
+Tests without an eval result, setup failures, and opt-out skips remain in ordinary
+pytest output and optional JUnit output, not the captured-execution file.
 
-```bash
-uv run pytest-skill-engineering-report aitest-reports/results.json   --html aitest-reports/report.html
+An A/B test has one pytest outcome shared by both saved runs. Record side-specific
+verification properties; the framework does not generate rankings or choose winners.
+
+Evidence-save errors are visible and make the command return nonzero. A file from
+an earlier run is not evidence that the current command succeeded.
+
+## Reading saved evidence
+
+Read the JSON directly with your coding agent or load its dataclasses:
+
+```python
+from pytest_skill_engineering.reporting import load_suite_report
+
+evidence = load_suite_report("results.json")
+for case in evidence.tests:
+    print(case.name, case.outcome, case.error)
 ```
 
-Add `--summary --summary-model copilot/gpt-5.6-sol` to refresh AI insights.
+Loading needs neither Copilot authentication nor a running Copilot process.
+Schema 4.0 is required; older evidence is rejected explicitly.
+There is no HTML/Markdown renderer or report CLI.
 
-## Environment variables
+## Authentication
 
-- `GITHUB_TOKEN` — explicit non-interactive Copilot auth; takes precedence over `GH_TOKEN`
-- `GH_TOKEN` — explicit Copilot auth when `GITHUB_TOKEN` is unset
-- `AITEST_SUMMARY_MODEL` — default summary model for regeneration
+Task execution selects `GITHUB_TOKEN` first, then `GH_TOKEN`; otherwise the SDK
+uses its signed-in user. The retired `AITEST_SUMMARY_MODEL` setting has no effect.

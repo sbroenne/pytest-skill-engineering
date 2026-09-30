@@ -1,5 +1,5 @@
 ---
-description: "Configure CopilotEval, MCP servers, report output, and assertion models using the current Copilot-only APIs."
+description: "Configure CopilotEval, MCP servers, execution controls, and JSON evidence."
 ---
 
 # Configuration
@@ -11,7 +11,7 @@ Supported authentication paths:
 - `gh auth login --hostname github.com`
 - `GITHUB_TOKEN` or `GH_TOKEN` in CI or automation
 
-Eval and judge sessions select `GITHUB_TOKEN` first, then `GH_TOKEN`. If neither
+Eval sessions select `GITHUB_TOKEN` first, then `GH_TOKEN`. If neither
 is set, the SDK uses its signed-in user. Tokens must authorize the intended
 GitHub account and Copilot access.
 
@@ -41,7 +41,7 @@ agent = CopilotEval(
 
 | Field | Meaning |
 |---|---|
-| `name` | Human-readable report label |
+| `name` | Label identifying the configuration in saved evidence |
 | `model` | Copilot model name such as `gpt-5.6-sol` |
 | `instructions` | System prompt content |
 | `mcp_servers` | Copilot SDK server config mapping |
@@ -120,18 +120,17 @@ POSIX escaping. Tool-supplied arguments use POSIX quoting on every platform.
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 addopts = """
---aitest-summary-model=copilot/gpt-5.6-sol
---aitest-html=aitest-reports/report.html
 --aitest-json=aitest-reports/results.json
---llm-model=copilot/gpt-5.6-sol
 """
 ```
 
-`pytest-skill-engineering init` adds the first three settings to an existing
+`pytest-skill-engineering init` adds these settings to an existing
 project. It reports conflicting values instead of replacing them.
 
 ## Notes
 
 - Use Copilot model names only
 - use only documented `CopilotEval` fields and pytest options
-- report regeneration expects the current JSON schema exactly
+- evidence loading expects the current JSON schema exactly
+- reading saved evidence never starts a model session
+- ordinary pytest assertions and consumer-owned checks determine task correctness

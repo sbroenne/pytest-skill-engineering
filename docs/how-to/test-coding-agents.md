@@ -2,9 +2,13 @@
 description: "Test real GitHub Copilot coding sessions with CopilotEval, skills, prompt files, and custom agent dispatch."
 ---
 
-# Test coding agents
+# Test skills and custom agents
 
-Use `CopilotEval` to run real GitHub Copilot sessions inside pytest.
+Use `CopilotEval` to run real GitHub Copilot sessions inside pytest. The interface,
+skill, system prompt, or custom agent definition is under test, not the harness.
+Session success and a file's existence are smoke checks; verify its actual
+behavior too. pytest shows the checks' outcomes; JSON records execution for your
+coding agent to investigate, without a separate judge or adviser.
 
 ## Quick start
 
@@ -156,7 +160,7 @@ Without that explicit path, the runtime regression is skipped rather than
 downloading or launching an unspecified runtime. These checks validate control
 behavior, not model performance or the live Copilot API's transport selection.
 
-For a JSON-only benchmark with no paid report analysis, explicitly override
+For a JSON-only benchmark, explicitly override
 repository report defaults:
 
 ```powershell

@@ -53,7 +53,7 @@ Also provides prompt file loaders for VS Code prompt files
     #    "description": "...", "metadata": {...}}
 
     # Use the body as the test input
-    result = await eval_run(agent, prompt["body"])
+    result = await copilot_eval(agent, prompt["body"])
 
     # Load all from directory
     prompts = load_prompt_files(".github/prompts/")
@@ -268,7 +268,7 @@ def load_prompt_file(path: Path | str) -> dict[str, Any]:
 
     Returns:
         Dict with keys ``name`` (str, derived from filename),
-        ``body`` (str, the prompt text to pass to :func:`eval_run`),
+        ``body`` (str, the prompt text to pass to :func:`copilot_eval`),
         ``description`` (str, from frontmatter or empty), and
         ``metadata`` (dict, full frontmatter).
 
@@ -282,11 +282,11 @@ def load_prompt_file(path: Path | str) -> dict[str, Any]:
 
         # VS Code prompt file
         prompt = load_prompt_file(".github/prompts/review.prompt.md")
-        result = await eval_run(agent, prompt["body"])
+        result = await copilot_eval(agent, prompt["body"])
 
         # Claude Code command
         prompt = load_prompt_file(".claude/commands/review.md")
-        result = await eval_run(agent, prompt["body"])
+        result = await copilot_eval(agent, prompt["body"])
     """
     path = Path(path)
     if not path.exists():
@@ -338,8 +338,8 @@ def load_prompt_files(
         prompts = load_prompt_files(".github/prompts/")
 
         @pytest.mark.parametrize("prompt", prompts, ids=lambda p: p["name"])
-        async def test_prompt_files(eval_run, agent, prompt):
-            result = await eval_run(agent, prompt["body"])
+        async def test_prompt_files(copilot_eval, agent, prompt):
+            result = await copilot_eval(agent, prompt["body"])
             assert result.success
     """
     directory = Path(directory)

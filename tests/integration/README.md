@@ -20,16 +20,16 @@ tests/integration/
     ├── test_05_skills.py        # Skill A/B comparison
     ├── test_06_sessions.py      # Multi-turn sessions
     ├── test_07_clarification.py # Clarification detection
-    ├── test_08_scoring.py       # LLM scoring
     ├── test_09_cli.py           # CLI workflows
     ├── test_10_ab_servers.py    # Configuration A/B comparison
     ├── test_11_iterations.py    # Iteration reliability
     ├── test_12_custom_agents.py # Custom agent dispatch
     ├── test_13_plugins.py       # Plugin discovery and loading
-    ├── test_14_skill_evals.py   # Skill eval execution
-    ├── test_15_skill_refinement.py # Skill refinement
-    ├── test_16_skill_benchmark.py  # Skill benchmarking
-    └── test_17_plugin_skill_workflow.py # End-to-end plugin skill workflow
+    ├── test_14_skill_evals.py   # Loaded skill cases with explicit checks
+    ├── test_16_skill_benchmark.py # Controlled skill comparisons
+    ├── test_17_plugin_skill_workflow.py # Plugin skill execution with concrete checks
+    ├── test_18_config_validation.py # Configuration validation
+    └── test_19_companion_skill.py # Coding-agent-led authoring and investigation
 ```
 
 ## Quick Start
@@ -53,7 +53,10 @@ uv run python -m pytest \
 
 1. GitHub Copilot authentication through `gh auth login` or `GITHUB_TOKEN`.
 2. A model available through the GitHub Copilot SDK.
-3. Dependencies installed with `uv sync --all-groups`.
+3. Dependencies installed with `uv sync --frozen --all-extras`.
+
+pytest determines outcomes from ordinary assertions. Saved JSON records execution
+evidence for the coding agent to investigate; there are no judges or report renderers.
 
 ## Adding Tests
 

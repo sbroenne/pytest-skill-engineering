@@ -1,8 +1,8 @@
 # Examples
 
 Start with the standalone [quickstart project](quickstart/). It runs one real
-Copilot eval against the bundled Todo MCP server and produces a report you can
-inspect before adapting the test to your own tools.
+Copilot eval against the bundled Todo MCP server. pytest shows the result and
+JSON captures execution for your coding agent to inspect.
 
 The repository's own integration tests demonstrate advanced scenarios:
 

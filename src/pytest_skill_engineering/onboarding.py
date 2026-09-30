@@ -29,15 +29,12 @@ DEFAULT_MODEL = "gpt-5.6-sol"
 STARTER_TEST_PATH = Path("tests/test_copilot_eval.py")
 PRICING_PATH = Path("pricing.toml")
 DEFAULT_PRICING = {"input": 5.0, "output": 30.0, "cache_read": 0.5}
-REPORT_OPTIONS = (
-    f"--aitest-summary-model=copilot/{DEFAULT_MODEL}",
-    "--aitest-html=aitest-reports/report.html",
-    "--aitest-json=aitest-reports/results.json",
-)
+REPORT_OPTIONS = ("--aitest-json=aitest-reports/results.json",)
 
 STARTER_TEST = """\
 from __future__ import annotations
 
+import json
 import sys
 
 from pytest_skill_engineering.copilot import CopilotEval
@@ -59,10 +56,22 @@ async def test_add_task(copilot_eval):
         mcp_servers=TODO_MCP,
     )
 
-    result = await copilot_eval(agent, "Add a task to buy groceries")
+    result = await copilot_eval(agent, "Add a task titled exactly 'buy groceries'")
 
     assert result.success
     assert result.tool_was_called("todo-add_task")
+    calls = result.tool_calls_for("todo-add_task")
+    assert len(calls) == 1
+    assert calls[0].arguments["title"] == "buy groceries"
+    assert calls[0].success is True
+    assert calls[0].evidence_complete
+    assert calls[0].result is not None
+    # The SDK includes both display text and the structured MCP string result.
+    display, structured = calls[0].result.rsplit("\\n\\n", 1)
+    assert json.loads(structured) == {"result": display}
+    saved = json.loads(display)
+    assert saved["title"] == "buy groceries"
+    assert saved["completed"] is False
 """
 
 
@@ -120,6 +129,12 @@ def _merge_report_options(existing: Any) -> str | Array:
 
 
 def _missing_report_options(tokens: list[str]) -> list[str]:
+    retired = sorted({_option_key(token) for token in tokens} & {"--aitest-html", "--aitest-md"})
+    if retired:
+        raise OnboardingError(
+            f"Remove unsupported report options from addopts: {', '.join(retired)}. "
+            "The runner saves JSON evidence; it does not render reports."
+        )
     additions: list[str] = []
     for desired in REPORT_OPTIONS:
         key = _option_key(desired)
@@ -256,7 +271,7 @@ def check_project(project_dir: Path) -> list[Check]:
                     Check(
                         "Project configuration",
                         False,
-                        "starter report settings are missing; run pytest-skill-engineering init",
+                        "starter evidence settings are missing; run pytest-skill-engineering init",
                     )
                 )
         except OnboardingError as error:
@@ -376,7 +391,7 @@ def main(argv: list[str] | None = None) -> int:
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     for name, help_text in (
-        ("init", "Create a starter Copilot eval and configure pytest reports"),
+        ("init", "Create a starter Copilot eval and configure JSON evidence"),
         ("doctor", "Validate project setup, authentication, and Copilot model access"),
     ):
         command = subparsers.add_parser(name, help=help_text)

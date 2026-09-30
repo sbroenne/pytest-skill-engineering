@@ -1,8 +1,8 @@
 """Level 11 — Iterations: run each test N times for reliability measurement.
 
 Uses the --aitest-iterations=N CLI flag to run each test multiple times.
-The report aggregates iterations per test and shows iteration pass rate,
-enabling flakiness detection and reliability baselines.
+pytest records each repetition separately. Native JSON preserves its iteration
+number, outcome, and execution evidence for investigation.
 
 Run with: uv run python -m pytest tests/integration/copilot/test_11_iterations.py -v --aitest-iterations=3
 """
@@ -20,7 +20,7 @@ class TestIterationBaseline:
     """Run Copilot tests multiple times to establish reliability baselines.
 
     When invoked with ``--aitest-iterations=3``, each test runs 3 times.
-    The report aggregates iterations per test and shows an iteration pass rate.
+    Each repetition has its own pytest outcome and saved execution record.
     """
 
     async def test_file_creation_reliability(self, copilot_eval, tmp_path):

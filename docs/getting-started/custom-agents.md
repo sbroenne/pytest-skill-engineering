@@ -80,3 +80,5 @@ async def test_review_agent_variant(copilot_eval, agent_file):
 ```
 
 Use this pattern to validate **custom agent dispatch** with the real Copilot runtime.
+Dispatch and session-completion checks do not grade a review's quality. Add
+concrete task-specific output checks, or label subjective review as advice.

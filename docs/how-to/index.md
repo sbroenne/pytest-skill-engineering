@@ -1,5 +1,5 @@
 ---
-description: "Step-by-step guides for testing MCP servers, CLI tools, generating AI-analyzed reports, and more with pytest-skill-engineering."
+description: "Guides for running real Copilot tasks, checking outputs, and investigating native evidence."
 ---
 
 # How-To Guides
@@ -11,10 +11,7 @@ Goal-oriented guides for common tasks.
 - **[Complete Example](complete-example.md)** — Tying it all together: a comprehensive test suite
 - **[Test MCP Servers](test-mcp-servers.md)** — Configure and test Model Context Protocol servers
 - **[Test CLI Tools](test-cli-tools.md)** — Wrap command-line tools as testable interfaces
-- **[Generate Reports](generate-reports.md)** — Create HTML/JSON/Markdown reports with AI insights
+- **[Inspect Execution Evidence](inspect-evidence.md)** — Let your coding agent investigate pytest failures and saved JSON
 - **[Cost Estimation](cost-estimation.md)** — Configure model pricing for accurate cost analysis
-- **[Visual Testing](visual-testing.md)** — Validate HTML report rendering with deterministic fixture-backed HTML assertions
-- **[Fixture Testing](fixture-testing.md)** — Use comprehensive assertion patterns with fixture tests
-- **[Multi-Dimension Scoring](multi-dimension-scoring.md)** — Score AI output on weighted rubric dimensions with LLM-as-judge
 - **[Test Plugins](test-plugins.md)** — Test complete plugin directories: instructions, skills, agents, and MCP servers
-- **[Test Coding Agents](test-coding-agents.md)** — Test real coding agents like GitHub Copilot via the SDK
+- **[Test Skills and Custom Agents](test-coding-agents.md)** — Use real Copilot sessions to test your AI-facing interface

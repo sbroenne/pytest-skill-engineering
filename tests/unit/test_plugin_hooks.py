@@ -20,10 +20,7 @@ from pytest_skill_engineering.plugin import (
     _add_junit_properties,
     _get_timestamped_path,
     pytest_configure,
-    pytest_skill_engineering_analysis_prompt,
 )
-from pytest_skill_engineering.plugin_report import build_coding_agent_prompt
-from pytest_skill_engineering.reporting import TestReport as ReportingTestReport
 
 pytest_plugins = ["pytester"]
 
@@ -222,7 +219,6 @@ def pytest_sessionfinish(session, exitstatus):
                 "system_prompt_name": test.system_prompt_name,
                 "skill_name": test.skill_name,
                 "iteration": test.iteration,
-                "copilot_test": getattr(test, "_copilot_test", False),
             }
         )
     (session.config.rootpath / "collected.json").write_text(
@@ -294,10 +290,10 @@ class TestGetTimestampedPath:
     def test_sanitizes_test_name_for_extended_filenames(self) -> None:
         """Path segments, extensions, spaces, and underscores are stripped from test names."""
 
-        path = _get_timestamped_path("report.html", test_name="suite/path/My Test_Name.py")
+        path = _get_timestamped_path("evidence.json", test_name="suite/path/My Test_Name.py")
 
         assert re.fullmatch(
-            r"report_my-test-name_\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}\.html",
+            r"evidence_my-test-name_\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}\.json",
             path.name,
         )
 
@@ -328,7 +324,7 @@ class TestPytestAddoption:
         assert "AI agent testing:" in stdout
         assert "--aitest-json=PATH" in stdout
         assert "--aitest-iterations=N" in stdout
-        assert "--llm-model=LLM_MODEL" in stdout
+        assert "--llm-model" not in stdout
 
 
 class TestPytestConfigure:
@@ -340,7 +336,7 @@ class TestPytestConfigure:
         config = _parse_config(pytester)
         pytest_configure(config)
 
-        assert hasattr(config.pluginmanager.hook, "pytest_skill_engineering_analysis_prompt")
+        assert not hasattr(config.pluginmanager.hook, "pytest_skill_engineering_analysis_prompt")
         assert config.stash[COLLECTOR_KEY] == []
         assert config.stash[SESSION_MESSAGES_KEY] == {}
 
@@ -466,9 +462,6 @@ class TestPytestRuntestMakereport:
 
                 def test_auto_stashed_failure(self, auto_result, request):
                     \"\"\"Auto-stashed failure docstring.\"\"\"
-                    request.node._aitest_assertions = [
-                        {"type": "semantic", "passed": True, "message": "recorded"}
-                    ]
                     assert False, "boom"
 
                 def test_manual_failure_without_e_lines(self, manual_aitest):
@@ -504,9 +497,7 @@ class TestPytestRuntestMakereport:
         assert auto_failure["outcome"] == "failed"
         assert auto_failure["docstring"] == "Auto-stashed failure docstring."
         assert auto_failure["class_docstring"] == "Collected class docstring."
-        assert auto_failure["assertions"] == [
-            {"type": "semantic", "passed": True, "message": "recorded"}
-        ]
+        assert auto_failure["assertions"] == []
         assert auto_failure["agent_id"] == "auto-agent"
         assert auto_failure["eval_name"] == "auto-agent"
         assert auto_failure["model"] == "gpt-5.4-mini"
@@ -524,7 +515,6 @@ class TestPytestRuntestMakereport:
         assert manual_pass["model"] == "claude-sonnet-4.5"
         assert manual_pass["system_prompt_name"] == "manual-prompt"
         assert manual_pass["skill_name"] == "manual-skill"
-        assert manual_pass["copilot_test"] is True
 
     def test_captures_iteration_from_callspec(self, pytester: Pytester) -> None:
         """Collected reports include the injected _aitest_iteration value."""
@@ -644,7 +634,7 @@ class TestPytestSessionfinish:
         assert output_path.exists()
 
         report = _load_json(output_path)
-        assert report["schema_version"] == "3.0"
+        assert report["schema_version"] == "4.0"
         assert report["passed"] == 1
         assert report["failed"] == 0
         assert report["skipped"] == 0
@@ -693,27 +683,3 @@ class TestPytestSessionfinish:
         result.assert_outcomes(passed=1)
         assert result.ret == 0
         assert "aitest: pass rate 100.0% meets minimum threshold 100%" in result.stdout.str()
-
-
-class TestAnalysisPromptHook:
-    """Tests for the coding-agent analysis prompt hook implementation."""
-
-    def test_returns_none_without_copilot_reports(self, pytester: Pytester) -> None:
-        """No coding-agent prompt is returned when the stash has no copilot-flagged tests."""
-
-        config = _parse_config(pytester)
-        config.stash[COLLECTOR_KEY] = []
-
-        assert pytest_skill_engineering_analysis_prompt(config) is None
-
-    def test_delegates_to_real_coding_agent_prompt_builder(self, pytester: Pytester) -> None:
-        """The hook passes collected TestReport objects to build_coding_agent_prompt()."""
-
-        config = _parse_config(pytester)
-        report = ReportingTestReport(name="test_demo", outcome="passed", duration_ms=1.0)
-        report._copilot_test = True
-        config.stash[COLLECTOR_KEY] = [report]
-
-        expected = build_coding_agent_prompt([report])
-        assert expected is not None
-        assert pytest_skill_engineering_analysis_prompt(config) == expected

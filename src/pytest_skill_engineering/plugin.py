@@ -10,23 +10,13 @@ from typing import TYPE_CHECKING, Any, cast
 import pytest
 
 from pytest_skill_engineering.plugin_options import add_aitest_options
-from pytest_skill_engineering.plugin_recording import (
-    RecordingLLMAssert,
-    RecordingLLMScore,
-)
 from pytest_skill_engineering.plugin_report import (
-    build_coding_agent_prompt,
-    generate_structured_insights,
-    get_analysis_prompt,
-    get_analysis_prompt_details,
     log_report_path,
 )
 from pytest_skill_engineering.reporting import (
     TestReport,
     build_suite_report,
-    generate_html,
     generate_json,
-    generate_md,
 )
 
 if TYPE_CHECKING:
@@ -50,33 +40,7 @@ SESSION_MESSAGES_KEY = pytest.StashKey[dict[str, list[dict[str, Any]]]]()
 __all__ = [
     "COLLECTOR_KEY",
     "SESSION_MESSAGES_KEY",
-    "get_analysis_prompt",
-    "get_analysis_prompt_details",
 ]
-
-
-@pytest.hookimpl(hookwrapper=True)
-def pytest_pyfunc_call(pyfuncitem: Item) -> Any:
-    """Wrap semantic assertion and scoring fixtures before test function execution."""
-    funcargs = getattr(pyfuncitem, "funcargs", {})
-
-    # Ensure assertion store exists
-    store = getattr(pyfuncitem, "_aitest_assertions", None)
-    if store is None:
-        store = []
-        pyfuncitem._aitest_assertions = store  # type: ignore[attr-defined]
-
-    # Wrap llm_assert
-    llm_assert = funcargs.get("llm_assert")
-    if llm_assert is not None and not isinstance(llm_assert, RecordingLLMAssert):
-        pyfuncitem.funcargs["llm_assert"] = RecordingLLMAssert(llm_assert, store)  # type: ignore[index]
-
-    # Wrap llm_score
-    llm_score = funcargs.get("llm_score")
-    if llm_score is not None and not isinstance(llm_score, RecordingLLMScore):
-        pyfuncitem.funcargs["llm_score"] = RecordingLLMScore(llm_score, store)  # type: ignore[index]
-
-    yield
 
 
 def _get_timestamped_path(
@@ -85,7 +49,7 @@ def _get_timestamped_path(
     """Generate timestamped filename for unique report names.
 
     Args:
-        base_name: Base filename with extension (e.g., 'results.json', 'report.html')
+        base_name: Base evidence filename with extension (e.g., 'results.json')
         test_name: Name of the test/suite to include in filename
         default_dir: Directory to store the file (default: 'aitest-reports')
 
@@ -134,13 +98,8 @@ def pytest_addoption(parser: Parser) -> None:
 
 def pytest_configure(config: Config) -> None:
     """Configure the aitest plugin."""
-    # Register custom hookspecs so downstream plugins can extend behavior
-    from pytest_skill_engineering.hooks import AitestHookSpec
-
     if not config.pluginmanager.hasplugin("pytest_skill_engineering.fixtures"):
         config.pluginmanager.import_plugin("pytest_skill_engineering.fixtures")
-
-    config.pluginmanager.add_hookspecs(AitestHookSpec)
 
     # Register markers
     config.addinivalue_line(
@@ -318,7 +277,7 @@ def pytest_runtest_makereport(item: Item, call: Any) -> Any:
     runs = getattr(item, "_aitest_runs", [])
 
     # Only collect tests that actually used aitest (have an agent result)
-    # This prevents unit tests from triggering AI analysis for reports
+    # Tests without eval execution do not create eval reports.
     if not runs:
         return
 
@@ -340,12 +299,9 @@ def pytest_runtest_makereport(item: Item, call: Any) -> Any:
             if inspect.isclass(parent_obj):
                 class_docstring = parent_obj.__doc__
 
-    # Extract assertions recorded by the llm_assert fixture
-    assertions = getattr(item, "_aitest_assertions", [])
-
     # Capture error message — just the assertion/exception, never raw tracebacks.
     # Tracebacks contain file paths, line numbers, and nodeids that pollute
-    # AI analysis and user-facing reports.
+    # User-facing reports.
     error_msg = None
     if report.failed:
         error_text = str(report.longrepr)
@@ -381,7 +337,6 @@ def pytest_runtest_makereport(item: Item, call: Any) -> Any:
             duration_ms=eval_result.duration_ms if len(runs) > 1 else report.duration * 1000,
             eval_result=eval_result,
             error=error_msg,
-            assertions=assertions,
             properties=properties,
             docstring=docstring,
             class_docstring=class_docstring,
@@ -392,8 +347,6 @@ def pytest_runtest_makereport(item: Item, call: Any) -> Any:
             skill_name=skill_name,
             iteration=iteration,
         )
-        if any(m.name == "copilot" for m in item.iter_markers()):
-            test_report._copilot_test = True
         tests.append(test_report)
         _add_junit_properties(report, eval_result, agent)
 
@@ -490,16 +443,14 @@ def _add_junit_properties(
 
 
 def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
-    """Generate reports and enforce minimum pass rate at end of test session."""
+    """Save execution evidence and enforce the observed pytest pass-rate threshold."""
     config = session.config
     tests = config.stash.get(COLLECTOR_KEY, None)
 
     if tests is None or not tests:
         return
 
-    html_path = config.getoption("--aitest-html")
     json_path = config.getoption("--aitest-json")
-    md_path = config.getoption("--aitest-md")
     min_pass_rate: int | None = config.getoption("--aitest-min-pass-rate")
 
     # Extract suite docstring from first test's parent class/module
@@ -530,61 +481,28 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
         "results.json", test_name=suite_report.name, default_dir=default_dir
     )
 
-    # Always generate JSON report first (before AI analysis which may fail)
     json_output_path = Path(json_path) if json_path else default_json_path
-    json_output_path.parent.mkdir(parents=True, exist_ok=True)
-    generate_json(suite_report, json_output_path)
-    log_report_path(config, "JSON", json_output_path)
-
-    # Generate AI insights + HTML/MD reports. JSON is already safely written
-    # above. Report failures fail the command without skipping pass-rate
-    # enforcement or cleanup.
-    summary_model = config.getoption("--aitest-summary-model")
     try:
-        insights = None
-        if html_path or md_path or summary_model:
-            insights = generate_structured_insights(config, suite_report, required=True)
-
-        # Update JSON with insights if analysis succeeded
-        if insights is not None:
-            generate_json(suite_report, json_output_path, insights=insights)
-
-        # Generate HTML report only when explicitly requested
-        if html_path:
-            html_output_path = Path(html_path)
-            html_output_path.parent.mkdir(parents=True, exist_ok=True)
-
-            if insights is None:
-                insights = generate_structured_insights(config, suite_report, required=True)
-
-            assert insights is not None  # guaranteed by required=True above
-            generate_html(
-                suite_report, html_output_path, insights=insights, min_pass_rate=min_pass_rate
-            )
-            log_report_path(config, "HTML", html_output_path)
-
-        # Generate Markdown report if requested
-        if md_path:
-            md_output_path = Path(md_path)
-            md_output_path.parent.mkdir(parents=True, exist_ok=True)
-
-            if insights is None:
-                insights = generate_structured_insights(config, suite_report, required=True)
-
-            assert insights is not None  # noqa: S101
-            generate_md(
-                suite_report, md_output_path, insights=insights, min_pass_rate=min_pass_rate
-            )
-            log_report_path(config, "Markdown", md_output_path)
-    except Exception:
+        json_output_path.parent.mkdir(parents=True, exist_ok=True)
+        generate_json(suite_report, json_output_path)
+    except (OSError, TypeError, ValueError) as error:
         if session.exitstatus == pytest.ExitCode.OK:
             session.exitstatus = pytest.ExitCode.TESTS_FAILED
-        _logger.warning(
-            "Report rendering failed after JSON was written to %s; "
+        terminalreporter = config.pluginmanager.get_plugin("terminalreporter")
+        if terminalreporter:
+            terminalreporter.write_line(
+                f"\naitest: Failed to save execution evidence to {json_output_path}: {error}",
+                red=True,
+                bold=True,
+            )
+        _logger.error(
+            "Failed to save execution evidence to %s; "
             "continuing with pass-rate enforcement and cleanup",
             json_output_path,
             exc_info=True,
         )
+    else:
+        log_report_path(config, "JSON evidence", json_output_path)
 
     # Enforce minimum pass rate threshold
     if min_pass_rate is not None:
@@ -614,17 +532,3 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
         reset_rate_limiters()
     except Exception:
         _logger.warning("Rate limiter cleanup failed", exc_info=True)
-
-
-# ── Coding agent analysis prompt ──
-
-
-@pytest.hookimpl(optionalhook=True)
-def pytest_skill_engineering_analysis_prompt(config: object) -> str | None:
-    """Provide coding-agent-specific analysis prompt when copilot tests are detected."""
-    from _pytest.config import Config
-
-    assert isinstance(config, Config)
-
-    tests = config.stash.get(COLLECTOR_KEY, [])
-    return build_coding_agent_prompt(tests)

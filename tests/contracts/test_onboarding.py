@@ -61,9 +61,6 @@ def test_initializer_accepts_equivalent_array_options() -> None:
 [tool.pytest.ini_options]
 addopts = [
     "-q",
-    "--aitest-summary-model",
-    "copilot/gpt-5.6-sol",
-    "--aitest-html=aitest-reports/report.html",
     "--aitest-json=aitest-reports/results.json",
 ]
 """
@@ -71,9 +68,6 @@ addopts = [
     addopts = configured["tool"]["pytest"]["ini_options"]["addopts"]
     assert list(addopts) == [
         "-q",
-        "--aitest-summary-model",
-        "copilot/gpt-5.6-sol",
-        "--aitest-html=aitest-reports/report.html",
         "--aitest-json=aitest-reports/results.json",
     ]
 
@@ -86,19 +80,34 @@ addopts = [
             "asyncio_mode conflicts",
         ),
         (
-            '[tool.pytest.ini_options]\naddopts = "--aitest-html=custom/report.html"\n',
-            "--aitest-html",
+            '[tool.pytest.ini_options]\naddopts = "--aitest-json=custom/results.json"\n',
+            "--aitest-json",
         ),
         (
-            '[tool.pytest.ini_options]\naddopts = "--aitest-html=aitest-reports/report.html '
-            '--aitest-html=custom/report.html"\n',
-            "--aitest-html",
+            '[tool.pytest.ini_options]\naddopts = "--aitest-json=aitest-reports/results.json '
+            '--aitest-json=custom/results.json"\n',
+            "--aitest-json",
         ),
     ],
 )
 def test_initializer_refuses_configuration_conflicts(source: str, expected: str) -> None:
     with pytest.raises(OnboardingError, match=expected):
         configured_pyproject(source)
+
+
+@pytest.mark.parametrize("option", ["--aitest-html=report.html", "--aitest-md=report.md"])
+def test_initializer_rejects_retired_renderers_without_mutating_project(
+    tmp_path: Path,
+    option: str,
+) -> None:
+    pyproject = tmp_path / "pyproject.toml"
+    original = f'[tool.pytest.ini_options]\naddopts = "{option}"\n'
+    pyproject.write_text(original, encoding="utf-8")
+    with pytest.raises(OnboardingError, match="Remove unsupported report options"):
+        initialize_project(tmp_path)
+    assert pyproject.read_text(encoding="utf-8") == original
+    assert not (tmp_path / STARTER_TEST_PATH).exists()
+    assert not (tmp_path / PRICING_PATH).exists()
 
 
 def test_initializer_refuses_to_overwrite_starter_without_mutating_config(

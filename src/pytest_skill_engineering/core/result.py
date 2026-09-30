@@ -85,11 +85,9 @@ class ToolCall:
 
 @dataclass(slots=True)
 class ToolInfo:
-    """Metadata about an MCP tool for AI analysis.
+    """Recorded metadata about an MCP tool.
 
-    Captures the tool's description and schema as exposed to the LLM,
-    enabling the AI to analyze whether tool descriptions are clear and
-    suggest improvements.
+    Captures the description and schema exposed to the model for inspection.
     """
 
     name: str
@@ -129,7 +127,7 @@ class MCPPrompt:
         await server.start()
         prompts = await server.list_prompts()
         messages = await server.get_prompt("code_review", {"code": "..."})
-        result = await eval_run(agent, messages[0]["content"])
+        result = await copilot_eval(agent, messages[0]["content"])
     """
 
     name: str
@@ -168,10 +166,9 @@ class InstructionFileInfo:
 
 @dataclass(slots=True)
 class SkillInfo:
-    """Metadata about a skill for AI analysis.
+    """Recorded metadata about a skill.
 
-    Captures the skill's instruction content and references,
-    enabling the AI to analyze skill effectiveness and suggest improvements.
+    Captures the skill's system prompt content and references for inspection.
     """
 
     name: str
@@ -192,7 +189,7 @@ class ClarificationStats:
     Only populated when clarification_detection is enabled on the agent.
 
     Example:
-        result = await eval_run(agent, "Check my balance")
+        result = await copilot_eval(agent, "Check my balance")
         if result.clarification_stats:
             print(f"Eval asked {result.clarification_stats.count} question(s)")
     """
@@ -263,13 +260,11 @@ class EvalResult:
     """Result of running an agent with rich inspection capabilities.
 
     Example:
-        result = await eval_run(agent, "Hello!")
+        result = await copilot_eval(agent, "Hello!")
         assert result.success
         assert "hello" in result.final_response.lower()
         assert result.tool_was_called("read_file")
 
-        # Session continuity: pass messages to next test
-        next_result = await eval_run(agent, "Follow up", messages=result.messages)
     """
 
     turns: list[Turn]
@@ -282,7 +277,7 @@ class EvalResult:
     session_context_count: int = 0  # Number of prior messages passed in
     assertions: list[Assertion] = field(default_factory=list)  # Assertion results
 
-    # Phase 2: Collection for AI analysis
+    # Recorded interface metadata.
     available_tools: list[ToolInfo] = field(default_factory=list)
     skill_info: SkillInfo | None = None
     effective_system_prompt: str = ""
@@ -306,10 +301,9 @@ class EvalResult:
     def messages(self) -> list[Any]:
         """Get full conversation messages for session continuity.
 
-        Use this to pass conversation history to the next test in a session:
-
-            result = await eval_run(agent, "First message")
-            next_result = await eval_run(agent, "Continue", messages=result.messages)
+        This is a copy of captured messages for inspection. The public
+        ``copilot_eval`` fixture does not accept a message-history argument or
+        reuse conversation state between calls.
         """
         return list(self._messages)  # Return copy to prevent mutation
 
@@ -442,7 +436,7 @@ class EvalResult:
         asked at least one clarifying question.
 
         Example:
-            result = await eval_run(agent, "Check my balance")
+            result = await copilot_eval(agent, "Check my balance")
             assert not result.asked_for_clarification
         """
         return self.clarification_stats is not None and self.clarification_stats.count > 0
@@ -458,16 +452,8 @@ class EvalResult:
     def tool_context(self) -> str:
         """Summarise tool calls and their results as plain text.
 
-        Use this as the ``context`` argument for ``llm_score`` so the judge
-        can see what tools were called and what data they returned.
-
-        Example::
-
-            score = llm_score(
-                result.final_response,
-                TOOL_QUALITY_RUBRIC,
-                context=result.tool_context,
-            )
+        This is a readable evidence summary for investigation. It is not an
+        independent correctness check and does not replace the full trace.
         """
         calls = self.all_tool_calls
         if not calls:

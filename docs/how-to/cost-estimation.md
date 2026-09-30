@@ -1,60 +1,28 @@
----
-description: "Configure cost estimation for accurate spending analysis. Use pricing.toml to define model costs."
----
+# Cost estimation
 
-# Cost Estimation
-
-pytest-skill-engineering estimates the USD cost of each LLM call based on token counts and model pricing data. Costs appear in reports, eval leaderboards, and AI insights analysis.
-
-## How It Works
-
-Cost estimation uses `pricing.toml` files. If no pricing is found, the cost is `$0.00` and the model is flagged as missing. AI insights are automatically warned when any model lacks pricing, so cost-based recommendations are skipped.
-
-## pricing.toml Configuration
-
-Create a `pricing.toml` file in your project root (or any parent directory) to add pricing for your models:
+The framework estimates task-execution USD cost from reported tokens and
+explicit per-million-token rates. Copilot premium-request accounting is a
+separate measurement. Neither is a separate report-analysis charge.
 
 ```toml
-# Per-million-token pricing.
 [models]
 "gpt-5.6-sol" = { input = 5.00, output = 30.00, cache_read = 0.50 }
-"claude-sonnet-4" = { input = 3.00, output = 15.00 }
 ```
 
-### Format
+These are explicit example rates, not a promise about current billing. Adjust
+them for your billing basis.
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `input` | float | Cost per **1 million** input tokens (USD) |
-| `output` | float | Cost per **1 million** output tokens (USD) |
-| `cache_read` | float | Optional cost per **1 million** cached input tokens (USD) |
+`input` and `output` are required rates. `cache_read` is optional. Pricing is
+searched upward from the process working directory and cached for the session.
+The generated starter writes explicit rates without replacing existing ones.
 
-### Lookup Behavior
+## Missing pricing and usage
 
-- `pricing.toml` is searched upward from the working directory
-- The first file found is used
-- The file is loaded once and cached for the test session
+A missing model rate produces a placeholder zero estimate and a missing-pricing
+warning. The suite saves `models_without_pricing` in native JSON evidence.
+**This is not measured free usage.** Do not choose
+a supposedly cheapest configuration from unavailable prices.
 
-## Missing Pricing
-
-When a model has no pricing:
-
-- Cost is reported as `$0.00`
-- The model is tracked internally
-- AI insights receive a warning: *"Incomplete Pricing Data — do not use cost as a ranking factor"*
-- The AI analysis focuses on pass rate, tool usage, and response quality instead
-
-## Pricing Lookup Summary
-
-```text
-CopilotEval(model="gpt-5.6-sol")
-         │
-         ▼
-┌─────────────────┐
-│  pricing.toml   │──→ found? use it (per-million-token rates)
-└─────────────────┘
-         │ not found
-         ▼
-    cost = $0.00
-    (model flagged, AI warned)
-```
+Missing SDK usage values remain `None`, not known zero. Estimates from available
+input/output counts are not complete billing evidence; unknown cache reads
+receive no cache discount. See [result evidence](../reference/result.md).

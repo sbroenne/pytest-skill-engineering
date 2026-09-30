@@ -29,12 +29,15 @@ Create multiple `CopilotEval` instances when you want to compare:
 - custom agents
 - MCP server variants
 
-The report ranks them by pass rate first and cost second.
+Keep the task, fixture state, and concrete output checks fixed. The framework
+records each execution and its pytest outcome; your coding agent interprets
+the observations. It does not generate rankings or select a winner.
 
-## Stable identity vs display names
+## Identifying runs
 
-Every eval needs a stable machine identity internally, but reports should display human-readable names.
-Use `name=` for the display label users see in the report.
+Use `name=` to label the configuration in saved evidence. Genuine pytest
+parameter IDs, the model, and captured configuration distinguish runs even when
+the same runtime name is reused.
 
 ## Retries
 
