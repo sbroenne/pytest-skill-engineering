@@ -18,8 +18,10 @@ Another model session also adds cost and a failure point unrelated to whether
 the task under test passed. Reading captured results should not need another paid call.
 
 Version 1.0 therefore removes built-in judging, answer scoring, report advice,
-dashboards, rankings, and automatic skill refinement. The [companion skill](../getting-started/companion-skill.md)
-teaches the current coding agent a source-backed investigation workflow instead.
+dashboards, rankings, and automatic skill refinement. The existing coding agent
+investigates source and evidence without another framework-owned guidance layer.
+We also tested and removed our proposed companion skill; the
+[case study](../use-cases/companion-skill.md) explains why.
 
 ## What evidence can establish
 

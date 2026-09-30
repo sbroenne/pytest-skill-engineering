@@ -11,9 +11,9 @@ Copilot task execution, controls, ordinary pytest output, and saved JSON evidenc
   evidence, and native JSON. The coding agent interprets results.
 - Never add a separate SDK runner, model retry loop, usage collector, competing
   benchmark report, AI judge, report adviser, or skill refiner.
-- The companion skill under `skills/pytest-skill-engineering` guides the coding
-  agent already working with the user. Distribute it through `npx skills`, not
-  a Python installer or duplicate bundled copy.
+- There is no framework companion skill. Keep framework usage in documentation,
+  examples, and helpful errors. Consumer-provided skill evaluation remains
+  supported; historical case-study guidance is a test fixture, not a product.
 - Session completion, tool presence, and a model's claims are not independent
   task verification. Use ordinary assertions against actual output.
 - A/B entries share one pytest outcome. Save side-specific verification; never

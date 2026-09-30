@@ -33,7 +33,6 @@ agent = CopilotEval(
     skill_directories=[],
     working_directory=None,
     max_turns=5,
-    max_retries=2,
 )
 ```
 
@@ -50,7 +49,10 @@ agent = CopilotEval(
 | `skill_directories` | Skill packages to inject |
 | `max_turns` | Advisory top-level turn budget; used for subagent turn caps |
 | `timeout_s` | Hard wall-clock limit for the run |
-| `max_retries` | Retry count for transient runtime failures; default `2` |
+
+Each `copilot_eval` call makes one execution attempt. Startup, connection, and
+task failures are recorded without automatically starting another session.
+Rerun a selected pytest case explicitly when appropriate.
 
 ## MCP server config shape
 

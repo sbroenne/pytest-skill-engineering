@@ -22,7 +22,7 @@ from pytest_skill_engineering.copilot.client import (
     create_client,
     stop_client,
 )
-from pytest_skill_engineering.copilot.contracts import CopilotEvalConfig, CopilotRunResult
+from pytest_skill_engineering.copilot.contracts import CopilotEvalConfig
 from pytest_skill_engineering.copilot.controls import RunControls
 from pytest_skill_engineering.copilot.events import EventMapper
 from pytest_skill_engineering.copilot.requests import RequestAuditHandler
@@ -36,16 +36,15 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-async def run_copilot(agent: CopilotEvalConfig, prompt: str) -> CopilotRunResult:
+async def run_copilot(agent: CopilotEvalConfig, prompt: str) -> CopilotResult:
     """Execute a prompt against GitHub Copilot and return structured results.
 
     This is the primary entry point for test execution. It manages the full
     lifecycle: client start → session creation → prompt execution → event
     capture → client cleanup.
 
-    Retries on transient SDK errors (fetch failed, model list errors) up to
-    ``agent.max_retries`` times with ``agent.retry_delay_s`` delay between
-    attempts.
+    Each call makes one execution attempt. Failures retain their captured
+    evidence and are returned without starting a replacement session.
 
     Authentication is resolved in this order:
     1. ``GITHUB_TOKEN`` environment variable (ideal for CI)
@@ -59,63 +58,7 @@ async def run_copilot(agent: CopilotEvalConfig, prompt: str) -> CopilotRunResult
     Returns:
         CopilotResult with all captured events, tool calls, usage, etc.
 
-    Raises:
-        TimeoutError: If the prompt takes longer than agent.timeout_s.
-        RuntimeError: If the Copilot CLI fails to start.
     """
-    last_result: CopilotRunResult | None = None
-
-    for attempt in range(1, agent.max_retries + 2):  # +2: 1 initial + max_retries
-        result = await _run_copilot_once(agent, prompt)
-        result.agent = agent  # Back-reference for automated report stashing
-
-        if (
-            result.success
-            or result.stop_reason != "execution_error"
-            or result.tool_calls_admitted
-            or result.all_tool_calls
-            or not _is_transient_error(result.error)
-        ):
-            return result
-
-        last_result = result
-
-        if attempt <= agent.max_retries:
-            logger.warning(
-                "Transient error on attempt %d/%d: %s — retrying in %ss",
-                attempt,
-                agent.max_retries + 1,
-                result.error,
-                agent.retry_delay_s,
-            )
-            await asyncio.sleep(agent.retry_delay_s)
-
-    # All retries exhausted — return last result
-    if last_result is None:
-        raise RuntimeError("Copilot execution did not run")
-    return last_result
-
-
-_TRANSIENT_PATTERNS = (
-    "fetch failed",
-    "Failed to list models",
-    "ECONNREFUSED",
-    "ECONNRESET",
-    "ETIMEDOUT",
-    "socket hang up",
-    "SDK TimeoutError",
-)
-
-
-def _is_transient_error(error: str | None) -> bool:
-    """Check if an error message matches a known transient SDK pattern."""
-    if not error:
-        return False
-    return any(pattern in error for pattern in _TRANSIENT_PATTERNS)
-
-
-async def _run_copilot_once(agent: CopilotEvalConfig, prompt: str) -> CopilotResult:
-    """Execute a single attempt of a prompt against GitHub Copilot."""
     mapper = EventMapper()
     controls = RunControls(agent.max_tool_calls)
     capture_requests = agent.audit_requests or agent.image_detail is not None
@@ -266,6 +209,7 @@ async def _run_copilot_once(agent: CopilotEvalConfig, prompt: str) -> CopilotRes
                 cleanup_errors.append(f"Isolated storage cleanup failed: {type(exc).__name__}")
 
     result = mapper.build()
+    result.agent = agent
     result.tool_calls_admitted = controls.admitted
     if result.capture_errors:
         result.capture_errors.extend(controls.incomplete_diagnostics(abort_phase=reason))

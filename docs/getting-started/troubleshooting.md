@@ -38,8 +38,8 @@ An old output file is not evidence that this run succeeded.
 
 Session success is not task correctness. Inspect actual outputs and
 `record_property` checks. Check call completion, operation errors, capture
-errors, fixture state, and the source. Ask your current coding agent to use the
-[companion skill](companion-skill.md) for an evidence-backed investigation.
+errors, fixture state, and the source. Give your current coding agent the failure
+and [saved evidence](../how-to/inspect-evidence.md) for investigation.
 
 ## Initialization conflicts
 

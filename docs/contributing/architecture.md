@@ -29,11 +29,12 @@ CopilotEval
 `src/pytest_skill_engineering/copilot/`
 
 - `eval.py` — `CopilotEval` configuration
-- `runner.py` — session lifecycle, retries, and event streaming
+- `runner.py` — single-attempt session lifecycle and event streaming
 - `events.py` — contains EventMapper, which converts SDK events into normalized result data
 - `result.py` — `CopilotResult`
 
-`max_retries` defaults to `2` for transient runtime failures.
+Each call makes one attempt and preserves its failure evidence. The framework
+does not start replacement sessions after startup or execution failures.
 
 ### 2. pytest integration
 
@@ -51,8 +52,9 @@ pytest parameter IDs, and writes native JSON evidence.
 
 No HTML/Markdown UI, rankings, or interpretation layer exists.
 The framework owns execution and evidence;
-consumers own application fixtures and verification. The companion skill guides
-the existing coding agent, not a framework-owned adviser.
+consumers own application fixtures and verification. The existing coding agent
+interprets the evidence using the source and documentation. There is no
+framework companion skill or framework-owned adviser.
 
 ### 4. Serialization boundary
 

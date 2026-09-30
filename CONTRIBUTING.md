@@ -51,7 +51,7 @@ Use the smallest command that proves the change you made.
 
 ### Locked dependency environment
 
-CI, integration, hero-test, and documentation workflows use `uv sync --frozen`
+CI, integration, and documentation workflows use `uv sync --frozen`
 and `uv run --frozen` to consume the committed lock without resolving against a
 runner's different default registry. `--frozen` does not check whether the lock
 is current with `pyproject.toml`; dependency changes must regenerate and validate
@@ -78,6 +78,8 @@ Run the checks that cover the changed surface:
 ```bash
 uv run --frozen ruff check src tests
 uv run --frozen ruff format --check src tests
+uv run --frozen ruff check examples/skill-dogfood
+uv run --frozen ruff format --check examples/skill-dogfood
 uv run --frozen pyright
 uv run --frozen python -X utf8 -m mkdocs build --strict
 ```
@@ -103,6 +105,19 @@ Do not claim success from mock-only tests.
 
 Run integration files one at a time. Fix every failure before moving to the
 next file, and use `--lf` rather than repeating successful, paid runs.
+
+### Customer workflow and historical case study
+
+[`examples/skill-dogfood`](examples/skill-dogfood/) preserves the historical
+write-run-fix-rerun experiment with frozen guidance fixtures, not a distributed
+companion skill. Default collection is offline; comparisons are explicit live
+cases. It has no dedicated workflow. `test_19_customer_workflow.py` reuses the
+ordinary no-skill workflow as regression coverage.
+
+The sample's fixed checks remain outside model-writable files. Preserve real
+before/after evidence and unchanged authored tests. A failed control case stays
+visible; one pair does not prove a skill advantage. Keep the sample's separate
+lock current when its manifest or the local framework dependency changes.
 
 ## Evidence collection
 

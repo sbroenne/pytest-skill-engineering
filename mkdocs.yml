@@ -80,7 +80,6 @@ nav:
     - Prompt Files: getting-started/prompt-files.md
     - Custom Instructions: getting-started/custom-instructions.md
     - Eval Skills: getting-started/skills.md
-    - Companion Skill: getting-started/companion-skill.md
     - Comparing Configurations: getting-started/comparing.md
     - A/B Testing Servers: getting-started/ab-testing-servers.md
     - Test Iterations: getting-started/iterations.md
@@ -97,6 +96,8 @@ nav:
     - CI/CD Integration: how-to/ci-cd.md
     - Image Assertions: how-to/image-assertions.md
     - Complete Example: how-to/complete-example.md
+  - Use Cases:
+    - Why We Removed Our Companion Skill: use-cases/companion-skill.md
   - Reference:
     - Overview: reference/index.md
     - API: reference/api.md

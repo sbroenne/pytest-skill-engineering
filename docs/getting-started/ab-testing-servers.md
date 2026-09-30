@@ -164,7 +164,7 @@ This reveals interactions like:
 ## Investigate the comparison
 
 Inspect captured calls and arguments alongside each server's source and
-description. The current coding agent can use the companion skill to identify
+description. The current coding agent can use the saved evidence to identify
 a supported cause and propose one targeted change. There is no report adviser.
 
 Keep the task, model, initial data, limits, and output checks fixed. Parametrized

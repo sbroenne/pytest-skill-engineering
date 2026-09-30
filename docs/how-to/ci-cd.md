@@ -42,9 +42,12 @@ repository. The runtime selects `GITHUB_TOKEN` before `GH_TOKEN`; a token alone
 does not establish Copilot entitlement. Protect paid workflows with appropriate
 approvals and do not expose credentials to untrusted pull-request code.
 
-The repository's integration and hero workflows are examples of explicit live
-execution. Do not turn them into automatic report-judging jobs. Reading saved
-JSON does not require those permissions.
+The repository's integration workflow is an example of explicitly authorized
+live execution. The old banking showcase and its dedicated workflow are retired.
+The [skill dogfooding sample](https://github.com/sbroenne/pytest-skill-engineering/tree/main/examples/skill-dogfood)
+is local-only, with offline defaults and an explicit live file. Do not add an
+automatic paid comparison or report-judging job. Reading saved JSON does not
+require those permissions.
 
 ## Verification properties and metrics
 

@@ -1446,6 +1446,7 @@ test = [
 [package.dev-dependencies]
 dev = [
     { name = "pytest-skill-engineering", extra = ["dev", "docs", "test"] },
+    { name = "pytest-skill-engineering-dogfood" },
 ]
 
 [package.metadata]
@@ -1476,7 +1477,21 @@ requires-dist = [
 provides-extras = ["dev", "test", "docs"]
 
 [package.metadata.requires-dev]
-dev = [{ name = "pytest-skill-engineering", extras = ["dev", "test", "docs"] }]
+dev = [
+    { name = "pytest-skill-engineering", extras = ["dev", "test", "docs"] },
+    { name = "pytest-skill-engineering-dogfood", editable = "examples/skill-dogfood" },
+]
+
+[[package]]
+name = "pytest-skill-engineering-dogfood"
+version = "0.1.0"
+source = { editable = "examples/skill-dogfood" }
+dependencies = [
+    { name = "pytest-skill-engineering" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "pytest-skill-engineering", editable = "." }]
 
 [[package]]
 name = "python-dateutil"

@@ -50,6 +50,11 @@ def test_no_separate_model_judging_or_advice_modules(module: str) -> None:
         "src/pytest_skill_engineering/reporting/components",
         "src/pytest_skill_engineering/prompts",
         "tests/fixtures/reports",
+        "tests/showcase",
+        ".github/workflows/hero-tests.yml",
+        "skills/pytest-skill-engineering/SKILL.md",
+        "docs/getting-started/companion-skill.md",
+        "tests/integration/copilot/test_19_companion_skill.py",
     ],
 )
 def test_removed_presentation_artifacts_are_absent(artifact: str) -> None:

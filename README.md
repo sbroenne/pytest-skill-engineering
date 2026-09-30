@@ -46,19 +46,21 @@ pytest shows ordinary test results and assertion failures. Give your coding
 agent `aitest-reports\results.json` and the relevant source to investigate what
 happened. No dashboard or second AI judgment is generated.
 
-## Give your coding agent the companion skill
+## What we learned by testing our own idea
 
-```powershell
-npx skills add sbroenne/pytest-skill-engineering --skill pytest-skill-engineering
-```
+We evaluated a companion skill for coding agents using this framework and chose
+not to ship it. The comparison did not demonstrate a benefit; adding general
+test-writing advice was not evidence that users needed another product layer.
+Use the documentation, examples, and native evidence directly.
 
-For an explicit host, add `--agent github-copilot`. The repository is the
-canonical skill source; Node is needed for installation, not the Python runtime.
-The remote command needs a published repository ref containing the skill.
+The [case study](docs/use-cases/companion-skill.md) records the actual results,
+failures, limitations, and removal decision. Its
+[historical experiment](examples/skill-dogfood/) remains reproducible with a
+frozen test fixture, not an installable companion skill. Default sample checks
+are offline; live execution is explicit. The [quickstart](examples/quickstart/)
+is the smaller first example.
 
-The skill teaches your existing coding agent to define concrete success criteria,
-investigate evidence and source, make one supported change, and rerun affected
-cases. It does not add another runner or an automated judge.
+Testing your own domain skills remains a supported framework capability.
 
 ## A test that checks the result
 
@@ -99,7 +101,7 @@ is not a security sandbox.
 | --- | --- |
 | `CopilotEval` and `copilot_eval` | Real SDK sessions with explicit configuration |
 | MCP, CLI, skills, plugins, custom agents | The interfaces and definitions under test |
-| Execution controls | Time, usage, request, tool, permission, and retry controls |
+| Execution controls | Time, usage, request, tool, and permission controls; one attempt per execution |
 | Captured evidence | Configuration, calls, arguments, outputs, completion flags, errors, and usage |
 | Ordinary pytest checks | Consumer-owned verification and recorded properties |
 | `ab_run` and repetitions | Isolated working directories and repeated observations |

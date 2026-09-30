@@ -173,5 +173,6 @@ discovery opt-in.
 
 See [Test Coding Agents](../how-to/test-coding-agents.md#testing-skills) for a full example.
 
-The framework's own [companion skill](companion-skill.md) is different from a
-domain skill under test: it guides the coding agent using this framework.
+The framework does not distribute a companion skill for its own use. Testing
+your domain skills remains supported; the
+[case study](../use-cases/companion-skill.md) explains the distinction.

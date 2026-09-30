@@ -71,6 +71,11 @@ Open the generated test and replace:
 The complete generated file is also available in
 [`examples/quickstart`](https://github.com/sbroenne/pytest-skill-engineering/tree/main/examples/quickstart).
 
+For the full test-write, failure-investigation, and repair cycle, use the
+[customer workflow sample](https://github.com/sbroenne/pytest-skill-engineering/tree/main/examples/skill-dogfood).
+It also preserves the historical comparison that led us to remove our proposed
+companion skill. Default sample tests are offline; paid runs are explicit.
+
 ## What to compare next
 
 - [System prompts](system-prompts.md)
@@ -79,4 +84,4 @@ The complete generated file is also available in
 - [Comparing configurations](comparing.md)
 - [Multi-turn sessions](sessions.md)
 - [Troubleshooting](troubleshooting.md)
-- [Companion skill for your coding agent](companion-skill.md)
+- [Inspecting captured evidence](../how-to/inspect-evidence.md)

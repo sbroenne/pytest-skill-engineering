@@ -140,8 +140,6 @@ def _convert_to_aitest(
                 "excluded_tools": agent.excluded_tools,
                 "max_turns": agent.max_turns,
                 "timeout_s": agent.timeout_s,
-                "max_retries": agent.max_retries,
-                "retry_delay_s": agent.retry_delay_s,
                 "auto_confirm": agent.auto_confirm,
                 "mcp_servers": {
                     name: {"type": config.get("type"), "tools": config.get("tools")}

@@ -29,7 +29,7 @@ tests/integration/
     ├── test_16_skill_benchmark.py # Controlled skill comparisons
     ├── test_17_plugin_skill_workflow.py # Plugin skill execution with concrete checks
     ├── test_18_config_validation.py # Configuration validation
-    └── test_19_companion_skill.py # Coding-agent-led authoring and investigation
+    └── test_19_customer_workflow.py # Ordinary author-run-fix-rerun workflow
 ```
 
 ## Quick Start
@@ -57,6 +57,20 @@ uv run python -m pytest \
 
 pytest determines outcomes from ordinary assertions. Saved JSON records execution
 evidence for the coding agent to investigate; there are no judges or report renderers.
+
+## Customer workflow
+
+`test_19_customer_workflow.py` reuses the customer workflow from
+[`examples/skill-dogfood`](../../examples/skill-dogfood/), rather than supplying
+synthetic failure evidence. It requires no framework companion skill. The sample
+separately preserves the historical skill comparison through frozen fixtures,
+not a currently distributed feature.
+
+The initial consumer test must genuinely fail on invoice rounding. The coding
+agent reads its actual native evidence, repairs only the CLI, and reruns the
+unchanged test. Fixed independent checks verify the repaired output. Child
+before/after JSON and outer authoring/repair evidence remain separate; do not
+treat outer usage as the total cost of all sessions.
 
 ## Adding Tests
 

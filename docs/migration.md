@@ -5,16 +5,15 @@ controls, ordinary pytest output, and JSON evidence. It removes the separate AI
 judging, analysis, refinement, and report-presentation layers. There are no
 compatibility aliases, legacy readers, or optional versions of the removed features.
 
-## Upgrade and install the companion skill
+## Upgrade
 
 ```powershell
 uv add "pytest-skill-engineering>=1.0.0,<2"
-npx skills add sbroenne/pytest-skill-engineering --skill pytest-skill-engineering
 ```
 
-The remote skill command requires a repository ref containing the skill.
-Before publication, use the [local installation procedure](getting-started/companion-skill.md).
-Node is needed for skill installation, not the Python runtime.
+No companion skill installation is required or distributed. Use the framework
+documentation and [evidence inspection guide](how-to/inspect-evidence.md).
+The [case study](use-cases/companion-skill.md) explains that product decision.
 
 ## Removed fixtures and APIs
 
@@ -22,7 +21,7 @@ Node is needed for skill installation, not the Python runtime.
 | --- | --- |
 | `llm_assert`, `llm_score`, `LLMScore` | Ordinary assertions against concrete output; subjective review is advice |
 | `ScoringDimension`, `ScoreResult`, `assert_score` | Explicit measurable checks, not automatic answer scores |
-| `skill_refiner`, `analyze_skill_failures`, `RefinementResult`, `RefinementSuggestion` | Current coding agent plus companion skill, source investigation, and targeted reruns |
+| `skill_refiner`, `analyze_skill_failures`, `RefinementResult`, `RefinementSuggestion` | Current coding agent, source investigation, and targeted reruns |
 | `skill_eval_runner`, `SkillCaseResult`, `SkillGradingResult` | `load_skill_evals`, pytest parametrization, `copilot_eval`, consumer-owned checks |
 | `skill_benchmark`, `SkillBenchmarkResult`, `CaseBenchmark`, `BenchmarkComparison` | `ab_run`, fixed criteria, side-specific verification, and repetitions |
 | `InsightsResult` and `reporting.insights` | Native execution evidence and coding-agent-led interpretation |
@@ -30,7 +29,8 @@ Node is needed for skill installation, not the Python runtime.
 | `pytest-skill-engineering-report`, `pytest_skill_engineering.cli` | Read saved JSON directly or use the current native loader |
 | HTML/Markdown components, templates, rankings, winner selection, and demo reports | The coding agent investigates saved evidence alongside source |
 | `AitestHookSpec`, `pytest_skill_engineering_analysis_prompt` | No replacement adviser hook |
-| `get_analysis_prompt`, `get_analysis_prompt_details`, packaged analysis system prompts | Companion skill guidance for the current coding agent |
+| `get_analysis_prompt`, `get_analysis_prompt_details`, packaged analysis system prompts | Documentation, examples, and coding-agent-led investigation |
+| `CopilotEval.max_retries`, `retry_delay_s` | Single-attempt execution; explicitly rerun a selected pytest case |
 
 The judge, analysis, scoring, refinement, automatic grading, and automatic
 benchmark modules are removed, not deprecated. Plugins registering the removed
@@ -40,6 +40,11 @@ analysis hook must remove that implementation.
 remain non-AI helpers. The exporter formats supplied booleans and evidence; it
 does not judge a response. Free-text expectations remain descriptions that you
 must translate into explicit checks.
+
+Execution no longer retries startup, connection, or task failures. Remove
+`max_retries` and `retry_delay_s` from eval construction; removed keywords are
+errors. Read the recorded failure before choosing a pytest rerun, such as
+`uv run python -m pytest --lf`.
 
 ## Replace judging with actual verification
 

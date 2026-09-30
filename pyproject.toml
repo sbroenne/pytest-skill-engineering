@@ -98,7 +98,7 @@ quote-style = "double"
 indent-style = "space"
 
 [tool.pyright]
-include = ["src", "tests"]
+include = ["src", "tests", "examples/skill-dogfood"]
 pythonVersion = "3.11"
 typeCheckingMode = "basic"
 
@@ -139,4 +139,8 @@ markers = [
 [dependency-groups]
 dev = [
     "pytest-skill-engineering[dev,test,docs]",
+    "pytest-skill-engineering-dogfood",
 ]
+
+[tool.uv.sources]
+pytest-skill-engineering-dogfood = { path = "examples/skill-dogfood", editable = true }

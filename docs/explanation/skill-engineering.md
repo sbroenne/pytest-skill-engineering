@@ -18,8 +18,8 @@ does not replace tests of the tool implementation.
 6. Check regressions and repeat cases when reliability is the question.
 
 The framework supplies execution and evidence. The coding agent already working
-in your repository supplies the investigation, assisted by the
-[companion skill](../getting-started/companion-skill.md). There is no separate
+in your repository supplies the investigation. Framework usage belongs in
+documentation and examples, not a mandatory companion skill. There is no separate
 automated adviser and no automatic free-text answer grading.
 
 ## Do not assume every failure is an instruction problem

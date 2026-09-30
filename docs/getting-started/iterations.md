@@ -26,9 +26,9 @@ environment failures.
 fixtures. It does not reset session-scoped fixtures, a shared desktop, or an
 external service automatically.
 
-`CopilotEval(max_retries=2)` retries eligible transient execution failures before
-tool activity. Runs with tool admission or observed tool activity are not
-replayed. Use `max_retries=0` when the experiment must not retry executions.
+Each `copilot_eval` call makes one attempt. The framework does not retry startup,
+connection, or task failures. Rerun a selected case explicitly, or request
+repetitions with fixed criteria; failed executions remain recorded.
 
 ## Thresholds and interpretation
 

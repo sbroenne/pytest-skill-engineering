@@ -30,11 +30,18 @@ Resources for contributors and developers working on pytest-skill-engineering it
     | Copilot behavior | One relevant `tests/integration/copilot/` file at a time |
     | Documentation | Strict MkDocs build |
     | Evidence persistence | Native JSON round-trip and failure-path contracts |
+    | Historical customer workflow sample | Sample offline checks, then explicitly authorized live cases |
 
 All PRs are **squash merged**. The
 [full contribution guide](https://github.com/sbroenne/pytest-skill-engineering/blob/main/CONTRIBUTING.md)
 contains the exact commands and explains when a paid real-Copilot run is
 required.
+
+The customer example and historical case study live in
+[the workflow sample](https://github.com/sbroenne/pytest-skill-engineering/tree/main/examples/skill-dogfood).
+It replaces the old banking showcase and reuses its no-skill workflow in
+`test_19_customer_workflow.py`. Keep the quickstart as the simpler first example;
+do not introduce automatic paid jobs for the sample.
 
 ## Guides
 

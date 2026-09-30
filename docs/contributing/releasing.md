@@ -82,9 +82,15 @@ Only repository maintainers can trigger releases.
 ## 1.0 release preparation
 
 Check the [breaking-change guide](../migration.md), complete current documentation,
-schema-4.0 evidence contracts, and the canonical companion skill. Verify local
-`npx skills` discovery and installation, package version metadata, and the
-installed wheel before publishing. Reading saved evidence must work without Copilot.
+schema-4.0 evidence contracts, package version metadata, and the installed wheel
+before publishing. There is no companion skill to install or publish.
+Reading saved evidence must work without Copilot.
+
+Verify the quickstart and the
+[historical customer workflow sample](https://github.com/sbroenne/pytest-skill-engineering/tree/main/examples/skill-dogfood)
+against the checkout. The latter must default to offline checks and preserve
+real before/after evidence when its live cases are explicitly authorized. The
+old banking showcase and dedicated workflow are no longer release artifacts.
 
 Preparing a version bump does not authorize tagging, publishing, running a
 release workflow, or announcing a release. The maintainer makes that decision

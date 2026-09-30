@@ -102,14 +102,6 @@ class CopilotEvalConfig(CopilotResultAgent, Protocol):
         raise NotImplementedError
 
     @property
-    def max_retries(self) -> int:
-        raise NotImplementedError
-
-    @property
-    def retry_delay_s(self) -> float:
-        raise NotImplementedError
-
-    @property
     def auto_confirm(self) -> bool:
         raise NotImplementedError
 

@@ -12,7 +12,7 @@
 ## What I Own
 
 - `tests/integration/copilot/` — All CopilotEval integration tests
-- `tests/showcase/` — Real-tool outcome examples
+- `examples/skill-dogfood/` — Customer workflow and historical skill-removal case study
 - `tests/contracts/` — Offline framework boundaries, not model performance
 - `tests/integration/conftest.py` — Shared constants and server fixtures
 - Test harnesses in `src/pytest_skill_engineering/testing/` — banking, todo MCP servers
