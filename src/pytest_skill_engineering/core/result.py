@@ -3,11 +3,34 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 
 if TYPE_CHECKING:
     from pytest_skill_engineering.copilot.requests import RequestAudit
-    from pytest_skill_engineering.copilot.result import StopReason, UsageInfo
+
+
+@dataclass(slots=True)
+class UsageInfo:
+    """Token usage from a single model turn."""
+
+    model: str
+    input_tokens: int | None = None
+    output_tokens: int | None = None
+    cache_read_tokens: int | None = None
+    cache_write_tokens: int | None = None
+    reasoning_tokens: int | None = None
+    reasoning_effort: str | None = None
+    duration_ms: float | None = None
+
+
+StopReason = Literal[
+    "completed",
+    "tool_budget_exceeded",
+    "timeout",
+    "request_audit_error",
+    "execution_error",
+    "cleanup_error",
+]
 
 
 @dataclass(slots=True)

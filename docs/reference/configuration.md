@@ -109,6 +109,11 @@ from pytest_skill_engineering import CLIServer
 server = CLIServer(command="git", tool_prefix="git")
 ```
 
+With `shell="none"`, the command runs directly without a shell. Single or double
+quotes group words and are removed before execution. Windows base commands keep
+backslashes as path separators, including unquoted paths; other platforms use
+POSIX escaping. Tool-supplied arguments use POSIX quoting on every platform.
+
 ## pytest configuration
 
 ```toml

@@ -2,7 +2,7 @@
 # fixture-04-agent-selector
 
 > **3** tests | **2** passed | **1** failed | **67%** pass rate  
-> Duration: 9.0s | Cost: 🧪 2 PR · 🤖 $0.001200 · 💰 $0.001200 | Tokens: 195–195  
+> Duration: 9.0s | Cost: 🧪 3 PR · 🤖 $0.001200 · 💰 $0.001200 | Tokens: 195–195  
 > August 10, 2026 at 08:03 PM
 
 *Three agents for testing the agent selector UI.*
@@ -15,7 +15,7 @@
 | :---: | :--- | :---: | :---: | ---: | ---: | ---: |
 |🥇|claude-haiku-4.5 🏆|1/1|100%|195|1 PR|3.0s|
 |🥈|gpt-5.4-mini|1/1|100%|195|1 PR|3.0s|
-|🥉|gemini-3.6-flash|0/1|0%|0|N/A|3.0s|
+|🥉|gemini-3.6-flash|0/1|0%|195|1 PR|3.0s|
 
 
 
@@ -46,13 +46,25 @@ Tool names are deterministic in these fixture reports.
 <details>
 <summary>✅ gpt-5.4-mini — 3.0s · 195 tokens · 3 turns · 1 PR</summary>
 
+<details><summary>Execution and verification evidence</summary><pre>{
+  &quot;session_success&quot;: true,
+  &quot;evidence_complete&quot;: null,
+  &quot;capture_errors&quot;: [],
+  &quot;properties&quot;: [],
+  &quot;configuration&quot;: {}
+}</pre></details>
 **Tool Calls:**
 
 
 |Tool|Status|Args|
 | :--- | :---: | :--- |
-|`create_file`|✅|path='summary.txt'|
+|`create_file`|Incomplete evidence|path='summary.txt'|
 
+<details><summary>Call evidence</summary><pre>Call: None
+Completion received: None; tool success: None
+Arguments: {&quot;path&quot;: &quot;summary.txt&quot;}
+Output: written
+Error: None</pre></details>
 
 **Response:**
 
@@ -67,6 +79,7 @@ sequenceDiagram
     User->>Eval: "Create a summary file."
     Eval->>Tools: "create_file({'path': 'summary.txt'})"
     Tools-->>Eval: "written"
+    Note over Tools,Eval: Incomplete evidence
     Eval->>User: "Created summary.txt."
 ```
 
@@ -78,13 +91,25 @@ sequenceDiagram
 <details>
 <summary>✅ claude-haiku-4.5 — 3.0s · 195 tokens · 3 turns · 1 PR</summary>
 
+<details><summary>Execution and verification evidence</summary><pre>{
+  &quot;session_success&quot;: true,
+  &quot;evidence_complete&quot;: null,
+  &quot;capture_errors&quot;: [],
+  &quot;properties&quot;: [],
+  &quot;configuration&quot;: {}
+}</pre></details>
 **Tool Calls:**
 
 
 |Tool|Status|Args|
 | :--- | :---: | :--- |
-|`create_file`|✅|path='summary.txt'|
+|`create_file`|Incomplete evidence|path='summary.txt'|
 
+<details><summary>Call evidence</summary><pre>Call: None
+Completion received: None; tool success: None
+Arguments: {&quot;path&quot;: &quot;summary.txt&quot;}
+Output: written
+Error: None</pre></details>
 
 **Response:**
 
@@ -99,6 +124,7 @@ sequenceDiagram
     User->>Eval: "Create a summary file."
     Eval->>Tools: "create_file({'path': 'summary.txt'})"
     Tools-->>Eval: "written"
+    Note over Tools,Eval: Incomplete evidence
     Eval->>User: "Created summary.txt."
 ```
 
@@ -108,9 +134,30 @@ sequenceDiagram
 #### ❌ Compare three agents with selector controls. [gemini-3.6-flash]
 
 <details>
-<summary>❌ gemini-3.6-flash — 3.0s · 0 tokens · 0 turns · N/A</summary>
+<summary>❌ gemini-3.6-flash — 3.0s · 195 tokens · 2 turns · 1 PR</summary>
 
+<details><summary>Execution and verification evidence</summary><pre>{
+  &quot;session_success&quot;: false,
+  &quot;evidence_complete&quot;: null,
+  &quot;capture_errors&quot;: [],
+  &quot;properties&quot;: [],
+  &quot;configuration&quot;: {}
+}</pre></details>
 **Error:** `AssertionError: summary.txt was not created`
+
+**Response:**
+
+> Refused to create the file.
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Eval
+    participant Tools
+
+    User->>Eval: "Create a summary file."
+    Eval->>User: "Refused to create the file."
+```
 
 </details>
 

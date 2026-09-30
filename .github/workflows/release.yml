@@ -318,6 +318,7 @@ jobs:
       - name: Create or update GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
           TAG: ${{ needs.validate-release.outputs.tag }}
         run: |
           release_args=(--generate-notes --title "$TAG")

@@ -7,6 +7,25 @@ import pytest
 from pytest_skill_engineering.copilot.result import CopilotResult, ToolCall, Turn, UsageInfo
 
 
+def test_usage_and_stop_types_are_shared_without_core_importing_copilot_result() -> None:
+    from pytest_skill_engineering.copilot import UsageInfo as PublicUsageInfo
+    from pytest_skill_engineering.copilot.result import StopReason
+    from pytest_skill_engineering.core.result import EvalResult
+    from pytest_skill_engineering.core.result import StopReason as CoreStopReason
+    from pytest_skill_engineering.core.result import UsageInfo as CoreUsageInfo
+    from pytest_skill_engineering.core.serialization import serialize_dataclass
+
+    assert UsageInfo is PublicUsageInfo is CoreUsageInfo
+    assert StopReason is CoreStopReason
+    assert UsageInfo.__module__ == "pytest_skill_engineering.core.result"
+    usage = CoreUsageInfo(model="actual-model", input_tokens=7, reasoning_tokens=3)
+    result = EvalResult(turns=[], success=False, usage=[usage], stop_reason="timeout")
+    serialized = serialize_dataclass(result)
+    assert serialized["usage"][0]["reasoning_tokens"] == 3
+    assert serialized["usage"][0]["cache_read_tokens"] is None
+    assert serialized["stop_reason"] == "timeout"
+
+
 class TestCopilotResultProperties:
     """Test computed properties."""
 

@@ -47,13 +47,25 @@ Tool names are deterministic in these fixture reports.
 <details>
 <summary>✅ gpt-5.4-mini / concise — 3.0s · 195 tokens · 3 turns · 1 PR</summary>
 
+<details><summary>Execution and verification evidence</summary><pre>{
+  &quot;session_success&quot;: true,
+  &quot;evidence_complete&quot;: null,
+  &quot;capture_errors&quot;: [],
+  &quot;properties&quot;: [],
+  &quot;configuration&quot;: {}
+}</pre></details>
 **Tool Calls:**
 
 
 |Tool|Status|Args|
 | :--- | :---: | :--- |
-|`get_all_balances`|✅||
+|`get_all_balances`|Incomplete evidence||
 
+<details><summary>Call evidence</summary><pre>Call: None
+Completion received: None; tool success: None
+Arguments: {}
+Output: {&quot;checking&quot;:&quot;$1,500.00&quot;,&quot;savings&quot;:&quot;$3,000.00&quot;}
+Error: None</pre></details>
 
 **Response:**
 
@@ -68,6 +80,7 @@ sequenceDiagram
     User->>Eval: "Check balances with all dimensions enabled."
     Eval->>Tools: "get_all_balances({})"
     Tools-->>Eval: "{'checking':'$1,500.00','savings':'$3,000.00'}"
+    Note over Tools,Eval: Incomplete evidence
     Eval->>User: "gpt-5.4-mini answered with the concise prompt."
 ```
 
@@ -79,13 +92,25 @@ sequenceDiagram
 <details>
 <summary>✅ gpt-5.4-mini / detailed — 3.0s · 195 tokens · 3 turns · 1 PR</summary>
 
+<details><summary>Execution and verification evidence</summary><pre>{
+  &quot;session_success&quot;: true,
+  &quot;evidence_complete&quot;: null,
+  &quot;capture_errors&quot;: [],
+  &quot;properties&quot;: [],
+  &quot;configuration&quot;: {}
+}</pre></details>
 **Tool Calls:**
 
 
 |Tool|Status|Args|
 | :--- | :---: | :--- |
-|`get_all_balances`|✅||
+|`get_all_balances`|Incomplete evidence||
 
+<details><summary>Call evidence</summary><pre>Call: None
+Completion received: None; tool success: None
+Arguments: {}
+Output: {&quot;checking&quot;:&quot;$1,500.00&quot;,&quot;savings&quot;:&quot;$3,000.00&quot;}
+Error: None</pre></details>
 
 **Response:**
 
@@ -100,6 +125,7 @@ sequenceDiagram
     User->>Eval: "Check balances with all dimensions enabled."
     Eval->>Tools: "get_all_balances({})"
     Tools-->>Eval: "{'checking':'$1,500.00','savings':'$3,000.00'}"
+    Note over Tools,Eval: Incomplete evidence
     Eval->>User: "gpt-5.4-mini answered with the detailed prompt."
 ```
 
@@ -111,13 +137,25 @@ sequenceDiagram
 <details>
 <summary>✅ claude-haiku-4.5 / concise — 3.0s · 195 tokens · 3 turns · 1 PR</summary>
 
+<details><summary>Execution and verification evidence</summary><pre>{
+  &quot;session_success&quot;: true,
+  &quot;evidence_complete&quot;: null,
+  &quot;capture_errors&quot;: [],
+  &quot;properties&quot;: [],
+  &quot;configuration&quot;: {}
+}</pre></details>
 **Tool Calls:**
 
 
 |Tool|Status|Args|
 | :--- | :---: | :--- |
-|`get_all_balances`|✅||
+|`get_all_balances`|Incomplete evidence||
 
+<details><summary>Call evidence</summary><pre>Call: None
+Completion received: None; tool success: None
+Arguments: {}
+Output: {&quot;checking&quot;:&quot;$1,500.00&quot;,&quot;savings&quot;:&quot;$3,000.00&quot;}
+Error: None</pre></details>
 
 **Response:**
 
@@ -132,6 +170,7 @@ sequenceDiagram
     User->>Eval: "Check balances with all dimensions enabled."
     Eval->>Tools: "get_all_balances({})"
     Tools-->>Eval: "{'checking':'$1,500.00','savings':'$3,000.00'}"
+    Note over Tools,Eval: Incomplete evidence
     Eval->>User: "claude-haiku-4.5 answered with the concise prompt."
 ```
 
@@ -143,13 +182,25 @@ sequenceDiagram
 <details>
 <summary>✅ claude-haiku-4.5 / detailed — 3.0s · 195 tokens · 3 turns · 1 PR</summary>
 
+<details><summary>Execution and verification evidence</summary><pre>{
+  &quot;session_success&quot;: true,
+  &quot;evidence_complete&quot;: null,
+  &quot;capture_errors&quot;: [],
+  &quot;properties&quot;: [],
+  &quot;configuration&quot;: {}
+}</pre></details>
 **Tool Calls:**
 
 
 |Tool|Status|Args|
 | :--- | :---: | :--- |
-|`get_all_balances`|✅||
+|`get_all_balances`|Incomplete evidence||
 
+<details><summary>Call evidence</summary><pre>Call: None
+Completion received: None; tool success: None
+Arguments: {}
+Output: {&quot;checking&quot;:&quot;$1,500.00&quot;,&quot;savings&quot;:&quot;$3,000.00&quot;}
+Error: None</pre></details>
 
 **Response:**
 
@@ -164,6 +215,7 @@ sequenceDiagram
     User->>Eval: "Check balances with all dimensions enabled."
     Eval->>Tools: "get_all_balances({})"
     Tools-->>Eval: "{'checking':'$1,500.00','savings':'$3,000.00'}"
+    Note over Tools,Eval: Incomplete evidence
     Eval->>User: "claude-haiku-4.5 answered with the detailed prompt."
 ```
 

@@ -56,8 +56,7 @@ def deserialize_suite_report(data: dict[str, Any]) -> SuiteReport:
     Reconstructs the full dataclass hierarchy from the serialized format.
     """
     from pytest_skill_engineering.copilot.requests import RequestAudit
-    from pytest_skill_engineering.copilot.result import UsageInfo
-    from pytest_skill_engineering.core.result import EvalResult, ToolCall, Turn
+    from pytest_skill_engineering.core.result import EvalResult, ToolCall, Turn, UsageInfo
     from pytest_skill_engineering.reporting.collector import SuiteReport, TestReport
 
     # Reconstruct tests

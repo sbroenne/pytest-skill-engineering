@@ -38,13 +38,25 @@ Tool names are deterministic in these fixture reports.
 <details>
 <summary>3.0s · 195 tokens · 3 turns · 1 PR</summary>
 
+<details><summary>Execution and verification evidence</summary><pre>{
+  &quot;session_success&quot;: true,
+  &quot;evidence_complete&quot;: null,
+  &quot;capture_errors&quot;: [],
+  &quot;properties&quot;: [],
+  &quot;configuration&quot;: {}
+}</pre></details>
 **Tool Calls:**
 
 
 |Tool|Status|Args|
 | :--- | :---: | :--- |
-|`echo_execute`|✅|args='hello'|
+|`echo_execute`|Incomplete evidence|args='hello'|
 
+<details><summary>Call evidence</summary><pre>Call: None
+Completion received: None; tool success: None
+Arguments: {&quot;args&quot;: &quot;hello&quot;}
+Output: {&quot;stdout&quot;:&quot;hello\n&quot;}
+Error: None</pre></details>
 
 **Response:**
 
@@ -59,6 +71,7 @@ sequenceDiagram
     User->>Eval: "Echo hello from the CLI wrapper."
     Eval->>Tools: "echo_execute({'args': 'hello'})"
     Tools-->>Eval: "{'stdout':'hello\n'}"
+    Note over Tools,Eval: Incomplete evidence
     Eval->>User: "The CLI returned hello."
 ```
 
@@ -70,13 +83,25 @@ sequenceDiagram
 <details>
 <summary>3.0s · 195 tokens · 3 turns · 1 PR</summary>
 
+<details><summary>Execution and verification evidence</summary><pre>{
+  &quot;session_success&quot;: true,
+  &quot;evidence_complete&quot;: null,
+  &quot;capture_errors&quot;: [],
+  &quot;properties&quot;: [],
+  &quot;configuration&quot;: {}
+}</pre></details>
 **Tool Calls:**
 
 
 |Tool|Status|Args|
 | :--- | :---: | :--- |
-|`echo_execute`|✅|args='hello'|
+|`echo_execute`|Incomplete evidence|args='hello'|
 
+<details><summary>Call evidence</summary><pre>Call: None
+Completion received: None; tool success: None
+Arguments: {&quot;args&quot;: &quot;hello&quot;}
+Output: {&quot;stdout&quot;:&quot;hello\n&quot;}
+Error: None</pre></details>
 
 **Response:**
 
@@ -91,6 +116,7 @@ sequenceDiagram
     User->>Eval: "Echo hello and explain the result."
     Eval->>Tools: "echo_execute({'args': 'hello'})"
     Tools-->>Eval: "{'stdout':'hello\n'}"
+    Note over Tools,Eval: Incomplete evidence
     Eval->>User: "The CLI returned hello and I explained it."
 ```
 

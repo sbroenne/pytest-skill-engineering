@@ -2,7 +2,7 @@
 # fixture-07-skill-improvement
 
 > **2** tests | **1** passed | **1** failed | **50%** pass rate  
-> Duration: 6.0s | Cost: 🧪 1 PR · 🤖 $0.001200 · 💰 $0.001200 | Tokens: 195–195  
+> Duration: 6.0s | Cost: 🧪 2 PR · 🤖 $0.001200 · 💰 $0.001200 | Tokens: 195–195  
 > August 10, 2026 at 08:06 PM
 
 *Skill treatment improves domain language and tool usage.*
@@ -14,7 +14,7 @@
 |#|Eval|Tests|Pass Rate|Tokens|Cost|Duration|
 | :---: | :--- | :---: | :---: | ---: | ---: | ---: |
 |🥇|with skill 🏆|1/1|100%|195|1 PR|3.0s|
-|🥈|baseline|0/1|0%|0|N/A|3.0s|
+|🥈|baseline|0/1|0%|195|1 PR|3.0s|
 
 
 
@@ -43,13 +43,34 @@ Tool names are deterministic in these fixture reports.
 #### ❌ Baseline agent without the skill.
 
 <details>
-<summary>❌ baseline — 3.0s · 0 tokens · 0 turns · N/A</summary>
+<summary>❌ baseline — 3.0s · 195 tokens · 2 turns · 1 PR</summary>
 
 **Assertions:**
 
 - ❌ `llm`: uses domain-correct banking terminology
 
+<details><summary>Execution and verification evidence</summary><pre>{
+  &quot;session_success&quot;: false,
+  &quot;evidence_complete&quot;: null,
+  &quot;capture_errors&quot;: [],
+  &quot;properties&quot;: [],
+  &quot;configuration&quot;: {}
+}</pre></details>
 **Error:** `AssertionError: expected banking terminology was missing`
+
+**Response:**
+
+> Accounts exist.
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Eval
+    participant Tools
+
+    User->>Eval: "Explain available account types."
+    Eval->>User: "Accounts exist."
+```
 
 </details>
 
@@ -63,13 +84,25 @@ Tool names are deterministic in these fixture reports.
 
 - ✅ `llm`: uses domain-correct banking terminology
 
+<details><summary>Execution and verification evidence</summary><pre>{
+  &quot;session_success&quot;: true,
+  &quot;evidence_complete&quot;: null,
+  &quot;capture_errors&quot;: [],
+  &quot;properties&quot;: [],
+  &quot;configuration&quot;: {}
+}</pre></details>
 **Tool Calls:**
 
 
 |Tool|Status|Args|
 | :--- | :---: | :--- |
-|`get_all_balances`|✅||
+|`get_all_balances`|Incomplete evidence||
 
+<details><summary>Call evidence</summary><pre>Call: None
+Completion received: None; tool success: None
+Arguments: {}
+Output: {&quot;checking&quot;:&quot;$1,500.00&quot;,&quot;savings&quot;:&quot;$3,000.00&quot;}
+Error: None</pre></details>
 
 **Response:**
 
@@ -84,6 +117,7 @@ sequenceDiagram
     User->>Eval: "Explain available account types."
     Eval->>Tools: "get_all_balances({})"
     Tools-->>Eval: "{'checking':'$1,500.00','savings':'$3,000.00'}"
+    Note over Tools,Eval: Incomplete evidence
     Eval->>User: "Checking handles daily spending, while savings earns interest."
 ```
 

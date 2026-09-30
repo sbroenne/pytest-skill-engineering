@@ -1,49 +1,26 @@
 """Result types for Copilot agent execution.
 
-Turn, ToolCall, and SubagentInvocation are imported from pytest-skill-engineering core.
-Copilot-specific types (UsageInfo, CopilotResult) are defined here.
+Shared result types are imported from pytest-skill-engineering core.
+CopilotResult adds SDK-specific execution evidence.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any
 
 from pytest_skill_engineering.copilot.contracts import CopilotResultAgent, SubagentInvocation
 from pytest_skill_engineering.copilot.requests import RequestAudit
-from pytest_skill_engineering.core.result import ToolCall, Turn  # noqa: F401
+from pytest_skill_engineering.core.result import StopReason, ToolCall, Turn, UsageInfo
 
 __all__ = [
     "CopilotResult",
+    "StopReason",
     "SubagentInvocation",
     "ToolCall",
     "Turn",
     "UsageInfo",
-]
-
-
-@dataclass(slots=True)
-class UsageInfo:
-    """Token usage from a single model turn."""
-
-    model: str
-    input_tokens: int | None = None
-    output_tokens: int | None = None
-    cache_read_tokens: int | None = None
-    cache_write_tokens: int | None = None
-    reasoning_tokens: int | None = None
-    reasoning_effort: str | None = None
-    duration_ms: float | None = None
-
-
-StopReason = Literal[
-    "completed",
-    "tool_budget_exceeded",
-    "timeout",
-    "request_audit_error",
-    "execution_error",
-    "cleanup_error",
 ]
 
 

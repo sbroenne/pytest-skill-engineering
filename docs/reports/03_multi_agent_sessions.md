@@ -45,13 +45,25 @@ Tool names are deterministic in these fixture reports.
 <details>
 <summary>✅ gpt-5.4-mini — 3.0s · 195 tokens · 3 turns · 1 PR</summary>
 
+<details><summary>Execution and verification evidence</summary><pre>{
+  &quot;session_success&quot;: true,
+  &quot;evidence_complete&quot;: null,
+  &quot;capture_errors&quot;: [],
+  &quot;properties&quot;: [],
+  &quot;configuration&quot;: {}
+}</pre></details>
 **Tool Calls:**
 
 
 |Tool|Status|Args|
 | :--- | :---: | :--- |
-|`get_all_balances`|✅||
+|`get_all_balances`|Incomplete evidence||
 
+<details><summary>Call evidence</summary><pre>Call: None
+Completion received: None; tool success: None
+Arguments: {}
+Output: {&quot;checking&quot;: &quot;$1,500.00&quot;, &quot;savings&quot;: &quot;$3,000.00&quot;}
+Error: None</pre></details>
 
 **Response:**
 
@@ -66,6 +78,7 @@ sequenceDiagram
     User->>Eval: "Start by checking balances."
     Eval->>Tools: "get_all_balances({})"
     Tools-->>Eval: "{'checking': '$1,500.00', 'savings': '$3,000.00'}"
+    Note over Tools,Eval: Incomplete evidence
     Eval->>User: "Balances loaded and ready for the next step."
 ```
 
@@ -77,13 +90,25 @@ sequenceDiagram
 <details>
 <summary>✅ claude-haiku-4.5 — 3.0s · 195 tokens · 3 turns · 1 PR</summary>
 
+<details><summary>Execution and verification evidence</summary><pre>{
+  &quot;session_success&quot;: true,
+  &quot;evidence_complete&quot;: null,
+  &quot;capture_errors&quot;: [],
+  &quot;properties&quot;: [],
+  &quot;configuration&quot;: {}
+}</pre></details>
 **Tool Calls:**
 
 
 |Tool|Status|Args|
 | :--- | :---: | :--- |
-|`get_all_balances`|✅||
+|`get_all_balances`|Incomplete evidence||
 
+<details><summary>Call evidence</summary><pre>Call: None
+Completion received: None; tool success: None
+Arguments: {}
+Output: {&quot;checking&quot;: &quot;$1,500.00&quot;, &quot;savings&quot;: &quot;$3,000.00&quot;}
+Error: None</pre></details>
 
 **Response:**
 
@@ -98,6 +123,7 @@ sequenceDiagram
     User->>Eval: "Start by checking balances."
     Eval->>Tools: "get_all_balances({})"
     Tools-->>Eval: "{'checking': '$1,500.00', 'savings': '$3,000.00'}"
+    Note over Tools,Eval: Incomplete evidence
     Eval->>User: "Balances loaded and ready for the next step."
 ```
 
@@ -109,13 +135,25 @@ sequenceDiagram
 <details>
 <summary>✅ gpt-5.4-mini — 3.0s · 195 tokens · 3 turns · 1 PR</summary>
 
+<details><summary>Execution and verification evidence</summary><pre>{
+  &quot;session_success&quot;: true,
+  &quot;evidence_complete&quot;: null,
+  &quot;capture_errors&quot;: [],
+  &quot;properties&quot;: [],
+  &quot;configuration&quot;: {}
+}</pre></details>
 **Tool Calls:**
 
 
 |Tool|Status|Args|
 | :--- | :---: | :--- |
-|`transfer`|✅|from_account='checking', to_account='savings', amount=250|
+|`transfer`|Incomplete evidence|from_account='checking', to_account='savings', amount=250|
 
+<details><summary>Call evidence</summary><pre>Call: None
+Completion received: None; tool success: None
+Arguments: {&quot;from_account&quot;: &quot;checking&quot;, &quot;to_account&quot;: &quot;savings&quot;, &quot;amount&quot;: 250}
+Output: ok
+Error: None</pre></details>
 
 **Response:**
 
@@ -130,6 +168,7 @@ sequenceDiagram
     User->>Eval: "Move $250 to savings."
     Eval->>Tools: "transfer({'from_account': 'checking', 'to_account': 'savings', 'amoun)"
     Tools-->>Eval: "ok"
+    Note over Tools,Eval: Incomplete evidence
     Eval->>User: "Transferred $250 to savings."
 ```
 
@@ -141,13 +180,25 @@ sequenceDiagram
 <details>
 <summary>✅ claude-haiku-4.5 — 3.0s · 195 tokens · 3 turns · 1 PR</summary>
 
+<details><summary>Execution and verification evidence</summary><pre>{
+  &quot;session_success&quot;: true,
+  &quot;evidence_complete&quot;: null,
+  &quot;capture_errors&quot;: [],
+  &quot;properties&quot;: [],
+  &quot;configuration&quot;: {}
+}</pre></details>
 **Tool Calls:**
 
 
 |Tool|Status|Args|
 | :--- | :---: | :--- |
-|`transfer`|✅|from_account='checking', to_account='savings', amount=250|
+|`transfer`|Incomplete evidence|from_account='checking', to_account='savings', amount=250|
 
+<details><summary>Call evidence</summary><pre>Call: None
+Completion received: None; tool success: None
+Arguments: {&quot;from_account&quot;: &quot;checking&quot;, &quot;to_account&quot;: &quot;savings&quot;, &quot;amount&quot;: 250}
+Output: ok
+Error: None</pre></details>
 
 **Response:**
 
@@ -162,6 +213,7 @@ sequenceDiagram
     User->>Eval: "Move $250 to savings."
     Eval->>Tools: "transfer({'from_account': 'checking', 'to_account': 'savings', 'amoun)"
     Tools-->>Eval: "ok"
+    Note over Tools,Eval: Incomplete evidence
     Eval->>User: "Transferred $250 to savings."
 ```
 

@@ -68,6 +68,12 @@ class TestRoundTrip:
         json_path = FIXTURES_DIR / f"{fixture_name}.json"
         report, _insights = load_suite_report(json_path)
         re_serialized = serialize_dataclass(report)
+        source = json.loads(json_path.read_text(encoding="utf-8"))
+        for original, restored in zip(source["tests"], re_serialized["tests"], strict=True):
+            if original["eval_result"] is not None:
+                for key in ("request_audit", "stop_reason", "usage", "tool_calls_admitted"):
+                    assert key in original["eval_result"], f"Regenerate {fixture_name}: {key}"
+                    assert restored["eval_result"][key] == original["eval_result"][key]
         schema = _extract_schema(re_serialized)
         assert schema == snapshot
 
