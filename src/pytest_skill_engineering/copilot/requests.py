@@ -173,6 +173,8 @@ class _AuditedWebSocket(CopilotWebSocketForwarder):
         try:
             await super().open()
         except Exception as exc:
+            if not self.owner.inspect_requests:
+                raise
             message = _transport_failure_message("open", exc)
             self.owner.fail(message)
             raise ValueError(message) from None
@@ -180,6 +182,12 @@ class _AuditedWebSocket(CopilotWebSocketForwarder):
     async def send_request_message(self, data: str | bytes) -> None:
         if self.owner.failed.is_set():
             raise ValueError("Request audit already failed")
+        if self.owner.forwarding_stopped.is_set():
+            await self.context.cancel_event.wait()
+            raise asyncio.CancelledError
+        if not self.owner.inspect_requests:
+            await super().send_request_message(data)
+            return
         try:
             if not isinstance(data, str):
                 raise ValueError("Unsupported WebSocket frame: expected JSON text")
@@ -216,6 +224,9 @@ class _AuditedWebSocket(CopilotWebSocketForwarder):
             raise ValueError(message) from None
 
     async def close(self, status: CopilotWebSocketCloseStatus | None = None) -> None:
+        if not self.owner.inspect_requests:
+            await super().close(status)
+            return
         if status is not None and status.error is not None:
             message = _transport_failure_message("receive", status.error)
             self.owner.fail(message)
@@ -227,6 +238,9 @@ class _AuditedWebSocket(CopilotWebSocketForwarder):
             await CopilotWebSocketHandler.close(self, status)
 
     async def aclose(self) -> None:
+        if not self.owner.inspect_requests:
+            await super().aclose()
+            return
         try:
             if self._suppress_close_on_dispose:
                 if self._upstream is not None:
@@ -243,12 +257,20 @@ class _AuditedWebSocket(CopilotWebSocketForwarder):
 class RequestAuditHandler(CopilotRequestHandler):
     """Inspect HTTP requests and WebSocket Responses messages before forwarding."""
 
-    def __init__(self, *, image_detail: ImageDetail | None, audit: bool) -> None:
+    def __init__(
+        self,
+        *,
+        image_detail: ImageDetail | None,
+        audit: bool,
+        inspect_requests: bool = True,
+    ) -> None:
         self.image_detail: ImageDetail | None = image_detail
         self.audit = audit
+        self.inspect_requests = inspect_requests
         self.records: list[RequestAudit] = []
         self.observed_requests = 0
         self.failed = asyncio.Event()
+        self.forwarding_stopped = asyncio.Event()
         self.error: str | None = None
         self.http: httpx.AsyncClient | None = None
         self.websockets: list[_AuditedWebSocket] = []
@@ -257,11 +279,22 @@ class RequestAuditHandler(CopilotRequestHandler):
         self.error = message
         self.failed.set()
 
+    def stop_forwarding(self) -> None:
+        """Prevent post-budget model requests from reaching the provider."""
+        self.forwarding_stopped.set()
+
     async def send_request(
         self, request: httpx.Request, ctx: CopilotRequestContext
     ) -> httpx.Response:
         if self.failed.is_set():
             raise ValueError("Request audit already failed")
+        if self.forwarding_stopped.is_set():
+            await ctx.cancel_event.wait()
+            raise asyncio.CancelledError
+        if not self.inspect_requests:
+            if self.http is None:
+                self.http = httpx.AsyncClient(timeout=None, follow_redirects=False)
+            return await self.http.send(request, stream=True)
         if request.method == "GET" and not request.url.path.rstrip("/").endswith("/models"):
             self.fail("Unsupported request audit: only model-catalog GET requests may bypass audit")
             raise ValueError(self.error)

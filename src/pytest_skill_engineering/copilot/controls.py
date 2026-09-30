@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import inspect
+import logging
 from collections.abc import Awaitable
 from dataclasses import replace
 from typing import Any, TypeVar, cast
@@ -12,6 +13,7 @@ from copilot.session import PreToolUseHookInput, PreToolUseHookOutput
 from copilot.tools import Tool, ToolInvocation, ToolResult
 
 T = TypeVar("T")
+logger = logging.getLogger(__name__)
 
 
 async def resolve(value: T | Awaitable[T]) -> T:
@@ -25,8 +27,15 @@ class RunControls:
         self.limit = max_tool_calls
         self.admitted = 0
         self.completed = 0
+        self.started = 0
+        self.handlers_started = 0
+        self.handlers_finished = 0
         self.closed = False
         self._budget_exhausted = False
+        self._started_call_ids: list[str] = []
+        self._completed_call_ids: set[str] = set()
+        self._handler_started_call_ids: set[str] = set()
+        self._handler_finished_call_ids: set[str] = set()
         self.budget_exceeded = asyncio.Event()
         self.failed = asyncio.Event()
         self.error: str | None = None
@@ -59,6 +68,12 @@ class RunControls:
                 if self.limit is not None and self.admitted >= self.limit:
                     self.closed = True
                     self._budget_exhausted = True
+                    logger.info(
+                        "Tool budget closed admission: admitted=%d started=%d completed=%d",
+                        self.admitted,
+                        self.started,
+                        self.completed,
+                    )
                     self._signal_budget_when_complete()
                     return {
                         "permissionDecision": "deny",
@@ -109,17 +124,39 @@ class RunControls:
         config["hooks"] = hooks
         config["tools"] = [self.wrap(tool) for tool in config.get("tools", [])]
 
-    def observe(self, event: Any) -> None:
-        """Release a pending budget stop only after admitted calls complete."""
+    def observe(self, event: Any) -> bool:
+        """Observe tool lifecycle and report when the budget barrier releases."""
         event_type = event.type.value if hasattr(event.type, "value") else str(event.type)
+        if event_type == "tool.execution_start":
+            call_id = _event_data_field(event, "tool_call_id", "")
+            if call_id and call_id not in self._started_call_ids:
+                self._started_call_ids.append(call_id)
+                self.started += 1
+            return False
         if event_type != "tool.execution_complete":
-            return
-        self.completed += 1
-        self._signal_budget_when_complete()
+            return False
+        call_id = _event_data_field(event, "tool_call_id", "")
+        if call_id and call_id not in self._completed_call_ids:
+            self._completed_call_ids.add(call_id)
+            self.completed += 1
+        return self._signal_budget_when_complete()
 
-    def _signal_budget_when_complete(self) -> None:
-        if self._budget_exhausted and self.completed >= self.admitted:
+    def _signal_budget_when_complete(self) -> bool:
+        if (
+            self._budget_exhausted
+            and self.started >= self.admitted
+            and set(self._started_call_ids) <= self._completed_call_ids
+            and not self.budget_exceeded.is_set()
+        ):
+            logger.info(
+                "Tool budget completion barrier released: admitted=%d started=%d completed=%d",
+                self.admitted,
+                self.started,
+                self.completed,
+            )
             self.budget_exceeded.set()
+            return True
+        return False
 
     def wrap(self, tool: Tool) -> Tool:
         handler = tool.handler
@@ -128,7 +165,14 @@ class RunControls:
 
         async def invoke(invocation: ToolInvocation) -> ToolResult:
             async def execute() -> ToolResult:
-                return await resolve(handler(invocation))
+                call_id = invocation.tool_call_id
+                self._handler_started_call_ids.add(call_id)
+                self.handlers_started += 1
+                try:
+                    return await resolve(handler(invocation))
+                finally:
+                    self._handler_finished_call_ids.add(call_id)
+                    self.handlers_finished += 1
 
             task = asyncio.create_task(execute())
             self.active.add(task)
@@ -140,6 +184,26 @@ class RunControls:
                     self.active.discard(task)
 
         return replace(tool, handler=invoke)
+
+    def incomplete_diagnostics(self, *, abort_phase: str) -> list[str]:
+        """Return safe lifecycle details for started calls missing SDK completion."""
+        diagnostics = []
+        for ordinal, call_id in enumerate(self._started_call_ids, 1):
+            if call_id in self._completed_call_ids:
+                continue
+            handler_state = (
+                "finished"
+                if call_id in self._handler_finished_call_ids
+                else "started"
+                if call_id in self._handler_started_call_ids
+                else "not_started"
+            )
+            diagnostics.append(
+                "Tool lifecycle incomplete: "
+                f"call={call_id}, start_ordinal={ordinal}, admitted={self.admitted}, "
+                f"handler={handler_state}, sdk_completion=missing, abort_phase={abort_phase}"
+            )
+        return diagnostics
 
     async def drain(self) -> list[str]:
         """Never release a trial while its local handlers can still act."""
@@ -154,3 +218,13 @@ class RunControls:
             for outcome in outcomes
             if isinstance(outcome, BaseException)
         ]
+
+
+def _event_data_field(event: Any, name: str, default: T) -> T:
+    data = getattr(event, "data", None)
+    if isinstance(data, dict):
+        camel_name = "".join(
+            part if index == 0 else part.title() for index, part in enumerate(name.split("_"))
+        )
+        return cast(T, data.get(name, data.get(camel_name, default)))
+    return cast(T, getattr(data, name, default))

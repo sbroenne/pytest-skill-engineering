@@ -118,15 +118,21 @@ async def _run_copilot_once(agent: CopilotEvalConfig, prompt: str) -> CopilotRes
     """Execute a single attempt of a prompt against GitHub Copilot."""
     mapper = EventMapper()
     controls = RunControls(agent.max_tool_calls)
+    capture_requests = agent.audit_requests or agent.image_detail is not None
     audit = (
-        RequestAuditHandler(image_detail=agent.image_detail, audit=agent.audit_requests)
-        if agent.audit_requests or agent.image_detail is not None
+        RequestAuditHandler(
+            image_detail=agent.image_detail,
+            audit=agent.audit_requests,
+            inspect_requests=capture_requests,
+        )
+        if capture_requests or agent.max_tool_calls is not None
         else None
     )
     storage: TemporaryDirectory[str] | None = None
     client: CopilotClient | None = None
     session: CopilotSession | None = None
     execution: asyncio.Task[None] | None = None
+    budget_abort: asyncio.Task[None] | None = None
     watchers: list[asyncio.Task[bool]] = []
     reason: StopReason = "completed"
     error: str | None = None
@@ -145,8 +151,21 @@ async def _run_copilot_once(agent: CopilotEvalConfig, prompt: str) -> CopilotRes
         caller_event = session_config.get("on_event")
 
         def capture(event: SessionEvent) -> None:
+            nonlocal budget_abort
             mapper.handle(event)
-            controls.observe(event)
+            if controls.observe(event) and session is not None:
+                if audit is not None:
+                    audit.stop_forwarding()
+                logger.info(
+                    "Aborting Copilot session: phase=tool_budget_exceeded admitted=%d "
+                    "started=%d completed=%d handlers_started=%d handlers_finished=%d",
+                    controls.admitted,
+                    controls.started,
+                    controls.completed,
+                    controls.handlers_started,
+                    controls.handlers_finished,
+                )
+                budget_abort = asyncio.create_task(session.abort())
             if caller_event is not None:
                 caller_event(event)
 
@@ -202,7 +221,25 @@ async def _run_copilot_once(agent: CopilotEvalConfig, prompt: str) -> CopilotRes
             watcher.cancel()
         if watchers:
             await asyncio.gather(*watchers, return_exceptions=True)
-        if session is not None and (error is not None or execution is None or not execution.done()):
+        if budget_abort is not None:
+            try:
+                await asyncio.wait_for(budget_abort, timeout=30)
+            except Exception as exc:
+                logger.error("Failed to abort Copilot session at budget barrier", exc_info=True)
+                cleanup_errors.append(f"Session abort failed: {type(exc).__name__}")
+        elif session is not None and (
+            error is not None or execution is None or not execution.done()
+        ):
+            logger.info(
+                "Aborting Copilot session: phase=%s admitted=%d started=%d completed=%d "
+                "handlers_started=%d handlers_finished=%d",
+                reason,
+                controls.admitted,
+                controls.started,
+                controls.completed,
+                controls.handlers_started,
+                controls.handlers_finished,
+            )
             try:
                 await asyncio.wait_for(session.abort(), timeout=30)
             except Exception as exc:
@@ -230,7 +267,9 @@ async def _run_copilot_once(agent: CopilotEvalConfig, prompt: str) -> CopilotRes
 
     result = mapper.build()
     result.tool_calls_admitted = controls.admitted
-    if audit is not None:
+    if result.capture_errors:
+        result.capture_errors.extend(controls.incomplete_diagnostics(abort_phase=reason))
+    if audit is not None and capture_requests:
         result.request_audit = list(audit.records)
         if audit.error or (session is not None and not audit.observed_requests):
             audit_error = audit.error or "No outbound model requests captured; audit unsupported"
