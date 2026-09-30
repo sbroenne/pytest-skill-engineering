@@ -42,13 +42,25 @@ Tool names are deterministic in these fixture reports.
 
 - ✅ `llm`: mentions the current balance
 
+<details><summary>Execution and verification evidence</summary><pre>{
+  &quot;session_success&quot;: true,
+  &quot;evidence_complete&quot;: null,
+  &quot;capture_errors&quot;: [],
+  &quot;properties&quot;: [],
+  &quot;configuration&quot;: {}
+}</pre></details>
 **Tool Calls:**
 
 
 |Tool|Status|Args|
 | :--- | :---: | :--- |
-|`get_balance`|✅|account='checking'|
+|`get_balance`|Incomplete evidence|account='checking'|
 
+<details><summary>Call evidence</summary><pre>Call: None
+Completion received: None; tool success: None
+Arguments: {&quot;account&quot;: &quot;checking&quot;}
+Output: {&quot;formatted&quot;: &quot;$1,500.00&quot;}
+Error: None</pre></details>
 
 **Response:**
 
@@ -63,6 +75,7 @@ sequenceDiagram
     User->>Eval: "What's my checking account balance?"
     Eval->>Tools: "get_balance({'account': 'checking'})"
     Tools-->>Eval: "{'formatted': '$1,500.00'}"
+    Note over Tools,Eval: Incomplete evidence
     Eval->>User: "Your checking balance is $1,500.00."
 ```
 
@@ -90,14 +103,31 @@ Overall: **4/5** (80%)
 
 > Deterministic score reasoning.
 
+<details><summary>Execution and verification evidence</summary><pre>{
+  &quot;session_success&quot;: true,
+  &quot;evidence_complete&quot;: null,
+  &quot;capture_errors&quot;: [],
+  &quot;properties&quot;: [],
+  &quot;configuration&quot;: {}
+}</pre></details>
 **Tool Calls:**
 
 
 |Tool|Status|Args|
 | :--- | :---: | :--- |
-|`transfer`|✅|from_account='checking', to_account='savings', amount=200|
-|`get_all_balances`|✅||
+|`transfer`|Incomplete evidence|from_account='checking', to_account='savings', amount=200|
+|`get_all_balances`|Incomplete evidence||
 
+<details><summary>Call evidence</summary><pre>Call: None
+Completion received: None; tool success: None
+Arguments: {&quot;from_account&quot;: &quot;checking&quot;, &quot;to_account&quot;: &quot;savings&quot;, &quot;amount&quot;: 200}
+Output: ok
+Error: None</pre></details>
+<details><summary>Call evidence</summary><pre>Call: None
+Completion received: None; tool success: None
+Arguments: {}
+Output: {&quot;checking&quot;: &quot;$1,300.00&quot;, &quot;savings&quot;: &quot;$3,200.00&quot;}
+Error: None</pre></details>
 
 **Response:**
 
@@ -112,8 +142,10 @@ sequenceDiagram
     User->>Eval: "Transfer $200 to savings and confirm it worked."
     Eval->>Tools: "transfer({'from_account': 'checking', 'to_account': 'savings', 'amoun)"
     Tools-->>Eval: "ok"
+    Note over Tools,Eval: Incomplete evidence
     Eval->>Tools: "get_all_balances({})"
     Tools-->>Eval: "{'checking': '$1,300.00', 'savings': '$3,200.00'}"
+    Note over Tools,Eval: Incomplete evidence
     Eval->>User: "Transferred $200 and confirmed the updated balances."
 ```
 

@@ -539,13 +539,13 @@ class CLIServerProcess:
 
         # Build shell command
         if self._shell == "none":
-            # Direct execution: no shell wrapper.
-            # Split base command and args separately:
-            # - Base command: use posix=False on Windows to preserve backslashes
-            #   in paths (posix=True treats backslash as escape character).
-            # - Args: always use posix=True to properly handle quoted strings
-            #   (e.g., JSON arrays like "[1,2,3]").
-            base_parts = shlex.split(self.config.command, posix=(sys.platform != "win32"))
+            # Remove grouping quotes without treating Windows path separators as escapes.
+            lexer = shlex.shlex(self.config.command, posix=True)
+            lexer.whitespace_split = True
+            lexer.commenters = ""
+            if sys.platform == "win32":
+                lexer.escape = ""
+            base_parts = list(lexer)
             if args:
                 base_parts.extend(shlex.split(args, posix=True))
             cmd = base_parts

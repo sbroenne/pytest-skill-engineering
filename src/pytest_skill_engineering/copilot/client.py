@@ -7,7 +7,7 @@ import logging
 import os
 from typing import Any
 
-from copilot import CopilotClientMode
+from copilot import CopilotClientMode, CopilotRequestHandler
 from copilot.client import CopilotClient
 from copilot.generated.rpc import PermissionDecisionApproveOnce
 
@@ -24,6 +24,7 @@ def create_client(
     *,
     mode: CopilotClientMode = "copilot-cli",
     base_directory: str | None = None,
+    request_handler: CopilotRequestHandler | None = None,
 ) -> CopilotClient:
     """Create a client using explicit credentials or the SDK's signed-in user."""
     return CopilotClient(
@@ -32,6 +33,7 @@ def create_client(
         github_token=get_github_token(),
         mode=mode,
         base_directory=base_directory,
+        request_handler=request_handler,
     )
 
 
@@ -40,13 +42,17 @@ def approve_all_permissions(*_args: Any, **_kwargs: Any) -> PermissionDecisionAp
     return PermissionDecisionApproveOnce()
 
 
-async def stop_client(client: CopilotClient) -> None:
+async def stop_client(client: CopilotClient) -> list[str]:
     """Release the owned runtime without masking an execution failure."""
     try:
         await asyncio.wait_for(client.stop(), timeout=30)
-    except Exception:
+    except Exception as exc:
         logger.warning("Failed to stop Copilot CLI cleanly, force stopping", exc_info=True)
+        errors = [f"Runtime cleanup failed: {type(exc).__name__}"]
         try:
             await asyncio.wait_for(client.force_stop(), timeout=10)
-        except Exception:
+        except Exception as force_exc:
             logger.error("Failed to force stop Copilot CLI", exc_info=True)
+            errors.append(f"Runtime force stop failed: {type(force_exc).__name__}")
+        return errors
+    return []

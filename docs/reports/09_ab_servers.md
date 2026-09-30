@@ -45,13 +45,25 @@ Tool names are deterministic in these fixture reports.
 <details>
 <summary>✅ verbose-prompt — 3.0s · 195 tokens · 3 turns · 1 PR</summary>
 
+<details><summary>Execution and verification evidence</summary><pre>{
+  &quot;session_success&quot;: true,
+  &quot;evidence_complete&quot;: null,
+  &quot;capture_errors&quot;: [],
+  &quot;properties&quot;: [],
+  &quot;configuration&quot;: {}
+}</pre></details>
 **Tool Calls:**
 
 
 |Tool|Status|Args|
 | :--- | :---: | :--- |
-|`get_balance`|✅|account='checking'|
+|`get_balance`|Incomplete evidence|account='checking'|
 
+<details><summary>Call evidence</summary><pre>Call: None
+Completion received: None; tool success: None
+Arguments: {&quot;account&quot;: &quot;checking&quot;}
+Output: {&quot;formatted&quot;:&quot;$1,500.00&quot;}
+Error: None</pre></details>
 
 **Response:**
 
@@ -66,6 +78,7 @@ sequenceDiagram
     User->>Eval: "Tell me the balance."
     Eval->>Tools: "get_balance({'account': 'checking'})"
     Tools-->>Eval: "{'formatted':'$1,500.00'}"
+    Note over Tools,Eval: Incomplete evidence
     Eval->>User: "Verbose answer with extra guidance."
 ```
 
@@ -77,13 +90,25 @@ sequenceDiagram
 <details>
 <summary>✅ terse-prompt — 3.0s · 195 tokens · 3 turns · 1 PR</summary>
 
+<details><summary>Execution and verification evidence</summary><pre>{
+  &quot;session_success&quot;: true,
+  &quot;evidence_complete&quot;: null,
+  &quot;capture_errors&quot;: [],
+  &quot;properties&quot;: [],
+  &quot;configuration&quot;: {}
+}</pre></details>
 **Tool Calls:**
 
 
 |Tool|Status|Args|
 | :--- | :---: | :--- |
-|`get_balance`|✅|account='checking'|
+|`get_balance`|Incomplete evidence|account='checking'|
 
+<details><summary>Call evidence</summary><pre>Call: None
+Completion received: None; tool success: None
+Arguments: {&quot;account&quot;: &quot;checking&quot;}
+Output: {&quot;formatted&quot;:&quot;$1,500.00&quot;}
+Error: None</pre></details>
 
 **Response:**
 
@@ -98,6 +123,7 @@ sequenceDiagram
     User->>Eval: "Tell me the balance."
     Eval->>Tools: "get_balance({'account': 'checking'})"
     Tools-->>Eval: "{'formatted':'$1,500.00'}"
+    Note over Tools,Eval: Incomplete evidence
     Eval->>User: "Terse answer."
 ```
 

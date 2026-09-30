@@ -105,6 +105,9 @@ class CopilotEval:
     # Model selection (None = Copilot's default)
     model: str | None = None
     reasoning_effort: CopilotReasoningEffort | None = None
+    client_mode: Literal["copilot-cli", "empty"] = "copilot-cli"
+    image_detail: Literal["auto", "low", "high"] | None = None
+    audit_requests: bool = False
 
     # System message content — maps to SDK's system_message.content
     # In the Copilot SDK, this is NOT a "system prompt" — it's instructions
@@ -124,6 +127,7 @@ class CopilotEval:
     # mid-run) and is used to cap subagent turns.
     max_turns: int = 25
     timeout_s: float = 300.0
+    max_tool_calls: int | None = None
 
     # Retry on transient SDK errors (fetch failed, model list errors)
     max_retries: int = 2
@@ -159,6 +163,16 @@ class CopilotEval:
     # VSCodePersona is the default: it polyfills runSubagent when custom_agents
     # are present, matching VS Code's native behaviour.
     persona: CopilotPersona = field(default_factory=_default_persona)
+
+    def __post_init__(self) -> None:
+        if self.client_mode not in ("copilot-cli", "empty"):
+            raise ValueError("client_mode must be 'copilot-cli' or 'empty'")
+        if self.image_detail not in (None, "auto", "low", "high"):
+            raise ValueError("image_detail must be 'auto', 'low', 'high', or None")
+        if self.max_tool_calls is not None and (
+            type(self.max_tool_calls) is not int or self.max_tool_calls < 0
+        ):
+            raise ValueError("max_tool_calls must be a nonnegative integer or None")
 
     def build_session_config(self) -> dict[str, Any]:
         """Build a SessionConfig dict for the Copilot SDK.
@@ -226,6 +240,21 @@ class CopilotEval:
 
         # Apply extra_config passthrough
         config.update(self.extra_config)
+
+        if self.client_mode == "empty":
+            isolated = {
+                "enable_config_discovery": False,
+                "enable_file_hooks": False,
+                "enable_on_demand_instruction_discovery": False,
+                "skip_custom_instructions": True,
+                "enable_managed_settings": False,
+            }
+            for key, value in isolated.items():
+                if key in config and config[key] != value:
+                    raise ValueError(f"client_mode='empty' requires {key}={value}")
+            config.update(isolated)
+            if config.get("available_tools") is None:
+                config["available_tools"] = []
 
         return config
 

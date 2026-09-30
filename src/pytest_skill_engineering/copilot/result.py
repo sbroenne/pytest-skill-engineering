@@ -1,7 +1,7 @@
 """Result types for Copilot agent execution.
 
-Turn, ToolCall, and SubagentInvocation are imported from pytest-skill-engineering core.
-Copilot-specific types (UsageInfo, CopilotResult) are defined here.
+Shared result types are imported from pytest-skill-engineering core.
+CopilotResult adds SDK-specific execution evidence.
 """
 
 from __future__ import annotations
@@ -11,26 +11,17 @@ from pathlib import Path
 from typing import Any
 
 from pytest_skill_engineering.copilot.contracts import CopilotResultAgent, SubagentInvocation
-from pytest_skill_engineering.core.result import ToolCall, Turn  # noqa: F401
+from pytest_skill_engineering.copilot.requests import RequestAudit
+from pytest_skill_engineering.core.result import StopReason, ToolCall, Turn, UsageInfo
 
 __all__ = [
     "CopilotResult",
+    "StopReason",
     "SubagentInvocation",
     "ToolCall",
     "Turn",
     "UsageInfo",
 ]
-
-
-@dataclass(slots=True)
-class UsageInfo:
-    """Token usage from a single model turn."""
-
-    model: str
-    input_tokens: int = 0
-    output_tokens: int = 0
-    cache_read_tokens: int = 0
-    duration_ms: float = 0.0
 
 
 @dataclass(slots=True)
@@ -74,6 +65,9 @@ class CopilotResult:
     # Raw SDK events for advanced inspection
     raw_events: list[Any] = field(default_factory=list)
     capture_errors: list[str] = field(default_factory=list)
+    request_audit: list[RequestAudit] = field(default_factory=list)
+    stop_reason: StopReason | None = None
+    tool_calls_admitted: int = 0
 
     @property
     def evidence_complete(self) -> bool:
@@ -145,19 +139,22 @@ class CopilotResult:
         return False
 
     @property
-    def total_input_tokens(self) -> int:
+    def total_input_tokens(self) -> int | None:
         """Total input tokens across all model turns."""
-        return sum(u.input_tokens for u in self.usage)
+        counts = [u.input_tokens for u in self.usage]
+        return sum(c for c in counts if c is not None) if counts and None not in counts else None
 
     @property
-    def total_output_tokens(self) -> int:
+    def total_output_tokens(self) -> int | None:
         """Total output tokens across all model turns."""
-        return sum(u.output_tokens for u in self.usage)
+        counts = [u.output_tokens for u in self.usage]
+        return sum(c for c in counts if c is not None) if counts and None not in counts else None
 
     @property
-    def total_tokens(self) -> int:
+    def total_tokens(self) -> int | None:
         """Total tokens (input + output) across all model turns."""
-        return self.total_input_tokens + self.total_output_tokens
+        inputs, outputs = self.total_input_tokens, self.total_output_tokens
+        return inputs + outputs if inputs is not None and outputs is not None else None
 
     @property
     def token_usage(self) -> dict[str, int]:
@@ -166,11 +163,12 @@ class CopilotResult:
         Keys use short names (``prompt``, ``completion``, ``total``) to match
         the format pytest-skill-engineering reads in its collector and generator.
         """
-        return {
+        counts = {
             "prompt": self.total_input_tokens,
             "completion": self.total_output_tokens,
             "total": self.total_tokens,
         }
+        return {key: value for key, value in counts.items() if value is not None}
 
     def __repr__(self) -> str:
         status = "SUCCESS" if self.success else f"FAILED: {self.error}"

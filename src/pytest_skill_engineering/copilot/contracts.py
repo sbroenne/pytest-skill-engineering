@@ -58,6 +58,22 @@ class CopilotEvalConfig(CopilotResultAgent, Protocol):
     """Configuration surface consumed by the runner and personas."""
 
     @property
+    def client_mode(self) -> Literal["copilot-cli", "empty"]:
+        raise NotImplementedError
+
+    @property
+    def image_detail(self) -> Literal["auto", "low", "high"] | None:
+        raise NotImplementedError
+
+    @property
+    def audit_requests(self) -> bool:
+        raise NotImplementedError
+
+    @property
+    def max_tool_calls(self) -> int | None:
+        raise NotImplementedError
+
+    @property
     def name(self) -> str:
         raise NotImplementedError
 

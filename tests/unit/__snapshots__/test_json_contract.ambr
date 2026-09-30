@@ -58,13 +58,18 @@
           ]),
           'premium_requests': 'float',
           'prompt_name': 'NoneType',
+          'request_audit': list([
+            '<empty>',
+          ]),
           'session_context_count': 'int',
           'skill_info': 'NoneType',
+          'stop_reason': 'NoneType',
           'success': 'bool',
           'token_usage': dict({
             'completion': 'int',
             'prompt': 'int',
           }),
+          'tool_calls_admitted': 'int',
           'turns': list([
             dict({
               'content': 'str',
@@ -73,6 +78,9 @@
                 '<empty>',
               ]),
             }),
+          ]),
+          'usage': list([
+            '<empty>',
           ]),
         }),
         'iteration': 'NoneType',
@@ -143,13 +151,18 @@
           ]),
           'premium_requests': 'float',
           'prompt_name': 'NoneType',
+          'request_audit': list([
+            '<empty>',
+          ]),
           'session_context_count': 'int',
           'skill_info': 'NoneType',
+          'stop_reason': 'NoneType',
           'success': 'bool',
           'token_usage': dict({
             'completion': 'int',
             'prompt': 'int',
           }),
+          'tool_calls_admitted': 'int',
           'turns': list([
             dict({
               'content': 'str',
@@ -158,6 +171,9 @@
                 '<empty>',
               ]),
             }),
+          ]),
+          'usage': list([
+            '<empty>',
           ]),
         }),
         'iteration': 'NoneType',
@@ -228,13 +244,18 @@
           ]),
           'premium_requests': 'float',
           'prompt_name': 'NoneType',
+          'request_audit': list([
+            '<empty>',
+          ]),
           'session_context_count': 'int',
           'skill_info': 'NoneType',
+          'stop_reason': 'NoneType',
           'success': 'bool',
           'token_usage': dict({
             'completion': 'int',
             'prompt': 'int',
           }),
+          'tool_calls_admitted': 'int',
           'turns': list([
             dict({
               'content': 'str',
@@ -243,6 +264,9 @@
                 '<empty>',
               ]),
             }),
+          ]),
+          'usage': list([
+            '<empty>',
           ]),
         }),
         'iteration': 'NoneType',
@@ -313,13 +337,18 @@
           ]),
           'premium_requests': 'float',
           'prompt_name': 'NoneType',
+          'request_audit': list([
+            '<empty>',
+          ]),
           'session_context_count': 'int',
           'skill_info': 'NoneType',
+          'stop_reason': 'NoneType',
           'success': 'bool',
           'token_usage': dict({
             'completion': 'int',
             'prompt': 'int',
           }),
+          'tool_calls_admitted': 'int',
           'turns': list([
             dict({
               'content': 'str',
@@ -328,6 +357,9 @@
                 '<empty>',
               ]),
             }),
+          ]),
+          'usage': list([
+            '<empty>',
           ]),
         }),
         'iteration': 'NoneType',
@@ -398,13 +430,18 @@
           ]),
           'premium_requests': 'float',
           'prompt_name': 'NoneType',
+          'request_audit': list([
+            '<empty>',
+          ]),
           'session_context_count': 'int',
           'skill_info': 'NoneType',
+          'stop_reason': 'NoneType',
           'success': 'bool',
           'token_usage': dict({
             'completion': 'int',
             'prompt': 'int',
           }),
+          'tool_calls_admitted': 'int',
           'turns': list([
             dict({
               'content': 'str',
@@ -413,6 +450,9 @@
                 '<empty>',
               ]),
             }),
+          ]),
+          'usage': list([
+            '<empty>',
           ]),
         }),
         'iteration': 'NoneType',
@@ -483,13 +523,18 @@
           ]),
           'premium_requests': 'float',
           'prompt_name': 'NoneType',
+          'request_audit': list([
+            '<empty>',
+          ]),
           'session_context_count': 'int',
           'skill_info': 'NoneType',
+          'stop_reason': 'NoneType',
           'success': 'bool',
           'token_usage': dict({
             'completion': 'int',
             'prompt': 'int',
           }),
+          'tool_calls_admitted': 'int',
           'turns': list([
             dict({
               'content': 'str',
@@ -498,6 +543,9 @@
                 '<empty>',
               ]),
             }),
+          ]),
+          'usage': list([
+            '<empty>',
           ]),
         }),
         'iteration': 'NoneType',
@@ -573,13 +621,18 @@
           ]),
           'premium_requests': 'float',
           'prompt_name': 'NoneType',
+          'request_audit': list([
+            '<empty>',
+          ]),
           'session_context_count': 'int',
           'skill_info': 'NoneType',
+          'stop_reason': 'NoneType',
           'success': 'bool',
           'token_usage': dict({
             'completion': 'int',
             'prompt': 'int',
           }),
+          'tool_calls_admitted': 'int',
           'turns': list([
             dict({
               'content': 'str',
@@ -588,6 +641,9 @@
                 '<empty>',
               ]),
             }),
+          ]),
+          'usage': list([
+            '<empty>',
           ]),
         }),
         'iteration': 'NoneType',
@@ -658,13 +714,18 @@
           ]),
           'premium_requests': 'float',
           'prompt_name': 'NoneType',
+          'request_audit': list([
+            '<empty>',
+          ]),
           'session_context_count': 'int',
           'skill_info': 'NoneType',
+          'stop_reason': 'NoneType',
           'success': 'bool',
           'token_usage': dict({
             'completion': 'int',
             'prompt': 'int',
           }),
+          'tool_calls_admitted': 'int',
           'turns': list([
             dict({
               'content': 'str',
@@ -673,6 +734,9 @@
                 '<empty>',
               ]),
             }),
+          ]),
+          'usage': list([
+            '<empty>',
           ]),
         }),
         'iteration': 'NoneType',
@@ -743,13 +807,18 @@
           ]),
           'premium_requests': 'float',
           'prompt_name': 'NoneType',
+          'request_audit': list([
+            '<empty>',
+          ]),
           'session_context_count': 'int',
           'skill_info': 'NoneType',
+          'stop_reason': 'NoneType',
           'success': 'bool',
           'token_usage': dict({
             'completion': 'int',
             'prompt': 'int',
           }),
+          'tool_calls_admitted': 'int',
           'turns': list([
             dict({
               'content': 'str',
@@ -758,6 +827,9 @@
                 '<empty>',
               ]),
             }),
+          ]),
+          'usage': list([
+            '<empty>',
           ]),
         }),
         'iteration': 'NoneType',
@@ -828,13 +900,18 @@
           ]),
           'premium_requests': 'float',
           'prompt_name': 'NoneType',
+          'request_audit': list([
+            '<empty>',
+          ]),
           'session_context_count': 'int',
           'skill_info': 'NoneType',
+          'stop_reason': 'NoneType',
           'success': 'bool',
           'token_usage': dict({
             'completion': 'int',
             'prompt': 'int',
           }),
+          'tool_calls_admitted': 'int',
           'turns': list([
             dict({
               'content': 'str',
@@ -843,6 +920,9 @@
                 '<empty>',
               ]),
             }),
+          ]),
+          'usage': list([
+            '<empty>',
           ]),
         }),
         'iteration': 'NoneType',
@@ -910,13 +990,18 @@
           ]),
           'premium_requests': 'float',
           'prompt_name': 'NoneType',
+          'request_audit': list([
+            '<empty>',
+          ]),
           'session_context_count': 'int',
           'skill_info': 'NoneType',
+          'stop_reason': 'NoneType',
           'success': 'bool',
           'token_usage': dict({
             'completion': 'int',
             'prompt': 'int',
           }),
+          'tool_calls_admitted': 'int',
           'turns': list([
             dict({
               'content': 'str',
@@ -925,6 +1010,9 @@
                 '<empty>',
               ]),
             }),
+          ]),
+          'usage': list([
+            '<empty>',
           ]),
         }),
         'iteration': 'NoneType',
@@ -987,13 +1075,18 @@
           ]),
           'premium_requests': 'float',
           'prompt_name': 'NoneType',
+          'request_audit': list([
+            '<empty>',
+          ]),
           'session_context_count': 'int',
           'skill_info': 'NoneType',
+          'stop_reason': 'NoneType',
           'success': 'bool',
           'token_usage': dict({
             'completion': 'int',
             'prompt': 'int',
           }),
+          'tool_calls_admitted': 'int',
           'turns': list([
             dict({
               'content': 'str',
@@ -1002,6 +1095,9 @@
                 '<empty>',
               ]),
             }),
+          ]),
+          'usage': list([
+            '<empty>',
           ]),
         }),
         'iteration': 'NoneType',
@@ -1064,13 +1160,18 @@
           ]),
           'premium_requests': 'float',
           'prompt_name': 'NoneType',
+          'request_audit': list([
+            '<empty>',
+          ]),
           'session_context_count': 'int',
           'skill_info': 'NoneType',
+          'stop_reason': 'NoneType',
           'success': 'bool',
           'token_usage': dict({
             'completion': 'int',
             'prompt': 'int',
           }),
+          'tool_calls_admitted': 'int',
           'turns': list([
             dict({
               'content': 'str',
@@ -1079,6 +1180,9 @@
                 '<empty>',
               ]),
             }),
+          ]),
+          'usage': list([
+            '<empty>',
           ]),
         }),
         'iteration': 'NoneType',
@@ -1141,13 +1245,18 @@
           ]),
           'premium_requests': 'float',
           'prompt_name': 'NoneType',
+          'request_audit': list([
+            '<empty>',
+          ]),
           'session_context_count': 'int',
           'skill_info': 'NoneType',
+          'stop_reason': 'NoneType',
           'success': 'bool',
           'token_usage': dict({
             'completion': 'int',
             'prompt': 'int',
           }),
+          'tool_calls_admitted': 'int',
           'turns': list([
             dict({
               'content': 'str',
@@ -1156,6 +1265,9 @@
                 '<empty>',
               ]),
             }),
+          ]),
+          'usage': list([
+            '<empty>',
           ]),
         }),
         'iteration': 'NoneType',
@@ -1218,13 +1330,18 @@
           ]),
           'premium_requests': 'float',
           'prompt_name': 'NoneType',
+          'request_audit': list([
+            '<empty>',
+          ]),
           'session_context_count': 'int',
           'skill_info': 'NoneType',
+          'stop_reason': 'NoneType',
           'success': 'bool',
           'token_usage': dict({
             'completion': 'int',
             'prompt': 'int',
           }),
+          'tool_calls_admitted': 'int',
           'turns': list([
             dict({
               'content': 'str',
@@ -1233,6 +1350,9 @@
                 '<empty>',
               ]),
             }),
+          ]),
+          'usage': list([
+            '<empty>',
           ]),
         }),
         'iteration': 'NoneType',
@@ -1295,13 +1415,18 @@
           ]),
           'premium_requests': 'float',
           'prompt_name': 'NoneType',
+          'request_audit': list([
+            '<empty>',
+          ]),
           'session_context_count': 'int',
           'skill_info': 'NoneType',
+          'stop_reason': 'NoneType',
           'success': 'bool',
           'token_usage': dict({
             'completion': 'int',
             'prompt': 'int',
           }),
+          'tool_calls_admitted': 'int',
           'turns': list([
             dict({
               'content': 'str',
@@ -1310,6 +1435,9 @@
                 '<empty>',
               ]),
             }),
+          ]),
+          'usage': list([
+            '<empty>',
           ]),
         }),
         'iteration': 'NoneType',
@@ -1377,13 +1505,18 @@
           ]),
           'premium_requests': 'float',
           'prompt_name': 'NoneType',
+          'request_audit': list([
+            '<empty>',
+          ]),
           'session_context_count': 'int',
           'skill_info': 'NoneType',
+          'stop_reason': 'NoneType',
           'success': 'bool',
           'token_usage': dict({
             'completion': 'int',
             'prompt': 'int',
           }),
+          'tool_calls_admitted': 'int',
           'turns': list([
             dict({
               'content': 'str',
@@ -1392,6 +1525,9 @@
                 '<empty>',
               ]),
             }),
+          ]),
+          'usage': list([
+            '<empty>',
           ]),
         }),
         'iteration': 'NoneType',
@@ -1454,13 +1590,18 @@
           ]),
           'premium_requests': 'float',
           'prompt_name': 'NoneType',
+          'request_audit': list([
+            '<empty>',
+          ]),
           'session_context_count': 'int',
           'skill_info': 'NoneType',
+          'stop_reason': 'NoneType',
           'success': 'bool',
           'token_usage': dict({
             'completion': 'int',
             'prompt': 'int',
           }),
+          'tool_calls_admitted': 'int',
           'turns': list([
             dict({
               'content': 'str',
@@ -1469,6 +1610,9 @@
                 '<empty>',
               ]),
             }),
+          ]),
+          'usage': list([
+            '<empty>',
           ]),
         }),
         'iteration': 'NoneType',
@@ -1531,13 +1675,18 @@
           ]),
           'premium_requests': 'float',
           'prompt_name': 'NoneType',
+          'request_audit': list([
+            '<empty>',
+          ]),
           'session_context_count': 'int',
           'skill_info': 'NoneType',
+          'stop_reason': 'NoneType',
           'success': 'bool',
           'token_usage': dict({
             'completion': 'int',
             'prompt': 'int',
           }),
+          'tool_calls_admitted': 'int',
           'turns': list([
             dict({
               'content': 'str',
@@ -1546,6 +1695,9 @@
                 '<empty>',
               ]),
             }),
+          ]),
+          'usage': list([
+            '<empty>',
           ]),
         }),
         'iteration': 'NoneType',
@@ -1608,13 +1760,18 @@
           ]),
           'premium_requests': 'float',
           'prompt_name': 'NoneType',
+          'request_audit': list([
+            '<empty>',
+          ]),
           'session_context_count': 'int',
           'skill_info': 'NoneType',
+          'stop_reason': 'NoneType',
           'success': 'bool',
           'token_usage': dict({
             'completion': 'int',
             'prompt': 'int',
           }),
+          'tool_calls_admitted': 'int',
           'turns': list([
             dict({
               'content': 'str',
@@ -1623,6 +1780,9 @@
                 '<empty>',
               ]),
             }),
+          ]),
+          'usage': list([
+            '<empty>',
           ]),
         }),
         'iteration': 'NoneType',

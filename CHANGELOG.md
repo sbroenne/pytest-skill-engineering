@@ -6,14 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.6.20] - 2026-09-30
+
 ### Added
 
+- **Reusable benchmark controls** — `CopilotEval` supports isolated `client_mode="empty"`, `max_tool_calls`, `image_detail`, and `audit_requests`. Consumer-owned SDK tools continue through `extra_config["tools"]`; sessions, usage and reports remain framework-managed.
+- **Actual request evidence** — HTTP Responses/Chat Completions and WebSocket Responses messages record model, advertised tool names, reasoning effort, image detail/count, and the actual system prompt hash. Image detail is rewritten before forwarding. Unsupported or incomplete messages fail closed without recording raw requests or credentials.
+- **Native benchmark reporting** — JSON preserves request audit, stop reason, admitted tool calls, detailed nullable usage and pytest properties. Custom tool configuration records omit Python callbacks.
+- **Offline native-runtime regressions** — a loopback Responses server and an in-memory image tool exercise persistent WebSocket continuations, image rewriting, tool-budget stops, timeouts and transport failures without paid calls or desktop input.
 - **Cache-read tokens now count toward cost estimates** — `estimate_cost()` accepts a `cache_read_tokens` argument priced via an optional per-model `cache_read` rate in `pricing.toml` (defaults to `0.0`, so cost is unchanged unless a rate is configured). `pricing.toml` documents the new field and sets `cache_read` for the two frontier models.
 - **Type checking now covers `tests/`** — pyright's `include` was widened from `src` to `["src", "tests"]` (excluding `tests/visual`, which needs the optional `playwright` extra), and CI runs `uv run pyright` (config-driven) instead of a hard-coded `src/` path. Fixed the type errors this surfaced in `test_08_scoring.py`, `test_13_plugins.py`, and the event-mapper test helper.
 - **Unit tests for cost estimation** — `tests/unit/test_cost.py` covers the input/output/cache-read arithmetic, unknown-model handling, and the zero-token short-circuit.
 
 ### Changed
 
+- **Unavailable usage stays unknown** — missing input/output, reasoning and cache counts remain `None`; unavailable aggregate counts are not reported as zero. Callers must handle unknown totals.
+- **Transport selection remains SDK-owned** — auditing inspects the HTTP or WebSocket transport actually used, rather than relying on an HTTP preference that proved ineffective in consumer execution.
 - **Dependency refresh** — upgraded GitHub Copilot SDK to 1.0.13, MCP to 2.1.1, Syrupy to 6, and Ruff to 0.16.6.
 - **Shared locked developer toolchain** — Ruff pre-commit hooks now use local system hooks invoking `uv run --frozen ruff`, sharing the repository's locked version instead of a separately versioned hook environment. Pyright and documentation hooks also use frozen execution.
 - **Exact-lock CI installs** — CI, integration, hero-test, and documentation workflows use `uv sync --frozen` and `uv run --frozen`, avoiding re-resolution against a different default registry.
@@ -26,6 +34,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- **Safe benchmark termination** — caller guards are preserved, tool admission stops before exceeding the budget, in-flight custom handlers drain before returning, and cleanup preserves failure evidence and usage. Startup cancellation is no longer swallowed when startup completes at the same time.
+- **Shared result imports** — usage and stop-reason types live in the core result module, removing the circular dependency flagged by CodeQL while preserving public Copilot imports.
+- **Generated JSON contracts** — regenerated report fixtures and schema snapshots include the new benchmark fields, with round-trip checks that detect stale generated evidence.
+- **Windows direct CLI commands** — remove argument-grouping quotes while preserving path backslashes so quoted executables and Python code run correctly with `shell="none"`. Platform-specific path and newline checks now work on Windows as well as Linux.
+- **Release repository selection** — the GitHub release job explicitly selects its repository when publishing downloaded artifacts without a checkout.
 - **Copilot event capture** — register the event handler during session creation so initial SDK events are captured, and stop mapping the `send_and_wait` return a second time after `on_event` already recorded it. Integration assertions cover `session.start`, model metadata, and unique raw event IDs.
 - **Recursive custom agent dispatch** — remove the dispatched custom agent from the child registry. The registry shrinks along each nested dispatch path, preventing self-dispatch and cycles without an arbitrary depth cap.
 - **SDK cleanup attempts** — bound graceful client shutdown and force-stop attempts rather than allowing cleanup to wait indefinitely.

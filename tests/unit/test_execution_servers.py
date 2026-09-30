@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import contextlib
 import json
+import os
 import shlex
 import shutil
 import sys
@@ -480,6 +481,41 @@ class TestCLIServerProcess:
         linux_default = CLIServerProcess(CLIServer(command="git", tool_prefix="git"))
         assert linux_default._shell == "bash"
 
+    @pytest.mark.parametrize(
+        ("platform", "command", "expected"),
+        [
+            (
+                "win32",
+                r'"C:\Program Files\tool.exe" --file C:\data\input.txt',
+                [r"C:\Program Files\tool.exe", "--file", r"C:\data\input.txt"],
+            ),
+            (
+                "win32",
+                r"""'C:\Python\python.exe' -c 'print('"'"'hello'"'"')'""",
+                [r"C:\Python\python.exe", "-c", "print('hello')"],
+            ),
+            ("linux", r"/opt/my\ tool --file 'a b.txt'", ["/opt/my tool", "--file", "a b.txt"]),
+        ],
+    )
+    async def test_direct_command_removes_quotes_and_preserves_platform_paths(
+        self, monkeypatch: pytest.MonkeyPatch, platform: str, command: str, expected: list[str]
+    ) -> None:
+        captured: list[str] = []
+
+        async def communicate() -> tuple[bytes, bytes]:
+            return b"", b""
+
+        async def spawn(*args: str, **kwargs: Any) -> Any:
+            captured.extend(args)
+            return SimpleNamespace(communicate=communicate, returncode=0)
+
+        monkeypatch.setattr(sys, "platform", platform)
+        monkeypatch.setattr("asyncio.create_subprocess_exec", spawn)
+        server = CLIServerProcess(CLIServer(command=command, tool_prefix="tool", shell="none"))
+        result = await server._run_command("'alpha beta'")
+        assert result["exit_code"] == 0
+        assert captured == [*expected, "alpha beta"]
+
     async def test_start_discovers_help_and_truncates_long_output(self) -> None:
         """Discovered help text is truncated before being exposed to the LLM."""
         server = CLIServerProcess(
@@ -638,7 +674,7 @@ class TestCLIServerProcess:
 
         result = json.loads(await server.call_tool("python_execute", {"args": "one two"}))
 
-        assert result == {"exit_code": 0, "stdout": "one two\n", "stderr": ""}
+        assert result == {"exit_code": 0, "stdout": f"one two{os.linesep}", "stderr": ""}
 
     async def test_get_executions_accumulates_and_stop_clears(self) -> None:
         """Execution history persists across runs until stop() is called."""

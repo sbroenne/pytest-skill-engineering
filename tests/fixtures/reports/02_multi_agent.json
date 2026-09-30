@@ -59,6 +59,10 @@
         "configuration": {},
         "capture_errors": [],
         "evidence_complete": null,
+        "request_audit": [],
+        "stop_reason": null,
+        "usage": [],
+        "tool_calls_admitted": 0,
         "clarification_stats": null
       },
       "error": null,
@@ -129,6 +133,10 @@
         "configuration": {},
         "capture_errors": [],
         "evidence_complete": null,
+        "request_audit": [],
+        "stop_reason": null,
+        "usage": [],
+        "tool_calls_admitted": 0,
         "clarification_stats": null
       },
       "error": null,
@@ -202,6 +210,10 @@
         "configuration": {},
         "capture_errors": [],
         "evidence_complete": null,
+        "request_audit": [],
+        "stop_reason": null,
+        "usage": [],
+        "tool_calls_admitted": 0,
         "clarification_stats": null
       },
       "error": null,
@@ -254,6 +266,10 @@
         "configuration": {},
         "capture_errors": [],
         "evidence_complete": null,
+        "request_audit": [],
+        "stop_reason": null,
+        "usage": [],
+        "tool_calls_admitted": 0,
         "clarification_stats": null
       },
       "error": "AssertionError: withdraw tool was never called",

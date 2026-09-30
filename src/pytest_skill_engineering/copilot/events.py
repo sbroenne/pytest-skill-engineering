@@ -252,15 +252,20 @@ class EventMapper:
         """Handle token usage report."""
         model = _get_data_field(event, "model", "unknown")
         self._model_used = model
-        input_tokens = int(_get_data_field(event, "input_tokens", 0) or 0)
-        output_tokens = int(_get_data_field(event, "output_tokens", 0) or 0)
+        duration = _get_data_field(event, "duration", None)
+        duration_ms = (
+            duration.total_seconds() * 1000 if isinstance(duration, timedelta) else duration
+        )
         self._usage.append(
             UsageInfo(
                 model=model,
-                input_tokens=input_tokens,
-                output_tokens=output_tokens,
-                cache_read_tokens=int(_get_data_field(event, "cache_read_tokens", 0) or 0),
-                duration_ms=_get_data_field(event, "duration", 0.0) or 0.0,
+                input_tokens=_get_data_field(event, "input_tokens", None),
+                output_tokens=_get_data_field(event, "output_tokens", None),
+                cache_read_tokens=_get_data_field(event, "cache_read_tokens", None),
+                cache_write_tokens=_get_data_field(event, "cache_write_tokens", None),
+                reasoning_tokens=_get_data_field(event, "reasoning_tokens", None),
+                reasoning_effort=_get_data_field(event, "reasoning_effort", None),
+                duration_ms=duration_ms,
             )
         )
 

@@ -46,13 +46,25 @@ Tool names are deterministic in these fixture reports.
 <details>
 <summary>✅ gpt-5.4-mini / concise — 3.0s · 195 tokens · 3 turns · 1 PR</summary>
 
+<details><summary>Execution and verification evidence</summary><pre>{
+  &quot;session_success&quot;: true,
+  &quot;evidence_complete&quot;: null,
+  &quot;capture_errors&quot;: [],
+  &quot;properties&quot;: [],
+  &quot;configuration&quot;: {}
+}</pre></details>
 **Tool Calls:**
 
 
 |Tool|Status|Args|
 | :--- | :---: | :--- |
-|`get_balance`|✅|account='checking'|
+|`get_balance`|Incomplete evidence|account='checking'|
 
+<details><summary>Call evidence</summary><pre>Call: None
+Completion received: None; tool success: None
+Arguments: {&quot;account&quot;: &quot;checking&quot;}
+Output: {&quot;formatted&quot;:&quot;$1,500.00&quot;}
+Error: None</pre></details>
 
 **Response:**
 
@@ -67,6 +79,7 @@ sequenceDiagram
     User->>Eval: "Explain the balance."
     Eval->>Tools: "get_balance({'account': 'checking'})"
     Tools-->>Eval: "{'formatted':'$1,500.00'}"
+    Note over Tools,Eval: Incomplete evidence
     Eval->>User: "Concise response with the same answer."
 ```
 
@@ -78,13 +91,25 @@ sequenceDiagram
 <details>
 <summary>✅ gpt-5.4-mini / detailed — 3.0s · 195 tokens · 3 turns · 1 PR</summary>
 
+<details><summary>Execution and verification evidence</summary><pre>{
+  &quot;session_success&quot;: true,
+  &quot;evidence_complete&quot;: null,
+  &quot;capture_errors&quot;: [],
+  &quot;properties&quot;: [],
+  &quot;configuration&quot;: {}
+}</pre></details>
 **Tool Calls:**
 
 
 |Tool|Status|Args|
 | :--- | :---: | :--- |
-|`get_balance`|✅|account='checking'|
+|`get_balance`|Incomplete evidence|account='checking'|
 
+<details><summary>Call evidence</summary><pre>Call: None
+Completion received: None; tool success: None
+Arguments: {&quot;account&quot;: &quot;checking&quot;}
+Output: {&quot;formatted&quot;:&quot;$1,500.00&quot;}
+Error: None</pre></details>
 
 **Response:**
 
@@ -99,6 +124,7 @@ sequenceDiagram
     User->>Eval: "Explain the balance."
     Eval->>Tools: "get_balance({'account': 'checking'})"
     Tools-->>Eval: "{'formatted':'$1,500.00'}"
+    Note over Tools,Eval: Incomplete evidence
     Eval->>User: "Detailed response with the same answer."
 ```
 
@@ -110,13 +136,25 @@ sequenceDiagram
 <details>
 <summary>✅ gpt-5.4-mini / structured — 3.0s · 195 tokens · 3 turns · 1 PR</summary>
 
+<details><summary>Execution and verification evidence</summary><pre>{
+  &quot;session_success&quot;: true,
+  &quot;evidence_complete&quot;: null,
+  &quot;capture_errors&quot;: [],
+  &quot;properties&quot;: [],
+  &quot;configuration&quot;: {}
+}</pre></details>
 **Tool Calls:**
 
 
 |Tool|Status|Args|
 | :--- | :---: | :--- |
-|`get_balance`|✅|account='checking'|
+|`get_balance`|Incomplete evidence|account='checking'|
 
+<details><summary>Call evidence</summary><pre>Call: None
+Completion received: None; tool success: None
+Arguments: {&quot;account&quot;: &quot;checking&quot;}
+Output: {&quot;formatted&quot;:&quot;$1,500.00&quot;}
+Error: None</pre></details>
 
 **Response:**
 
@@ -131,6 +169,7 @@ sequenceDiagram
     User->>Eval: "Explain the balance."
     Eval->>Tools: "get_balance({'account': 'checking'})"
     Tools-->>Eval: "{'formatted':'$1,500.00'}"
+    Note over Tools,Eval: Incomplete evidence
     Eval->>User: "Structured response with the same answer."
 ```
 
