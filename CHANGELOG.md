@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- Refreshed runtime, development, documentation, and build dependency minimums
+  to current supported releases, including GitHub Copilot SDK 1.0.16. Updated
+  the framework and historical sample lockfiles, including cryptography 50.0.2.
+
 ### Removed
 
 - Removed the proposed framework companion skill and its installation guidance.
