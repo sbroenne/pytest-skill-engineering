@@ -20,13 +20,13 @@ on:
   workflow_call:
     inputs:
       version:
-        description: "Version tag (e.g. v1.0.1) to validate and build from"
+        description: "Version tag (e.g. v1.0.2) to validate and build from"
         required: false
         type: string
   workflow_dispatch:
     inputs:
       version:
-        description: "Version tag (e.g. v1.0.1) to validate and build from"
+        description: "Version tag (e.g. v1.0.2) to validate and build from"
         required: false
         type: string
 
