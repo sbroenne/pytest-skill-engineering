@@ -10,7 +10,8 @@ from copy import deepcopy
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from pytest_skill_engineering.core.plugin import _read_json, _validate_mcp_servers
+from pytest_skill_engineering.core.plugin import _read_json
+from pytest_skill_engineering.core.validation import _validate_mcp_servers
 
 if TYPE_CHECKING:
     from pytest_skill_engineering.copilot.contracts import CopilotEvalConfig

@@ -8,9 +8,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal, Protocol, TypeAlias
 
-from pytest_skill_engineering.copilot.contracts import CopilotResultAgent, SubagentInvocation
 from pytest_skill_engineering.copilot.requests import RequestAudit
 from pytest_skill_engineering.core.result import (
     SkillDiscovery,
@@ -28,6 +27,28 @@ __all__ = [
     "Turn",
     "UsageInfo",
 ]
+
+
+SubagentStatus: TypeAlias = Literal["selected", "started", "completed", "failed"]
+
+
+class CopilotResultAgent(Protocol):
+    """Minimal agent surface stored on :class:`CopilotResult`."""
+
+    @property
+    def working_directory(self) -> str | None:
+        raise NotImplementedError
+
+
+@dataclass(slots=True)
+class SubagentInvocation:
+    """A single custom-agent dispatch observed during a run."""
+
+    invocation_id: str
+    name: str
+    status: SubagentStatus
+    duration_ms: float | None = None
+    result: CopilotResult | None = None
 
 
 @dataclass(slots=True)

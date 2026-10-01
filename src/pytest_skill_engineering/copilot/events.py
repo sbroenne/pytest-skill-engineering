@@ -64,10 +64,10 @@ from collections import deque
 from datetime import timedelta
 from typing import TYPE_CHECKING, Any
 
-from pytest_skill_engineering.copilot.contracts import SubagentStatus
 from pytest_skill_engineering.copilot.result import (
     CopilotResult,
     SubagentInvocation,
+    SubagentStatus,
     ToolCall,
     Turn,
     UsageInfo,

@@ -192,7 +192,7 @@ def load_custom_agent(
         if key in metadata:
             config[key] = metadata[key]
     if "mcp-servers" in metadata:
-        from pytest_skill_engineering.core.plugin import _validate_mcp_servers
+        from pytest_skill_engineering.core.validation import _validate_mcp_servers
 
         config["mcp_servers"] = _validate_mcp_servers(
             metadata["mcp-servers"], path, field="mcp-servers"

@@ -8,7 +8,7 @@ import shlex
 import sys
 from inspect import isawaitable
 from pathlib import Path
-from typing import Any
+from typing import Any, get_type_hints
 from uuid import uuid4
 
 import pytest
@@ -16,7 +16,7 @@ from copilot.generated.session_events import SessionEvent
 from copilot.tools import ToolInvocation
 
 from pytest_skill_engineering.copilot.config import snapshot_session_configuration
-from pytest_skill_engineering.copilot.contracts import CopilotEvalConfig, SubagentInvocation
+from pytest_skill_engineering.copilot.contracts import CopilotEvalConfig
 from pytest_skill_engineering.copilot.eval import CopilotEval
 from pytest_skill_engineering.copilot.events import EventMapper
 from pytest_skill_engineering.copilot.fixtures import _convert_to_aitest
@@ -24,13 +24,18 @@ from pytest_skill_engineering.copilot.personas import (
     _inject_skill_reference_tools,
     _make_subagent_dispatch_tool,
 )
-from pytest_skill_engineering.copilot.result import CopilotResult
+from pytest_skill_engineering.copilot.result import CopilotResult, SubagentInvocation
 from pytest_skill_engineering.core.evals import load_custom_agent, load_custom_agents
 from pytest_skill_engineering.core.result import ToolCall, Turn, UsageInfo
 from pytest_skill_engineering.core.serialization import serialize_dataclass
 from pytest_skill_engineering.execution.servers import CLIServer, CLIServerProcess
 from pytest_skill_engineering.reporting import build_suite_report, generate_json, load_suite_report
 from pytest_skill_engineering.reporting.collector import TestReport as CaseReport
+
+
+def test_runtime_result_type_hints_resolve() -> None:
+    assert get_type_hints(CopilotResult)["subagent_invocations"] == list[SubagentInvocation]
+    assert get_type_hints(SubagentInvocation)["result"] == CopilotResult | None
 
 
 def test_agent_settings_are_shared_across_loaders(tmp_path: Path) -> None:

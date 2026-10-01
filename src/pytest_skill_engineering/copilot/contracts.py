@@ -3,27 +3,16 @@
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Mapping
-from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Literal, Protocol, TypeAlias
+from typing import Any, Literal, Protocol, TypeAlias
 
 from copilot.session import CustomAgentConfig, MCPServerConfig, ReasoningEffort, SessionHooks
 
-if TYPE_CHECKING:
-    from pytest_skill_engineering.copilot.result import CopilotResult
+from pytest_skill_engineering.copilot.result import CopilotResult, CopilotResultAgent
 
 CopilotCustomAgentConfig: TypeAlias = CustomAgentConfig
 CopilotMCPServerConfig: TypeAlias = MCPServerConfig
 CopilotReasoningEffort: TypeAlias = ReasoningEffort
 CopilotSessionHooks: TypeAlias = SessionHooks
-SubagentStatus: TypeAlias = Literal["selected", "started", "completed", "failed"]
-
-
-class CopilotResultAgent(Protocol):
-    """Minimal agent surface stored on :class:`CopilotResult`."""
-
-    @property
-    def working_directory(self) -> str | None:
-        raise NotImplementedError
 
 
 class CopilotRunResult(Protocol):
@@ -164,17 +153,6 @@ class CopilotPersona(Protocol):
         nested_runner: CopilotNestedRunner,
     ) -> None:
         raise NotImplementedError
-
-
-@dataclass(slots=True)
-class SubagentInvocation:
-    """A single custom-agent dispatch observed during a run."""
-
-    invocation_id: str
-    name: str
-    status: SubagentStatus
-    duration_ms: float | None = None
-    result: CopilotResult | None = None
 
 
 def declared_agent_tools(
