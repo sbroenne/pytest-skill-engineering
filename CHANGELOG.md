@@ -6,6 +6,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- Refreshed runtime, development, documentation, and build dependency minimums
+  to current supported releases, including GitHub Copilot SDK 1.0.16. Updated
+  the framework and historical sample lockfiles, including cryptography 50.0.2.
+
+### Removed
+
+- Removed the proposed framework companion skill and its installation guidance.
+  The case study retains the measured lack of benefit and product decision;
+  frozen guidance exists only as a historical experiment fixture. Evaluating
+  consumer-provided skills remains supported.
+
+## [1.0.1] - 2026-10-01
+
 ### Fixed
 
 - Explicit skill directories now enable native SDK skills in empty mode without
@@ -23,19 +38,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   `eval_result.skill_discovery`; regenerate older evidence with the current producer.
 - Unbilled real-SDK discovery and isolation checks, plus a request blocked before
   network forwarding to verify ambient instructions do not enter model context.
-
-### Changed
-
-- Refreshed runtime, development, documentation, and build dependency minimums
-  to current supported releases, including GitHub Copilot SDK 1.0.16. Updated
-  the framework and historical sample lockfiles, including cryptography 50.0.2.
-
-### Removed
-
-- Removed the proposed framework companion skill and its installation guidance.
-  The case study retains the measured lack of benefit and product decision;
-  frozen guidance exists only as a historical experiment fixture. Evaluating
-  consumer-provided skills remains supported.
 
 ## [1.0.0]
 
