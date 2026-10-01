@@ -6,16 +6,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
-### Fixed
-
-- Skill preflight now accepts nested Markdown references such as
-  `references/commands/read.md`, preserving distinct relative paths instead of
-  rejecting subdirectories. Recursive validation retains UTF-8, nonempty-file,
-  and readability checks, rejects escaping links and directory cycles (including
-  Windows junctions), and still runs before SDK startup or model execution.
-- Documented the existing public `load_skill()` / `Skill.from_path()` preflight
-  so unbilled SDK discovery probes also check the package's local validation.
-
 ### Changed
 
 - Refreshed runtime, development, documentation, and build dependency minimums
@@ -28,6 +18,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   The case study retains the measured lack of benefit and product decision;
   frozen guidance exists only as a historical experiment fixture. Evaluating
   consumer-provided skills remains supported.
+
+## [1.0.2] - 2026-10-01
+
+### Fixed
+
+- Skill preflight now accepts nested Markdown references such as
+  `references/commands/read.md`, preserving distinct relative paths instead of
+  rejecting subdirectories. Recursive validation retains UTF-8, nonempty-file,
+  and readability checks, rejects escaping links and directory cycles (including
+  Windows junctions), and still runs before SDK startup or model execution.
+- Documented the existing public `load_skill()` / `Skill.from_path()` preflight
+  so unbilled SDK discovery probes also check the package's local validation.
 
 ## [1.0.1] - 2026-10-01
 

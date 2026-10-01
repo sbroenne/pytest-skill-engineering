@@ -8,9 +8,9 @@ from pathlib import Path
 ROOT = Path(__file__).parents[2]
 
 
-def test_project_version_is_pinned_to_1_0_1() -> None:
+def test_project_version_is_pinned_to_1_0_2() -> None:
     pyproject = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
-    assert pyproject["project"]["version"] == "1.0.1"
+    assert pyproject["project"]["version"] == "1.0.2"
 
 
 def test_release_workflow_builds_and_validates_artifact_version() -> None:
@@ -22,7 +22,7 @@ def test_release_workflow_builds_and_validates_artifact_version() -> None:
 
 def test_docs_workflow_examples_reference_current_release_tag() -> None:
     workflow = (ROOT / ".github" / "workflows" / "docs.yml").read_text(encoding="utf-8")
-    assert "v1.0.1" in workflow
+    assert "v1.0.2" in workflow
 
 
 def test_github_release_job_selects_repository_without_checkout() -> None:
