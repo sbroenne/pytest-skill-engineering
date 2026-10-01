@@ -1,7 +1,7 @@
 """Level 02 — Model comparison: same task across different Copilot models.
 
 Parametrizes models to compare code quality and error handling.
-Report shows model leaderboard.
+pytest records each outcome; native JSON preserves each execution for investigation.
 
 Run with: uv run python -m pytest tests/integration/copilot/test_02_models.py -v
 """

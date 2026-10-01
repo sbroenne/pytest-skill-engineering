@@ -190,7 +190,7 @@ async def test_empty_runtime_forwarding_and_no_inherited_persona(
 
     client, options = fake_client(monkeypatch, behavior)
     result = await run_copilot(
-        CopilotEval(client_mode="empty", working_directory=str(tmp_path), max_retries=0), "go"
+        CopilotEval(client_mode="empty", working_directory=str(tmp_path)), "go"
     )
     assert result.success
     assert options["mode"] == "empty"
@@ -217,7 +217,6 @@ async def test_budget_stops_instead_of_repeating_denials(monkeypatch: pytest.Mon
     result = await run_copilot(
         CopilotEval(
             max_tool_calls=2,
-            max_retries=0,
             timeout_s=1,
             extra_config={"tools": [Tool("act", "act", handler)]},
         ),
@@ -257,7 +256,6 @@ async def test_budget_waits_for_last_admitted_completion(
     result = await run_copilot(
         CopilotEval(
             max_tool_calls=1,
-            max_retries=0,
             timeout_s=1,
             extra_config={"tools": [Tool("act", "act", handler)]},
         ),
@@ -285,7 +283,6 @@ async def test_budget_waits_for_denied_call_completion_in_runtime_event_order(
     result = await run_copilot(
         CopilotEval(
             max_tool_calls=1,
-            max_retries=0,
             timeout_s=1,
             extra_config={"tools": [Tool("act", "act", handler)]},
         ),
@@ -330,7 +327,6 @@ async def test_timeout_drains_handler_and_preserves_incomplete_evidence(
     client, _ = fake_client(monkeypatch, behavior)
     result = await run_copilot(
         CopilotEval(
-            max_retries=0,
             timeout_s=0.02,
             extra_config={"tools": [Tool("act", "act", handler)]},
         ),
@@ -361,16 +357,14 @@ async def test_startup_completion_cannot_swallow_execution_cancellation(
         execution = next(
             task
             for task in asyncio.all_tasks()
-            if getattr(task.get_coro(), "__qualname__", "").endswith(
-                "_run_copilot_once.<locals>.execute"
-            )
+            if getattr(task.get_coro(), "__qualname__", "").endswith("run_copilot.<locals>.execute")
         )
         execution.cancel()
 
     monkeypatch.setattr(client, "start", cancel_before_start_returns)
     monkeypatch.setattr(client, "create_session", create_after_yield)
     with pytest.raises(asyncio.CancelledError):
-        await run_copilot(CopilotEval(max_retries=0, timeout_s=1), "go")
+        await run_copilot(CopilotEval(timeout_s=1), "go")
     assert client.stopped
     assert client.session is None
 
@@ -474,7 +468,7 @@ async def test_missing_audit_fails_closed(monkeypatch: pytest.MonkeyPatch) -> No
         pass
 
     fake_client(monkeypatch, behavior)
-    result = await run_copilot(CopilotEval(audit_requests=True, max_retries=0), "go")
+    result = await run_copilot(CopilotEval(audit_requests=True), "go")
     assert not result.success
     assert result.stop_reason == "request_audit_error"
     assert not result.evidence_complete
@@ -641,7 +635,7 @@ async def test_timeout_keeps_missing_completion_incomplete(monkeypatch: pytest.M
         await asyncio.Event().wait()
 
     fake_client(monkeypatch, behavior)
-    result = await run_copilot(CopilotEval(timeout_s=0.02, max_retries=0), "go")
+    result = await run_copilot(CopilotEval(timeout_s=0.02), "go")
     assert result.stop_reason == "timeout"
     assert not result.evidence_complete
     assert result.all_tool_calls[0].completion_received is False
@@ -659,7 +653,7 @@ async def test_timeout_keeps_missing_completion_incomplete(monkeypatch: pytest.M
     assert data["usage"][-1]["input_tokens"] == 5
 
 
-async def test_no_retry_after_uncertain_action(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_single_attempt_after_uncertain_action(monkeypatch: pytest.MonkeyPatch) -> None:
     attempts = 0
 
     async def handler(invocation: ToolInvocation) -> ToolResult:
@@ -673,7 +667,7 @@ async def test_no_retry_after_uncertain_action(monkeypatch: pytest.MonkeyPatch) 
 
     fake_client(monkeypatch, behavior)
     result = await run_copilot(
-        CopilotEval(max_retries=2, extra_config={"tools": [Tool("act", "act", handler)]}), "go"
+        CopilotEval(extra_config={"tools": [Tool("act", "act", handler)]}), "go"
     )
     assert not result.success
     assert attempts == 1
@@ -689,7 +683,7 @@ async def test_cleanup_failure_cannot_look_successful(monkeypatch: pytest.Monkey
         raise RuntimeError("stop failed")
 
     monkeypatch.setattr(client, "stop", fail)
-    result = await run_copilot(CopilotEval(max_retries=0), "go")
+    result = await run_copilot(CopilotEval(), "go")
     assert result.stop_reason == "cleanup_error"
     assert not result.success
     assert not result.evidence_complete
@@ -832,7 +826,6 @@ async def test_controls_forwarding_keeps_permission_and_event_callbacks(
             instructions="system",
             timeout_s=600,
             max_tool_calls=80,
-            max_retries=0,
             allowed_tools=["act"],
             extra_config={"on_permission_request": permission, "on_event": events.append},
         ),
@@ -947,9 +940,7 @@ async def test_audited_execution_preserves_transport_options(
         )
 
     client, options = fake_client(monkeypatch, behavior)
-    result = await run_copilot(
-        CopilotEval(**settings, extra_config={"capi": supplied_capi}, max_retries=0), "go"
-    )
+    result = await run_copilot(CopilotEval(**settings, extra_config={"capi": supplied_capi}), "go")
     assert result.success, result.error
     assert result.stop_reason == "completed"
     assert result.evidence_complete
@@ -978,7 +969,7 @@ async def test_ordinary_execution_keeps_sdk_transport_default(
 
     fake_client(monkeypatch, behavior)
     result = await run_copilot(
-        CopilotEval(extra_config={"capi": capi} if capi is not None else {}, max_retries=0), "go"
+        CopilotEval(extra_config={"capi": capi} if capi is not None else {}), "go"
     )
     assert result.success
 
@@ -1018,7 +1009,6 @@ async def test_actual_sdk_serializes_caller_http_preference_without_network(
             extra_config={
                 "capi": {"auto_tier": "intelligence", "enable_web_socket_responses": False}
             },
-            max_retries=0,
         ),
         "go",
     )

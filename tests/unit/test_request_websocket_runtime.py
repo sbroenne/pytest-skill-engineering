@@ -297,7 +297,6 @@ async def test_native_runtime_websocket_audit(
                 max_tool_calls=(
                     1 if outcome == "exact_budget_slow_handler" else response_count - 1
                 ),
-                max_retries=0,
                 timeout_s=15 if outcome == "timeout" else 60,
                 allowed_tools=["memory_image"],
                 extra_config={

@@ -15,13 +15,13 @@ def skill_factory() -> Callable[[Path | str], Skill]:
     """Factory fixture for loading Skills.
 
     Example:
-        def test_with_skill(skill_factory, eval_run):
+        async def test_with_skill(skill_factory, copilot_eval):
             skill = skill_factory("path/to/my-skill")
             agent = CopilotEval(
                 skill_directories=[str(skill.path)],
                 model="gpt-5.6-sol",
             )
-            result = await eval_run(agent, "Do something with the skill")
+            result = await copilot_eval(agent, "Do something with the skill")
             assert result.success
 
         def test_skill_metadata(skill_factory):

@@ -24,6 +24,11 @@ This library makes calls to external LLM APIs and can execute MCP servers and CL
 
 - **API Keys**: Never commit API keys to version control. Use environment variables.
 - **Sensitive Data**: Be cautious about what content you send to LLM providers for evaluation.
-- **Network Security**: LLM API calls are made over HTTPS by default.
+- **Network Security**: Copilot model requests may use encrypted HTTP or WebSocket transports.
 - **MCP Servers**: Only run trusted MCP servers — they have access to execute code and tools.
 - **CLI Tools**: Test CLI tools in isolated environments when possible.
+- **Generated Code**: Running model-produced code needs the same precautions as
+  any untrusted code. A temporary working directory is not a security sandbox.
+- **Saved Evidence**: JSON can contain system prompts, tool output, images,
+  and test properties. Review it before publishing; saving evidence locally does not
+  make its contents safe to share.

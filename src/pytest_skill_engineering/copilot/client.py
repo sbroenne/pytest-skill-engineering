@@ -1,4 +1,4 @@
-"""Shared SDK client setup and cleanup for eval and judge sessions."""
+"""SDK client setup and cleanup for eval sessions."""
 
 from __future__ import annotations
 

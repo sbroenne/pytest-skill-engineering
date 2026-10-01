@@ -20,16 +20,16 @@ tests/integration/
     ├── test_05_skills.py        # Skill A/B comparison
     ├── test_06_sessions.py      # Multi-turn sessions
     ├── test_07_clarification.py # Clarification detection
-    ├── test_08_scoring.py       # LLM scoring
     ├── test_09_cli.py           # CLI workflows
     ├── test_10_ab_servers.py    # Configuration A/B comparison
     ├── test_11_iterations.py    # Iteration reliability
     ├── test_12_custom_agents.py # Custom agent dispatch
     ├── test_13_plugins.py       # Plugin discovery and loading
-    ├── test_14_skill_evals.py   # Skill eval execution
-    ├── test_15_skill_refinement.py # Skill refinement
-    ├── test_16_skill_benchmark.py  # Skill benchmarking
-    └── test_17_plugin_skill_workflow.py # End-to-end plugin skill workflow
+    ├── test_14_skill_evals.py   # Loaded skill cases with explicit checks
+    ├── test_16_skill_benchmark.py # Controlled skill comparisons
+    ├── test_17_plugin_skill_workflow.py # Plugin skill execution with concrete checks
+    ├── test_18_config_validation.py # Configuration validation
+    └── test_19_customer_workflow.py # Ordinary author-run-fix-rerun workflow
 ```
 
 ## Quick Start
@@ -53,7 +53,24 @@ uv run python -m pytest \
 
 1. GitHub Copilot authentication through `gh auth login` or `GITHUB_TOKEN`.
 2. A model available through the GitHub Copilot SDK.
-3. Dependencies installed with `uv sync --all-groups`.
+3. Dependencies installed with `uv sync --frozen --all-extras`.
+
+pytest determines outcomes from ordinary assertions. Saved JSON records execution
+evidence for the coding agent to investigate; there are no judges or report renderers.
+
+## Customer workflow
+
+`test_19_customer_workflow.py` reuses the customer workflow from
+[`examples/skill-dogfood`](../../examples/skill-dogfood/), rather than supplying
+synthetic failure evidence. It requires no framework companion skill. The sample
+separately preserves the historical skill comparison through frozen fixtures,
+not a currently distributed feature.
+
+The initial consumer test must genuinely fail on invoice rounding. The coding
+agent reads its actual native evidence, repairs only the CLI, and reruns the
+unchanged test. Fixed independent checks verify the repaired output. Child
+before/after JSON and outer authoring/repair evidence remain separate; do not
+treat outer usage as the total cost of all sessions.
 
 ## Adding Tests
 

@@ -2,8 +2,8 @@
 
 Since CopilotEval operates via Copilot's coding agent (not MCP banking
 servers), A/B comparison tests instruction variants rather than server
-variants. Same task, different configs — the report shows which performs
-better.
+variants. pytest records each outcome; the coding agent compares saved evidence
+and source without an automatically selected winner.
 
 Run with: uv run python -m pytest tests/integration/copilot/test_10_ab_servers.py -v
 """

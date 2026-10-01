@@ -53,6 +53,12 @@ listed in `capture_errors`; their original events remain in `raw_events`, rather
 than inventing a tool name or arguments. Normal duplicate events retain one call;
 conflicting duplicates retain the first record and flag the conflict.
 
+`result` is the SDK's complete text representation, not necessarily one JSON
+document. Current string-returning MCP tools include display text followed by a
+structured `{"result": ...}` representation. Parse the known tool contract and
+verify both agree; do not discard unexplained trailing data or invent a missing
+payload. The bundled starter demonstrates this explicitly.
+
 The existing `ToolCall` string representation is unchanged. Check
 `evidence_complete` explicitly rather than using `repr()` as an evidence verdict.
 

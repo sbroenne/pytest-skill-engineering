@@ -39,7 +39,9 @@ The workflow scans existing `v*` tags only to prevent version regressions and to
 
 ## Pre-releases and Special Versions
 
-Pre-releases and special versions still follow the same rule: update `project.version` in source first, then run the workflow from that commit.
+The current workflow accepts plain `X.Y.Z` only. Pre-release and special-version
+publishing would require an explicit workflow change; do not assume those
+versions are supported.
 
 ## Troubleshooting
 
@@ -53,7 +55,10 @@ If the workflow fails with "Tag already exists", either:
 
 ### Build or test failures
 
-The workflow stops before tagging if build or tests fail. Fix the issues and re-run the workflow.
+Source validation runs before tagging. Artifact building and verification run
+after the tag is created. A later failure may therefore leave a valid tag in
+place; inspect the workflow state before retrying. Run the documented local
+checks before dispatching a release.
 
 ### PyPI publish failures
 
@@ -73,3 +78,20 @@ Releases require:
 - **GitHub Pages** enabled for documentation deployment
 
 Only repository maintainers can trigger releases.
+
+## 1.0 release preparation
+
+Check the [breaking-change guide](../migration.md), complete current documentation,
+schema-4.0 evidence contracts, package version metadata, and the installed wheel
+before publishing. There is no companion skill to install or publish.
+Reading saved evidence must work without Copilot.
+
+Verify the quickstart and the
+[historical customer workflow sample](https://github.com/sbroenne/pytest-skill-engineering/tree/main/examples/skill-dogfood)
+against the checkout. The latter must default to offline checks and preserve
+real before/after evidence when its live cases are explicitly authorized. The
+old banking showcase and dedicated workflow are no longer release artifacts.
+
+Preparing a version bump does not authorize tagging, publishing, running a
+release workflow, or announcing a release. The maintainer makes that decision
+explicitly after review.

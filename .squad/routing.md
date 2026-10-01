@@ -6,9 +6,9 @@ How to decide who handles what.
 
 | Work Type | Route To | Examples |
 |-----------|----------|----------|
-| Engine & core types | Fenster | Eval, Provider, MCPServer, EvalEngine, pydantic_adapter, execution pipeline |
-| HTML reports & components | McManus | htpy components, CSS, JS, report generator, insights, data contracts |
-| Copilot SDK & CopilotEval | Verbal | CopilotEval, CopilotModel, copilot/ provider, custom agent dispatch |
+| Engine & core types | Fenster | CopilotEval, execution controls, core dataclasses, MCPServer, execution pipeline |
+| Native evidence | McManus | JSON serialization, schema, atomic saving, evidence contracts |
+| Copilot SDK & CopilotEval | Verbal | SDK lifecycle, request audits, event capture, custom agent dispatch |
 | Code review | Keaton | Review PRs, check quality, architecture decisions |
 | Testing | Hockney | Integration tests, test harnesses, edge cases, verify fixes |
 | Scope decisions (product) | Stefan 👤 | Priorities, what to build, what not to build, product trade-offs |

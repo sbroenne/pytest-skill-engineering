@@ -2,6 +2,21 @@
 
 ## Active Decisions
 
+### Runner-only 1.0 boundary (2026-09-30)
+
+**Author:** Stefan (User) | **Status:** Implemented in the working tree
+
+The framework runs real Copilot tasks and records ordinary pytest outcomes plus
+native JSON. Consumers own concrete checks; the current coding agent interprets
+the evidence and source through the companion skill. AI judging, advice,
+refinement, report rendering, rankings, demo reports, and their dependencies are
+removed. There are no compatibility readers or deprecated aliases.
+
+Older entries below are historical records, not current APIs or instructions.
+This boundary supersedes their judging, analysis, and report-rendering guidance.
+
+## Historical Decisions
+
 ### Copilot Pivot: PydanticAI Removed — Copilot SDK is the ONLY Harness (2026-03-21T18:33Z)
 **Author:** Stefan (User) | **Status:** Implemented
 

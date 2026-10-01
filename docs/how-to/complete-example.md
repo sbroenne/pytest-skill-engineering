@@ -1,10 +1,11 @@
 ---
-description: "A complete CopilotEval example that attaches MCP servers, compares configurations, and generates an HTML report."
+description: "A CopilotEval example that attaches MCP servers, compares configurations, and records native execution evidence."
 ---
 
 # Complete example
 
 ```python
+import json
 import sys
 
 import pytest
@@ -38,13 +39,23 @@ async def test_balance(copilot_eval, system_prompt_name, system_prompt):
     result = await copilot_eval(agent, "What's my checking balance?")
 
     assert result.success
-    assert result.tool_was_called("get_balance")
+    calls = result.tool_calls_for("banking-get_balance")
+    assert len(calls) == 1
+    assert calls[0].arguments == {"account": "checking"}
+    assert calls[0].evidence_complete
+    assert calls[0].result is not None
+    display, structured = calls[0].result.rsplit("\n\n", 1)
+    assert json.loads(structured) == {"result": display}
+    observed = json.loads(display)
+    assert observed["balance"] == 1500
 ```
 
 Run it with:
 
 ```bash
-uv run python -m pytest tests/test_banking.py -v   --aitest-summary-model=copilot/gpt-5.6-sol   --aitest-html=aitest-reports/report.html
+uv run python -m pytest tests/test_banking.py -v
 ```
 
-This produces a report that compares the two system prompt variants side by side.
+pytest records a separate outcome for each system prompt variant; JSON captures
+each execution. Your coding agent can compare those observations alongside the
+source. The test checks returned account data, not the subjective quality of each style.

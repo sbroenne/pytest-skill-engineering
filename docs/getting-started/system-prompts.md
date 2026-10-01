@@ -1,5 +1,5 @@
 ---
-description: "Compare alternative system prompts by varying CopilotEval.instructions and keeping machine identity stable in reports."
+description: "Compare system prompts with fixed checks and captured configuration evidence."
 ---
 
 # System prompts
@@ -48,8 +48,12 @@ async def test_balance_prompt(copilot_eval, system_prompt_name, system_prompt):
 
 ## Naming guidance
 
-Use human-readable `name=` values for report labels.
-The report keeps stable machine identity internally and displays these names in the UI.
+The example checks session completion only. Define the same concrete output
+checks for every variant before claiming one system prompt works better.
+
+Use descriptive `name=` values and pytest parameter IDs to identify variants.
+Native JSON records each name, configuration, system prompt, and pytest outcome;
+your coding agent interprets the observations.
 
 ## Replace vs append
 

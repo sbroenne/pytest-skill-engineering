@@ -46,11 +46,9 @@ htmlcov/
 # Test outputs
 test_results/
 aitest-reports/
-tests/fixtures/reports/html/
 
-# Node.js (Tailwind build)
+# Node.js
 node_modules/
-src/pytest_aitest/templates/node_modules/
 package-lock.json
 
 # Environment

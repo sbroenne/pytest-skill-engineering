@@ -36,6 +36,9 @@ async def test_my_plugin(copilot_eval, tmp_path):
 
 ## What Gets Loaded
 
+The quick example is a smoke check. To establish correctness, inspect and verify
+the produced script's behavior, not just session completion.
+
 `load_plugin()` auto-discovers and loads:
 
 - **Instructions** — `copilot-instructions.md`, `CLAUDE.md`, or from `plugin.json`

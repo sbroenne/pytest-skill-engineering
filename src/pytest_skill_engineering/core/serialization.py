@@ -88,8 +88,8 @@ def deserialize_suite_report(data: dict[str, Any]) -> SuiteReport:
                 for tc_data in turn_data.get("tool_calls", []):
                     # Decode base64 image content if present
                     image_content = None
-                    if tc_data.get("image_content"):
-                        image_content = base64.b64decode(tc_data["image_content"])
+                    if tc_data.get("image_content") is not None:
+                        image_content = base64.b64decode(tc_data["image_content"], validate=True)
 
                     tool_calls.append(
                         ToolCall(
@@ -283,4 +283,5 @@ def deserialize_suite_report(data: dict[str, Any]) -> SuiteReport:
         failed=_require_key(data, "failed", context="SuiteReport"),
         skipped=_require_key(data, "skipped", context="SuiteReport"),
         suite_docstring=data.get("suite_docstring"),
+        models_without_pricing=_require_key(data, "models_without_pricing", context="SuiteReport"),
     )

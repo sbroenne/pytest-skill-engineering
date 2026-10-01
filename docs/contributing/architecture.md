@@ -1,5 +1,5 @@
 ---
-description: "Current contributor architecture: CopilotClient sessions, event mapping, result collection, pytest hooks, and report generation."
+description: "CopilotClient sessions, event mapping, ordinary pytest checks, and native evidence collection."
 ---
 
 # Architecture
@@ -15,10 +15,11 @@ CopilotEval
   -> streaming SDK events
   -> EventMapper
   -> CopilotResult
+  -> consumer-owned pytest checks
   -> pytest plugin collection
   -> SuiteReport
-  -> JSON / Markdown / HTML report generation
-  -> optional AI insights
+  -> JSON evidence
+  -> coding-agent-led investigation alongside source
 ```
 
 ## Main components
@@ -28,29 +29,32 @@ CopilotEval
 `src/pytest_skill_engineering/copilot/`
 
 - `eval.py` — `CopilotEval` configuration
-- `runner.py` — session lifecycle, retries, and event streaming
+- `runner.py` — single-attempt session lifecycle and event streaming
 - `events.py` — contains EventMapper, which converts SDK events into normalized result data
 - `result.py` — `CopilotResult`
-- `judge.py` — semantic judging helpers such as `llm_assert`
 
-`max_retries` defaults to `2` for transient runtime failures.
+Each call makes one attempt and preserves its failure evidence. The framework
+does not start replacement sessions after startup or execution failures.
 
 ### 2. pytest integration
 
 `src/pytest_skill_engineering/plugin.py`
 
-The plugin captures completed results, attaches stable eval identity, preserves genuine pytest parameter IDs, and writes normalized JSON for report generation.
+The plugin captures results and ordinary pytest outcomes, preserves genuine
+pytest parameter IDs, and writes native JSON evidence.
 
-### 3. Reporting pipeline
+### 3. Evidence persistence
 
 `src/pytest_skill_engineering/reporting/`
 
 - `collector.py` builds `SuiteReport`
-- `generator.py` renders HTML, Markdown, and JSON
-- `insights.py` generates cached AI analysis
-- `components/` contains the htpy UI
+- `generator.py` atomically saves JSON and loads current-schema evidence
 
-Reports key comparisons by stable agent identity and display human-readable labels separately.
+No HTML/Markdown UI, rankings, or interpretation layer exists.
+The framework owns execution and evidence;
+consumers own application fixtures and verification. The existing coding agent
+interprets the evidence using the source and documentation. There is no
+framework companion skill or framework-owned adviser.
 
 ### 4. Serialization boundary
 
@@ -60,7 +64,6 @@ Serialization is strict. The current report loader expects the current schema ex
 
 ## Development guidance
 
-- change typed report contracts before changing components
-- regenerate reports from saved JSON for template work
-- use deterministic checks for report source changes
+- preserve native evidence contracts without inventing missing data
+- use deterministic round-trip and failure-path checks for persistence changes
 - use real Copilot integration tests for runtime changes

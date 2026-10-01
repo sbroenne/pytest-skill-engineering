@@ -21,7 +21,7 @@ Authenticate Copilot with either:
 gh auth login --hostname github.com
 ```
 
-or an explicit token in your environment. Eval and judge sessions use
+or an explicit token in your environment. Eval sessions use
 `GITHUB_TOKEN` first, then `GH_TOKEN`; when neither is set, the SDK uses its
 signed-in user.
 
@@ -46,12 +46,12 @@ Use the smallest command that proves the change you made.
 | Python source | Ruff, Ruff format, Pyright, relevant contract checks, then relevant Copilot integration file |
 | Copilot execution or system prompt | Relevant `tests/integration/copilot/` file with a real model |
 | Docs only | `uv run --frozen python -X utf8 -m mkdocs build --strict` |
-| Report Python, CSS, or JavaScript | Regenerate every fixture report, inspect the rendered HTML, and run relevant deterministic checks |
+| Evidence collection or serialization | Offline round-trip/failure-path contracts and relevant real-Copilot coverage |
 | Dependencies | Refresh `uv.lock`, then run the checks for the affected source |
 
 ### Locked dependency environment
 
-CI, integration, hero-test, and documentation workflows use `uv sync --frozen`
+CI, integration, and documentation workflows use `uv sync --frozen`
 and `uv run --frozen` to consume the committed lock without resolving against a
 runner's different default registry. `--frozen` does not check whether the lock
 is current with `pyproject.toml`; dependency changes must regenerate and validate
@@ -78,9 +78,10 @@ Run the checks that cover the changed surface:
 ```bash
 uv run --frozen ruff check src tests
 uv run --frozen ruff format --check src tests
+uv run --frozen ruff check examples/skill-dogfood
+uv run --frozen ruff format --check examples/skill-dogfood
 uv run --frozen pyright
 uv run --frozen python -X utf8 -m mkdocs build --strict
-uv run --frozen python scripts/generate_fixture_html.py
 ```
 
 These checks validate source correctness, but they do **not** prove agent behavior.
@@ -105,19 +106,32 @@ Do not claim success from mock-only tests.
 Run integration files one at a time. Fix every failure before moving to the
 next file, and use `--lf` rather than repeating successful, paid runs.
 
-## Report development
+### Customer workflow and historical case study
 
-When you change report components, contracts, CSS, or JS, regenerate from existing JSON instead of re-running LLM tests:
+[`examples/skill-dogfood`](examples/skill-dogfood/) preserves the historical
+write-run-fix-rerun experiment with frozen guidance fixtures, not a distributed
+companion skill. Default collection is offline; comparisons are explicit live
+cases. It has no dedicated workflow. `test_19_customer_workflow.py` reuses the
+ordinary no-skill workflow as regression coverage.
 
-```bash
-uv run pytest-skill-engineering-report aitest-reports/results.json   --html aitest-reports/report.html
-```
+The sample's fixed checks remain outside model-writable files. Preserve real
+before/after evidence and unchanged authored tests. A failed control case stays
+visible; one pair does not prove a skill advantage. Keep the sample's separate
+lock current when its manifest or the local framework dependency changes.
+
+## Evidence collection
+
+The framework supplies ordinary pytest output and structured JSON evidence.
+It does not render dashboards, rank configurations, or interpret outcomes.
+Preserve captured configuration, arguments, outputs, errors, completion flags,
+nullable usage, request audits, and consumer-recorded verification properties.
+Never hand-edit generated JSON; fix its producer and run the relevant check.
 
 ## Architecture
 
 See `docs/contributing/architecture.md` for the current Copilot pipeline:
 
-`CopilotClient -> session -> EventMapper -> CopilotResult -> pytest plugin -> suite report -> HTML/Markdown/JSON`
+`CopilotClient -> session -> EventMapper -> CopilotResult -> ordinary pytest checks -> collected JSON evidence`
 
 ## Terminology
 

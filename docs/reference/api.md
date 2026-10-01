@@ -55,24 +55,47 @@ Auto-generated API documentation from source code.
       show_source: false
       heading_level: 3
 
-## Scoring Types
+## Explicit case loading and export
 
-::: pytest_skill_engineering.core.scoring.ScoringDimension
+Free-text expectations are descriptions, not automatically executed checks.
+Consumers supply their own booleans and evidence to the exporter.
+
+::: pytest_skill_engineering.core.skill_evals.load_skill_evals
     options:
       show_source: false
       heading_level: 3
 
-::: pytest_skill_engineering.core.scoring.ScoreResult
+::: pytest_skill_engineering.core.skill_evals.SkillEvalCase
     options:
       show_source: false
       heading_level: 3
 
-::: pytest_skill_engineering.core.scoring.assert_score
+::: pytest_skill_engineering.core.skill_grading.export_grading
     options:
       show_source: false
       heading_level: 3
 
-::: pytest_skill_engineering.fixtures.llm_score.LLMScore
+## Native execution evidence
+
+These APIs save and load captured execution and ordinary pytest outcomes.
+They do not render reports, interpret results, rank configurations, or select winners.
+
+::: pytest_skill_engineering.reporting.collector.TestReport
+    options:
+      show_source: false
+      heading_level: 3
+
+::: pytest_skill_engineering.reporting.collector.SuiteReport
+    options:
+      show_source: false
+      heading_level: 3
+
+::: pytest_skill_engineering.reporting.generator.generate_json
+    options:
+      show_source: false
+      heading_level: 3
+
+::: pytest_skill_engineering.reporting.generator.load_suite_report
     options:
       show_source: false
       heading_level: 3

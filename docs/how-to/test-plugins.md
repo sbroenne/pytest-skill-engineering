@@ -235,21 +235,12 @@ assert result.tool_was_called_from_server("search", "document-server")
 assert not result.tool_was_called_from_server("search", "web-server")
 ```
 
-### Semantic Assertions
+### Independent output checks
 
-Use `llm_assert` for AI-powered validation of response content:
-
-```python
-async def test_plugin_response_quality(copilot_eval, llm_assert):
-    agent = CopilotEval.from_plugin("path/to/my-plugin")
-    result = await copilot_eval(agent, "Summarize my financial situation")
-
-    assert result.success
-    assert llm_assert(
-        result.final_response,
-        "provides a summary of account balances with actionable advice",
-    )
-```
+Session completion and tool presence are smoke checks. Also verify concrete
+output schemas, exact values, produced files, or fixture-store state. Save
+observations with `record_property`, then assert the check. Subjective review
+belongs to the current coding agent or a human, not a separate framework judge.
 
 ## SDK Passthroughs
 
@@ -299,7 +290,9 @@ async def test_plugin_versions(copilot_eval, plugin_path):
     assert result.tool_was_called("get_balance")
 ```
 
-The report generates an **eval leaderboard** comparing pass rates, costs, and AI-analyzed differences across plugin versions.
+pytest shows each outcome, and JSON records calls, usage, and captured configuration
+for each plugin version. Your coding agent investigates those records alongside
+source; the framework does not generate recommendations or diagnose causes.
 
 ## Supported Formats Reference
 

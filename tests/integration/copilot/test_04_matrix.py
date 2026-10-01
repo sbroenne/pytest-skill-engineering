@@ -1,7 +1,7 @@
 """Level 04 — Model × system prompt matrix comparison.
 
 Runs the same task across every configured model and two distinct system
-prompts. The report exposes both dimensions for side-by-side comparison.
+prompts. pytest records each outcome and JSON preserves each configuration.
 
 Run with: uv run python -m pytest tests/integration/copilot/test_04_matrix.py -v
 """

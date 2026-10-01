@@ -1,4 +1,4 @@
-"""Report collector and data structures."""
+"""Captured execution records and ordinary pytest outcomes."""
 
 from __future__ import annotations
 
@@ -12,19 +12,19 @@ if TYPE_CHECKING:
 
 @dataclass(slots=True)
 class TestReport:
-    """Report data for a single test.
+    """Native evidence for one captured test execution.
 
     Attributes:
         name: Full test node ID (e.g., "test_balance[gpt-4o-PROMPT_V1]")
         outcome: Test outcome - "passed", "failed", or "skipped"
         duration_ms: Test duration in milliseconds
-        eval_result: Optional EvalResult from eval_run
+        eval_result: Optional EvalResult from copilot_eval
         error: Error message if test failed
         assertions: List of assertion results
         docstring: Test function's docstring (first line) for human-readable description
         class_docstring: Test class docstring (first line) for human-readable group name
-        agent_id: Eval UUID (from Eval.id)
-        eval_name: Display name for the agent
+        agent_id: Identity supplied by the execution wrapper
+        eval_name: Name identifying the eval configuration
         model: LLM model name (without provider prefix)
         system_prompt_name: Label for the system prompt variant
         skill_name: Name of the skill used
@@ -46,7 +46,6 @@ class TestReport:
     system_prompt_name: str | None = None
     skill_name: str | None = None
     iteration: int | None = None
-    _copilot_test: bool = False
     properties: list[tuple[str, Any]] = field(default_factory=list)
 
     @property
@@ -92,9 +91,9 @@ class TestReport:
 
 @dataclass(slots=True)
 class SuiteReport:
-    """Report data for a test suite.
+    """Native evidence for captured executions in a pytest session.
 
-    Automatically computes statistics from test results.
+    Counts reflect recorded pytest outcomes, not framework-created judgments.
     """
 
     name: str
@@ -105,6 +104,7 @@ class SuiteReport:
     failed: int = 0
     skipped: int = 0
     suite_docstring: str | None = None
+    models_without_pricing: list[str] = field(default_factory=list)
 
     @property
     def total(self) -> int:
@@ -181,6 +181,9 @@ def build_suite_report(
     skipped = sum(1 for t in tests if t.outcome == "skipped")
     total_duration = sum(t.duration_ms for t in tests)
 
+    from pytest_skill_engineering.execution.cost import models_without_pricing
+
+    suite_models = {test.model for test in tests}
     return SuiteReport(
         name=name,
         timestamp=datetime.now().isoformat(),
@@ -190,4 +193,5 @@ def build_suite_report(
         failed=failed,
         skipped=skipped,
         suite_docstring=suite_docstring,
+        models_without_pricing=sorted(suite_models & models_without_pricing),
     )

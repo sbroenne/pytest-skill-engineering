@@ -2,9 +2,13 @@
 description: "Test real GitHub Copilot coding sessions with CopilotEval, skills, prompt files, and custom agent dispatch."
 ---
 
-# Test coding agents
+# Test skills and custom agents
 
-Use `CopilotEval` to run real GitHub Copilot sessions inside pytest.
+Use `CopilotEval` to run real GitHub Copilot sessions inside pytest. The interface,
+skill, system prompt, or custom agent definition is under test, not the harness.
+Session success and a file's existence are smoke checks; verify its actual
+behavior too. pytest shows the checks' outcomes; JSON records execution for your
+coding agent to investigate, without a separate judge or adviser.
 
 ## Quick start
 
@@ -41,7 +45,6 @@ agent = CopilotEval(
     instructions="Your system prompt.",
     working_directory=str(tmp_path),
     max_turns=10,
-    max_retries=2,
     excluded_tools=["run_in_terminal"],
     skill_directories=["./skills/my-skill"],
     custom_agents=[],
@@ -85,7 +88,6 @@ async def test_trial(copilot_eval, record_property, guarded_tools):
         max_tool_calls=80,
         image_detail="high",
         audit_requests=True,
-        max_retries=0,
         allowed_tools=[tool.name for tool in guarded_tools],
         extra_config={"tools": guarded_tools},
     )
@@ -104,7 +106,10 @@ There is no framework-specific tool wrapper to implement.
 | `max_tool_calls=80` | Admits at most 80 calls after caller pre-tool guards. The next attempted call is denied and the session is aborted with `tool_budget_exceeded`, rather than asking the model to keep trying. Zero permits no calls. |
 | `image_detail="high"` | Rewrites actual outgoing OpenAI image content before HTTP or WebSocket dispatch. `None` leaves detail unchanged. |
 | `audit_requests=True` | Records actual outgoing model, tool names, reasoning effort, image details and system prompt hash; unsupported requests fail rather than inventing evidence. |
-| `max_retries=0` | Disables framework retries. Independently, failures after tool admission or observed tool activity are never retried. |
+
+Each execution makes one attempt, including startup and connection failures.
+The framework never silently reruns a task. Inspect its failure and captured
+evidence before requesting an explicit pytest rerun.
 
 The normal defaults remain CLI mode, no tool-call limit, no image override, and
 no request audit. `max_turns` remains advisory; it is not a tool-call limit.
@@ -156,7 +161,7 @@ Without that explicit path, the runtime regression is skipped rather than
 downloading or launching an unspecified runtime. These checks validate control
 behavior, not model performance or the live Copilot API's transport selection.
 
-For a JSON-only benchmark with no paid report analysis, explicitly override
+For a JSON-only benchmark, explicitly override
 repository report defaults:
 
 ```powershell

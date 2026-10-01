@@ -130,7 +130,10 @@ async def test_financial_advice(copilot_eval, agent):
     assert result.success
 ```
 
-The report shows whether the skill improves performance.
+This example checks session completion only, not advice quality or skill
+effectiveness. Add fixed checks of concrete output, such as exact allocation
+amounts in a JSON artifact, to establish task correctness. Compare both sides
+with the same checks and repeat representative cases before claiming improvement.
 
 ## Next Steps
 
@@ -169,3 +172,7 @@ by default. See [Configuration](../reference/configuration.md) for the explicit
 discovery opt-in.
 
 See [Test Coding Agents](../how-to/test-coding-agents.md#testing-skills) for a full example.
+
+The framework does not distribute a companion skill for its own use. Testing
+your domain skills remains supported; the
+[case study](../use-cases/companion-skill.md) explains the distinction.

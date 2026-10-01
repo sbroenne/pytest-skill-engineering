@@ -1,8 +1,7 @@
 """Level 07 — Clarification detection: catch agents that ask instead of acting.
 
-These tests detect clarification patterns by inspecting
-``result.final_response`` — either with simple substring checks or with
-the ``llm_assert`` fixture for semantic evaluation.
+Phrase checks are deliberately limited checks of response wording, not semantic
+judgments. Task completion is checked separately through produced files.
 
 Run with: uv run python -m pytest tests/integration/copilot/test_07_clarification.py -v
 """
@@ -85,13 +84,10 @@ class TestClarificationDetection:
         assert (tmp_path / "utils.py").exists(), "utils.py was not created"
         assert (tmp_path / "main.py").exists(), "main.py was not created"
 
-    async def test_ambiguous_request_may_clarify(self, copilot_eval, tmp_path, llm_assert):
-        """An ambiguous request — agent may clarify or make a reasonable choice.
-
-        This test verifies the agent either acts (creates a file) or asks a
-        sensible clarifying question.  Both outcomes are acceptable; the test
-        fails only if the agent does *nothing*.
-        """
+    async def test_ambiguous_request_preserves_evidence(
+        self, copilot_eval, tmp_path, record_property
+    ):
+        """Record an ambiguous response without claiming it is a sensible design."""
         agent = CopilotEval(
             name="ambiguous-task",
             instructions="You are a helpful developer.",
@@ -106,24 +102,26 @@ class TestClarificationDetection:
         created_files = [path for path in tmp_path.rglob("*") if path.is_file()]
         response = result.final_response or ""
 
-        acted = len(created_files) > 0
-        if not acted:
-            assert llm_assert(
-                response,
-                "Asks the user a relevant clarifying question about the web app "
-                "they want, such as its purpose, features, design, or technology.",
-            )
+        record_property(
+            "ambiguity_observation",
+            {
+                "files": [str(path.relative_to(tmp_path)) for path in created_files],
+                "response": response,
+                "semantic_quality": "not evaluated",
+            },
+        )
+        assert result.evidence_complete, result.capture_errors
+        assert result.turns
+        assert response or created_files, "No response or files were captured."
 
-    async def test_actionable_instructions_suppress_clarification(
-        self, copilot_eval, tmp_path, llm_assert
-    ):
+    async def test_actionable_instructions_suppress_clarification(self, copilot_eval, tmp_path):
         """Strong 'just do it' instructions should suppress clarification even on vague prompts."""
         agent = CopilotEval(
             name="action-oriented",
             instructions=(
                 "You are a decisive developer. NEVER ask questions. "
                 "If a request is ambiguous, make a reasonable choice and "
-                "proceed. Always produce working code. Asking for clarification "
+                "proceed. Always produce working Python code. Asking for clarification "
                 "is forbidden."
             ),
             working_directory=str(tmp_path),

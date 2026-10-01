@@ -1,159 +1,134 @@
 # pytest-skill-engineering
 
 [![PyPI version](https://img.shields.io/pypi/v/pytest-skill-engineering)](https://pypi.org/project/pytest-skill-engineering/)
-[![Python versions](https://img.shields.io/pypi/pyversions/pytest-skill-engineering)](https://pypi.org/project/pytest-skill-engineering/)
 [![CI](https://github.com/sbroenne/pytest-skill-engineering/actions/workflows/ci.yml/badge.svg)](https://github.com/sbroenne/pytest-skill-engineering/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-**Test-Driven Skill Engineering for GitHub Copilot**
+**A test runner for people working with coding agents.**
 
-Test MCP servers, CLI tools, Agent Skills, and custom agents using the **real GitHub Copilot coding agent**. Write tests as prompts, run them against actual Copilot sessions, and get AI-powered insights on what to fix.
+Test whether real GitHub Copilot sessions can use your MCP servers, CLI tools,
+skills, system prompts, and custom agents. Write a user task, execute it through
+pytest, and verify the actual output with ordinary assertions.
 
-## Why?
+The framework runs the task and records what happened. Your existing coding agent
+investigates the evidence, reads the source, and helps you improve the interface.
+**Version 1.0 removes AI judging, report dashboards, rankings, and skill refinement.**
+See the [migration guide](docs/migration.md) for this breaking change.
 
-Your MCP server passes all unit tests. Then a user tries it in GitHub Copilot and:
+## Why this exists
 
-- Copilot picks the wrong tool
-- Passes garbage parameters
-- Can't recover from errors
-- Ignores your skill's instructions
+Your tool can pass its own tests while Copilot chooses the wrong operation,
+supplies the wrong arguments, or misunderstands its descriptions. That is a
+different question from whether the tool implementation works.
 
-**Why?** Because you tested the code, not the AI interface.
+Use real task execution to test the AI-facing interface, and independent output
+checks to establish correctness. A completed session or a tool call by itself
+does not prove that the requested task succeeded.
 
-For LLMs, your API isn't functions and types — it's **tool descriptions, Agent Skills, custom agent instructions, and schemas**. These are what GitHub Copilot actually sees. Traditional tests can't validate them.
+## Quick start
 
-**The key insight: your test is a prompt.** You write what a user would say ("What's my checking balance?"), and Copilot figures out how to use your tools. If it can't, your AI interface needs work.
+You need Python 3.11+, [uv](https://docs.astral.sh/uv/), and a GitHub account with
+Copilot access.
 
-## What This Tests
-
-pytest-skill-engineering validates the **full skill engineering stack** that ships with your MCP server:
-
-- **MCP Server Tools** — Can Copilot discover and call your tools correctly?
-- **Agent Skills** ([agentskills.io](https://agentskills.io) spec-compliant) — Does domain knowledge improve performance?
-- **Custom Agents** (`.agent.md` files) — Do your specialist instructions trigger proper custom agent dispatch?
-- **MCP Prompt Templates** — Do server-side templates produce the right behavior?
-- **CLI Tools** — Can Copilot use command-line interfaces effectively?
-
-Plus **A/B testing**, **multi-step workflows with explicit context**, and **AI-powered reports** that tell you exactly what to fix.
-
-## How It Works
-
-Write tests as prompts. Run them with the real GitHub Copilot coding agent. Assert on what happened:
-
-A **system prompt** configures behavior (`CopilotEval.instructions` or a custom
-agent's body). A **prompt** is the user task passed to `copilot_eval`.
-
-```python
-from pytest_skill_engineering.copilot import CopilotEval
-
-
-async def test_balance_query(copilot_eval):
-    agent = CopilotEval(
-        skill_directories=["skills/banking-advisor"],
-        max_turns=10,
-    )
-    result = await copilot_eval(agent, "What's my checking balance?")
-
-    assert result.success
-    assert result.tool_was_called("get_balance")
-```
-
-**The workflow:**
-
-1. **Write a test** — a prompt that describes what a user would say
-2. **Run it** — GitHub Copilot tries to use your tools
-3. **Fix the interface** — improve tool descriptions, skills, or agent instructions until it passes
-4. **AI analysis tells you what to optimize** — cost, redundant calls, better system prompts
-
-If a test fails, your AI interface needs work, not your code.
-
-## Agent Skills — First-Class Support
-
-pytest-skill-engineering provides **full [Agent Skills](https://agentskills.io) spec compliance**:
-
-- **Compatibility field** — Mark required tools, models, or platforms
-- **Metadata** — Title, description, version, attribution
-- **Allowed-tools** — Restrict which tools the agent can use
-- **Scripts & Assets** — Package Python scripts, prompts, and resources
-- **Eval Bridge** — Import evals from `evals/evals.json`, export grading results
-
-Agent Skills are loaded natively when testing with `CopilotEval` — exactly as users experience them.
-
-## AI-Powered Reports
-
-AI analyzes your results and tells you **what to fix**: which configuration to deploy, how to improve tool descriptions, where to cut costs. [See a sample report →](https://sbroenne.github.io/pytest-skill-engineering/demo/hero-report.html)
-
-![AI Analysis — winner recommendation, metrics, and comparative analysis](screenshots/ai_analysis.png)
-
-## Quick Start
-
-You need Python 3.11+, [uv](https://docs.astral.sh/uv/), the GitHub CLI, and a
-GitHub account with Copilot access.
-
-```bash
-# Add the package to an existing Python project
+```powershell
 uv add pytest-skill-engineering
-
-# Authenticate once, then create and verify the starter
 gh auth login --hostname github.com
 uv run pytest-skill-engineering init
 uv run pytest-skill-engineering doctor
-
-# Run one real Copilot eval
-uv run python -m pytest tests/test_copilot_eval.py -v
+uv run python -m pytest "tests\test_copilot_eval.py" -v
 ```
 
-`init` creates `tests/test_copilot_eval.py`, adds explicit pytest settings to
-`pyproject.toml`, and records `gpt-5.6-sol` cost rates in `pricing.toml`. It
-refuses to overwrite an existing starter or conflicting report configuration
-and preserves existing model pricing. The starter invokes the bundled Todo MCP
-server and may consume Copilot premium requests.
+`init` creates a Todo MCP starter test, explicit JSON evidence settings, and
+explicit starter-model rates in `pricing.toml`. It refuses conflicting settings
+or an existing starter. Live execution can consume Copilot premium requests.
 
-After the run, open:
+pytest shows ordinary test results and assertion failures. Give your coding
+agent `aitest-reports\results.json` and the relevant source to investigate what
+happened. No dashboard or second AI judgment is generated.
 
-- `aitest-reports/report.html` — rendered results and required AI analysis
-- `aitest-reports/results.json` — raw execution evidence
+## What we learned by testing our own idea
 
-See the [complete quickstart](https://sbroenne.github.io/pytest-skill-engineering/getting-started/)
-or run the standalone [`examples/quickstart`](examples/quickstart/) project.
+We evaluated a companion skill for coding agents using this framework and chose
+not to ship it. The comparison did not demonstrate a benefit; adding general
+test-writing advice was not evidence that users needed another product layer.
+Use the documentation, examples, and native evidence directly.
 
-## Features
+The [case study](docs/use-cases/companion-skill.md) records the actual results,
+failures, limitations, and removal decision. Its
+[historical experiment](examples/skill-dogfood/) remains reproducible with a
+frozen test fixture, not an installable companion skill. Default sample checks
+are offline; live execution is explicit. The [quickstart](examples/quickstart/)
+is the smaller first example.
 
-- **MCP Server Testing** — Test tools, prompt templates, and bundled skills with real Copilot sessions
-- **Agent Skills** — Full [agentskills.io](https://agentskills.io) spec compliance (compatibility, metadata, allowed-tools, evals bridge)
-- **Custom Agents** — Test `.agent.md` files and validate custom agent dispatch
-- **CLI Tool Testing** — Verify Copilot can use command-line interfaces
-- **Plugin Testing** — Load complete plugin directories (plugin.json, .github/, .claude/ layouts) with auto-discovery
-- **A/B Testing** — Compare instructions, skills, custom agent versions, or tool configurations
-- **Eval Leaderboard** — Auto-ranked by pass rate and cost
-- **Multi-Turn Sessions** — Test conversations that build on context
-- **LLM Assertions** — Semantic checks with `llm_assert` and multi-dimension scoring with `llm_score`
-- **Tool Images** — Capture tool-returned images for inspection in results and reports
-- **AI-Powered Reports** — Actionable feedback on tool descriptions, system prompts, and costs
-- **Cost Tracking** — Copilot premium request tracking + USD estimation via `pricing.toml`
+Testing your own domain skills remains a supported framework capability.
 
-## Who This Is For
+## A test that checks the result
 
-- **MCP server authors** — Validate that GitHub Copilot can actually use your tools
-- **Agent Skills authors** — Test skills exactly as users experience them in Copilot
-- **Custom agent builders** — Validate `.agent.md` instructions and custom agent dispatch
-- **Plugin developers** — Test complete GitHub Copilot CLI plugins end-to-end
-- **Teams shipping Copilot integrations** — Catch skill stack regressions in CI/CD
+```python
+from __future__ import annotations
 
-## Documentation
+import subprocess
+import sys
 
-📚 **[Full Documentation](https://sbroenne.github.io/pytest-skill-engineering/)**
+from pytest_skill_engineering.copilot import CopilotEval
 
-## Requirements
 
-- Python 3.11+
-- pytest 9.0+
-- GitHub Copilot subscription (required)
+async def test_addition(copilot_eval, tmp_path):
+    agent = CopilotEval(
+        name="addition",
+        model="gpt-5.6-luna",
+        instructions="Write Python code and save the requested file.",
+        working_directory=str(tmp_path),
+    )
+    result = await copilot_eval(agent, "Create calc.py with add(a, b) returning a + b.")
+    assert result.success, result.error
+    assert (tmp_path / "calc.py").is_file()
+    checked = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            "from calc import add; assert add(2, 3) == 5; assert add(-2, 2) == 0",
+        ],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        timeout=10,
+    )
+    assert checked.returncode == 0, checked.stderr
+```
 
-## Acknowledgments
+Use your approved isolation when executing generated code. A temporary directory
+is not a security sandbox.
 
-Inspired by [agent-benchmark](https://github.com/mykhaliev/agent-benchmark).
+## What stays in the framework
+
+| Capability | What it provides |
+| --- | --- |
+| `CopilotEval` and `copilot_eval` | Real SDK sessions with explicit configuration |
+| MCP, CLI, skills, plugins, custom agents | The interfaces and definitions under test |
+| Execution controls | Time, usage, request, tool, and permission controls; one attempt per execution |
+| Captured evidence | Configuration, calls, arguments, outputs, completion flags, errors, and usage |
+| Ordinary pytest checks | Consumer-owned verification and recorded properties |
+| `ab_run` and repetitions | Isolated working directories and repeated observations |
+| Structured JSON | Captured execution and ordinary pytest outcomes, without rankings or advice |
+| Pricing | Explicit USD estimates and recorded Copilot premium requests |
+
+A/B entries share one pytest outcome. Record side-specific checks; do not read
+that shared outcome as independent per-side success or causal improvement.
+Missing prices and incomplete evidence are recorded explicitly.
+
+## Let your coding agent investigate
+
+Ask your existing coding agent to inspect a failed test, its saved JSON evidence,
+and the source. It can explain the supported cause and help fix it, without
+changing the test's success criteria after seeing the failure.
+
+Reading current schema-4.0 evidence needs no authentication or paid call.
+The framework records results; the coding agent interprets them. Subjective
+review is advice, not an automatic pytest verdict.
+
+Read the [full documentation](https://sbroenne.github.io/pytest-skill-engineering/).
 
 ## License
 
-MIT
+MIT. Inspired by [agent-benchmark](https://github.com/mykhaliev/agent-benchmark).

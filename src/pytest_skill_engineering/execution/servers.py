@@ -420,7 +420,7 @@ class MCPServerProcess:
 
             messages = await server.get_prompt("code_review", {"code": "def hello(): ..."})
             # [{"role": "user", "content": "Please review this code: def hello(): ..."}]
-            result = await eval_run(agent, messages[0]["content"])
+            result = await copilot_eval(agent, messages[0]["content"])
         """
         if not self._session:
             raise RuntimeError("Server not started")

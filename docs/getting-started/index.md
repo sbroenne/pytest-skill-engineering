@@ -31,8 +31,7 @@ In CI, set `GITHUB_TOKEN` or `GH_TOKEN` instead. The runtime selects
 `init` makes three explicit changes:
 
 - creates `tests/test_copilot_eval.py`
-- adds `asyncio_mode`, HTML output, JSON output, and the `gpt-5.6-sol` analysis
-  model to `[tool.pytest.ini_options]`
+- adds `asyncio_mode` and JSON evidence output to `[tool.pytest.ini_options]`
 - adds explicit `gpt-5.6-sol` cost rates to `pricing.toml` while preserving an
   existing rate
 
@@ -52,10 +51,12 @@ run proves that:
 - `gpt-5.6-sol` is available
 - Copilot can start and use an MCP server
 - pytest captures the execution
-- required AI analysis can render a report
+- the starter's exact tool arguments and returned task state satisfy its checks
 
-Open `aitest-reports/report.html` and find the `todo-add_task` tool call. Raw
-execution evidence is in `aitest-reports/results.json`.
+pytest prints the outcome and assertion failures. Ask your coding agent to read
+`aitest-reports/results.json` and inspect the `todo-add_task` call, its arguments,
+and returned state alongside the test source. There is no HTML or Markdown
+dashboard and no separate model judging the result.
 
 ## Adapt it to your project
 
@@ -63,11 +64,17 @@ Open the generated test and replace:
 
 1. `TODO_MCP` with your MCP server configuration.
 2. The system prompt in `instructions`.
-3. `"Add a task to buy groceries"` with a real user prompt.
-4. `tool_was_called("todo-add_task")` with the behavior your interface must produce.
+3. The task prompt with a real user request.
+4. The starter's tool argument and returned-state checks with independent checks
+   of your application's required output. Session success alone is not enough.
 
 The complete generated file is also available in
 [`examples/quickstart`](https://github.com/sbroenne/pytest-skill-engineering/tree/main/examples/quickstart).
+
+For the full test-write, failure-investigation, and repair cycle, use the
+[customer workflow sample](https://github.com/sbroenne/pytest-skill-engineering/tree/main/examples/skill-dogfood).
+It also preserves the historical comparison that led us to remove our proposed
+companion skill. Default sample tests are offline; paid runs are explicit.
 
 ## What to compare next
 
@@ -77,3 +84,4 @@ The complete generated file is also available in
 - [Comparing configurations](comparing.md)
 - [Multi-turn sessions](sessions.md)
 - [Troubleshooting](troubleshooting.md)
+- [Inspecting captured evidence](../how-to/inspect-evidence.md)

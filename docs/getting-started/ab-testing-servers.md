@@ -42,9 +42,11 @@ async def test_balance_query(copilot_eval, agent):
     assert result.tool_was_called("get_balance")
 ```
 
-The report shows which server performs better.
+This example checks session completion and tool selection only. Also verify the
+actual returned values or application state before comparing task success.
+pytest shows each test outcome; native JSON records the execution for investigation.
 
-## What the Report Reveals
+## What to inspect in the evidence
 
 | Metric | What It Tells You |
 |--------|-------------------|
@@ -159,22 +161,16 @@ This reveals interactions like:
 - "v2 works great with gpt-5.6-luna but fails with gpt-5.6-sol"
 - "gpt-5.6-sol needs better tool descriptions to match gpt-5.6-luna performance"
 
-## AI Insights for Server Comparison
+## Investigate the comparison
 
-When you run with `--aitest-summary-model`, the report includes:
+Inspect captured calls and arguments alongside each server's source and
+description. The current coding agent can use the saved evidence to identify
+a supported cause and propose one targeted change. There is no report adviser.
 
-```
-🔧 MCP TOOL FEEDBACK
-
-banking-v1/get_balance — 60% success rate
-Current: "Gets balance data"
-Issue: LLM often calls get_all_balances instead
-Suggested: "Get CURRENT balance for a specific bank account.
-            For all accounts at once, use get_all_balances."
-
-banking-v2/get_balance — 95% success rate
-Description is clear and well-targeted.
-```
+Keep the task, model, initial data, limits, and output checks fixed. Parametrized
+tests have separate outcomes; `ab_run` pairs have one shared pytest outcome and
+need side-specific recorded verification. Repeat representative cases before
+claiming a reliability improvement.
 
 ## Best Practices
 
@@ -186,11 +182,11 @@ Description is clear and well-targeted.
 
 4. **Check token usage** — Better descriptions might cost more but improve accuracy
 
-5. **Name servers clearly** — Use descriptive names that appear in reports (`v1`, `v2`, `sqlite`, `postgres`)
+5. **Name servers clearly** — Use descriptive names in saved evidence (`v1`, `v2`, `sqlite`, `postgres`)
 
 ## Next Steps
 
 - [Comparing Configurations](comparing.md) — More comparison patterns
-- [Generate Reports](../how-to/generate-reports.md) — Get AI insights on your comparison
+- [Inspect Execution Evidence](../how-to/inspect-evidence.md) — Inspect both traces and verification
 
 > 📁 **Real Example:** [copilot/test_10_ab_servers.py](https://github.com/sbroenne/pytest-skill-engineering/blob/main/tests/integration/copilot/test_10_ab_servers.py) — Configuration A/B comparison

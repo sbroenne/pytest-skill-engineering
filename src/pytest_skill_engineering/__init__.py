@@ -1,4 +1,4 @@
-"""pytest-skill-engineering: Pytest plugin for testing AI agents with MCP and CLI servers."""
+"""Copilot task execution and evidence for testing AI-facing tools and skills."""
 
 import logging
 
@@ -22,8 +22,6 @@ from pytest_skill_engineering.copilot import (  # noqa: E402
 )
 from pytest_skill_engineering.core import (  # noqa: E402
     AITestError,
-    BenchmarkComparison,
-    CaseBenchmark,
     EngineTimeoutError,
     EvalResult,
     HookDefinition,
@@ -33,25 +31,16 @@ from pytest_skill_engineering.core import (  # noqa: E402
     Plugin,
     PluginMetadata,
     Prompt,
-    RefinementResult,
-    RefinementSuggestion,
-    ScoreResult,
-    ScoringDimension,
     ServerStartError,
     Skill,
-    SkillBenchmarkResult,
-    SkillCaseResult,
     SkillError,
     SkillEvalCase,
-    SkillGradingResult,
     SkillInfo,
     SkillMetadata,
     SubagentInvocation,
     ToolCall,
     ToolInfo,
     Turn,
-    analyze_skill_failures,
-    assert_score,
     export_grading,
     has_skill_evals,
     load_custom_agent,
@@ -74,27 +63,18 @@ from pytest_skill_engineering.execution import (  # noqa: E402
     WaitStrategy,
 )
 
-# Hooks (for plugin extensibility)
-from pytest_skill_engineering.hooks import AitestHookSpec  # noqa: E402
-from pytest_skill_engineering.plugin import (  # noqa: E402
-    get_analysis_prompt,
-    get_analysis_prompt_details,
-)
-
 # Reporting
 from pytest_skill_engineering.reporting import (  # noqa: E402
     SuiteReport,
     TestReport,
     build_suite_report,
-    generate_html,
     generate_json,
+    load_suite_report,
 )
 
 __all__ = [  # noqa: RUF022
     # Core
     "AITestError",
-    "BenchmarkComparison",
-    "CaseBenchmark",
     "EngineTimeoutError",
     "EvalResult",
     "HookDefinition",
@@ -104,22 +84,16 @@ __all__ = [  # noqa: RUF022
     "Plugin",
     "PluginMetadata",
     "Prompt",
-    "RefinementResult",
-    "RefinementSuggestion",
     "ServerStartError",
     "Skill",
-    "SkillBenchmarkResult",
-    "SkillCaseResult",
     "SkillError",
     "SkillEvalCase",
-    "SkillGradingResult",
     "SkillInfo",
     "SkillMetadata",
     "SubagentInvocation",
     "ToolCall",
     "ToolInfo",
     "Turn",
-    "analyze_skill_failures",
     "export_grading",
     "has_skill_evals",
     "load_custom_agent",
@@ -152,16 +126,8 @@ __all__ = [  # noqa: RUF022
     "SuiteReport",
     "TestReport",
     "build_suite_report",
-    "generate_html",
     "generate_json",
-    # Hooks
-    "AitestHookSpec",
-    "get_analysis_prompt",
-    "get_analysis_prompt_details",
-    # Scoring
-    "ScoreResult",
-    "ScoringDimension",
-    "assert_score",
+    "load_suite_report",
 ]
 
 from importlib.metadata import version as _get_version  # noqa: E402

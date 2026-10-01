@@ -1,17 +1,18 @@
 ---
-description: "Inspect tool-returned images in Copilot results and reports using structural assertions."
+description: "Inspect tool-returned images in Copilot results and saved evidence using structural checks."
 ---
 
 # Tool-returned images
 
 ## Current status
 
-Tool-returned images are captured in results and surfaced in reports.
+Tool-returned images are captured in results and preserved in native JSON.
 Inspect `image_content` (bytes) and `image_media_type` on calls returned by
 `result.tool_calls_for(...)`.
 
 Semantic image judging is not supported. Use ordinary pytest assertions for
-image presence and metadata, and inspect the captured images in the report.
+image presence and metadata. Your coding agent can inspect the captured images;
+the framework does not automatically interpret them.
 
 ## What works today
 
@@ -31,3 +32,24 @@ async def test_screenshot_tool_returns_png(copilot_eval, agent):
 Use the exact tool name captured in your result; MCP tools may have a server
 prefix. Checking media type does not establish that the image shows the
 requested chart.
+
+## Inspect a saved image
+
+Native JSON stores image bytes as base64. Loading evidence restores the bytes
+without starting Copilot:
+
+```python
+from pathlib import Path
+
+from pytest_skill_engineering.reporting import load_suite_report
+
+evidence = load_suite_report("results.json")
+result = evidence.tests[0].eval_result
+assert result is not None
+images = [call for call in result.all_tool_calls if call.image_content is not None]
+assert images and images[-1].image_media_type == "image/png"
+assert images[-1].image_content is not None
+Path("captured.png").write_bytes(images[-1].image_content)
+```
+
+Treat captured images as private evidence. Review them before sharing.

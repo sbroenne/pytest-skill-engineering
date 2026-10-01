@@ -13,7 +13,7 @@ It defines:
 - the **tool surface** (`mcp_servers=`, `allowed_tools=`)
 - the **custom agents** (`custom_agents=`)
 - the **prompt files** you choose to send as user prompts
-- execution limits such as `max_turns` and `max_retries`
+- execution limits such as `timeout_s` and `max_tool_calls`
 
 ## Why one harness
 
@@ -29,14 +29,19 @@ Create multiple `CopilotEval` instances when you want to compare:
 - custom agents
 - MCP server variants
 
-The report ranks them by pass rate first and cost second.
+Keep the task, fixture state, and concrete output checks fixed. The framework
+records each execution and its pytest outcome; your coding agent interprets
+the observations. It does not generate rankings or select a winner.
 
-## Stable identity vs display names
+## Identifying runs
 
-Every eval needs a stable machine identity internally, but reports should display human-readable names.
-Use `name=` for the display label users see in the report.
+Use `name=` to label the configuration in saved evidence. Genuine pytest
+parameter IDs, the model, and captured configuration distinguish runs even when
+the same runtime name is reused.
 
-## Retries
+## One attempt per execution
 
-`max_retries` defaults to `2`.
-Retries are useful for transient Copilot session failures, not as a substitute for fixing deterministic tool or prompt problems.
+Startup, connection, and task failures remain visible in the returned result.
+The framework does not automatically start another session. Request an explicit
+pytest rerun when appropriate; use repetitions to measure variation with fixed
+criteria, not to hide failed attempts.

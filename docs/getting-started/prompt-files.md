@@ -86,7 +86,10 @@ async def test_prompt_files(copilot_eval, prompt):
 
 `load_prompt_files()` handles both — `.prompt.md` files take precedence if both exist with the same name.
 
-## Tracking Prompt Names in Reports
+## Identifying prompt files in evidence
+
+These completion checks are smoke tests, not proof of actionable review quality.
+Add output-specific checks for the behavior each task actually requires.
 
 Use pytest parameter IDs, as in the example above, to identify each prompt file
 in test results. `copilot_eval` accepts an eval and a prompt string; it has no
