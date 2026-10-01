@@ -136,6 +136,18 @@ def test_advisory_payload_is_an_error(tmp_path: Path) -> None:
         load_suite_report(path)
 
 
+def test_missing_skill_discovery_is_not_inferred_from_configuration(tmp_path: Path) -> None:
+    path = tmp_path / "evidence.json"
+    data = serialize_dataclass(_suite())
+    data["schema_version"] = "4.0"
+    result = data["tests"][0]["eval_result"]
+    result["configuration"]["skill_directories"] = ["requested-only"]
+    del result["skill_discovery"]
+    path.write_text(json.dumps(data), encoding="utf-8")
+    with pytest.raises(ValueError, match="missing required field 'skill_discovery'"):
+        load_suite_report(path)
+
+
 def test_empty_image_payload_is_not_changed_to_missing_evidence(tmp_path: Path) -> None:
     suite = _suite()
     result = suite.tests[0].eval_result

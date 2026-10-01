@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import TYPE_CHECKING
 
@@ -27,6 +28,8 @@ from pytest_skill_engineering.copilot.controls import RunControls
 from pytest_skill_engineering.copilot.events import EventMapper
 from pytest_skill_engineering.copilot.requests import RequestAuditHandler
 from pytest_skill_engineering.copilot.result import CopilotResult, StopReason
+from pytest_skill_engineering.copilot.skills import discover_requested_skills, requested_skill_files
+from pytest_skill_engineering.core.result import SkillDiscovery
 
 if TYPE_CHECKING:
     from copilot.client import CopilotClient
@@ -80,8 +83,20 @@ async def run_copilot(agent: CopilotEvalConfig, prompt: str) -> CopilotResult:
     reason: StopReason = "completed"
     error: str | None = None
     cleanup_errors: list[str] = []
+    skill_discovery: SkillDiscovery | None = None
+    send_started = False
     try:
         session_config = agent.build_session_config()
+        skill_directories = session_config.get("skill_directories") or []
+        requested_skills: dict[Path, str] = {}
+        if skill_directories:
+            skill_discovery = SkillDiscovery()
+            if not isinstance(skill_directories, list):
+                raise ValueError("skill_directories must be a list of directory paths")
+            requested_skills = requested_skill_files(skill_directories)
+            session_config["skill_directories"] = [
+                str(Path(directory).resolve()) for directory in skill_directories
+            ]
         caller_hooks = dict(session_config.get("hooks") or {})
         session_config["hooks"] = dict(caller_hooks)
         # Empty mode must not read persona instruction files or inject tools.
@@ -123,12 +138,20 @@ async def run_copilot(agent: CopilotEvalConfig, prompt: str) -> CopilotResult:
         )
 
         async def execute() -> None:
-            nonlocal session
+            nonlocal session, send_started
             assert client is not None
             async with asyncio.timeout(min(60, agent.timeout_s)):
                 await client.start()
             async with asyncio.timeout(min(30, agent.timeout_s)):
                 session = await client.create_session(**session_config)
+                if skill_discovery is not None:
+                    await discover_requested_skills(
+                        session,
+                        requested_skills,
+                        session_config.get("disabled_skills") or [],
+                        skill_discovery,
+                    )
+            send_started = True
             await session.send_and_wait(prompt, timeout=agent.timeout_s)
 
         execution = asyncio.create_task(execute())
@@ -158,6 +181,9 @@ async def run_copilot(agent: CopilotEvalConfig, prompt: str) -> CopilotResult:
     except Exception as exc:
         logger.error("Copilot execution failed: %s", exc)
         reason, error = "execution_error", str(exc)
+        if skill_discovery is not None and not skill_discovery.complete:
+            error = f"Skill setup failed before model execution: {exc}"
+            skill_discovery.errors.append(error)
     finally:
         controls.closed = True
         for watcher in watchers:
@@ -210,12 +236,13 @@ async def run_copilot(agent: CopilotEvalConfig, prompt: str) -> CopilotResult:
 
     result = mapper.build()
     result.agent = agent
+    result.skill_discovery = skill_discovery
     result.tool_calls_admitted = controls.admitted
     if result.capture_errors:
         result.capture_errors.extend(controls.incomplete_diagnostics(abort_phase=reason))
     if audit is not None and capture_requests:
         result.request_audit = list(audit.records)
-        if audit.error or (session is not None and not audit.observed_requests):
+        if audit.error or (send_started and not audit.observed_requests):
             audit_error = audit.error or "No outbound model requests captured; audit unsupported"
             result.capture_errors.append(audit_error)
             if reason == "completed" or audit.error:

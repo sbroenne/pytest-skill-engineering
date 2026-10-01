@@ -6,6 +6,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- Explicit skill directories now enable native SDK skills in empty mode without
+  enabling ambient discovery. Individual directories and parents are checked
+  before model execution; missing, unreadable, invalid, duplicate-name, or
+  undiscovered requested skills fail clearly without sending the task.
+- Explicit directories combined with `enable_skills=False` are rejected.
+  Named `disabled_skills` remain supported for deliberate exclusions.
+
+### Added
+
+- Public `DiscoveredSkill` and `SkillDiscovery` evidence types and
+  `CopilotResult.skill_discovery`, preserving actual SDK availability and loading
+  diagnostics separately from skill reads. Native schema-4.0 evidence now requires
+  `eval_result.skill_discovery`; regenerate older evidence with the current producer.
+- Unbilled real-SDK discovery and isolation checks, plus a request blocked before
+  network forwarding to verify ambient instructions do not enter model context.
+
 ### Changed
 
 - Refreshed runtime, development, documentation, and build dependency minimums

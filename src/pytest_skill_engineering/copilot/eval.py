@@ -139,7 +139,7 @@ class CopilotEval:
     # display_name, tools, mcp_servers, infer)
     custom_agents: list[CopilotCustomAgentConfig] = field(default_factory=list)
 
-    # Skill directories
+    # Explicit skills are enabled and checked before model execution.
     skill_directories: list[str] = field(default_factory=list)
     disabled_skills: list[str] = field(default_factory=list)
 
@@ -235,7 +235,23 @@ class CopilotEval:
             config["hooks"] = self.hooks
 
         # Apply extra_config passthrough
+        if (
+            self.skill_directories
+            and "skill_directories" in self.extra_config
+            and self.extra_config["skill_directories"] != self.skill_directories
+        ):
+            raise ValueError("extra_config must not override explicitly supplied skill_directories")
         config.update(self.extra_config)
+
+        if config.get("skill_directories"):
+            if config.get("enable_skills") is False:
+                raise ValueError(
+                    "Explicit skill_directories conflict with enable_skills=False; "
+                    "remove the directories for a no-skill baseline, or enable skills"
+                )
+            if config.get("enable_skills") is not None and config["enable_skills"] is not True:
+                raise ValueError("enable_skills must be a boolean or None")
+            config["enable_skills"] = True
 
         if self.client_mode == "empty":
             isolated = {
