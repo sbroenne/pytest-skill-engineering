@@ -76,6 +76,22 @@ class TestCustomAgentOutcomes:
             invocation.name == "test-writer" and invocation.status == "completed"
             for invocation in result.subagent_invocations
         ), "The test-writer must complete rather than recursively dispatching itself"
+        children = [
+            invocation.result
+            for invocation in result.subagent_invocations
+            if invocation.result is not None
+        ]
+        assert children, "Framework-owned child evidence must be retained"
+        assert all(child.usage and child.configuration is not None for child in children)
+        usages = result.all_usage
+        assert all(
+            usage.input_tokens is not None and usage.output_tokens is not None for usage in usages
+        ), "Live accounting must retain unknown values instead of inventing totals"
+        assert result.total_tokens == sum(
+            usage.input_tokens + usage.output_tokens
+            for usage in usages
+            if usage.input_tokens is not None and usage.output_tokens is not None
+        )
 
     async def test_docs_writer_agent_creates_readme(self, copilot_eval, tmp_path):
         """Custom docs-writer agent produces a README.md for the project."""

@@ -56,20 +56,23 @@ SDK Event Types (38 values) grouped by what they map to:
 
 from __future__ import annotations
 
+import base64
+import binascii
 import logging
 import time
 from collections import deque
 from datetime import timedelta
 from typing import TYPE_CHECKING, Any
 
-from pytest_skill_engineering.copilot.contracts import SubagentStatus
 from pytest_skill_engineering.copilot.result import (
     CopilotResult,
     SubagentInvocation,
+    SubagentStatus,
     ToolCall,
     Turn,
     UsageInfo,
 )
+from pytest_skill_engineering.core.result import ImageContent
 
 if TYPE_CHECKING:
     from copilot.generated.session_events import SessionEvent
@@ -162,7 +165,12 @@ class EventMapper:
             permissions=self._permissions,
             model_used=self._model_used,
             raw_events=self._raw_events,
-            total_premium_requests=self._total_premium_requests,
+            total_premium_requests=self._total_premium_requests
+            + sum(
+                invocation.result.total_premium_requests
+                for invocation in resolved_subagents
+                if invocation.result is not None
+            ),
         )
 
     # ── Assistant events ──
@@ -342,22 +350,73 @@ class EventMapper:
             self._early_tool_completions.setdefault(call_id, []).append(event)
             return
         result_text: str | None = None
+        images: list[ImageContent] = []
         if result_data is not None and hasattr(result_data, "content"):
             result_text = result_data.content
         elif isinstance(result_data, str):
             result_text = result_data
         elif result_data is not None:
             result_text = str(result_data)
+        text_parts: list[str] = []
+        blocks = getattr(result_data, "contents", None) or []
+        for block in blocks:
+            block_type = getattr(block, "type", None)
+            if block_type == "image":
+                try:
+                    data = getattr(block, "data", None)
+                    media_type = getattr(block, "mime_type", None)
+                    if (
+                        not isinstance(data, str)
+                        or not isinstance(media_type, str)
+                        or not media_type
+                    ):
+                        raise ValueError("image data and media type are required")
+                    images.append(ImageContent(base64.b64decode(data, validate=True), media_type))
+                except (ValueError, binascii.Error) as exc:
+                    self._record_contract_error(f"Tool call {call_id} has an invalid image: {exc}")
+            elif block_type == "text" and result_text is None:
+                text = getattr(block, "text", None)
+                if text is not None:
+                    text_parts.append(text)
+        if result_text is None and text_parts:
+            result_text = "\n".join(text_parts)
+        content_images = list(images)
+        for block in getattr(result_data, "binary_results_for_llm", None) or []:
+            block_type = getattr(block, "type", None)
+            if getattr(block_type, "value", block_type) != "image":
+                continue
+            try:
+                data, media_type = block.data, block.mime_type
+                if not isinstance(data, str) or not isinstance(media_type, str) or not media_type:
+                    raise ValueError("image data and media type are required")
+                image = ImageContent(base64.b64decode(data, validate=True), media_type)
+                if image not in content_images:
+                    images.append(image)
+            except (ValueError, binascii.Error) as exc:
+                self._record_contract_error(f"Tool call {call_id} has an invalid image: {exc}")
         success = _get_data_field(event, "success", None)
         error = _stringify_tool_error(_get_data_field(event, "error", None))
         if tc.completion_received:
-            if (tc.result, tc.success, tc.error) != (result_text, success, error):
+            captured_images = (
+                [ImageContent(tc.image_content, tc.image_media_type or "image/png")]
+                if tc.image_content is not None
+                else []
+            ) + tc.additional_images
+            if (tc.result, tc.success, tc.error, captured_images) != (
+                result_text,
+                success,
+                error,
+                images,
+            ):
                 self._record_contract_error(f"Conflicting completion for tool call {call_id}")
             return
         tc.completion_received = True
         tc.success = success
         tc.result = result_text
         tc.error = error
+        if images:
+            tc.image_content, tc.image_media_type = images[0].data, images[0].media_type
+            tc.additional_images = images[1:]
         if tc.success is None:
             self._record_contract_error(f"Tool call {call_id} completion is missing success")
         start = self._pending_tool_start_times.pop(call_id, None)
@@ -381,6 +440,16 @@ class EventMapper:
         self._error = f"Session aborted: {_get_data_field(event, 'reason', None)}"
 
     # ── Subagent recording (used by runSubagent tool handler) ──
+
+    def record_subagent_result(
+        self, *, invocation_id: str, name: str, result: CopilotResult
+    ) -> None:
+        """Link a framework-owned child without mixing its conversation into this one."""
+        invocation = self._ensure_subagent_invocation(invocation_id=invocation_id, name=name)
+        if invocation.result is not None and invocation.result is not result:
+            self._record_contract_error(f"Conflicting child result for invocation {invocation_id}")
+            return
+        invocation.result = result
 
     def record_subagent_start(self, *, invocation_id: str, name: str) -> None:
         """Record a subagent invocation dispatched via a tool call."""

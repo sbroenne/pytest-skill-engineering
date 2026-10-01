@@ -230,13 +230,14 @@ def test_multiple_runs_and_verification_properties_reach_native_report(
         from pytest_skill_engineering.copilot.eval import CopilotEval
         from pytest_skill_engineering.copilot.fixtures import stash_on_item
         from pytest_skill_engineering.copilot.result import CopilotResult
+        from pytest_skill_engineering.copilot.config import snapshot_session_configuration
 
         def test_comparison(request, record_property):
             record_property("verification", {"status": "failed", "artifact": "expected.txt"})
             for name in ("baseline", "treatment"):
-                stash_on_item(request.node,
-                              CopilotEval(name=name, model="test-model", instructions=name),
-                              CopilotResult(success=True))
+                agent = CopilotEval(name=name, model="test-model", instructions=name)
+                configuration = snapshot_session_configuration(agent, agent.build_session_config())
+                stash_on_item(request.node, agent, CopilotResult(success=True, configuration=configuration))
             assert False, "Independent file check failed"
         """
     )
@@ -308,10 +309,15 @@ def test_configuration_is_a_snapshot_without_connection_secrets() -> None:
             }
         },
     )
-    converted = _convert_to_aitest(agent, EventMapper().build())
+    from pytest_skill_engineering.copilot.config import snapshot_session_configuration
+
+    result = EventMapper().build()
+    result.configuration = snapshot_session_configuration(agent, agent.build_session_config())
+    converted = _convert_to_aitest(agent, result)
     assert converted is not None
     tools.append("write")
     configuration = converted[0].configuration
+    assert configuration is not None
     assert configuration["allowed_tools"] == ["read"]
     assert configuration["mcp_servers"]["documents"]["tools"] == ["read"]
     assert "synthetic-secret" not in json.dumps(configuration)
@@ -381,8 +387,8 @@ def test_ab_labels_apply_only_to_saved_reports(pytester: pytest.Pytester) -> Non
     for test, role in zip(saved["tests"], ("baseline", "treatment"), strict=True):
         assert test["eval_name"] == f"helper ({role})"
         assert test["agent_id"] == f"helper ({role})"
-        assert test["eval_result"]["configuration"]["name"] == "helper"
-        assert test["eval_result"]["configuration"]["comparison_role"] == role
+        assert test["eval_result"]["configuration"] is None
+        assert test["eval_result"]["comparison_role"] == role
 
 
 def test_tool_repr_preserves_existing_status_format() -> None:

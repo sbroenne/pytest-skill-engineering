@@ -1,309 +1,128 @@
-"""Serialization helpers for dataclasses to JSON-compatible dicts."""
+"""Lossless serialization and strict loading of the current native report schema."""
 
 from __future__ import annotations
 
 import base64
+import binascii
+import sys
 from dataclasses import fields, is_dataclass
-from typing import TYPE_CHECKING, Any
+from types import UnionType
+from typing import TYPE_CHECKING, Any, Literal, TypeVar, Union, get_args, get_origin, get_type_hints
 
 if TYPE_CHECKING:
     from pytest_skill_engineering.reporting.collector import SuiteReport
 
-
-def _require_key(data: dict[str, Any], key: str, *, context: str) -> Any:
-    """Read a required key or raise a schema-alignment error."""
-    if key not in data:
-        msg = f"{context} is missing required field {key!r}"
-        raise ValueError(msg)
-    return data[key]
+T = TypeVar("T")
 
 
 def serialize_dataclass(obj: Any) -> Any:
-    """Convert dataclass to dict recursively, handling special types.
-
-    Excludes private fields (prefixed with _) from serialization.
-    Encodes bytes fields as base64 strings.
-
-    Uses manual field iteration instead of ``dataclasses.asdict()`` to avoid
-    ``copy.deepcopy`` on large private fields (e.g. ``_messages`` containing
-    SDK session payloads).
-    """
+    """Convert public dataclass fields recursively, encoding bytes as base64."""
     if is_dataclass(obj) and not isinstance(obj, type):
-        result = {}
-        for f in fields(obj):
-            if f.name.startswith("_"):
-                continue
-            v = getattr(obj, f.name)
-            if isinstance(v, bytes):
-                result[f.name] = base64.b64encode(v).decode("ascii")
-            else:
-                result[f.name] = serialize_dataclass(v)
-        return result
-    elif isinstance(obj, (list, tuple)):
+        return {
+            field.name: serialize_dataclass(getattr(obj, field.name))
+            for field in fields(obj)
+            if not field.name.startswith("_")
+        }
+    if isinstance(obj, (list, tuple)):
         return [serialize_dataclass(item) for item in obj]
-    elif isinstance(obj, dict):
-        return {k: serialize_dataclass(v) for k, v in obj.items()}
-    elif isinstance(obj, bytes):
+    if isinstance(obj, dict):
+        return {key: serialize_dataclass(value) for key, value in obj.items()}
+    if isinstance(obj, bytes):
         return base64.b64encode(obj).decode("ascii")
-    else:
-        # For enums, strings, numbers, etc.
-        return obj
+    return obj
+
+
+def _decode_dataclass(cls: type[T], data: Any, *, path: str) -> T:
+    from pytest_skill_engineering.copilot.requests import RequestAudit
+    from pytest_skill_engineering.core.result import EvalResult
+
+    if not is_dataclass(cls):
+        raise TypeError(f"{cls} is not a native report dataclass")
+    context = f"{cls.__name__} at {path}"
+    if not isinstance(data, dict):
+        raise ValueError(f"{context} must be an object")
+    public_fields = [field for field in fields(cls) if not field.name.startswith("_")]
+    unexpected = data.keys() - {field.name for field in public_fields}
+    if unexpected:
+        raise ValueError(f"{context} has unexpected fields: {sorted(unexpected)}")
+    annotations = get_type_hints(
+        cls,
+        globalns={
+            **vars(sys.modules[cls.__module__]),
+            "RequestAudit": RequestAudit,
+            "EvalResult": EvalResult,
+        },
+    )
+    values: dict[str, Any] = {}
+    for field in public_fields:
+        if field.name not in data:
+            raise ValueError(f"{context} is missing required field {field.name!r}")
+        values[field.name] = _decode_value(
+            annotations[field.name], data[field.name], path=f"{path}.{field.name}"
+        )
+    return cls(**values)
+
+
+def _decode_value(annotation: Any, value: Any, *, path: str) -> Any:
+    origin = get_origin(annotation)
+    arguments = get_args(annotation)
+    if annotation is Any:
+        return value
+    if origin in (Union, UnionType):
+        if value is None and type(None) in arguments:
+            return None
+        alternatives = [item for item in arguments if item is not type(None)]
+        if len(alternatives) != 1:
+            raise TypeError(f"Unsupported native report field type at {path}: {annotation}")
+        return _decode_value(alternatives[0], value, path=path)
+    if origin is Literal:
+        if value not in arguments:
+            raise ValueError(f"{path} must be one of {arguments!r}")
+        return value
+    if origin in (list, tuple):
+        if not isinstance(value, list):
+            raise ValueError(f"{path} must be a list")
+        if origin is list:
+            return [
+                _decode_value(arguments[0], item, path=f"{path}[{index}]")
+                for index, item in enumerate(value)
+            ]
+        if len(value) != len(arguments):
+            raise ValueError(f"{path} must contain {len(arguments)} values")
+        return tuple(
+            _decode_value(kind, item, path=f"{path}[{index}]")
+            for index, (kind, item) in enumerate(zip(arguments, value, strict=True))
+        )
+    if origin is dict:
+        if not isinstance(value, dict):
+            raise ValueError(f"{path} must be an object")
+        return {
+            _decode_value(arguments[0], key, path=f"{path} key"): _decode_value(
+                arguments[1], item, path=f"{path}[{key!r}]"
+            )
+            for key, item in value.items()
+        }
+    if isinstance(annotation, type) and is_dataclass(annotation):
+        return _decode_dataclass(annotation, value, path=path)
+    if annotation is bytes:
+        if not isinstance(value, str):
+            raise ValueError(f"{path} must be a base64 string")
+        try:
+            return base64.b64decode(value, validate=True)
+        except (ValueError, binascii.Error) as exc:
+            raise ValueError(f"{path} contains invalid base64 image data") from exc
+    if annotation is float:
+        if type(value) not in (int, float):
+            raise ValueError(f"{path} must be a number")
+        return float(value)
+    if annotation in (str, int, bool) and type(value) is annotation:
+        return value
+    raise ValueError(f"{path} must be {annotation.__name__}")
 
 
 def deserialize_suite_report(data: dict[str, Any]) -> SuiteReport:
-    """Deserialize a SuiteReport from a dict (from JSON).
+    """Load every current producer field; missing evidence is never inferred."""
+    from pytest_skill_engineering.reporting.collector import SuiteReport
 
-    Reconstructs the full dataclass hierarchy from the serialized format.
-    """
-    from pytest_skill_engineering.copilot.requests import RequestAudit
-    from pytest_skill_engineering.core.result import (
-        DiscoveredSkill,
-        EvalResult,
-        SkillDiscovery,
-        ToolCall,
-        Turn,
-        UsageInfo,
-    )
-    from pytest_skill_engineering.reporting.collector import SuiteReport, TestReport
-
-    # Reconstruct tests
-    raw_tests = _require_key(data, "tests", context="SuiteReport")
-    if not isinstance(raw_tests, list):
-        raise ValueError("SuiteReport field 'tests' must be a list")
-
-    tests = []
-    for test_data in raw_tests:
-        if not isinstance(test_data, dict):
-            raise ValueError("SuiteReport tests must contain objects")
-
-        eval_result = None
-        raw_eval_result = _require_key(
-            test_data,
-            "eval_result",
-            context=f"TestReport {test_data!r}",
-        )
-        if raw_eval_result is not None:
-            if not isinstance(raw_eval_result, dict):
-                raise ValueError("TestReport field 'eval_result' must be an object or null")
-            ar_data = raw_eval_result
-
-            # Reconstruct turns
-            turns = []
-            for turn_data in ar_data.get("turns", []):
-                # Reconstruct tool calls
-                tool_calls = []
-                for tc_data in turn_data.get("tool_calls", []):
-                    # Decode base64 image content if present
-                    image_content = None
-                    if tc_data.get("image_content") is not None:
-                        image_content = base64.b64decode(tc_data["image_content"], validate=True)
-
-                    tool_calls.append(
-                        ToolCall(
-                            name=_require_key(tc_data, "name", context="ToolCall"),
-                            arguments=tc_data.get("arguments", {}),
-                            result=tc_data.get("result"),
-                            error=tc_data.get("error"),
-                            duration_ms=tc_data.get("duration_ms"),
-                            image_content=image_content,
-                            image_media_type=tc_data.get("image_media_type"),
-                            call_id=tc_data.get("call_id"),
-                            completion_received=tc_data.get("completion_received"),
-                            success=tc_data.get("success"),
-                        )
-                    )
-
-                turns.append(
-                    Turn(
-                        role=_require_key(turn_data, "role", context="Turn"),
-                        content=_require_key(turn_data, "content", context="Turn"),
-                        tool_calls=tool_calls,
-                    )
-                )
-
-            # Reconstruct clarification stats if present
-            from pytest_skill_engineering.core.result import ClarificationStats
-
-            clarification_stats = None
-            if ar_data.get("clarification_stats") is not None:
-                cs_data = ar_data["clarification_stats"]
-                clarification_stats = ClarificationStats(
-                    count=cs_data.get("count", 0),
-                    turn_indices=cs_data.get("turn_indices", []),
-                    examples=cs_data.get("examples", []),
-                )
-
-            # Reconstruct assertions if present
-            from pytest_skill_engineering.core.result import Assertion
-
-            assertions = []
-            for a_data in ar_data.get("assertions", []):
-                assertions.append(
-                    Assertion(
-                        type=a_data["type"],
-                        passed=a_data["passed"],
-                        message=a_data["message"],
-                        details=a_data.get("details"),
-                    )
-                )
-
-            # Reconstruct available tools if present
-            from pytest_skill_engineering.core.result import (
-                MCPPrompt,
-                MCPPromptArgument,
-                SkillInfo,
-                ToolInfo,
-            )
-
-            available_tools = []
-            for t_data in ar_data.get("available_tools", []):
-                available_tools.append(
-                    ToolInfo(
-                        name=_require_key(t_data, "name", context="ToolInfo"),
-                        description=_require_key(t_data, "description", context="ToolInfo"),
-                        input_schema=_require_key(t_data, "input_schema", context="ToolInfo"),
-                        server_name=_require_key(t_data, "server_name", context="ToolInfo"),
-                    )
-                )
-
-            # Reconstruct MCP prompts if present
-            mcp_prompts = []
-            for p_data in ar_data.get("mcp_prompts", []):
-                args = [
-                    MCPPromptArgument(
-                        name=a["name"],
-                        description=a.get("description", ""),
-                        required=a.get("required", False),
-                    )
-                    for a in p_data.get("arguments", [])
-                ]
-                mcp_prompts.append(
-                    MCPPrompt(
-                        name=_require_key(p_data, "name", context="MCPPrompt"),
-                        description=p_data.get("description", ""),
-                        arguments=args,
-                    )
-                )
-
-            # Reconstruct skill info if present
-            skill_info = None
-            si_data = ar_data.get("skill_info")
-            if si_data:
-                skill_info = SkillInfo(
-                    name=_require_key(si_data, "name", context="SkillInfo"),
-                    description=_require_key(si_data, "description", context="SkillInfo"),
-                    instruction_content=si_data.get("instruction_content", ""),
-                    reference_names=si_data.get("reference_names", []),
-                )
-
-            # Reconstruct custom agent info if present
-            from pytest_skill_engineering.core.result import CustomAgentInfo, InstructionFileInfo
-
-            custom_agent_info = None
-            ca_data = ar_data.get("custom_agent_info")
-            if ca_data:
-                custom_agent_info = CustomAgentInfo(
-                    name=_require_key(ca_data, "name", context="CustomAgentInfo"),
-                    description=ca_data.get("description", ""),
-                    file_path=ca_data.get("file_path", ""),
-                )
-
-            # Reconstruct instruction files if present
-            instruction_files = []
-            for if_data in ar_data.get("instruction_files", []):
-                instruction_files.append(
-                    InstructionFileInfo(
-                        name=_require_key(if_data, "name", context="InstructionFileInfo"),
-                        file_path=if_data.get("file_path", ""),
-                        apply_to=if_data.get("apply_to", ""),
-                        description=if_data.get("description", ""),
-                    )
-                )
-
-            # Reconstruct agent result
-            discovery_data = _require_key(ar_data, "skill_discovery", context="EvalResult")
-            skill_discovery = None
-            if discovery_data is not None:
-                skill_discovery = SkillDiscovery(
-                    skills=[
-                        DiscoveredSkill(**skill)
-                        for skill in _require_key(
-                            discovery_data, "skills", context="SkillDiscovery"
-                        )
-                    ],
-                    warnings=_require_key(discovery_data, "warnings", context="SkillDiscovery"),
-                    errors=_require_key(discovery_data, "errors", context="SkillDiscovery"),
-                    complete=_require_key(discovery_data, "complete", context="SkillDiscovery"),
-                )
-            eval_result = EvalResult(
-                turns=turns,
-                success=_require_key(ar_data, "success", context="EvalResult"),
-                error=ar_data.get("error"),
-                duration_ms=_require_key(ar_data, "duration_ms", context="EvalResult"),
-                token_usage=_require_key(ar_data, "token_usage", context="EvalResult"),
-                cost_usd=_require_key(ar_data, "cost_usd", context="EvalResult"),
-                session_context_count=_require_key(
-                    ar_data, "session_context_count", context="EvalResult"
-                ),
-                clarification_stats=clarification_stats,
-                assertions=assertions,
-                available_tools=available_tools,
-                skill_info=skill_info,
-                skill_discovery=skill_discovery,
-                effective_system_prompt=_require_key(
-                    ar_data, "effective_system_prompt", context="EvalResult"
-                ),
-                mcp_prompts=mcp_prompts,
-                prompt_name=ar_data.get("prompt_name"),
-                custom_agent_info=custom_agent_info,
-                premium_requests=_require_key(ar_data, "premium_requests", context="EvalResult"),
-                instruction_files=instruction_files,
-                configuration=ar_data.get("configuration", {}),
-                capture_errors=ar_data.get("capture_errors", []),
-                evidence_complete=ar_data.get("evidence_complete"),
-                request_audit=[
-                    RequestAudit(**record) for record in ar_data.get("request_audit", [])
-                ],
-                stop_reason=ar_data.get("stop_reason"),
-                usage=[UsageInfo(**record) for record in ar_data.get("usage", [])],
-                tool_calls_admitted=ar_data.get("tool_calls_admitted", 0),
-            )
-
-        agent_id = _require_key(test_data, "agent_id", context="TestReport")
-        eval_name = _require_key(test_data, "eval_name", context="TestReport")
-        model = _require_key(test_data, "model", context="TestReport")
-        system_prompt_name = test_data.get("system_prompt_name")
-        skill_name = test_data.get("skill_name")
-
-        # Reconstruct test report
-        test_report = TestReport(
-            name=_require_key(test_data, "name", context="TestReport"),
-            outcome=_require_key(test_data, "outcome", context="TestReport"),
-            duration_ms=_require_key(test_data, "duration_ms", context="TestReport"),
-            eval_result=eval_result,
-            error=test_data.get("error"),
-            assertions=test_data.get("assertions", []),
-            docstring=test_data.get("docstring"),
-            class_docstring=test_data.get("class_docstring"),
-            agent_id=agent_id,
-            eval_name=eval_name,
-            model=model,
-            system_prompt_name=system_prompt_name,
-            skill_name=skill_name,
-            iteration=test_data.get("iteration"),
-            properties=[(key, value) for key, value in test_data.get("properties", [])],
-        )
-        tests.append(test_report)
-
-    # Reconstruct suite report
-    return SuiteReport(
-        name=_require_key(data, "name", context="SuiteReport"),
-        timestamp=_require_key(data, "timestamp", context="SuiteReport"),
-        duration_ms=_require_key(data, "duration_ms", context="SuiteReport"),
-        tests=tests,
-        passed=_require_key(data, "passed", context="SuiteReport"),
-        failed=_require_key(data, "failed", context="SuiteReport"),
-        skipped=_require_key(data, "skipped", context="SuiteReport"),
-        suite_docstring=data.get("suite_docstring"),
-        models_without_pricing=_require_key(data, "models_without_pricing", context="SuiteReport"),
-    )
+    payload = {key: value for key, value in data.items() if key != "schema_version"}
+    return _decode_dataclass(SuiteReport, payload, path="suite")

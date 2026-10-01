@@ -13,8 +13,9 @@ description: "CopilotResult reference: tool calls, responses, token usage, files
 | `success` | Whether the eval completed successfully |
 | `error` | Error message when `success` is false |
 | `turns` | Normalized conversation turns |
-| `usage` | Per-turn token usage entries |
-| `model_used` | Actual Copilot model used |
+| `usage` | Per-turn token usage entries for this session |
+| `all_usage` | Captured usage across this session and framework-owned descendants |
+| `model_used` | Actual Copilot model used, or `None` when unknown |
 | `total_premium_requests` | Premium-request accounting |
 | `subagent_invocations` | Runtime subagent events from custom agent dispatch |
 | `permission_requested` | Whether Copilot requested permissions |
@@ -25,6 +26,7 @@ description: "CopilotResult reference: tool calls, responses, token usage, files
 | `tool_calls_admitted` | Calls admitted by the framework after caller guards; not proof of execution or application success |
 | `request_audit` | Actual outgoing request records when `audit_requests=True` |
 | `skill_discovery` | Actual pre-execution SDK skill metadata and diagnostics for explicit directories; `None` means no discovery check was attempted |
+| `configuration` | Safe snapshot of the prepared session settings; `None` means the snapshot was not captured |
 
 `success` describes session execution, not whether the application did the right
 thing. A tool can fail and the session can recover. Check application state with
@@ -99,7 +101,23 @@ result.tool_was_called_with("transfer", amount=500.0)
 ```
 
 Tool-returned images are available on individual tool calls as `image_content`
-(bytes) and `image_media_type`. See [Tool-returned images](../how-to/image-assertions.md).
+(bytes) and `image_media_type`. Further images from the same call are retained in
+`additional_images`, in order. See [Tool-returned images](../how-to/image-assertions.md).
+
+## Child execution evidence
+
+Each `subagent_invocations` entry retains its `invocation_id`, name, status, and
+duration. For a framework-owned child session, `invocation.result` contains that
+child's separate `CopilotResult`, including its own turns, tools, usage, request
+audit, capture errors, prepared settings, and further children. Native SDK events
+without an independently captured child result leave `result=None`; the framework
+does not invent a child trace.
+
+`execution_results` walks this session and its framework-owned descendants.
+Parent `turns`, `all_tool_calls`, and `usage` remain session-local. Token totals,
+premium-request totals, and saved cost estimates include descendant work once.
+Do not add already-inclusive child totals to the parent's totals again.
+Parent `evidence_complete` also checks captured child evidence.
 
 ## Token helpers
 
@@ -113,10 +131,24 @@ result.token_usage
 Each `usage` entry retains `model`, `input_tokens`, `output_tokens`,
 `cache_read_tokens`, `cache_write_tokens`, `reasoning_tokens`,
 `reasoning_effort`, and `duration_ms`. Missing SDK values are `None`, not zero.
-Token totals are `None` when any corresponding count is unavailable (or no
-usage was captured); `token_usage` omits those totals. Known zero remains zero.
+Token totals are `None` when any corresponding count is unavailable, or a
+captured session in the execution tree has no usage; `token_usage` omits those
+totals. Known zero remains zero.
 Cost is an estimate from reported input/output counts, not a claim of complete
 billing evidence; unknown cache reads receive no cache discount in that estimate.
+
+## Prepared settings
+
+`configuration` records the supplied settings after `extra_config` overrides,
+persona instructions, and tool setup, rather than rebuilding them during report
+conversion. Native evidence's `effective_system_prompt` is this supplied system
+message; it is not a claim to capture hidden SDK instructions. If preparation
+fails before the snapshot, both remain `None`.
+
+Server credentials, commands, arguments, environment variables, and executable
+handlers are excluded. Request audit remains the separate source of evidence
+about actual outgoing requests. A/B comparison roles are report metadata in
+`eval_result.comparison_role`, not part of the runtime configuration.
 
 ## Request audit
 

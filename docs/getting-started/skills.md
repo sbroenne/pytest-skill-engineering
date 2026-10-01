@@ -47,8 +47,9 @@ For detailed budgeting advice, use the reference document.
 
 References are documents the agent can look up **on demand** rather than having
 them always in context. Copilot loads skills natively and can read their
-`references/` files using its file tools. The plugin does not inject synthetic
-reference tools.
+`references/` files using its file tools. The supplied personas also expose
+`list_skill_references` and `read_skill_reference` for validated enabled
+references. `client_mode="empty"` does not inject persona tools.
 
 Reference documents may be organized in subdirectories, for example
 `references/commands/read.md`. Link to them directly from `SKILL.md` using paths
@@ -59,6 +60,10 @@ The package validates all reference files recursively as nonempty UTF-8 Markdown
 `Skill.references` uses paths relative to `references/`, with `/` separators on
 every platform: `commands/read.md`. Flat names such as `budgeting-guide.md` are
 unchanged, and equal basenames in different folders remain distinct.
+Reference tools use these same relative paths. Disabled skills are not
+advertised or readable through the reference tools. This does not block ordinary
+filesystem access by other tools. Duplicate relative reference paths across
+enabled skills are rejected rather than silently replacing a document.
 Links are accepted only when their resolved targets stay within `references/`;
 the `references/` directory itself must resolve within the skill directory.
 Broken links, directory cycles, unreadable entries, and non-file entries are

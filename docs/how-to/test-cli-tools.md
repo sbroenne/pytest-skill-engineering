@@ -43,6 +43,11 @@ git_server = CLIServer(
 
 ## Configuration options
 
+With `shell="none"`, both `command` and tool `args` are split into direct process
+arguments, without shell expansion. On Windows, backslashes in paths are
+preserved; quote paths containing spaces. Grouping quotes are removed, and
+explicit empty quoted arguments remain empty arguments.
+
 ```python
 CLIServer(
     command="git",

@@ -18,6 +18,10 @@ Schema 4.0 saves test IDs, outcomes, assertion errors, verification properties,
 execution configuration, turns, tool arguments and outputs, completion status,
 capture errors, request audits, stop reasons, usage, and missing-pricing models.
 Private SDK/session fields are not serialized.
+Prepared session settings reflect overrides and persona additions. A missing
+snapshot or unknown model is explicit `null`. Framework-owned child results
+remain nested under invocation IDs, with inclusive top-level accounting; tool
+image bytes and any additional images round-trip without loss.
 
 `eval_result.skill_discovery` saves actual public SDK availability separately
 from requested configuration and observed reads. It preserves metadata, loading
@@ -28,11 +32,14 @@ availability from supplied paths or patch saved JSON.
 
 Preserve missing versus empty output and nullable usage. Do not replace unsupported
 property values with strings or synthesize uncaptured successful assertions.
-The loader rejects old schemas; there is no compatibility reader.
+The loader rejects old schemas and missing current-schema fields at every record
+level; there is no compatibility reader or reconstruction from default values.
 
 Each captured run retains its pytest outcome. Multiple executions in one test
 share that outcome, so their entries are not independently graded task verdicts.
 Preserve side-specific properties and captured comparison roles.
+Finalize outcomes and verification properties after fixture cleanup; setup and
+cleanup errors with captured executions must not be saved as passes.
 
 ## Validation
 

@@ -103,6 +103,7 @@ def test_model_and_configuration_variants_remain_separate_without_ranking(tmp_pa
     other = _suite().tests[0]
     other.model = "model-two"
     assert other.eval_result is not None
+    assert other.eval_result.configuration is not None
     other.eval_result.configuration["model"] = "model-two"
     other.eval_result.effective_system_prompt = "Different system prompt."
     suite = build_suite_report([*suite.tests, other], name="Configuration variants")

@@ -691,6 +691,7 @@ async def test_cleanup_failure_cannot_look_successful(monkeypatch: pytest.Monkey
 
 
 async def test_audit_records_in_native_json_with_bound_handler(tmp_path: Any) -> None:
+    from pytest_skill_engineering.copilot.config import snapshot_session_configuration
     from pytest_skill_engineering.copilot.requests import RequestAudit
     from pytest_skill_engineering.copilot.result import CopilotResult, UsageInfo
     from pytest_skill_engineering.core.serialization import deserialize_suite_report
@@ -722,6 +723,7 @@ async def test_audit_records_in_native_json_with_bound_handler(tmp_path: Any) ->
         request_audit=[RequestAudit("r1", "actual", ["act"], "medium", ["high"], 1, "abc")],
         usage=[UsageInfo(model="actual", input_tokens=3, output_tokens=4, reasoning_tokens=2)],
         tool_calls_admitted=80,
+        configuration=snapshot_session_configuration(agent, agent.build_session_config()),
     )
     converted = _convert_to_aitest(agent, result)
     assert converted is not None

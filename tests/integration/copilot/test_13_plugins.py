@@ -14,6 +14,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+from copilot.tools import Tool, ToolInvocation, ToolResult
 
 from pytest_skill_engineering.copilot.eval import CopilotEval
 
@@ -120,17 +121,67 @@ class TestCopilotPluginExecution:
 
     async def test_plugin_eval_creates_output(self, copilot_eval, tmp_path):
         """CopilotEval.from_plugin() produces a working eval that can execute tasks."""
+        balances = {"checking": "$125.00", "savings": "$250.00"}
+        receipt = tmp_path / "balances.txt"
+
+        async def get_balance(invocation: ToolInvocation) -> ToolResult:
+            account = (invocation.arguments or {}).get("account_type")
+            if not isinstance(account, str) or account not in balances:
+                return ToolResult(
+                    text_result_for_llm="Error: account_type must be checking or savings.",
+                    result_type="failure",
+                )
+            entry = f"{account}: {balances[account]}"
+            with receipt.open("a", encoding="utf-8") as output:
+                output.write(entry + "\n")
+            return ToolResult(text_result_for_llm=entry)
+
         agent = CopilotEval.from_plugin(
             PLUGIN_DIR,
             model=DEFAULT_MODEL,
             working_directory=str(tmp_path),
+            excluded_tools=["task"],
+            extra_config={
+                "tools": [
+                    Tool(
+                        name="get_balance",
+                        description="Look up an account balance and save it to balances.txt.",
+                        parameters={
+                            "type": "object",
+                            "properties": {
+                                "account_type": {
+                                    "type": "string",
+                                    "enum": ["checking", "savings"],
+                                }
+                            },
+                            "required": ["account_type"],
+                        },
+                        handler=get_balance,
+                    )
+                ]
+            },
         )
         result = await copilot_eval(
             agent,
-            "Create a file called balances.txt that lists checking and savings account types.",
+            "Have banking-advisor use get_balance for both checking and savings accounts. "
+            "The banking tool saves each balance to balances.txt.",
         )
         assert result.success, f"Failed: {result.error}"
-        assert list(tmp_path.rglob("balances.txt")), "balances.txt was not created"
+        assert set(receipt.read_text(encoding="utf-8").splitlines()) == {
+            "checking: $125.00",
+            "savings: $250.00",
+        }
+        children = [
+            invocation.result
+            for invocation in result.subagent_invocations
+            if invocation.name == "banking-advisor" and invocation.result is not None
+        ]
+        assert children, "The plugin's banking agent was not dispatched"
+        assert all(
+            child.configuration is not None
+            and child.configuration["allowed_tools"] == ["get_balance", "transfer"]
+            for child in children
+        )
 
     async def test_claude_project_eval_runs(self, copilot_eval, tmp_path):
         """CopilotEval.from_claude_config() produces a working eval."""

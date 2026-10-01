@@ -14,11 +14,72 @@ Covered properties:
 
 from __future__ import annotations
 
+import base64
+from pathlib import Path
+
 import pytest
+from copilot.tools import Tool, ToolBinaryResult, ToolInvocation, ToolResult
 
 from pytest_skill_engineering.copilot.eval import CopilotEval
+from pytest_skill_engineering.copilot.fixtures import _convert_to_aitest
+from pytest_skill_engineering.reporting import build_suite_report, generate_json, load_suite_report
+from pytest_skill_engineering.reporting.collector import TestReport as CaseReport
 
 from .conftest import DEFAULT_MODEL
+
+
+@pytest.mark.copilot
+async def test_image_receipt_and_runtime_overrides_are_captured(copilot_eval, tmp_path: Path):
+    png = base64.b64decode(
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aJ6kAAAAASUVORK5CYII="
+    )
+
+    async def image(invocation: ToolInvocation) -> ToolResult:
+        (tmp_path / "receipt.png").write_bytes(png)
+        return ToolResult(
+            text_result_for_llm="Saved receipt.png.",
+            binary_results_for_llm=[
+                ToolBinaryResult(data=base64.b64encode(png).decode(), mime_type="image/png")
+            ],
+        )
+
+    instructions = "Use the evidence_image tool exactly once to save receipt.png, then finish."
+    agent = CopilotEval(
+        name="image-evidence",
+        model="configured-but-unused",
+        client_mode="empty",
+        instructions="This prompt is overridden.",
+        allowed_tools=["configured-but-unused"],
+        working_directory=str(tmp_path),
+        extra_config={
+            "model": DEFAULT_MODEL,
+            "available_tools": ["evidence_image"],
+            "system_message": {"mode": "replace", "content": instructions},
+            "tools": [
+                Tool(name="evidence_image", description="Save a PNG receipt.", handler=image)
+            ],
+        },
+    )
+    result = await copilot_eval(agent, "Save receipt.png using evidence_image.")
+    assert result.success, result.error
+    assert (tmp_path / "receipt.png").read_bytes() == png
+    calls = result.tool_calls_for("evidence_image")
+    assert len(calls) == 1
+    assert calls[0].image_content == png
+    assert calls[0].image_media_type == "image/png"
+    assert result.configuration is not None
+    assert result.configuration["model"] == DEFAULT_MODEL
+    assert result.configuration["allowed_tools"] == ["evidence_image"]
+    assert result.configuration["instructions"] == instructions
+    converted = _convert_to_aitest(agent, result)
+    assert converted is not None
+    suite = build_suite_report([CaseReport("image", "passed", 1, converted[0])], "Live image")
+    output = tmp_path / "evidence.json"
+    generate_json(suite, output)
+    saved = load_suite_report(output).tests[0].eval_result
+    assert saved is not None
+    assert saved.all_tool_calls[0].image_content == png
+    assert saved.effective_system_prompt == instructions
 
 
 @pytest.mark.copilot

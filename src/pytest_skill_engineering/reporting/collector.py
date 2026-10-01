@@ -42,7 +42,7 @@ class TestReport:
     # Eval identity (populated by plugin from Eval object)
     agent_id: str = ""
     eval_name: str = ""
-    model: str = ""
+    model: str | None = None
     system_prompt_name: str | None = None
     skill_name: str | None = None
     iteration: int | None = None
@@ -181,9 +181,15 @@ def build_suite_report(
     skipped = sum(1 for t in tests if t.outcome == "skipped")
     total_duration = sum(t.duration_ms for t in tests)
 
-    from pytest_skill_engineering.execution.cost import models_without_pricing
+    from pytest_skill_engineering.execution.cost import unpriced_models
 
-    suite_models = {test.model for test in tests}
+    suite_models = {
+        usage.model
+        for test in tests
+        if test.eval_result is not None
+        for result in test.eval_result.execution_results
+        for usage in result.usage
+    }
     return SuiteReport(
         name=name,
         timestamp=datetime.now().isoformat(),
@@ -193,5 +199,5 @@ def build_suite_report(
         failed=failed,
         skipped=skipped,
         suite_docstring=suite_docstring,
-        models_without_pricing=sorted(suite_models & models_without_pricing),
+        models_without_pricing=unpriced_models(suite_models),
     )

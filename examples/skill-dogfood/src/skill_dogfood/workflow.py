@@ -261,6 +261,7 @@ def _check_consumer(
     assert case.eval_result is not None, run.stdout + run.stderr
     result = case.eval_result
     assert result.success and result.evidence_complete, result.error
+    assert result.configuration is not None, "Prepared session settings were not captured"
     assert result.configuration["model"] == MODEL
     calls = [call for turn in result.turns for call in turn.tool_calls]
     assert len(calls) == 1 and calls[0].name == "invoice"

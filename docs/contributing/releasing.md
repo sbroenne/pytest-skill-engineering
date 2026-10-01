@@ -85,6 +85,10 @@ Check the [breaking-change guide](../migration.md), complete current documentati
 schema-4.0 evidence contracts, package version metadata, and the installed wheel
 before publishing. There is no companion skill to install or publish.
 Reading saved evidence must work without Copilot.
+Confirm strict current-field loading, null model identity, image and child-result
+round trips, and outcomes finalized after fixture cleanup. A/B roles are saved
+separately from prepared runtime settings. Regenerate evidence missing required
+schema-4.0 fields through its producer; do not patch old reports.
 
 Verify the quickstart and the
 [historical customer workflow sample](https://github.com/sbroenne/pytest-skill-engineering/tree/main/examples/skill-dogfood)

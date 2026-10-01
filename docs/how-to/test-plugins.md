@@ -105,6 +105,10 @@ async def test_plugin_tool_usage(copilot_eval):
 ```
 
 `CopilotEval.from_plugin()` loads instructions, skills, and custom agents from the directory. The Copilot SDK handles model selection and tool access.
+Custom-agent definitions retain their declared names and supported SDK settings,
+including model, tools, skills, reasoning effort, and MCP servers, just as they do
+when loaded through the project factories. Missing names use the filename;
+duplicate resolved names are errors.
 
 ### Overriding Plugin Settings
 

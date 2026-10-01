@@ -540,15 +540,15 @@ class CLIServerProcess:
         # Build shell command
         if self._shell == "none":
             # Remove grouping quotes without treating Windows path separators as escapes.
-            lexer = shlex.shlex(self.config.command, posix=True)
-            lexer.whitespace_split = True
-            lexer.commenters = ""
-            if sys.platform == "win32":
-                lexer.escape = ""
-            base_parts = list(lexer)
-            if args:
-                base_parts.extend(shlex.split(args, posix=True))
-            cmd = base_parts
+            def split_arguments(value: str) -> list[str]:
+                lexer = shlex.shlex(value, posix=True)
+                lexer.whitespace_split = True
+                lexer.commenters = ""
+                if sys.platform == "win32":
+                    lexer.escape = ""
+                return list(lexer)
+
+            cmd = split_arguments(self.config.command) + split_arguments(args)
         elif self._shell in ("powershell", "pwsh"):
             shell_exe = "powershell" if self._shell == "powershell" else "pwsh"
             cmd = [shell_exe, "-NoProfile", "-NonInteractive", "-Command", full_cmd]

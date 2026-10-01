@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "pytest-skill-engineering"
-version = "1.0.2"
+version = "1.0.3"
 description = "Reliable Copilot execution and evidence for coding-agent-led testing of MCP servers, CLI tools, skills, and custom agents."
 readme = "README.md"
 license = { text = "MIT" }

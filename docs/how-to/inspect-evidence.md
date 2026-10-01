@@ -48,7 +48,9 @@ saved under `tests[].properties`; recording a property alone does not determine
 the outcome. Record the observed values before asserting, so failures retain
 the check's evidence. Use JSON-compatible values and never record secrets.
 
-Setup failures, ordinary tests without eval execution, and opt-out skips remain
+Setup failures with a captured eval and fixture-cleanup failures are reflected
+in the saved execution outcome. Cleanup-recorded properties are included too.
+Ordinary tests, setup failures without eval execution, and opt-out skips remain
 in pytest and JUnit output. Their absence from execution evidence is not a pass.
 
 ## Investigate with your coding agent
@@ -74,6 +76,8 @@ No companion skill is required.
 
 `ab_run` saves both captured configurations and comparison roles without changing
 runtime names. Both entries share the enclosing pytest outcome and properties.
+The role is stored in `eval_result.comparison_role`, separately from prepared
+session settings.
 Record `baseline_verification` and `treatment_verification` separately. A failed
 combined assertion does not prove both sides failed.
 
@@ -96,5 +100,8 @@ for case in evidence.tests:
 ```
 
 Reading schema-4.0 evidence is local and needs no Copilot process or credentials.
+Every current producer field is required, including nested child and tool records.
+Present `null`, empty collections, empty output, and known zero remain distinct
+from absent fields. Unknown models remain `null`, not a guessed model name.
 Regenerate older evidence by running its producer with framework 1.x; never
 hand-edit JSON or invent missing fields.

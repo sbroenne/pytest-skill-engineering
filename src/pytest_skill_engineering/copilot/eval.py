@@ -18,7 +18,6 @@ from pytest_skill_engineering.copilot.personas import ClaudeCodePersona, VSCodeP
 from pytest_skill_engineering.core.evals import load_custom_agent, load_instruction_file
 from pytest_skill_engineering.core.plugin import (
     _discover_skills,
-    _validate_mcp_servers,
     _validate_skill_reference_names,
 )
 
@@ -34,30 +33,20 @@ def _parse_agent_file(path: Path) -> CopilotCustomAgentConfig:
     fields and uses the Markdown body as the custom agent's system prompt.
     Parsing and metadata errors retain the definition's file path.
     """
-    loaded = load_custom_agent(path)
-    frontmatter = loaded["metadata"]
-    agent: CopilotCustomAgentConfig = {
-        "name": frontmatter.get("name", loaded["name"]),
-        "prompt": loaded["prompt"],
-    }
-    for key in (
-        "description",
-        "display_name",
-        "infer",
-        "skills",
-        "model",
-        "reasoning_effort",
-        "tools",
-    ):
-        if key in frontmatter:
-            agent[key] = frontmatter[key]
-    if "mcp-servers" in frontmatter:
-        agent["mcp_servers"] = cast(
-            dict[str, CopilotMCPServerConfig],
-            _validate_mcp_servers(frontmatter["mcp-servers"], path, field="mcp-servers"),
-        )
+    return cast(CopilotCustomAgentConfig, load_custom_agent(path))
 
-    return agent
+
+def _parse_agent_files(paths: list[Path]) -> list[CopilotCustomAgentConfig]:
+    agents: list[CopilotCustomAgentConfig] = []
+    names: set[str] = set()
+    for path in paths:
+        agent = _parse_agent_file(path)
+        name = require_custom_agent_name(agent)
+        if name in names:
+            raise ValueError(f"{path}: Duplicate custom agent name '{name}'")
+        names.add(name)
+        agents.append(agent)
+    return agents
 
 
 def _default_persona() -> CopilotPersona:
@@ -361,8 +350,7 @@ class CopilotEval:
         if agents_dir.exists():
             if not agents_dir.is_dir():
                 raise ValueError(f"{agents_dir}: custom agents path must be a directory")
-            for agent_file in sorted(agents_dir.rglob("*.agent.md")):
-                agents.append(_parse_agent_file(agent_file))
+            agents = _parse_agent_files(sorted(agents_dir.rglob("*.agent.md")))
 
         config: dict[str, Any] = {
             "instructions": instructions,
@@ -527,8 +515,7 @@ class CopilotEval:
             if not agents_dir.is_dir():
                 raise ValueError(f"{agents_dir}: custom agents path must be a directory")
             # Claude Code uses plain .md files for agents
-            for agent_file in sorted(agents_dir.glob("*.md")):
-                agents.append(_parse_agent_file(agent_file))
+            agents = _parse_agent_files(sorted(agents_dir.glob("*.md")))
 
         # 3. Discover skill directories from .claude/skills/
         skills = _discover_skills(claude_dir)

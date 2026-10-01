@@ -43,6 +43,77 @@ def _load_json(path: Path) -> Any:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def test_grouped_parameter_ids_survive_repetition(pytester: Pytester) -> None:
+    pytester.makeconftest(CAPTURE_REPORTS_CONFTEST)
+    pytester.makepyfile(
+        """
+        import pytest
+
+        @pytest.mark.parametrize("a,b", [(1,2), (3,4)], ids=["iter-1", "bracket[x]"])
+        @pytest.mark.parametrize("tag", ["a", "b"], ids=["left", "right"])
+        def test_grouped(a, b, tag, manual_aitest):
+            assert b == a + 1
+        """
+    )
+    result = _run_pytest(pytester, "--aitest-iterations=2", "--aitest-json=report.json", "-q")
+    result.assert_outcomes(passed=8)
+    collected = _load_json(pytester.path / "report.json")["tests"]
+    names = {entry["name"] for entry in collected}
+    assert len(names) == 4
+    assert {entry["iteration"] for entry in collected} == {1, 2}
+    assert all(sum(entry["name"] == name for entry in collected) == 2 for name in names)
+    assert any("bracket[x]" in name for name in names)
+    assert any("iter-1" in name for name in names)
+    assert all("iter-2" not in name for name in names)
+
+
+@pytest.mark.parametrize("phase", ["setup", "teardown"])
+def test_fixture_failure_updates_native_outcome(pytester: Pytester, phase: str) -> None:
+    fixture = """
+@pytest.fixture
+def broken(manual_aitest, record_property):
+    %s
+""" % (
+        'raise RuntimeError("verification failed")'
+        if phase == "setup"
+        else 'yield\n    record_property("late_verification", {"passed": False})\n'
+        '    raise RuntimeError("verification failed")'
+    )
+    pytester.makeconftest(CAPTURE_REPORTS_CONFTEST + fixture)
+    pytester.makepyfile("def test_case(broken):\n    assert True\n")
+    result = _run_pytest(pytester, "--aitest-json=report.json", "-q")
+    result.assert_outcomes(errors=1, passed=1 if phase == "teardown" else 0)
+    report = _load_json(pytester.path / "report.json")
+    assert report["failed"] == 1
+    assert report["passed"] == 0
+    assert len(report["tests"]) == 1
+    case = report["tests"][0]
+    assert case["outcome"] == "failed"
+    assert f"{phase}:" in case["error"]
+    assert "verification failed" in case["error"]
+    if phase == "teardown":
+        assert ["late_verification", {"passed": False}] in case["properties"]
+
+
+def test_unknown_model_is_not_invented_in_native_or_junit_reports(pytester: Pytester) -> None:
+    pytester.makepyfile(
+        """
+        from pytest_skill_engineering.copilot import CopilotEval, CopilotResult
+        from pytest_skill_engineering.copilot.fixtures import stash_on_item
+
+        def test_unknown(request):
+            result = CopilotResult(success=False, error="startup failed")
+            stash_on_item(request.node, CopilotEval(name="unknown"), result)
+            assert result.error == "startup failed"
+        """
+    )
+    result = _run_pytest(pytester, "--aitest-json=report.json", "--junitxml=junit.xml", "-q")
+    result.assert_outcomes(passed=1)
+    report = _load_json(pytester.path / "report.json")
+    assert report["tests"][0]["model"] is None
+    assert "aitest.model" not in (pytester.path / "junit.xml").read_text(encoding="utf-8")
+
+
 def _make_eval_result(
     *,
     success: bool = True,

@@ -3,24 +3,16 @@
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Mapping
-from dataclasses import dataclass
 from typing import Any, Literal, Protocol, TypeAlias
 
 from copilot.session import CustomAgentConfig, MCPServerConfig, ReasoningEffort, SessionHooks
+
+from pytest_skill_engineering.copilot.result import CopilotResult, CopilotResultAgent
 
 CopilotCustomAgentConfig: TypeAlias = CustomAgentConfig
 CopilotMCPServerConfig: TypeAlias = MCPServerConfig
 CopilotReasoningEffort: TypeAlias = ReasoningEffort
 CopilotSessionHooks: TypeAlias = SessionHooks
-SubagentStatus: TypeAlias = Literal["selected", "started", "completed", "failed"]
-
-
-class CopilotResultAgent(Protocol):
-    """Minimal agent surface stored on :class:`CopilotResult`."""
-
-    @property
-    def working_directory(self) -> str | None:
-        raise NotImplementedError
 
 
 class CopilotRunResult(Protocol):
@@ -51,6 +43,11 @@ class CopilotEventMapper(Protocol):
         raise NotImplementedError
 
     def record_subagent_failed(self, *, invocation_id: str, name: str) -> None:
+        raise NotImplementedError
+
+    def record_subagent_result(
+        self, *, invocation_id: str, name: str, result: CopilotResult
+    ) -> None:
         raise NotImplementedError
 
 
@@ -141,7 +138,7 @@ class CopilotEvalConfig(CopilotResultAgent, Protocol):
 
 CopilotNestedRunner: TypeAlias = Callable[
     [CopilotEvalConfig, str],
-    Awaitable[CopilotRunResult],
+    Awaitable["CopilotResult"],
 ]
 
 
@@ -156,16 +153,6 @@ class CopilotPersona(Protocol):
         nested_runner: CopilotNestedRunner,
     ) -> None:
         raise NotImplementedError
-
-
-@dataclass(slots=True)
-class SubagentInvocation:
-    """A single custom-agent dispatch observed during a run."""
-
-    invocation_id: str
-    name: str
-    status: SubagentStatus
-    duration_ms: float | None = None
 
 
 def declared_agent_tools(
