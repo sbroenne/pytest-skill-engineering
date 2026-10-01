@@ -97,7 +97,7 @@ nav:
     - Image Assertions: how-to/image-assertions.md
     - Complete Example: how-to/complete-example.md
   - Use Cases:
-    - Why We Removed Our Companion Skill: use-cases/companion-skill.md
+    - Does a Skill Help a Coding Agent?: use-cases/companion-skill.md
   - Reference:
     - Overview: reference/index.md
     - API: reference/api.md

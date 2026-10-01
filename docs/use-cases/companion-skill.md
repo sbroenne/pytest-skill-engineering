@@ -1,91 +1,147 @@
-# We tested our own companion skill and chose not to ship it
+# Does a skill help a coding agent? A real-world case study
 
-The framework should run tasks and preserve evidence. The coding agent already
-helping the user should interpret the evidence and improve the project. This
-case study records whether our proposed companion skill helped that coding
-agent, rather than assuming that another guidance layer was an improvement.
+**We tested a skill intended to help coding agents use this framework. It did
+not demonstrate a benefit, so we chose not to ship it.** We kept the test
+runner, saved execution records, documentation, and examples.
 
-**Decision: remove the framework companion skill.** The completed experiment
-showed no benefit, while attempted improvements drifted into general advice
-about writing tests. We kept the runner, evidence, documentation, and examples.
-Testing consumer-provided domain skills remains supported.
+You do not need to install a companion skill to use pytest-skill-engineering.
+The framework still supports testing **your own skills**. Removing our guidance
+package did not remove that capability.
+
+## What were we trying to improve?
+
+A coding agent can write code, run tests, and investigate failures. A *skill*
+is a package of instructions and reference material that the agent can read
+while working.
+
+Our proposed companion skill explained how to use the framework: write tests,
+check actual results, inspect saved execution records, and investigate failures.
+It was guidance for the agent using the framework, not a separate AI judge.
+
+The question was simple: **does adding that guidance help the agent complete a
+real task more reliably than giving it the same project without the skill?**
+
+## What we asked the agent to do
+
+We gave the agent a small application with deliberate bugs. It had to:
+
+1. Write a test from the customer's requirements.
+2. Let us run that test and confirm it caught a real application failure.
+3. Read the failure and repair the application.
+4. Pass both the original, unchanged test and our separate correctness checks.
+
+Those separate checks were written before the experiment and could not be
+changed by the agent. This mattered because **the agent's test could be wrong
+too**. Passing a test written by the same agent is not enough to establish
+that the customer's requirements were met.
+
+### First: a simple invoice calculation
+
+The application rounded a tax amount incorrectly. Both versions of the agent
+fixed it and passed all 16 separate checks.
+
+The skill version used more tool calls, including calls to read guidance.
+That showed the example worked, but did not show that the skill helped.
+
+### Next: order calculations and saved records
+
+We then used a harder application that imports orders from CSV files and saves
+a ledger: a file containing the completed transactions.
+
+The agent needed to handle discounts and tax correctly, avoid charging twice
+for a repeated request, reject conflicting requests, and save the same amounts
+that it reported to the user. Previewing an order must not change saved records.
+Invalid inputs and a missing ledger also had specified behavior.
+
+We checked actual command output and the files on disk, using **42 separate
+checks**. A successful response alone could not prove that the saved data was
+correct.
+
+For this harder task, we ran three fresh attempts without the skill and three
+with it. Both groups received the same requirements, inputs, starting code,
+model, and limits. We alternated which group went first. The skill was actually
+read in each skill-enabled attempt, not merely made available.
+
+## What happened?
+
+The completed comparison on **30 September 2026** showed no improvement:
+
+| Result in the harder task | Without skill | With skill |
+| --- | --- | --- |
+| Completed the whole task | 1 of 3 | 0 of 3 |
+| Wrote a test with correct expected amounts | 1 of 3 | 0 of 3 |
+| Repaired the application to pass all 42 separate checks | 2 of 3 | 1 of 3 |
+
+"Completed the whole task" means the agent wrote a valid test, caught a real
+failure, repaired the application correctly, and passed its unchanged test.
+All six attempts reached a real application failure and completed the repair
+session. The remaining failures were not login, connection, or import failures.
+
+### The important failure: a test can expect the wrong answer
+
+Five of the six generated tests contained incorrect expected amounts.
+
+For example, one order should have had a total of **31 cents**, including
+**4 cents of tax** after discount. Several tests instead expected **35 cents**,
+including **8 cents of tax**. Some repairs then kept the wrong calculation
+rather than satisfy the customer's requirements.
+
+In two attempts, the agent repaired the application correctly, but its unchanged
+test still failed because that test expected the wrong answer. Our separate
+checks caught the disagreement.
+
+In normal development, an incorrect test should be corrected. In this experiment,
+the repair stage could change only the application. Keeping the test unchanged
+let us measure whether the agent had written a trustworthy test in the first
+place; we did not rewrite failed tests to make the comparison look better.
+
+**A completed agent session is not the same as a correct result. Neither is
+agreement between a broken application and an incorrect test.**
+
+## Why not keep improving the skill?
+
+We started a revision that told the agent to derive expected answers from the
+requirements, double-check calculations, and distinguish a wrong test from a
+broken application. A new comparison began, but we stopped it when we reconsidered
+the purpose of the skill. That interrupted run supports no improvement claim.
+
+The revision was becoming general advice about writing tests and reasoning
+correctly. It was not filling a demonstrated gap in how agents used our tool.
+Both groups had already used the framework successfully.
+
+That changed the product question. Rather than keep adding instructions until
+this particular task improved, we asked: **does this extra guidance package
+deserve to be part of the framework?**
+
+Our answer was no. Framework-specific knowledge belongs in clear documentation,
+working examples, and helpful errors. The coding agent can investigate ordinary
+pytest failures and saved execution records directly.
+
+## What this means for users
+
+Use the framework to run tasks and record what happened. Use ordinary assertions
+to check actual application output. Give your coding agent the failure, saved
+records, requirements, and relevant source when you need help investigating.
+
+There is no framework companion skill to install and no separate AI judge.
+You can still use the framework to compare your own domain skills: guidance
+containing knowledge specific to the tasks your users need to complete.
+
+This was a small experiment on one project and one model. It does **not** prove
+that skills are useless, or that our skill generally made agents worse. It did
+not demonstrate enough value to justify shipping ours.
+
+**The useful conclusion was a simpler product: test whether an extra layer
+deserves to exist, and be willing to remove it.**
+
+## Explore the example
 
 The runnable project is
 [`examples/skill-dogfood`](https://github.com/sbroenne/pytest-skill-engineering/tree/main/examples/skill-dogfood).
-It uses `CopilotEval`, `copilot_eval`, ordinary pytest assertions, and native JSON.
-There is no second AI judge, report adviser, custom SDK runner, or hidden retry.
-The original guidance survives only as a frozen historical test fixture, not
-an installable or maintained product.
+Its [README](https://github.com/sbroenne/pytest-skill-engineering/blob/main/examples/skill-dogfood/README.md)
+explains setup and explicitly selected live comparisons.
 
-## Start with a real baseline
-
-Our first case asked a coding agent to write a test for an invoice CLI,
-observe an actual rounding failure, repair the CLI, and rerun the unchanged
-test. Both the skill-enabled and control workflows passed all 16 independent
-output checks.
-
-| Observation in the basic case | Without skill | With skill |
-| --- | --- | --- |
-| Correct repair and unchanged test passed | Yes | Yes |
-| Tool uses while authoring | 6 | 9 |
-| Tool uses while investigating and repairing | 8 | 11 |
-
-This established that the workflow worked, not that the skill helped. Reading
-guidance added work without an observed correctness gain. A straightforward
-rounding repair was insufficient to answer a reliability question.
-
-## A harder customer project
-
-The second case uses an imported-order checkout CLI with durable ledger state.
-Its workflow is preview, first post, repeated post, conflicting request, second
-order, and ledger read. Multiple faults interact: monetary rounding and tax
-basis, duplicate posting, conflicting request handling, and the difference
-between a successful response and the data actually saved.
-
-The requirements are explicit before execution:
-
-| Requirement | Independently observed evidence |
-| --- | --- |
-| Discount before tax, with per-line half-cent rounding upwards | Exact integer-cent command output |
-| Preview has no side effects | Actual absence of the ledger |
-| Same request is idempotent | Unchanged on-disk ledger after the repeated post |
-| Conflicting request is rejected | Exit code 2, visible error, unchanged ledger |
-| Saved amounts match reported amounts | Exact postings and request records read from disk |
-| Other orders and invalid inputs behave correctly | Separate fixed CLI cases |
-
-Forty-two independent checks live outside the model-writable project. Expected
-money amounts are explicit constants, not calculated using the application.
-JSON types are checked exactly: a boolean or float is not an integer-cent amount.
-The initial failure must be a real business assertion failure after a completed
-tool execution, not a syntax, import, or authentication error.
-
-## Comparison design
-
-Use three independent pairs with fresh projects. Both variants receive the same
-tasks, system prompts, fixtures, inputs, starting source, model, limits, and
-output criteria. Only access to the proposed companion skill changed. The
-control disables that skill; the treatment must actually read it during
-authoring and investigation.
-
-The order alternates between trials to reduce a consistent first/second-order
-advantage. The model is `gpt-5.6-luna`. Authoring and repair each have a
-180-second limit and a 24-tool-call cap. Each consumer session has a 120-second
-limit and a four-tool-call cap, with one permitted checkout workflow invocation.
-
-The author can write only the test. The investigator can write only the CLI.
-Tests, inputs, requirements, and failed-before evidence must remain unchanged.
-Cases have separate pytest outcomes. Failed cases remain failed; there are no
-automatic retries or expected-failure labels to manufacture a better result.
-The skill and criteria are not tuned after seeing comparison outcomes.
-
-The main measure is complete first-run workflow success: valid authored test,
-genuine before failure, repair satisfying all 42 checks, and unchanged after test
-passing. Record the failed stage too. Tool uses and captured usage are secondary
-observations, not substitutes for correctness or automatic quality scores.
-
-## Run it locally
-
-Use an approved environment for executing generated code. From the repository:
+From the repository root, these commands run only the offline checks:
 
 ```powershell
 cd examples\skill-dogfood
@@ -93,214 +149,70 @@ uv sync --frozen
 uv run --frozen python -m pytest -q
 ```
 
-Default collection is offline and blocks Copilot client creation. Those checks
-validate the application and harness boundaries, not skill effectiveness.
+Offline checks verify the sample and its checking code; they do not measure
+agent performance. Live comparisons consume Copilot requests and execute
+generated code, so run them only with authorization and suitable isolation.
+A temporary folder and file-access checks are not a security sandbox.
 
-After explicitly authorizing live execution:
+The original skill text is retained only as historical test data under
+`fixtures\retired-companion`. The sample turns it into a loadable skill inside
+a temporary experiment folder. It is not an installable or maintained product.
+New runs save new records rather than overwrite the original experiment.
 
-```powershell
-gh auth login --hostname github.com
-uv run --frozen python -m pytest "tests\live\test_checkout_workflow.py" --aitest-iterations=3 -v --aitest-json=..\..\aitest-reports\skill-dogfood\checkout-reproduction.json
-```
+## Experiment details
 
-Three completed pairs can start 24 framework sessions. Each can make multiple
-model requests; that count is not a billing estimate. No dedicated workflow or
-automatic paid CI job is added.
+The details below explain how we ran the comparison. You do not need them
+to get started with the framework.
 
-Reproduction uses the byte-identical original guidance stored as
-`examples\skill-dogfood\fixtures\retired-companion\instructions.txt`, with its two
-frozen reference files. Fixture checkout attributes preserve the original CRLF
-bytes and recorded hashes on every platform. The sample creates `SKILL.md` only inside a temporary
-experiment workspace, where the SDK can load it. No companion skill is
-distributed from the repository's product skill directory. Harness code changed
-to load that historical fixture after removal, so a new reproduction records
-its own protocol hash; it does not overwrite or impersonate the original run.
+### Conditions and complete results
 
-## Recorded results
+The recorded runs used `gpt-5.6-luna`, Python 3.11.15, and GitHub Copilot SDK
+1.0.15. These are the versions used then, not necessarily the current versions.
+Writing and repair each had a 180-second limit and a 24-tool-call limit.
+Each separate test execution had a 120-second limit and a four-tool-call limit;
+the supplied application tool could run the workflow only once.
 
-The first checkout batch produced six failed workflows, but four were blocked
-by a defect in our harness: fingerprint verification requires normal hashing,
-while an undeclared import restriction rejected it. The API also did not expose
-the immutable input bytes through a fixture, encouraging direct file access.
-That batch is retained as `checkout-comparison-2026-09-30.json`, but is not a
-valid skill comparison. Its failures must not be attributed to the skill.
-
-We corrected the harness equally for both variants: permitted standard hashing,
-provided input text and real fingerprints through `checkout_inputs`, documented
-import/file-access rules, and allowed plain assertion helpers. No monetary
-expectation, application requirement, seeded defect, model, limit, or skill
-instruction changed. A new, separately saved batch establishes the baseline
-under that corrected protocol; it is not a hidden execution retry.
-
-### Corrected comparison: 30 September 2026
-
-**The skill did not improve the measured result in this experiment.**
-The control completed one of three workflows; the skill-enabled version
-completed none. All six authored tests reached a genuine business failure and
-all six repair sessions completed. The failures were not authentication,
-transport, capture, or import problems.
-
-| Measure | Without skill | With skill |
+| Attempt | Without skill | With skill |
 | --- | --- | --- |
-| Complete workflow: all checks and unchanged test pass | 1 of 3 | 0 of 3 |
-| Authored test has correct monetary expectations | 1 of 3 | 0 of 3 |
-| Repaired CLI passes all 42 independent checks | 2 of 3 | 1 of 3 |
-| Tool uses in authoring sessions | 28 | 38 |
-| Tool uses in repair sessions | 29 | 48 |
+| 1 | Application passed 42/42 checks; generated test expected wrong tax amounts | Application passed 29/42 checks; incorrect calculations remained |
+| 2 | Application passed 42/42 checks and unchanged test passed | Application passed 29/42 checks; incorrect calculations remained |
+| 3 | Application passed 29/42 checks; incorrect calculations remained | Application passed 42/42 checks; generated test expected wrong order amounts |
 
-Tool-use totals are observations from the outer authoring/repair traces, not
-model-request counts or complete-workflow cost. They include guidance reading.
-The six workflows are the six observations; the two outer session records per
-workflow are not additional independent samples.
+The simple case used 6 writing and 8 repair tool calls without the skill,
+versus 9 and 11 with it. Across the harder task's three attempts per group,
+the totals were 28 writing and 29 repair calls without the skill, versus 38
+and 48 with it. Reading guidance counts as tool work. More calls alone do not
+prove harm, and these counts are not model-request counts or billing estimates.
 
-| Trial | Without skill | With skill |
-| --- | --- | --- |
-| 1 | CLI passes 42/42 checks; unchanged authored test still has wrong tax expectations | CLI passes 29/42 checks; wrong monetary behavior remains |
-| 2 | CLI passes 42/42 checks and unchanged test passes | CLI passes 29/42 checks; wrong monetary behavior remains |
-| 3 | CLI passes 29/42 checks; wrong monetary behavior remains | CLI passes 42/42 checks; unchanged authored test has wrong order amounts |
+Each full attempt has one pytest outcome. Its writing and repair records are
+not two independent attempts. Their usage excludes the separate sessions that
+execute the generated test; it is not the cost of the whole task. Missing
+usage or pricing is not measured zero.
 
-Five of six authored tests had **incorrect monetary expectations**. For the first order,
-the requirements give subtotal 50 cents, rounded discount 23 cents, net 27
-cents, tax 4 cents, and total 31 cents. Several tests instead expected tax
-8 cents and total 35 cents. Some repairs then preserved those wrong values
-rather than satisfy the customer's tax-on-discounted-amount rule.
+### Excluded and interrupted runs
 
-Two workflows repaired the application correctly but still failed the unchanged
-test because its expectations were wrong. That failure is intentional and
-important: a coding agent must not quietly rewrite criteria after seeing a
-failure. The independent checks exposed the disagreement instead of letting
-the authored test become the sole source of truth.
+An earlier checkout batch was invalid: four of six attempts were blocked by our
+test setup. It rejected a normal hashing import and did not provide input bytes
+through the supplied test fixtures. We corrected those restrictions equally
+for both groups, without changing the application requirements or expected
+amounts, and ran the completed comparison reported above.
 
-We did not alter the skill, weaken criteria, retry failed observations, or keep
-increasing complexity until a favorable result appeared. In this small sample,
-the skill required more tool work and showed no correctness benefit. Three
-pairs do not establish that it generally harms performance or never helps.
+The excluded batch is not included in the result counts. Do not attribute its
+setup failures to the skill.
 
-### Evidence provenance
+Draft revision 1.0.1 began a separate three-pair comparison, but it was stopped
+before completion. We make no improvement claim for that revision.
 
-The corrected batch is saved locally as
-`aitest-reports\skill-dogfood\checkout-comparison-v2-2026-09-30.json`.
-It used Python 3.11.15, GitHub Copilot SDK 1.0.15, and `gpt-5.6-luna`.
-All six cases recorded identical criteria, protocol, skill, and environment
-identifiers. Actual skill reads were recorded in every treatment authoring and
-repair session; registration alone was not treated as proof of use.
+### What readers can reproduce
 
-| Identifier | SHA-256 |
-| --- | --- |
-| Corrected native outer evidence | `73084355efeec0e5304ea83b32a4c143e575e63d3605924c134fcc542db3d0e0` |
-| Fixed business criteria | `4014bef13d0c553487c14a3a3374f53da79cfd5be4302d7678e01556a038223a` |
-| Corrected experiment protocol | `b3437d192436594bf84b000c5ca12491de3aebe60fb601942e98491438de8c5b` |
-| Canonical skill | `4654291384d760eecc26b3a00d901934a6da62e346c84702878e595147318f32` |
+The linked sample contains the application, checks, and original guidance needed
+to run a new comparison. The original generated execution records are not
+distributed with this case study; the tables above summarize our observations.
 
-Hashes identify this recorded run, not a promise that later runs will be
-identical. Native JSON and the linked child files are retained locally and
-are not hand-edited or embedded in the public documentation.
+A new run uses the current environment and produces its own execution records.
+It is a new observation, not a promise of the same outcome or an exact copy of
+the original run.
 
-## What this use case establishes
-
-The runner-and-evidence boundary worked: it preserved real failures, showed
-that session completion was not business correctness, and let independent
-checks catch wrong assertions and incomplete repairs. No extra AI judge was
-needed to decide those concrete requirements.
-
-The original companion skill remained an **unproven aid for this workflow**,
-not a demonstrated performance improvement. More complex tasks and additional
-guidance did not automatically produce better outcomes. Keep domain criteria
-independently grounded; do not promote the skill as improving reliability on
-the basis of this experiment.
-
-## The attempted improvement changed the question
-
-The original result is retained above. After that comparison, the user asked us
-to improve the skill and measure whether the result improves. This is an
-explicitly task-targeted development exercise, not an untouched evaluation.
-
-Draft revision 1.0.1 added a requirement-first verification step:
-
-- Derive expected answers from actual inputs before reading the implementation.
-- Check units, quantities, operation order, intermediate values, and rounding.
-- Audit the derivation a second way and record it before execution.
-- Compare requirements, test expectations, observed output, and saved state
-  separately when investigating a failure.
-- Never change an application to satisfy an incorrect test.
-
-The guidance is general: it contains no order identifiers, fixture amounts,
-expected checkout totals, or copies of the benchmark's independent answers.
-The customer task, fixtures, starting defects, model, request limits, and all
-42 independent checks remain unchanged.
-
-The planned evaluation was a fresh three-pair comparison with new control
-observations, alternating order, and a separate native evidence file.
-
-For that development comparison, the target was at least two of three complete
-skill-enabled workflows and more complete workflows than the fresh control.
-Correct application repairs and correctly authored expectations are separate
-secondary measures. The run was stopped rather than evaluated against that target.
-
-### Revision 1.0.1
-
-The three-pair run was started with output directed to
-`aitest-reports\skill-dogfood\checkout-skill-1.0.1-2026-09-30.json`,
-then stopped when the user reconsidered whether the companion skill should
-exist. It is not a completed comparison and provides no validated improvement
-claim for this draft revision.
-The main guidance hash for this draft revision was
-`7edb7576f3b890b17ed761531913e69fd35292b92c09bb2455b3cbf89c97d935`.
-
-Even an improvement on this known task would not establish improvement on unseen
-projects. More importantly, the revision was teaching general calculation and
-test-writing discipline, not missing knowledge about using our framework.
-
-## Conclusion: a simpler product is the useful result
-
-The original idea was attractive: replace framework-owned AI analysis with a
-skill used by the coding agent already working in the repository. Testing that
-idea revealed a third option: **keep neither extra layer**.
-
-Both variants used the framework successfully. The main failures involved
-incorrect business expectations, not inability to discover or operate the
-framework. The completed comparison did not establish a reason to distribute
-and maintain our own companion skill. Attempting to tune it shifted the question
-from tool usability to general coding-agent reasoning.
-
-We removed the companion skill, its installation instructions, and its
-onboarding references. Framework-specific knowledge belongs in clear
-documentation, working examples, and useful errors. Coding agents can investigate
-ordinary pytest failures and native evidence directly.
-
-This is a product decision under limited evidence, not proof that skills are
-useless or that our skill causes harm. Domain skills with substantial
-task-specific knowledge can still be evaluated through the framework's existing
-skill support.
-
-The failed comparisons, harness correction, and interrupted revision stay in
-the case study. Historical guidance is frozen as experimental input, not kept
-alive as a supported product. The lesson is not "make the skill win"; it is
-**test whether the extra layer deserves to exist, and be willing to remove it**.
-
-## Evidence and interpretation
-
-The outer JSON contains authoring/repair traces and recorded workflow properties.
-Each case links to its own native `before.json` and, when reached, `after.json`
-under `aitest-reports\skill-dogfood\checkout\<variant>\<run-id>`. Locations shown
-here are relative to the repository root; native properties preserve actual
-local paths. Files are local generated outputs, not bundled public evidence
-or a new report format.
-
-Record trial, actual variant, criteria, protocol and skill hashes, Python/SDK versions,
-completed milestones, real CLI checks, and child evidence paths. The before
-record preserves the actual bad reply and ledger. Do not hand-edit JSON.
-
-Outer usage covers authoring and repair, not the separate child pytest sessions.
-Read each native file's own usage; missing pricing or usage is not measured zero.
-Do not present outer timing or usage as the complete workflow cost.
-
-Three pairs are a small, single-project experiment. Even a difference would be
-an observation under these conditions, not proof of general causal improvement.
-Both variants passing, both failing, or the skill performing worse are valid
-results. More complexity does not entitle us to keep changing the task until the
-skill wins.
-
-File guards and AST checks are not an operating-system sandbox. Generated code
-runs with the current user's access; reduced CLI environment variables do not
-prevent file or network access. Use the isolation approved for your project.
+We ran the agent through the framework and used tests to check its actual
+output. We did not ask another AI to judge the result or automatically repeat
+failed attempts.

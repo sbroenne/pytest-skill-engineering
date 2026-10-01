@@ -28,7 +28,7 @@ verified task success: define concrete output checks.
 | --- | --- |
 | Run a first test | [Getting started](getting-started/index.md) |
 | Investigate results with your coding agent | [Inspecting evidence](how-to/inspect-evidence.md) |
-| See why we removed our own companion skill | [Real workflow case study](use-cases/companion-skill.md) |
+| See how we tested whether a skill helps a coding agent | [Real-world case study](use-cases/companion-skill.md) |
 | Test an MCP server | [MCP server testing](how-to/test-mcp-servers.md) |
 | Test a CLI | [CLI testing](how-to/test-cli-tools.md) |
 | Compare a skill or system prompt | [Comparisons](getting-started/comparing.md) |
