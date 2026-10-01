@@ -31,14 +31,13 @@ def skill_dir(tmp_path: Path) -> Path:
     """Create a skill directory with SKILL.md and references/."""
     skill = tmp_path / "my-skill"
     skill.mkdir()
-    (skill / "SKILL.md").write_text("---\nname: my-skill\n---\n# My Skill\nInstructions here.")
+    (skill / "SKILL.md").write_text(
+        "---\nname: my-skill\ndescription: Reference fixture\n---\n# My Skill\nInstructions here."
+    )
     refs = skill / "references"
     refs.mkdir()
     (refs / "guide.md").write_text("# Guide\nDetailed info.")
-    (refs / "lookup.txt").write_text("key1=value1\nkey2=value2")
-    (refs / "data.json").write_text('{"items": [1, 2, 3]}')
-    # Non-matching file extension should be ignored
-    (refs / "image.png").write_bytes(b"\x89PNG")
+    (refs / "lookup.md").write_text("key1=value1\nkey2=value2")
     return skill
 
 
@@ -47,7 +46,9 @@ def skill_dir_no_refs(tmp_path: Path) -> Path:
     """Create a skill directory without references/."""
     skill = tmp_path / "no-refs-skill"
     skill.mkdir()
-    (skill / "SKILL.md").write_text("---\nname: no-refs\n---\n# No Refs")
+    (skill / "SKILL.md").write_text(
+        "---\nname: no-refs-skill\ndescription: No references\n---\n# No Refs"
+    )
     return skill
 
 
@@ -86,8 +87,7 @@ class TestInjectSkillReferenceTools:
         read_tool = next(t for t in config["tools"] if t.name == "read_skill_reference")
         enum_values = read_tool.parameters["properties"]["filename"]["enum"]
         assert "guide.md" in enum_values
-        assert "lookup.txt" in enum_values
-        assert "data.json" in enum_values
+        assert "lookup.md" in enum_values
         assert "image.png" not in enum_values
 
     def test_system_message_added(self, skill_dir: Path) -> None:
@@ -106,7 +106,9 @@ class TestInjectSkillReferenceTools:
         parent.mkdir()
         skill = parent / "child-skill"
         skill.mkdir()
-        (skill / "SKILL.md").write_text("---\nname: child\n---\n# Child")
+        (skill / "SKILL.md").write_text(
+            "---\nname: child-skill\ndescription: Child fixture\n---\n# Child"
+        )
         refs = skill / "references"
         refs.mkdir()
         (refs / "doc.md").write_text("# Doc")

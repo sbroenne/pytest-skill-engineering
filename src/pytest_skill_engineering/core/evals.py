@@ -161,7 +161,7 @@ def load_custom_agent(
 
     Returns:
         Dict with keys:
-            - ``name`` (str): Derived from filename.
+            - ``name`` (str): Declared name, or derived from filename when absent.
             - ``prompt`` (str): Markdown body after frontmatter.
             - ``description`` (str): From frontmatter, empty if absent.
             - ``metadata`` (dict): Full parsed frontmatter dict.
@@ -183,11 +183,20 @@ def load_custom_agent(
         raise ValueError(msg)
 
     config: dict[str, Any] = {
-        "name": _name_from_path(path),
+        "name": metadata.get("name", _name_from_path(path)),
         "prompt": body,
         "description": metadata.get("description", ""),
         "metadata": metadata,
     }
+    for key in ("display_name", "infer", "skills", "model", "reasoning_effort", "tools"):
+        if key in metadata:
+            config[key] = metadata[key]
+    if "mcp-servers" in metadata:
+        from pytest_skill_engineering.core.plugin import _validate_mcp_servers
+
+        config["mcp_servers"] = _validate_mcp_servers(
+            metadata["mcp-servers"], path, field="mcp-servers"
+        )
 
     if overrides:
         config.update(overrides)
@@ -196,6 +205,22 @@ def load_custom_agent(
         if not isinstance(config[field], str) or not config[field].strip():
             raise ValueError(f"{path}: '{field}' must be a non-empty string")
     _validate_metadata({**metadata, **(overrides or {})}, path)
+    if isinstance(config.get("tools"), str):
+        config["tools"] = config["tools"].replace(",", " ").split()
+    if "infer" in config and type(config["infer"]) is not bool:
+        raise ValueError(f"{path}: 'infer' must be a boolean")
+    if "skills" in config and not (
+        isinstance(config["skills"], list)
+        and all(isinstance(skill, str) and skill.strip() for skill in config["skills"])
+    ):
+        raise ValueError(f"{path}: 'skills' must be a list of non-empty strings")
+    if "reasoning_effort" in config and config["reasoning_effort"] not in (
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+    ):
+        raise ValueError(f"{path}: invalid 'reasoning_effort'")
     return config
 
 
@@ -230,7 +255,8 @@ def load_custom_agents(
 
     agents: list[dict[str, Any]] = []
     for path in sorted(directory.glob("*.agent.md")):
-        name = _name_from_path(path)
+        loaded = load_custom_agent(path)
+        name = loaded["name"]
 
         if include is not None and name not in include:
             continue
@@ -238,9 +264,12 @@ def load_custom_agents(
             continue
 
         agent_overrides = (overrides or {}).get(name)
-        agents.append(load_custom_agent(path, overrides=agent_overrides))
+        agent = load_custom_agent(path, overrides=agent_overrides) if agent_overrides else loaded
+        if any(existing["name"] == agent["name"] for existing in agents):
+            raise ValueError(f"{path}: Duplicate custom agent name '{agent['name']}'")
+        agents.append(agent)
 
-    return agents
+    return sorted(agents, key=lambda agent: agent["name"])
 
 
 def _prompt_name_from_path(path: Path) -> str:

@@ -9,6 +9,12 @@ A **custom agent** is a `.agent.md` definition file that you load with `load_cus
 It is **not** inherently a subagent.
 It only becomes a **subagent** when Copilot dispatches work to it at runtime.
 
+Standalone, plugin, and project loaders preserve declared agent names, model,
+tools, reasoning effort, inference settings, skills, and `mcp-servers` settings.
+When no name is declared, the filename supplies it. Directory include/exclude
+filters and per-agent overrides use that resolved name. Duplicate declared names
+are errors; an explicit empty tool list remains empty.
+
 ## Load one custom agent
 
 ```python
@@ -37,6 +43,9 @@ async def test_dispatches_to_reviewer(copilot_eval):
 ```
 
 `result.subagent_invocations` reports runtime subagent events such as `selected`, `started`, and `completed`.
+Framework-owned invocations also retain a separate child `result`. Inspect its
+tools, usage, and capture errors without mixing its conversation into the parent.
+See [child evidence and accounting](../reference/result.md#child-execution-evidence).
 
 Each nested invocation receives the remaining custom agent registry without its
 own definition. That registry shrinks along the dispatch path, so a custom agent

@@ -305,15 +305,8 @@ def _discover_agents(plugin_dir: Path) -> list[dict[str, Any]]:
 
     agents: list[dict[str, Any]] = []
 
-    # Load .agent.md files (VS Code / Copilot format)
-    for agent_file in sorted(agents_dir.glob("*.agent.md")):
-        agents.append(load_custom_agent(agent_file))
-
-    # Load plain .md files (Claude Code format) that aren't .agent.md
-    seen_names = {a["name"] for a in agents}
+    seen_names: set[str] = set()
     for agent_file in sorted(agents_dir.glob("*.md")):
-        if agent_file.name.endswith(".agent.md"):
-            continue
         agent = load_custom_agent(agent_file)
         if agent["name"] in seen_names:
             raise ValueError(f"{agent_file}: Duplicate custom agent name '{agent['name']}'")

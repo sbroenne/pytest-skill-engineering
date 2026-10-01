@@ -437,6 +437,10 @@ def _make_subagent_dispatch_tool(
         )
 
         sub_result = await nested_runner(sub_agent, prompt_text)
+        sub_result.agent = sub_agent
+        mapper.record_subagent_result(
+            invocation_id=invocation.tool_call_id, name=agent_slug, result=sub_result
+        )
 
         if sub_result.success:
             mapper.record_subagent_complete(
@@ -501,32 +505,26 @@ def _inject_skill_reference_tools(
 
     Only injected when at least one skill directory has reference documents.
     """
-    if not agent.skill_directories:
+    from pytest_skill_engineering.copilot.skills import requested_skill_files
+    from pytest_skill_engineering.core.plugin import _validate_skill_reference_names
+    from pytest_skill_engineering.core.skill import Skill
+
+    configured = (
+        session_config if "skill_directories" in session_config else agent.build_session_config()
+    )
+    directories = configured.get("skill_directories")
+    if not directories:
         return
-
-    # Collect all reference files across all skill directories
-    reference_files: dict[str, Path] = {}  # filename → full path
-
-    for skill_dir_str in agent.skill_directories:
-        skill_dir = Path(skill_dir_str)
-
-        # Check if this is a skill directory (contains SKILL.md)
-        _EXTS = (".md", ".txt", ".json", ".yaml", ".yml")
-        if (skill_dir / "SKILL.md").exists():
-            refs_dir = skill_dir / "references"
-            if refs_dir.is_dir():
-                for ref_file in refs_dir.iterdir():
-                    if ref_file.is_file() and ref_file.suffix in _EXTS:
-                        reference_files[ref_file.name] = ref_file
-        else:
-            # Maybe it's a parent directory containing skill subdirectories
-            for sub in skill_dir.iterdir():
-                if sub.is_dir() and (sub / "SKILL.md").exists():
-                    refs_dir = sub / "references"
-                    if refs_dir.is_dir():
-                        for ref_file in refs_dir.iterdir():
-                            if ref_file.is_file() and ref_file.suffix in _EXTS:
-                                reference_files[ref_file.name] = ref_file
+    disabled = configured.get("disabled_skills") or []
+    skills = [
+        Skill.from_path(path)
+        for path, name in requested_skill_files(directories).items()
+        if name not in disabled
+    ]
+    _validate_skill_reference_names(skills)
+    reference_files = {
+        name: skill.path / "references" / name for skill in skills for name in skill.references
+    }
 
     if not reference_files:
         return

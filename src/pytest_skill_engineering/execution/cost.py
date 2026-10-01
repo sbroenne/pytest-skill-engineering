@@ -124,6 +124,11 @@ def _find_pricing_toml(current_dir: Path) -> Path | None:
 # ── Public API ───────────────────────────────────────────────────────────────
 
 
+def unpriced_models(models: set[str]) -> list[str]:
+    """Find missing prices for this execution's usage, independent of earlier suites."""
+    return sorted(models - _load_user_overrides().keys())
+
+
 def estimate_cost(
     model: str,
     input_tokens: int,

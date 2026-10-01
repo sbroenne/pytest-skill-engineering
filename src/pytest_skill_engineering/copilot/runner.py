@@ -16,7 +16,7 @@ import asyncio
 import logging
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from pytest_skill_engineering.copilot.client import (
     approve_all_permissions,
@@ -84,6 +84,7 @@ async def run_copilot(agent: CopilotEvalConfig, prompt: str) -> CopilotResult:
     error: str | None = None
     cleanup_errors: list[str] = []
     skill_discovery: SkillDiscovery | None = None
+    configuration: dict[str, Any] | None = None
     send_started = False
     try:
         session_config = agent.build_session_config()
@@ -105,6 +106,9 @@ async def run_copilot(agent: CopilotEvalConfig, prompt: str) -> CopilotResult:
         controls.install(session_config, caller_hooks)
         if agent.auto_confirm and "on_permission_request" not in session_config:
             session_config["on_permission_request"] = approve_all_permissions
+        from pytest_skill_engineering.copilot.config import snapshot_session_configuration
+
+        configuration = snapshot_session_configuration(agent, session_config)
 
         caller_event = session_config.get("on_event")
 
@@ -237,6 +241,7 @@ async def run_copilot(agent: CopilotEvalConfig, prompt: str) -> CopilotResult:
     result = mapper.build()
     result.agent = agent
     result.skill_discovery = skill_discovery
+    result.configuration = configuration
     result.tool_calls_admitted = controls.admitted
     if result.capture_errors:
         result.capture_errors.extend(controls.incomplete_diagnostics(abort_phase=reason))

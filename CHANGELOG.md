@@ -19,6 +19,33 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   frozen guidance exists only as a historical experiment fixture. Evaluating
   consumer-provided skills remains supported.
 
+## [1.0.3] - 2026-10-01
+
+### Fixed
+
+- Repeated pytest cases preserve grouped parameters and custom case IDs.
+  Saved outcomes include setup and cleanup failures, along with verification
+  recorded during cleanup.
+- Plugin and project custom agents preserve declared names, models, tools,
+  reasoning effort, skills, inference settings, and MCP configuration.
+  Duplicate declared names are rejected consistently.
+- Skill reference tools expose enabled skills only and retain nested relative
+  Markdown paths without silently replacing duplicate references.
+- Framework-owned child executions retain separate results and descendants.
+  Overall token, premium-request, cost, and evidence completeness totals include
+  child work without counting it twice.
+- Tool completion evidence preserves images, including multiple images and
+  explicit capture errors for malformed or conflicting payloads.
+- Direct CLI execution preserves Windows paths, grouping quotes, spaces, and
+  empty arguments.
+- Saved configuration records the actual prepared runtime settings instead of
+  reconstructing them from the original eval. A/B roles remain separate.
+- Missing-price warnings include every captured usage model. Unknown model
+  identities remain null instead of receiving an invented default.
+- Native schema-4.0 loading requires every current producer field and preserves
+  explicit nulls, empty values, and image bytes. Regenerate older incomplete
+  reports through their producer.
+
 ## [1.0.2] - 2026-10-01
 
 ### Fixed

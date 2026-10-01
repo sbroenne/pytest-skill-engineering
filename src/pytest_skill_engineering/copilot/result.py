@@ -75,11 +75,38 @@ class CopilotResult:
     stop_reason: StopReason | None = None
     tool_calls_admitted: int = 0
     skill_discovery: SkillDiscovery | None = None
+    configuration: dict[str, Any] | None = None
 
     @property
     def evidence_complete(self) -> bool:
         """Whether every observed call has a complete, correlated record."""
-        return not self.capture_errors and all(c.evidence_complete for c in self.all_tool_calls)
+        return (
+            not self.capture_errors
+            and all(c.evidence_complete for c in self.all_tool_calls)
+            and all(
+                invocation.result.evidence_complete
+                for invocation in self.subagent_invocations
+                if invocation.result is not None
+            )
+        )
+
+    @property
+    def execution_results(self) -> list[CopilotResult]:
+        """This session and framework-owned descendants, each included once."""
+        return [
+            self,
+            *(
+                result
+                for invocation in self.subagent_invocations
+                if invocation.result is not None
+                for result in invocation.result.execution_results
+            ),
+        ]
+
+    @property
+    def all_usage(self) -> list[UsageInfo]:
+        """Captured usage across this session and its descendants."""
+        return [usage for result in self.execution_results for usage in result.usage]
 
     # Back-reference to the agent that produced this result.
     # Set automatically by run_copilot() so the plugin hook can
@@ -148,13 +175,17 @@ class CopilotResult:
     @property
     def total_input_tokens(self) -> int | None:
         """Total input tokens across all model turns."""
-        counts = [u.input_tokens for u in self.usage]
+        if any(not result.usage for result in self.execution_results):
+            return None
+        counts = [u.input_tokens for u in self.all_usage]
         return sum(c for c in counts if c is not None) if counts and None not in counts else None
 
     @property
     def total_output_tokens(self) -> int | None:
         """Total output tokens across all model turns."""
-        counts = [u.output_tokens for u in self.usage]
+        if any(not result.usage for result in self.execution_results):
+            return None
+        counts = [u.output_tokens for u in self.all_usage]
         return sum(c for c in counts if c is not None) if counts and None not in counts else None
 
     @property

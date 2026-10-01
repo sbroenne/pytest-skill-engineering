@@ -36,6 +36,7 @@ _logger = logging.getLogger(__name__)
 COLLECTOR_KEY = pytest.StashKey[list[TestReport]]()
 # Key for storing session messages for @pytest.mark.session
 SESSION_MESSAGES_KEY = pytest.StashKey[dict[str, list[dict[str, Any]]]]()
+PHASE_REPORTS_KEY = pytest.StashKey[dict[str, "PytestTestReport"]]()
 # Export for use in fixtures and downstream consumers
 __all__ = [
     "COLLECTOR_KEY",
@@ -119,6 +120,10 @@ def pytest_configure(config: Config) -> None:
         "markers",
         "copilot: mark test as requiring GitHub Copilot SDK credentials",
     )
+    config.addinivalue_line(
+        "markers",
+        "aitest_iteration_axis(position): internal repetition parameter-group index",
+    )
 
     # Always initialize report collection - JSON is always generated
     config.stash[COLLECTOR_KEY] = []
@@ -139,9 +144,14 @@ def pytest_generate_tests(metafunc: pytest.Metafunc) -> None:
     if count <= 1:
         return
     metafunc.fixturenames.append("_aitest_iteration")
+    existing = getattr(metafunc, "_calls", [])
+    position = len(existing[0]._idlist) if existing else 0
     metafunc.parametrize(
         "_aitest_iteration",
-        range(1, count + 1),
+        [
+            pytest.param(i, marks=pytest.mark.aitest_iteration_axis(position))
+            for i in range(1, count + 1)
+        ],
         ids=[f"iter-{i}" for i in range(1, count + 1)],
         indirect=True,
     )
@@ -172,24 +182,26 @@ def _require_agent_string(agent: Any, *, field_name: str) -> str:
     raise ValueError(msg)
 
 
-def _require_provider_model(agent: Any) -> str:
+def _require_provider_model(agent: Any) -> str | None:
     """Read the required provider model from the reporting wrapper."""
     provider = getattr(agent, "provider", None)
-    model = getattr(provider, "model", None)
-    if isinstance(model, str) and model:
+    if provider is None or not hasattr(provider, "model"):
+        raise ValueError("aitest reporting agent is missing required field 'provider.model'")
+    model = provider.model
+    if model is None or isinstance(model, str) and model:
         return model
     raise ValueError("aitest reporting agent is missing required field 'provider.model'")
 
 
-def _display_model(model: str) -> str:
+def _display_model(model: str | None) -> str | None:
     """Strip any provider prefix from a model name for display."""
-    return model.split("/")[-1] if "/" in model else model
+    return model.split("/")[-1] if model is not None and "/" in model else model
 
 
 def _build_agent_identity(
     agent: Any,
     eval_result: EvalResult,
-) -> tuple[str, str, str, str | None, str | None]:
+) -> tuple[str, str, str | None, str | None, str | None]:
     """Resolve stable and human-facing identity fields for report production."""
     base_agent_id = _require_agent_string(agent, field_name="id")
     eval_name = _require_agent_string(agent, field_name="name")
@@ -219,23 +231,21 @@ def _build_case_name(item: Item) -> str:
     if callspec is None or "_aitest_iteration" not in callspec.params:
         return item.nodeid
 
-    param_names = list(callspec.params)
     param_ids = list(getattr(callspec, "_idlist", []))
-    if len(param_names) != len(param_ids):
+    axis = item.get_closest_marker("aitest_iteration_axis")
+    if axis is None or len(axis.args) != 1 or type(axis.args[0]) is not int:
         raise ValueError(
             "Unable to derive case identity for "
-            f"{item.nodeid!r}: pytest parameter IDs are unavailable"
+            f"{item.nodeid!r}: repetition parameter-group identity is unavailable"
         )
-
-    base_nodeid, _, _ = item.nodeid.partition("[")
-    preserved_ids = [
-        param_id
-        for param_name, param_id in zip(param_names, param_ids, strict=True)
-        if param_name != "_aitest_iteration"
-    ]
-    if not preserved_ids:
+    position = axis.args[0]
+    if not 0 <= position < len(param_ids):
+        raise ValueError(f"Invalid repetition parameter-group index for {item.nodeid!r}")
+    del param_ids[position]
+    base_nodeid = item.nodeid.removesuffix(f"[{callspec.id}]")
+    if not param_ids:
         return base_nodeid
-    return f"{base_nodeid}[{'-'.join(preserved_ids)}]"
+    return f"{base_nodeid}[{'-'.join(param_ids)}]"
 
 
 @pytest.hookimpl(hookwrapper=True, tryfirst=True)
@@ -247,7 +257,7 @@ def pytest_runtest_makereport(item: Item, call: Any) -> Any:
     module-scoped agent fixtures that cannot use the function-scoped fixture.
     """
     # Auto-stash CopilotResult before processing (tryfirst ensures this runs early)
-    if call.when == "call" and not hasattr(item, "_aitest_result"):
+    if call.when in ("setup", "call") and not hasattr(item, "_aitest_result"):
         from pytest_skill_engineering.copilot.eval import CopilotEval
         from pytest_skill_engineering.copilot.fixtures import stash_on_item
         from pytest_skill_engineering.copilot.result import CopilotResult
@@ -261,9 +271,8 @@ def pytest_runtest_makereport(item: Item, call: Any) -> Any:
     outcome = yield
     report: PytestTestReport = outcome.get_result()
 
-    # Only process call phase (not setup/teardown)
-    if report.when != "call":
-        return
+    phases = item.stash.setdefault(PHASE_REPORTS_KEY, {})
+    phases[report.when] = report
 
     # Check if reporting is enabled
     tests = item.config.stash.get(COLLECTOR_KEY, None)
@@ -280,6 +289,14 @@ def pytest_runtest_makereport(item: Item, call: Any) -> Any:
     # Tests without eval execution do not create eval reports.
     if not runs:
         return
+    if report.when != "teardown":
+        if report.when == "call":
+            for eval_result, agent in runs:
+                _add_junit_properties(report, eval_result, agent)
+        return
+    failed_phases = [phase for phase in phases.values() if phase.failed]
+    skipped_phases = [phase for phase in phases.values() if phase.skipped]
+    final_outcome = "failed" if failed_phases else "skipped" if skipped_phases else "passed"
 
     # Get test function docstring if available
     docstring = None
@@ -302,9 +319,10 @@ def pytest_runtest_makereport(item: Item, call: Any) -> Any:
     # Capture error message — just the assertion/exception, never raw tracebacks.
     # Tracebacks contain file paths, line numbers, and nodeids that pollute
     # User-facing reports.
-    error_msg = None
-    if report.failed:
-        error_text = str(report.longrepr)
+    phase_errors = []
+    for failed_report in failed_phases:
+        error_msg = None
+        error_text = str(failed_report.longrepr)
         error_lines = error_text.split("\n")
 
         # Extract lines starting with "E " — pytest's assertion/exception lines
@@ -319,6 +337,11 @@ def pytest_runtest_makereport(item: Item, call: Any) -> Any:
                 if stripped:
                     error_msg = stripped
                     break
+        if error_msg is not None:
+            phase_errors.append(
+                error_msg if failed_report.when == "call" else f"{failed_report.when}: {error_msg}"
+            )
+    error_msg = "\n".join(phase_errors) or None
 
     # Detect iteration index from _aitest_iteration fixture
     iteration: int | None = None
@@ -333,8 +356,12 @@ def pytest_runtest_makereport(item: Item, call: Any) -> Any:
         )
         test_report = TestReport(
             name=_build_case_name(item),
-            outcome=report.outcome,
-            duration_ms=eval_result.duration_ms if len(runs) > 1 else report.duration * 1000,
+            outcome=final_outcome,
+            duration_ms=(
+                eval_result.duration_ms
+                if len(runs) > 1
+                else sum(phase.duration for phase in phases.values()) * 1000
+            ),
             eval_result=eval_result,
             error=error_msg,
             properties=properties,
@@ -382,7 +409,8 @@ def _add_junit_properties(
             agent, eval_result
         )
         props.append(("aitest.agent.name", eval_name))
-        props.append(("aitest.model", model))
+        if model is not None:
+            props.append(("aitest.model", model))
         if system_prompt_name:
             props.append(("aitest.prompt", system_prompt_name))
 

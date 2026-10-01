@@ -10,6 +10,12 @@ Tool-returned images are captured in results and preserved in native JSON.
 Inspect `image_content` (bytes) and `image_media_type` on calls returned by
 `result.tool_calls_for(...)`.
 
+The first image remains in those fields. All later images from the same
+completion are in `call.additional_images`, as `ImageContent` objects with
+`data` and `media_type`. Saved `EvalResult.tool_images_for(name)` returns every
+image for that tool, in order. SDK content blocks and binary image results are
+captured; malformed image data produces an explicit capture error.
+
 Semantic image judging is not supported. Use ordinary pytest assertions for
 image presence and metadata. Your coding agent can inspect the captured images;
 the framework does not automatically interpret them.

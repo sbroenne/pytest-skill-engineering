@@ -20,9 +20,16 @@ The generated starter writes explicit rates without replacing existing ones.
 
 A missing model rate produces a placeholder zero estimate and a missing-pricing
 warning. The suite saves `models_without_pricing` in native JSON evidence.
+Warnings cover every captured usage model, including earlier models and
+framework-owned child sessions, not just the test's final display model.
+They are calculated for the current suite and current pricing file.
 **This is not measured free usage.** Do not choose
 a supposedly cheapest configuration from unavailable prices.
 
 Missing SDK usage values remain `None`, not known zero. Estimates from available
 input/output counts are not complete billing evidence; unknown cache reads
 receive no cache discount. See [result evidence](../reference/result.md).
+
+Parent cost and premium-request totals include framework-owned child work once;
+the saved child records remain separately inspectable. Do not sum inclusive
+parent and child totals together.

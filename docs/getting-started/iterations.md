@@ -15,6 +15,13 @@ execution cost. Authorize the scope before running a large case matrix.
 Each repetition has its own pytest outcome. Native JSON preserves that execution,
 its iteration number, configuration, usage, cost estimate, duration, and recorded
 checks. There is no grouped dashboard verdict or automatic explanation.
+Grouped and stacked pytest parameters retain their user-supplied IDs. Only the
+framework's repetition axis is removed from the saved case name; the iteration
+number remains a separate field.
+
+Saved outcomes are finalized after fixture cleanup. A cleanup failure changes
+the captured execution's outcome to failed and retains cleanup-recorded checks,
+even when the test body passed.
 
 There is no AI flakiness explanation. Inspect the individual traces and source
 to distinguish intermittent interface behavior from unstable fixtures or

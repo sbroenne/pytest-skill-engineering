@@ -61,6 +61,7 @@ class ToolCall:
     duration_ms: float | None = None
     image_content: bytes | None = None
     image_media_type: str | None = None
+    additional_images: list[ImageContent] = field(default_factory=list)
     call_id: str | None = None
     completion_received: bool | None = None
     success: bool | None = None
@@ -72,7 +73,10 @@ class ToolCall:
             self.completion_received is True
             and self.success is not None
             and (
-                self.result is not None or self.error is not None or self.image_content is not None
+                self.result is not None
+                or self.error is not None
+                or self.image_content is not None
+                or bool(self.additional_images)
             )
         )
 
@@ -254,9 +258,11 @@ class SubagentInvocation:
         assert all(s.status == "completed" for s in result.subagent_invocations)
     """
 
+    invocation_id: str
     name: str
     status: str  # "selected", "started", "completed", "failed"
     duration_ms: float | None = None
+    result: EvalResult | None = None
 
     def __repr__(self) -> str:
         return f"SubagentInvocation({self.name}, {self.status})"
@@ -306,19 +312,38 @@ class EvalResult:
     available_tools: list[ToolInfo] = field(default_factory=list)
     skill_info: SkillInfo | None = None
     skill_discovery: SkillDiscovery | None = None
-    effective_system_prompt: str = ""
+    effective_system_prompt: str | None = None
     mcp_prompts: list[MCPPrompt] = field(default_factory=list)
     prompt_name: str | None = None
     custom_agent_info: CustomAgentInfo | None = None
     premium_requests: float = 0.0
     instruction_files: list[InstructionFileInfo] = field(default_factory=list)
-    configuration: dict[str, Any] = field(default_factory=dict)
+    configuration: dict[str, Any] | None = None
     capture_errors: list[str] = field(default_factory=list)
     evidence_complete: bool | None = None
     request_audit: list[RequestAudit] = field(default_factory=list)
     stop_reason: StopReason | None = None
     usage: list[UsageInfo] = field(default_factory=list)
     tool_calls_admitted: int = 0
+    model_used: str | None = None
+    reasoning_traces: list[str] = field(default_factory=list)
+    permission_requested: bool = False
+    permissions: list[dict[str, Any]] = field(default_factory=list)
+    subagent_invocations: list[SubagentInvocation] = field(default_factory=list)
+    comparison_role: Literal["baseline", "treatment"] | None = None
+
+    @property
+    def execution_results(self) -> list[EvalResult]:
+        """This session and separately captured framework-owned descendants."""
+        return [
+            self,
+            *(
+                result
+                for invocation in self.subagent_invocations
+                if invocation.result is not None
+                for result in invocation.result.execution_results
+            ),
+        ]
 
     # Clarification detection
     clarification_stats: ClarificationStats | None = None
@@ -448,11 +473,14 @@ class EvalResult:
             assert len(screenshots) > 0
             assert screenshots[-1].media_type == "image/png"
         """
-        return [
-            ImageContent(data=c.image_content, media_type=c.image_media_type or "image/png")
-            for c in self.tool_calls_for(name)
-            if c.image_content is not None
-        ]
+        images: list[ImageContent] = []
+        for call in self.tool_calls_for(name):
+            if call.image_content is not None:
+                images.append(
+                    ImageContent(call.image_content, call.image_media_type or "image/png")
+                )
+            images.extend(call.additional_images)
+        return images
 
     @property
     def asked_for_clarification(self) -> bool:

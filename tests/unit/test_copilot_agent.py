@@ -167,7 +167,7 @@ class TestParseAgentFile:
         result = _parse_agent_file(f)
         assert result.get("name") == "my-agent"
         assert result.get("prompt") == "You are a helpful agent."
-        assert "description" not in result
+        assert result.get("description") == ""
         assert "tools" not in result
 
     def test_name_derived_from_filename(self, tmp_path):

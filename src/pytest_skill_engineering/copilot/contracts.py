@@ -4,9 +4,12 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass
-from typing import Any, Literal, Protocol, TypeAlias
+from typing import TYPE_CHECKING, Any, Literal, Protocol, TypeAlias
 
 from copilot.session import CustomAgentConfig, MCPServerConfig, ReasoningEffort, SessionHooks
+
+if TYPE_CHECKING:
+    from pytest_skill_engineering.copilot.result import CopilotResult
 
 CopilotCustomAgentConfig: TypeAlias = CustomAgentConfig
 CopilotMCPServerConfig: TypeAlias = MCPServerConfig
@@ -51,6 +54,11 @@ class CopilotEventMapper(Protocol):
         raise NotImplementedError
 
     def record_subagent_failed(self, *, invocation_id: str, name: str) -> None:
+        raise NotImplementedError
+
+    def record_subagent_result(
+        self, *, invocation_id: str, name: str, result: CopilotResult
+    ) -> None:
         raise NotImplementedError
 
 
@@ -141,7 +149,7 @@ class CopilotEvalConfig(CopilotResultAgent, Protocol):
 
 CopilotNestedRunner: TypeAlias = Callable[
     [CopilotEvalConfig, str],
-    Awaitable[CopilotRunResult],
+    Awaitable["CopilotResult"],
 ]
 
 
@@ -166,6 +174,7 @@ class SubagentInvocation:
     name: str
     status: SubagentStatus
     duration_ms: float | None = None
+    result: CopilotResult | None = None
 
 
 def declared_agent_tools(

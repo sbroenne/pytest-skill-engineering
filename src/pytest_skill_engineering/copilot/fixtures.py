@@ -83,7 +83,7 @@ def _convert_to_aitest(
     """
     from dataclasses import dataclass
 
-    from pytest_skill_engineering.core.result import EvalResult
+    from pytest_skill_engineering.core.result import EvalResult, SubagentInvocation
     from pytest_skill_engineering.execution.cost import estimate_cost
 
     # Estimate USD cost from captured token usage and pricing.toml.
@@ -96,7 +96,7 @@ def _convert_to_aitest(
             usage.output_tokens,
             usage.cache_read_tokens or 0,
         )
-        for usage in result.usage
+        for usage in result.all_usage
         if usage.input_tokens is not None and usage.output_tokens is not None
     )
 
@@ -108,7 +108,9 @@ def _convert_to_aitest(
         duration_ms=result.duration_ms,
         token_usage=result.token_usage,
         cost_usd=cost_usd,
-        effective_system_prompt=agent.instructions or "",
+        effective_system_prompt=(
+            result.configuration.get("instructions") if result.configuration is not None else None
+        ),
         premium_requests=result.total_premium_requests,
         evidence_complete=result.evidence_complete,
         capture_errors=list(result.capture_errors),
@@ -117,49 +119,39 @@ def _convert_to_aitest(
         usage=list(result.usage),
         tool_calls_admitted=result.tool_calls_admitted,
         skill_discovery=deepcopy(result.skill_discovery),
-        configuration=deepcopy(
-            {
-                "name": agent.name,
-                "model": agent.model,
-                "instructions": agent.instructions,
-                "system_message_mode": agent.system_message_mode,
-                "reasoning_effort": agent.reasoning_effort,
-                "client_mode": agent.client_mode,
-                "image_detail": agent.image_detail,
-                "audit_requests": agent.audit_requests,
-                "max_tool_calls": agent.max_tool_calls,
-                "tools": [
-                    {
-                        "name": tool.name,
-                        "description": tool.description,
-                        "parameters": tool.parameters,
-                        "metadata": tool.metadata,
-                    }
-                    for tool in agent.extra_config.get("tools", [])
-                ],
-                "allowed_tools": agent.allowed_tools,
-                "excluded_tools": agent.excluded_tools,
-                "max_turns": agent.max_turns,
-                "timeout_s": agent.timeout_s,
-                "auto_confirm": agent.auto_confirm,
-                "mcp_servers": {
-                    name: {"type": config.get("type"), "tools": config.get("tools")}
-                    for name, config in agent.mcp_servers.items()
-                },
-                "skill_directories": agent.skill_directories,
-                "disabled_skills": agent.disabled_skills,
-                "active_agent": agent.active_agent,
-                "persona": type(agent.persona).__name__,
-            }
-        ),
+        configuration=deepcopy(result.configuration),
+        model_used=result.model_used,
+        reasoning_traces=list(result.reasoning_traces),
+        permission_requested=result.permission_requested,
+        permissions=deepcopy(result.permissions),
     )
+    for invocation in result.subagent_invocations:
+        child_result = None
+        if invocation.result is not None:
+            from pytest_skill_engineering.copilot.eval import CopilotEval
+
+            child_agent = invocation.result.agent
+            if not isinstance(child_agent, CopilotEval):
+                raise ValueError(f"Child invocation {invocation.invocation_id!r} has no eval")
+            converted_child = _convert_to_aitest(child_agent, invocation.result)
+            assert converted_child is not None
+            child_result = converted_child[0]
+        aitest_result.subagent_invocations.append(
+            SubagentInvocation(
+                invocation_id=invocation.invocation_id,
+                name=invocation.name,
+                status=invocation.status,
+                duration_ms=invocation.duration_ms,
+                result=child_result,
+            )
+        )
 
     # Create a minimal wrapper with just the fields needed by plugin.py
-    @dataclass
+    @dataclass(slots=True)
     class Provider:
-        model: str
+        model: str | None
 
-    @dataclass
+    @dataclass(slots=True)
     class AgentWrapper:
         name: str
         id: str
@@ -176,7 +168,15 @@ def _convert_to_aitest(
     aitest_agent = AgentWrapper(
         name=agent.name,
         id=agent.name,
-        provider=Provider(model=result.model_used or agent.model or "claude-haiku-4-5"),
+        provider=Provider(
+            model=result.model_used
+            if result.model_used is not None
+            else (
+                result.configuration.get("model")
+                if result.configuration is not None
+                else agent.extra_config.get("model", agent.model)
+            )
+        ),
         system_prompt_name=None,  # CopilotEval doesn't have named prompts
         mcp_servers=[],  # Could convert agent.mcp_servers if needed
         allowed_tools=agent.allowed_tools,
@@ -211,7 +211,7 @@ def stash_on_item(
             report_name = f"{agent.name} ({comparison_role})"
             converted[1].name = report_name
             converted[1].id = report_name
-            converted[0].configuration["comparison_role"] = comparison_role
+            converted[0].comparison_role = comparison_role
         item._aitest_result = converted[0]  # type: ignore[attr-defined]
         item._aitest_agent = converted[1]  # type: ignore[attr-defined]
         runs = getattr(item, "_aitest_runs", None)
