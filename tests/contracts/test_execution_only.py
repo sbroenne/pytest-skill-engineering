@@ -55,6 +55,7 @@ def test_no_separate_model_judging_or_advice_modules(module: str) -> None:
         "skills/pytest-skill-engineering/SKILL.md",
         "docs/getting-started/companion-skill.md",
         "tests/integration/copilot/test_19_companion_skill.py",
+        "tests/unit/test_copilot_plugin.py",
     ],
 )
 def test_removed_presentation_artifacts_are_absent(artifact: str) -> None:

@@ -80,14 +80,19 @@ async def test_addition(copilot_eval, tmp_path):
         instructions="Write Python code and save the requested file.",
         working_directory=str(tmp_path),
     )
-    result = await copilot_eval(
-        agent, "Create calc.py with add(a, b) returning a + b."
-    )
+    result = await copilot_eval(agent, "Create calc.py with add(a, b) returning a + b.")
     assert result.success, result.error
     assert (tmp_path / "calc.py").is_file()
     checked = subprocess.run(
-        [sys.executable, "-c", "from calc import add; assert add(2, 3) == 5; assert add(-2, 2) == 0"],
-        cwd=tmp_path, capture_output=True, text=True, timeout=10,
+        [
+            sys.executable,
+            "-c",
+            "from calc import add; assert add(2, 3) == 5; assert add(-2, 2) == 0",
+        ],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        timeout=10,
     )
     assert checked.returncode == 0, checked.stderr
 ```

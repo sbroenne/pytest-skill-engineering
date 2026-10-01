@@ -19,14 +19,18 @@ from pytest_skill_engineering.copilot import CopilotEval
 
 async def test_skill_comparison(ab_run, record_property):
     baseline = CopilotEval(
-        name="baseline", model="gpt-5.6-luna",
+        name="baseline",
+        model="gpt-5.6-luna",
         instructions="Calculate the requested amount and save the JSON file.",
     )
     treatment = replace(
-        baseline, name="with-skill", skill_directories=["skills/math-helper"],
+        baseline,
+        name="with-skill",
+        skill_directories=["skills/math-helper"],
     )
     before, after = await ab_run(
-        baseline, treatment,
+        baseline,
+        treatment,
         "Write amount.json with only the numeric field total, equal to 1000 * 1.05 ** 3.",
     )
     verified = []
@@ -36,9 +40,14 @@ async def test_skill_comparison(ab_run, record_property):
         path = Path(result.agent.working_directory) / "amount.json"
         observed = json.loads(path.read_text())
         passed = abs(observed["total"] - 1000 * 1.05**3) < 0.00001
-        record_property(f"{side}_verification", {
-            "artifact": str(path), "observed": observed, "passed": passed,
-        })
+        record_property(
+            f"{side}_verification",
+            {
+                "artifact": str(path),
+                "observed": observed,
+                "passed": passed,
+            },
+        )
         verified.append(result.success and passed)
     assert all(verified)
 ```

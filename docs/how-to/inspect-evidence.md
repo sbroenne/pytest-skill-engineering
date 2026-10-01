@@ -31,10 +31,13 @@ stale evidence is not proof that this run succeeded.
 async def test_document(copilot_eval, record_property, eval_config, expected_file):
     result = await copilot_eval(eval_config, "Save the requested document.")
     verified = expected_file.is_file() and expected_file.read_text() == "Expected text"
-    record_property("verification", {
-        "status": "verified" if verified else "failed",
-        "artifact": expected_file.name,
-    })
+    record_property(
+        "verification",
+        {
+            "status": "verified" if verified else "failed",
+            "artifact": expected_file.name,
+        },
+    )
     assert verified
     assert result.success
     assert result.evidence_complete, result.capture_errors
