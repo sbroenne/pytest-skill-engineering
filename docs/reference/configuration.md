@@ -46,13 +46,33 @@ agent = CopilotEval(
 | `mcp_servers` | Copilot SDK server config mapping |
 | `allowed_tools` | Optional global tool allow-list |
 | `custom_agents` | Loaded `.agent.md` definitions |
-| `skill_directories` | Skill packages to inject |
+| `skill_directories` | Explicit individual skill directories or parents; enable loading and check SDK availability before sending |
+| `disabled_skills` | Skill names deliberately disabled, retained in discovery evidence |
 | `max_turns` | Advisory top-level turn budget; used for subagent turn caps |
 | `timeout_s` | Hard wall-clock limit for the run |
 
 Each `copilot_eval` call makes one execution attempt. Startup, connection, and
 task failures are recorded without automatically starting another session.
 Rerun a selected pytest case explicitly when appropriate.
+
+### Explicit skills and empty mode
+
+Nonempty `skill_directories` set the public SDK `enable_skills=True` by default.
+`enable_config_discovery` remains false. In empty mode, personal/project discovery,
+custom instructions, file hooks, managed settings, and persona injection stay
+disabled. Explicit tools and system prompt content remain supported.
+
+Explicit directories combined with `extra_config={"enable_skills": False}` are
+rejected, not silently ignored. `None` leaves the explicit-skills default enabled.
+An empty directory list plus `enable_skills=False` is allowed. Use `disabled_skills`
+to deliberately disable named skills within an otherwise loaded set.
+
+Every requested directory must contain a valid `SKILL.md` or immediate child
+skill directories. Relative paths use the Python caller's current directory.
+Validation and public SDK discovery run before the task is sent; setup failure
+is recorded as an execution error with no model send. SDK metadata and diagnostics
+are available as `result.skill_discovery` and in native JSON, separately from reads.
+See [Skills](../getting-started/skills.md) for input and evidence details.
 
 ## MCP server config shape
 

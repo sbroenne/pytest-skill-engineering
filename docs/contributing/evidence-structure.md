@@ -19,6 +19,13 @@ execution configuration, turns, tool arguments and outputs, completion status,
 capture errors, request audits, stop reasons, usage, and missing-pricing models.
 Private SDK/session fields are not serialized.
 
+`eval_result.skill_discovery` saves actual public SDK availability separately
+from requested configuration and observed reads. It preserves metadata, loading
+warnings/errors, and whether discovery completed; `null` means no check was
+attempted. This field is required by the current schema-4.0 producer/reader.
+Regenerate older evidence missing it with the current producer; do not infer
+availability from supplied paths or patch saved JSON.
+
 Preserve missing versus empty output and nullable usage. Do not replace unsupported
 property values with strings or synthesize uncaptured successful assertions.
 The loader rejects old schemas; there is no compatibility reader.

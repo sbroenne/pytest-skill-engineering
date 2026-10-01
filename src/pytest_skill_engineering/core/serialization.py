@@ -56,7 +56,14 @@ def deserialize_suite_report(data: dict[str, Any]) -> SuiteReport:
     Reconstructs the full dataclass hierarchy from the serialized format.
     """
     from pytest_skill_engineering.copilot.requests import RequestAudit
-    from pytest_skill_engineering.core.result import EvalResult, ToolCall, Turn, UsageInfo
+    from pytest_skill_engineering.core.result import (
+        DiscoveredSkill,
+        EvalResult,
+        SkillDiscovery,
+        ToolCall,
+        Turn,
+        UsageInfo,
+    )
     from pytest_skill_engineering.reporting.collector import SuiteReport, TestReport
 
     # Reconstruct tests
@@ -214,6 +221,20 @@ def deserialize_suite_report(data: dict[str, Any]) -> SuiteReport:
                 )
 
             # Reconstruct agent result
+            discovery_data = _require_key(ar_data, "skill_discovery", context="EvalResult")
+            skill_discovery = None
+            if discovery_data is not None:
+                skill_discovery = SkillDiscovery(
+                    skills=[
+                        DiscoveredSkill(**skill)
+                        for skill in _require_key(
+                            discovery_data, "skills", context="SkillDiscovery"
+                        )
+                    ],
+                    warnings=_require_key(discovery_data, "warnings", context="SkillDiscovery"),
+                    errors=_require_key(discovery_data, "errors", context="SkillDiscovery"),
+                    complete=_require_key(discovery_data, "complete", context="SkillDiscovery"),
+                )
             eval_result = EvalResult(
                 turns=turns,
                 success=_require_key(ar_data, "success", context="EvalResult"),
@@ -228,6 +249,7 @@ def deserialize_suite_report(data: dict[str, Any]) -> SuiteReport:
                 assertions=assertions,
                 available_tools=available_tools,
                 skill_info=skill_info,
+                skill_discovery=skill_discovery,
                 effective_system_prompt=_require_key(
                     ar_data, "effective_system_prompt", context="EvalResult"
                 ),

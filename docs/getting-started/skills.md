@@ -96,9 +96,41 @@ from pytest_skill_engineering.copilot import CopilotEval
 
 agent = CopilotEval(
     name="with-skill",
+    client_mode="empty",
     skill_directories=["skills/financial-advisor"],
 )
 ```
+
+Supply either a directory containing `SKILL.md` or its parent containing multiple
+immediate skill directories. Relative paths are resolved from the Python process's
+current directory, not `working_directory`.
+
+Explicit `skill_directories` enable native SDK skill loading automatically,
+including in `client_mode="empty"`. This does **not** enable ambient configuration
+discovery. Empty mode still excludes personal/project skills and custom instructions,
+file hooks, managed settings, and persona-provided instructions/tools. Supply the
+tools needed by your task explicitly; empty mode's default tool list is empty.
+
+Before sending the task, the runner validates every requested skill using the
+existing skill format checks, then checks availability through the public SDK
+`session.rpc.skills.ensure_loaded()`, `reload()`, and `list()` APIs. Missing,
+unreadable, invalid, duplicate-name, or undiscovered skills return
+`success=False`, `stop_reason="execution_error"`, and a setup error without
+sending a model message. A parent with no immediate `SKILL.md` files is an error;
+unrelated child directories without `SKILL.md` are not skill packages.
+SDK loading warnings are logged and saved; loading errors stop execution.
+There is still only one execution attempt.
+
+`extra_config={"enable_skills": False}` conflicts with nonempty explicit
+directories and raises `ValueError` from `build_session_config()`. For a
+no-skill baseline, remove the directories instead. To deliberately disable
+particular discovered skills, use `disabled_skills=["skill-name"]`; these skills
+remain in discovery evidence with `enabled=False`. Passthrough directories follow
+the same enable/check rules and cannot replace a nonempty `skill_directories` field.
+
+`result.skill_discovery` records actual SDK metadata and loading diagnostics,
+not a claim that the agent read or followed a skill. Observed reads remain
+ordinary tool-call evidence. No setup check tells the agent to read a skill.
 
 ## Testing Skill Effectiveness
 

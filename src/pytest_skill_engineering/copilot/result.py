@@ -12,7 +12,13 @@ from typing import Any
 
 from pytest_skill_engineering.copilot.contracts import CopilotResultAgent, SubagentInvocation
 from pytest_skill_engineering.copilot.requests import RequestAudit
-from pytest_skill_engineering.core.result import StopReason, ToolCall, Turn, UsageInfo
+from pytest_skill_engineering.core.result import (
+    SkillDiscovery,
+    StopReason,
+    ToolCall,
+    Turn,
+    UsageInfo,
+)
 
 __all__ = [
     "CopilotResult",
@@ -68,6 +74,7 @@ class CopilotResult:
     request_audit: list[RequestAudit] = field(default_factory=list)
     stop_reason: StopReason | None = None
     tool_calls_admitted: int = 0
+    skill_discovery: SkillDiscovery | None = None
 
     @property
     def evidence_complete(self) -> bool:

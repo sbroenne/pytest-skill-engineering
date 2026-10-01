@@ -181,6 +181,31 @@ class SkillInfo:
         return f"SkillInfo({self.name}{refs})"
 
 
+@dataclass(slots=True, frozen=True)
+class DiscoveredSkill:
+    """Skill metadata actually returned by the public SDK, not observed use."""
+
+    name: str
+    description: str
+    source: str
+    enabled: bool
+    user_invocable: bool
+    path: str | None = None
+    plugin_name: str | None = None
+    command_name: str | None = None
+    argument_hint: str | None = None
+
+
+@dataclass(slots=True)
+class SkillDiscovery:
+    """Pre-execution discovery evidence, including incomplete or failed checks."""
+
+    skills: list[DiscoveredSkill] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
+    errors: list[str] = field(default_factory=list)
+    complete: bool = False
+
+
 @dataclass(slots=True)
 class ClarificationStats:
     """Statistics about clarification requests detected during execution.
@@ -280,6 +305,7 @@ class EvalResult:
     # Recorded interface metadata.
     available_tools: list[ToolInfo] = field(default_factory=list)
     skill_info: SkillInfo | None = None
+    skill_discovery: SkillDiscovery | None = None
     effective_system_prompt: str = ""
     mcp_prompts: list[MCPPrompt] = field(default_factory=list)
     prompt_name: str | None = None

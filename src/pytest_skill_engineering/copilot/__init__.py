@@ -22,11 +22,14 @@ from pytest_skill_engineering.copilot.personas import (
 from pytest_skill_engineering.copilot.requests import RequestAudit
 from pytest_skill_engineering.copilot.result import CopilotResult, UsageInfo
 from pytest_skill_engineering.core.evals import load_custom_agent, load_custom_agents
+from pytest_skill_engineering.core.result import DiscoveredSkill, SkillDiscovery
 
 __all__ = [
     "CopilotEval",
     "CopilotResult",
+    "DiscoveredSkill",
     "RequestAudit",
+    "SkillDiscovery",
     "UsageInfo",
     "ClaudeCodePersona",
     "CopilotCLIPersona",

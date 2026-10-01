@@ -116,6 +116,7 @@ def _convert_to_aitest(
         stop_reason=result.stop_reason,
         usage=list(result.usage),
         tool_calls_admitted=result.tool_calls_admitted,
+        skill_discovery=deepcopy(result.skill_discovery),
         configuration=deepcopy(
             {
                 "name": agent.name,

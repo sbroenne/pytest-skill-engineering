@@ -24,6 +24,7 @@ description: "CopilotResult reference: tool calls, responses, token usage, files
 | `stop_reason` | `completed`, `tool_budget_exceeded`, `timeout`, `request_audit_error`, `execution_error`, or `cleanup_error`; `None` for a result not finalized by the runner |
 | `tool_calls_admitted` | Calls admitted by the framework after caller guards; not proof of execution or application success |
 | `request_audit` | Actual outgoing request records when `audit_requests=True` |
+| `skill_discovery` | Actual pre-execution SDK skill metadata and diagnostics for explicit directories; `None` means no discovery check was attempted |
 
 `success` describes session execution, not whether the application did the right
 thing. A tool can fail and the session can recover. Check application state with
@@ -33,6 +34,25 @@ claim that it saved a file does not override a failed file assertion.
 Missing completion, uncorrelated events, conflicting duplicate events, and
 cancellation make session `success` false. A completed call whose output was not
 captured makes `evidence_complete` false without changing the reported tool outcome.
+
+## Skill availability
+
+For explicit directories, `skill_discovery` contains `skills`, `warnings`,
+`errors`, and `complete`. `complete=True` means discovery finished, not that it
+succeeded: inspect `errors` and the result's `success` too. A failed local or SDK
+check can retain an incomplete record. `skills=[]` means the completed SDK list
+was empty; `skill_discovery=None` means availability was not checked.
+
+Each discovered skill retains SDK `name`, `description`, `source`, `enabled`,
+`user_invocable`, `path`, `plugin_name`, `command_name`, and `argument_hint`.
+Optional metadata remains `None` when absent. `disabled_skills` entries can
+deliberately have `enabled=False`; unexpectedly disabled requested skills block
+the task before a model send.
+
+Availability does not establish that a skill was read, followed, or useful.
+Actual reads remain in the ordinary tool calls; application checks establish
+task correctness. The runner neither forces a read nor changes the task prompt.
+Native JSON saves discovery separately from configuration and tool calls.
 
 ## Captured tool evidence
 

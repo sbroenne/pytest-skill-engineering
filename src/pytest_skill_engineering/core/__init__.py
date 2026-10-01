@@ -17,10 +17,12 @@ from pytest_skill_engineering.core.prompt import (
     load_system_prompts,
 )
 from pytest_skill_engineering.core.result import (
+    DiscoveredSkill,
     EvalResult,
     ImageContent,
     MCPPrompt,
     MCPPromptArgument,
+    SkillDiscovery,
     SkillInfo,
     SubagentInvocation,
     ToolCall,
@@ -38,6 +40,7 @@ from pytest_skill_engineering.core.skill_grading import export_grading
 __all__ = [
     "AITestError",
     "EvalResult",
+    "DiscoveredSkill",
     "EngineTimeoutError",
     "HookDefinition",
     "ImageContent",
@@ -48,6 +51,7 @@ __all__ = [
     "Prompt",
     "ServerStartError",
     "Skill",
+    "SkillDiscovery",
     "SkillError",
     "SkillInfo",
     "SkillMetadata",
