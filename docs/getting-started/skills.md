@@ -50,6 +50,20 @@ them always in context. Copilot loads skills natively and can read their
 `references/` files using its file tools. The plugin does not inject synthetic
 reference tools.
 
+Reference documents may be organized in subdirectories, for example
+`references/commands/read.md`. Link to them directly from `SKILL.md` using paths
+relative to the skill root. The specification's advice to keep reference chains
+one level deep is not a ban on nested folders.
+
+The package validates all reference files recursively as nonempty UTF-8 Markdown.
+`Skill.references` uses paths relative to `references/`, with `/` separators on
+every platform: `commands/read.md`. Flat names such as `budgeting-guide.md` are
+unchanged, and equal basenames in different folders remain distinct.
+Links are accepted only when their resolved targets stay within `references/`;
+the `references/` directory itself must resolve within the skill directory.
+Broken links, directory cycles, unreadable entries, and non-file entries are
+explicit errors. These checks also apply to Windows directory junctions.
+
 ### Example Reference Document
 
 ```markdown title="references/budgeting-guide.md"
@@ -131,6 +145,33 @@ the same enable/check rules and cannot replace a nonempty `skill_directories` fi
 `result.skill_discovery` records actual SDK metadata and loading diagnostics,
 not a claim that the agent read or followed a skill. Observed reads remain
 ordinary tool-call evidence. No setup check tells the agent to read a skill.
+
+### Preflight Without Model Execution
+
+Use the existing public `load_skill()` function (or `Skill.from_path()`) before
+an SDK discovery probe:
+
+```python
+from pytest_skill_engineering import load_skill
+
+# Each path must identify an individual skill, not a parent collection.
+skill = load_skill(r"skills\financial-advisor")
+assert skill.name == "financial-advisor"
+print(sorted(skill.references))
+```
+
+This uses the same local format, reference, and readability validation as the
+evaluation runner. It starts no client and sends no model message; invalid input
+raises `SkillError`. For a parent collection, call it for each immediate child
+containing `SKILL.md`; a collection with no such children is not a valid input.
+
+Then use `CopilotEval.build_session_config()` and the public SDK
+`session.rpc.skills.ensure_loaded()`, `reload()`, and `list()` APIs to check
+discovered paths, names, enabled state, and loading errors, without calling
+`send()` or `send_and_wait()`. Local validation and SDK discovery are separate
+checks: SDK discovery alone does not exercise the package's local validation,
+and `load_skill()` alone does not prove runtime availability or detect duplicate
+names across multiple skill directories.
 
 ## Testing Skill Effectiveness
 

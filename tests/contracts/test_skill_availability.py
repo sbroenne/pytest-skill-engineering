@@ -79,6 +79,20 @@ def _write_skill(parent: Path, name: str = "explicit-skill") -> Path:
     return directory
 
 
+@pytest.mark.parametrize("selection", ["individual", "parent"])
+def test_nested_reference_skill_passes_runner_input_validation(
+    tmp_path: Path, selection: str
+) -> None:
+    directory = _write_skill(tmp_path)
+    commands = directory / "references" / "commands"
+    commands.mkdir(parents=True)
+    (commands / "read.md").write_text("# Read command", encoding="utf-8")
+    selected = directory if selection == "individual" else tmp_path
+    assert requested_skill_files([str(selected)]) == {
+        (directory / "SKILL.md").resolve(): directory.name
+    }
+
+
 def test_relative_and_repeated_paths_resolve_to_the_same_explicit_skill(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -102,7 +116,22 @@ async def test_invalid_directory_argument_shapes_fail_before_start(
 
 
 @pytest.mark.parametrize(
-    "invalid", ["missing", "file", "empty", "invalid", "partial", "unreadable", "duplicate"]
+    "invalid",
+    [
+        "missing",
+        "file",
+        "empty",
+        "invalid",
+        "partial",
+        "unreadable",
+        "duplicate",
+        "nested-extension",
+        "nested-utf8",
+        "nested-empty",
+        "nested-unreadable",
+        "nested-outside",
+        "nested-cycle",
+    ],
 )
 async def test_bad_skill_inputs_fail_before_client_start(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, invalid: str
@@ -133,6 +162,33 @@ async def test_bad_skill_inputs_fail_before_client_start(
             return original_read(path, *args, **kwargs)
 
         monkeypatch.setattr(Path, "read_text", read)
+    if invalid.startswith("nested-"):
+        skill = _write_skill(directory)
+        commands = skill / "references" / "commands"
+        commands.mkdir(parents=True)
+        reference = commands / "read.md"
+        if invalid == "nested-extension":
+            reference.with_suffix(".txt").write_text("# Wrong extension", encoding="utf-8")
+        elif invalid == "nested-utf8":
+            reference.write_bytes(b"\xff")
+        elif invalid == "nested-empty":
+            reference.write_text(" \n", encoding="utf-8")
+        elif invalid == "nested-outside":
+            target = tmp_path / "outside.md"
+            target.write_text("# Outside references", encoding="utf-8")
+            reference.symlink_to(target)
+        elif invalid == "nested-cycle":
+            reference.symlink_to(commands, target_is_directory=True)
+        else:
+            reference.write_text("# Unreadable reference", encoding="utf-8")
+            original_read = Path.read_text
+
+            def read_reference(path: Path, *args: Any, **kwargs: Any) -> str:
+                if path == reference:
+                    raise PermissionError("Unreadable nested reference")
+                return original_read(path, *args, **kwargs)
+
+            monkeypatch.setattr(Path, "read_text", read_reference)
 
     def forbid_client(*args: Any, **kwargs: Any) -> None:
         pytest.fail("Invalid skill inputs must not start an SDK client")
@@ -154,6 +210,7 @@ async def test_bad_skill_inputs_fail_before_client_start(
     "outcome",
     [
         "loaded",
+        "loaded-nested",
         "missing",
         "wrong-path",
         "disabled",
@@ -166,6 +223,10 @@ async def test_runner_checks_sdk_availability_before_its_single_send_and_saves_e
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, outcome: str
 ) -> None:
     directory = _write_skill(tmp_path)
+    if outcome == "loaded-nested":
+        commands = directory / "references" / "commands"
+        commands.mkdir(parents=True)
+        (commands / "read.md").write_text("# Read command", encoding="utf-8")
     path = str(directory / "SKILL.md")
     calls: list[str] = []
     exposed = SDKSkill(
@@ -221,10 +282,10 @@ async def test_runner_checks_sdk_availability_before_its_single_send_and_saves_e
         client_mode="empty",
         skill_directories=[str(directory)],
         disabled_skills=[directory.name] if outcome == "intentional-disable" else [],
-        audit_requests=outcome not in ("loaded", "intentional-disable"),
+        audit_requests=outcome not in ("loaded", "loaded-nested", "intentional-disable"),
     )
     result = await runner.run_copilot(agent, "Do not force a skill read.")
-    succeeds = outcome in ("loaded", "intentional-disable")
+    succeeds = outcome in ("loaded", "loaded-nested", "intentional-disable")
     assert result.success is succeeds
     assert calls.count("start") == calls.count("create") == calls.count("stop") == 1
     assert calls.count("send") == int(succeeds)

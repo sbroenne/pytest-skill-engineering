@@ -341,7 +341,7 @@ def _discover_skills(plugin_dir: Path) -> list[Skill]:
 
 
 def _validate_skill_reference_names(skills: list[Skill]) -> None:
-    """Reject duplicate reference basenames across loaded skills."""
+    """Reject duplicate relative reference paths across loaded skills."""
     owners: dict[str, str] = {}
     for skill in skills:
         for reference_name in skill.references:

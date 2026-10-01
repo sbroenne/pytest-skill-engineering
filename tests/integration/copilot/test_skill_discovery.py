@@ -11,6 +11,7 @@ import pytest
 from copilot import CopilotRequestContext, CopilotRequestHandler, CopilotWebSocketHandler
 from copilot.session import CopilotSession
 
+from pytest_skill_engineering import load_skill
 from pytest_skill_engineering.copilot import CopilotEval
 from pytest_skill_engineering.copilot.client import create_client, stop_client
 from pytest_skill_engineering.copilot.skills import discover_requested_skills, requested_skill_files
@@ -19,19 +20,25 @@ from pytest_skill_engineering.core.result import SkillDiscovery
 pytestmark = pytest.mark.copilot
 
 
-def _write_skill(parent: Path, name: str) -> Path:
+def _write_skill(parent: Path, name: str, *, nested: bool = False) -> Path:
     directory = parent / name
     directory.mkdir(parents=True)
     (directory / "SKILL.md").write_text(
-        f"---\nname: {name}\ndescription: Explicit discovery test\n---\n\n# {name}\n",
+        f"---\nname: {name}\ndescription: Explicit discovery test\n---\n\n# {name}\n"
+        + ("See [read](references/commands/read.md).\n" if nested else ""),
         encoding="utf-8",
     )
+    if nested:
+        references = directory / "references" / "commands"
+        references.mkdir(parents=True)
+        (references / "read.md").write_text("# Read command", encoding="utf-8")
     return directory
 
 
+@pytest.mark.parametrize("nested", [False, True], ids=["flat", "nested"])
 @pytest.mark.parametrize("selection", ["baseline", "individual", "parent", "disabled"])
 async def test_empty_mode_discovers_only_explicit_skills_without_model_sends(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, selection: str
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, selection: str, nested: bool
 ) -> None:
     async def forbid_send(*args: object, **kwargs: object) -> None:
         pytest.fail("Discovery checks must not send model messages")
@@ -48,8 +55,8 @@ async def test_empty_mode_discovers_only_explicit_skills_without_model_sends(
     storage.mkdir()
     _write_skill(storage / "skills", "ambient-personal")
     parent = tmp_path / "explicit"
-    first = _write_skill(parent, "explicit-first")
-    second = _write_skill(parent, "explicit-second")
+    first = _write_skill(parent, "explicit-first", nested=nested)
+    second = _write_skill(parent, "explicit-second", nested=nested)
     directories = {
         "baseline": [],
         "individual": [str(first)],
@@ -68,6 +75,11 @@ async def test_empty_mode_discovers_only_explicit_skills_without_model_sends(
         skill_directories=directories,
         disabled_skills=["explicit-first"] if selection == "disabled" else [],
     )
+    selected_skills = [first, second] if selection == "parent" else [first] if directories else []
+    for directory in selected_skills:
+        skill = load_skill(directory)
+        assert skill.references == ({"commands/read.md": "# Read command"} if nested else {})
+    requested = requested_skill_files(directories)
     client = create_client(str(workspace), mode="empty", base_directory=str(storage))
     try:
         async with asyncio.timeout(60):
@@ -79,9 +91,7 @@ async def test_empty_mode_discovers_only_explicit_skills_without_model_sends(
             assert all(skill.enabled is (selection != "disabled") for skill in skills)
             assert (await session.rpc.skills.get_invoked()).skills == []
             discovery = SkillDiscovery()
-            await discover_requested_skills(
-                session, requested_skill_files(directories), agent.disabled_skills, discovery
-            )
+            await discover_requested_skills(session, requested, agent.disabled_skills, discovery)
             assert discovery.complete and not discovery.errors and not discovery.warnings
             assert {skill.path for skill in discovery.skills} == expected
     finally:

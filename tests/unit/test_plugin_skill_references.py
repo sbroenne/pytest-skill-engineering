@@ -19,7 +19,9 @@ def _make_skill(root: Path, name: str, reference_name: str) -> Skill:
     )
     refs = skill_dir / "references"
     refs.mkdir()
-    (refs / reference_name).write_text(f"# {reference_name}\n", encoding="utf-8")
+    reference = refs.joinpath(*reference_name.split("/"))
+    reference.parent.mkdir(parents=True, exist_ok=True)
+    reference.write_text(f"# {reference_name}\n", encoding="utf-8")
     return Skill.from_path(skill_dir)
 
 
@@ -36,3 +38,16 @@ def test_unique_skill_reference_basenames_are_allowed(tmp_path: Path) -> None:
     skill_b = _make_skill(tmp_path, "beta", "lookup.md")
 
     _validate_skill_reference_names([skill_a, skill_b])
+
+
+def test_nested_reference_paths_do_not_collide_by_basename(tmp_path: Path) -> None:
+    skill_a = _make_skill(tmp_path, "alpha", "commands/guide.md")
+    skill_b = _make_skill(tmp_path, "beta", "topics/guide.md")
+    _validate_skill_reference_names([skill_a, skill_b])
+
+
+def test_duplicate_nested_reference_paths_are_rejected(tmp_path: Path) -> None:
+    skill_a = _make_skill(tmp_path, "alpha", "commands/guide.md")
+    skill_b = _make_skill(tmp_path, "beta", "commands/guide.md")
+    with pytest.raises(ValueError, match="commands/guide.md"):
+        _validate_skill_reference_names([skill_a, skill_b])
