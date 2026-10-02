@@ -98,6 +98,7 @@ nav:
     - Complete Example: how-to/complete-example.md
   - Use Cases:
     - Does a Skill Help a Coding Agent?: use-cases/companion-skill.md
+    - Do Broad Excel Skills Help?: use-cases/excel-skill-value.md
   - Reference:
     - Overview: reference/index.md
     - API: reference/api.md

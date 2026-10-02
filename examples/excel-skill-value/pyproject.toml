@@ -1,0 +1,7 @@
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests/offline"]
+markers = ["copilot: explicitly authorized paid Copilot execution"]
+
+[tool.pyright]
+extraPaths = ["."]

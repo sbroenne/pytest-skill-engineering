@@ -1,0 +1,42 @@
+# Slicers
+
+PivotTable slicers filter their connected PivotTables. Table slicers filter one
+Excel Table. Filtering source-table rows does not automatically filter a
+separate PivotTable cache. Use the matching creation, listing, selection, and
+deletion actions for each type.
+
+## Required creation inputs
+
+Every creation needs a session, a unique slicer name, a destination worksheet, and
+a cell position for its top-left corner. Names and positions are **not**
+generated automatically.
+
+PivotTable slicers additionally need the PivotTable name and field name.
+Table slicers need the Table name and column name. Inspect the relevant slicer
+list and source fields before creating one. The destination sheet must exist.
+
+These examples assume the session, `SalesPivot`, `SalesData`, and `Analysis` sheet
+already exist. Check each result before proceeding.
+
+```text
+slicer(action: 'create-slicer', session_id: sessionId, pivot_table_name: 'SalesPivot', field_name: 'Region', slicer_name: 'RegionSlicer', destination_sheet: 'Analysis', position: 'E2')
+slicer(action: 'set-slicer-selection', session_id: sessionId, slicer_name: 'RegionSlicer', selected_items: '["North"]')
+slicer(action: 'create-table-slicer', session_id: sessionId, table_name: 'SalesData', column_name: 'Product', slicer_name: 'ProductSlicer', destination_sheet: 'Analysis', position: 'H2')
+slicer(action: 'set-table-slicer-selection', session_id: sessionId, slicer_name: 'ProductSlicer', selected_items: '["Laptop"]')
+```
+
+
+## Selection and verification
+
+Selections are JSON-array **text**, such as `'["North","South"]'`, not a native
+array argument in MCP. `'[]'` clears the filter. The default replaces the
+selection; disabling clear-first adds to it. The implementation compares names
+case-insensitively, but use the actual item names returned by Excel.
+
+Unmatched values are not individually rejected, and Excel may retain a selection
+when asked to deselect every item. Never infer success from the requested values:
+read the slicer selection and the filtered Table rows or PivotTable data.
+Check combined filters together. Deleting a slicer is not the same operation as
+clearing its filter; explicitly clear first if that is the intended result.
+
+Read [PivotTable guidance](pivottable.md) for source refresh and field setup.
