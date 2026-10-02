@@ -98,7 +98,7 @@ quote-style = "double"
 indent-style = "space"
 
 [tool.pyright]
-include = ["src", "tests", "examples/skill-dogfood"]
+include = ["src", "tests", "examples/skill-dogfood", "examples/excel-skill-value"]
 pythonVersion = "3.11"
 typeCheckingMode = "basic"
 

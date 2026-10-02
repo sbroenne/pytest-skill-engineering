@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added
+
+- Added an Excel skill-value case study and four-case formatting example using
+  the public CopilotEval API, frozen historical guidance, offline checks, and
+  opt-in desktop Excel verification. The historical comparison found equal
+  correctness and higher recorded token usage with broad skills; the small
+  example and narrow formatting skills have not had paid comparisons.
+
 ### Changed
 
 - Refreshed runtime, development, documentation, and build dependency minimums

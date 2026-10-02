@@ -14,6 +14,13 @@ Its harder checkout workflow adds durable state, duplicate/conflicting requests,
 and 42 fixed checks. The [use case](../docs/use-cases/companion-skill.md) records
 the comparison design, actual results, and decision not to ship the skill.
 
+The [Excel skill-value example](excel-skill-value/) pairs native MCP and CLI
+execution with and without a skill, then checks saved workbooks independently
+through desktop Excel. Default checks are offline; Excel checker proofs and
+paid comparisons are explicit. Its [case study](../docs/use-cases/excel-skill-value.md)
+records equal correctness and higher recorded token usage with broad skills,
+and separates that outcome from future narrow-formatting comparisons.
+
 The repository's own integration tests demonstrate advanced scenarios:
 
 - `test_02_models.py` — model comparison

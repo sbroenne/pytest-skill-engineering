@@ -1,0 +1,26 @@
+# Reference index
+
+Read only the guide needed for the task. Discover command syntax, actions, and defaults from native help or MCP tool schemas.
+
+- [analysis - What-If Analysis](analysis.md)
+- [Working safely with Excel](behavioral-rules.md)
+- [Charts](chart.md)
+- [Conditional formatting](conditionalformat.md)
+- [Data Model and DAX](datamodel.md)
+- [DMV Query Reference (Excel's Embedded Analysis Services)](dmv-reference.md)
+- [drawing - Server Quirks](drawing.md)
+- [M Code Syntax Reference](m-code-syntax.md)
+- [PivotTables](pivottable.md)
+- [Power Query: loading and recovery](powerquery.md)
+- [querytable - Local Text and Web Imports](querytable.md)
+- [Ranges and formatting](range.md)
+- [Excel CLI References](README.md)
+- [Report formatting](report-formatting.md)
+- [Screenshots and Visual Verification](screenshot.md)
+- [Slicers](slicer.md)
+- [Worksheet Tables versus model tables](table.md)
+- [Window management](window.md)
+- [Workbook Lifecycle](workbook.md)
+- [Choosing an Excel workflow](workflows.md)
+- [Worksheets](worksheet.md)
+- [XML Map Reference](xmlmap.md)
