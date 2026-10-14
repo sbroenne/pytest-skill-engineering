@@ -40,9 +40,7 @@ async def test_plugin_writes_json(copilot_eval, tmp_path):
     result = await copilot_eval(agent, 'Write hello.json containing exactly {"message": "hello"}.')
 
     assert result.success, result.error
-    assert json.loads((tmp_path / "hello.json").read_text(encoding="utf-8")) == {
-        "message": "hello"
-    }
+    assert json.loads((tmp_path / "hello.json").read_text(encoding="utf-8")) == {"message": "hello"}
 ```
 
 This checks one artifact, not every component in the bundle. Add tasks that

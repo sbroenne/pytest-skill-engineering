@@ -136,9 +136,7 @@ async def test_plugin_output(copilot_eval, tmp_path, record_property):
         model="gpt-5.6-sol",
         working_directory=str(tmp_path),
     )
-    result = await copilot_eval(
-        agent, 'Write answer.json containing exactly {"total": 5}.'
-    )
+    result = await copilot_eval(agent, 'Write answer.json containing exactly {"total": 5}.')
     path = tmp_path / "answer.json"
     observed = json.loads(path.read_text(encoding="utf-8")) if path.is_file() else None
     record_property("verification", {"observed": observed, "passed": observed == {"total": 5}})

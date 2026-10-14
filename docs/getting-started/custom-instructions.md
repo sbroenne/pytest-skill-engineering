@@ -58,9 +58,7 @@ async def test_function_conventions(copilot_eval, tmp_path):
     for function in functions:
         assert re.fullmatch(r"_?[a-z][a-z0-9]*(?:_[a-z0-9]+)*", function.name)
         assert ast.get_docstring(function)
-        parameters = (
-            function.args.posonlyargs + function.args.args + function.args.kwonlyargs
-        )
+        parameters = function.args.posonlyargs + function.args.args + function.args.kwonlyargs
         if function.args.vararg is not None:
             parameters.append(function.args.vararg)
         if function.args.kwarg is not None:

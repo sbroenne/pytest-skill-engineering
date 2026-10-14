@@ -47,9 +47,7 @@ async def test_transfer(copilot_eval, banking_store, version):
             }
         },
     )
-    result = await copilot_eval(
-        agent, "Transfer exactly $100 from checking to savings."
-    )
+    result = await copilot_eval(agent, "Transfer exactly $100 from checking to savings.")
 
     assert result.success, result.error
     assert result.evidence_complete, result.capture_errors
