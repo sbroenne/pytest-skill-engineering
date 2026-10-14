@@ -1,47 +1,66 @@
 ---
-description: "CopilotEval is the public harness for testing GitHub Copilot against your tools, system prompts, skills, and custom agents."
+description: "Separate session configuration from the user task and the output checks."
 ---
 
-# CopilotEval
+# Session configuration with CopilotEval
 
-`CopilotEval` is the public execution harness.
+`CopilotEval` is the configuration for a real GitHub Copilot session. It is not
+the task, the output checker, or the interface being tested.
 
-It defines:
+```python
+from pytest_skill_engineering.copilot import CopilotEval
 
-- the **system prompt** (`instructions=`)
-- the **model** (`model=`)
-- the **tool surface** (`mcp_servers=`, `allowed_tools=`)
-- the **custom agents** (`custom_agents=`)
-- the **prompt files** you choose to send as user prompts
-- execution limits such as `timeout_s` and `max_tool_calls`
+agent = CopilotEval(
+    name="file-writing",
+    instructions="Save the files the user requests.",
+    timeout_s=120,
+)
+```
 
-## Why one harness
+An async pytest test sends its task separately:
 
-The project is intentionally Copilot-only. That keeps the runtime, reports, and documentation aligned with the real GitHub Copilot experience.
+```python
+result = await copilot_eval(agent, "Write status.txt containing exactly Ready.")
+```
+
+Then the test checks the saved file. `result.success` alone checks execution,
+not the file's contents.
+
+## Three separate decisions
+
+| Part | What it controls |
+| --- | --- |
+| `CopilotEval` | Model, system prompt, tools, skills, custom agents, working directory, and limits |
+| Prompt passed to `copilot_eval` | The user's requested task |
+| pytest assertions | The observable criteria for a correct result |
+
+`instructions` supplies the system prompt. A prompt file can supply the user
+task, but its contents must be loaded and passed to `copilot_eval`; it is not
+another `CopilotEval` field. See the [configuration reference](../reference/configuration.md)
+for supported settings.
 
 ## What you compare
 
-Create multiple `CopilotEval` instances when you want to compare:
+Create separate configurations to compare a model, system prompt, skill, custom
+agent definition, or MCP server variant. Keep the other settings, task, starting
+state, and output checks fixed. Changing several at once makes a difference
+harder to explain.
 
-- model choices
-- system prompts
-- skill directories
-- custom agents
-- MCP server variants
-
-Keep the task, fixture state, and concrete output checks fixed. The framework
-records each execution and its pytest outcome; your coding agent interprets
-the observations. It does not generate rankings or select a winner.
+The framework supports GitHub Copilot, not interchangeable provider runners.
+The meaningful choice is [what to test](choosing-a-harness.md), not which
+framework harness to use.
 
 ## Identifying runs
 
-Use `name=` to label the configuration in saved evidence. Genuine pytest
-parameter IDs, the model, and captured configuration distinguish runs even when
-the same runtime name is reused.
+Use `name` to label the configuration in saved evidence. pytest parameter IDs,
+the observed model, and captured settings distinguish runs even when names
+are reused.
 
 ## One attempt per execution
 
-Startup, connection, and task failures remain visible in the returned result.
-The framework does not automatically start another session. Request an explicit
-pytest rerun when appropriate; use repetitions to measure variation with fixed
-criteria, not to hide failed attempts.
+Each `copilot_eval` call makes one attempt. Startup, connection, and task failures
+remain visible; the framework does not start replacement sessions. Rerun a
+selected pytest case explicitly after investigating a failure.
+
+Use [repetitions](../getting-started/iterations.md) to observe variation under
+fixed criteria, not to retry until a failure disappears.

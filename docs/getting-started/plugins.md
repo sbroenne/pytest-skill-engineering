@@ -1,54 +1,67 @@
 ---
-description: Test complete plugin directories — instructions, skills, agents, and MCP servers — with a single function call.
+description: "Load a plugin or project configuration into a CopilotEval."
 ---
 
 # Plugin Testing
 
-Test your GitHub Copilot CLI plugin or Claude Code project as a whole — not just individual tools.
+Use `CopilotEval.from_plugin()` when a task needs a bundle of instructions,
+skills, custom agents, and MCP server definitions. The loader assembles
+configuration; your test verifies what Copilot produces with it.
 
 ## What Is a Plugin?
 
-A plugin is a directory containing instructions, skills, custom agents, and MCP server configurations that work together. Instead of testing each piece separately, plugin testing loads everything and validates the combined behavior.
+The loader accepts these layouts:
 
-**Supported layouts:**
+| Input | What to pass |
+|---|---|
+| Manifest bundle | A directory containing `plugin.json` |
+| GitHub configuration | The `.github/` directory, or a project root with `.github/agents/` |
+| Claude configuration | A `.claude/` directory, or a root containing `CLAUDE.md` or `.claude/` |
 
-| Format | Key File | Example |
-|--------|----------|---------|
-| Plugin manifest | `plugin.json` | VS Code Copilot extensions |
-| GitHub project | `.github/copilot-instructions.md` | Repos with Copilot customization |
-| Claude project | `CLAUDE.md` or `.claude/` | Claude Code workspaces |
+These are loader formats, not a promise to reproduce an editor's entire plugin
+runtime. The execution still uses GitHub Copilot.
 
 ## Quick Example
 
+This test requires your own plugin at `plugins/my-plugin`:
+
 ```python
+import json
+
 from pytest_skill_engineering.copilot import CopilotEval
 
 
-async def test_my_plugin(copilot_eval, tmp_path):
+async def test_plugin_writes_json(copilot_eval, tmp_path):
     agent = CopilotEval.from_plugin(
-        "path/to/my-plugin",
+        "plugins/my-plugin",
         model="gpt-5.6-sol",
         working_directory=str(tmp_path),
     )
-    result = await copilot_eval(agent, "Create a hello world script")
-    assert result.success
+    result = await copilot_eval(agent, 'Write hello.json containing exactly {"message": "hello"}.')
+
+    assert result.success, result.error
+    assert json.loads((tmp_path / "hello.json").read_text(encoding="utf-8")) == {
+        "message": "hello"
+    }
 ```
+
+This checks one artifact, not every component in the bundle. Add tasks that
+exercise the components you intend to test.
 
 ## What Gets Loaded
 
-The quick example is a smoke check. To establish correctness, inspect and verify
-the produced script's behavior, not just session completion.
+`load_plugin(path)` lets you inspect the loaded instructions, `Skill` objects,
+custom agent definitions, MCP configuration, hooks, and extension paths.
+`from_plugin()` wires instructions, skills, agents, and MCP servers into the eval.
+Loaded hook definitions and extension paths are **not** automatically executed.
 
-`load_plugin()` auto-discovers and loads:
-
-- **Instructions** — `copilot-instructions.md`, `CLAUDE.md`, or from `plugin.json`
-- **Skills** — Markdown files with YAML frontmatter from skill directories
-- **Custom agents** — `.agent.md` files from agent directories
-- **MCP configs** — Server configurations from `plugin.json` or `.mcp.json`
-- **Hooks** — Lifecycle hook definitions (if present)
+Discovery differs by layout. In particular, the generic GitHub directory loader
+does not read a project-root `.mcp.json`; supply `mcp_servers` explicitly when
+needed. See [How to test plugins](../how-to/test-plugins.md) for exact layouts,
+overrides, and verification patterns.
 
 ## Next Steps
 
-- [How to Test Plugins](../how-to/test-plugins.md) — Comprehensive guide with all options
-- [Custom Agents](custom-agents.md) — Testing individual agent files
-- [API Reference](../reference/api.md) — Full Plugin type documentation
+- [Custom agents](custom-agents.md): test individual definitions.
+- [Skills](skills.md): validate and load skill directories.
+- [API reference](../reference/api.md): inspect public loader types.

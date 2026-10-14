@@ -1,33 +1,40 @@
 # Examples
 
-Start with the standalone [quickstart project](quickstart/). It runs one real
-Copilot eval against the bundled Todo MCP server. pytest shows the result and
-JSON captures execution for your coding agent to inspect.
+Start with **[quickstart](quickstart/)**. It runs one real Copilot task against
+the bundled Todo MCP server, checks the returned task state, and saves JSON.
+The other examples demonstrate comparison methods and have offline defaults.
 
-The [customer workflow project](skill-dogfood/) demonstrates the next step:
-have a coding agent write a test, observe a real failure, interpret the native
-evidence, repair an invoice CLI, and rerun unchanged checks. It also preserves
-our historical companion-skill comparison through a frozen test fixture.
-The companion skill was removed from the product. Defaults are offline;
-live execution is explicit.
-Its harder checkout workflow adds durable state, duplicate/conflicting requests,
-and 42 fixed checks. The [use case](../docs/use-cases/companion-skill.md) records
-the comparison design, actual results, and decision not to ship the skill.
+| Project | What it demonstrates | Requirements for live execution |
+| --- | --- | --- |
+| [Quickstart](quickstart/) | One task, ordinary assertions, and saved evidence | Python, uv, and Copilot access |
+| [Write-run-fix-rerun workflow](skill-dogfood/) | An agent authors a test, observes a real failure, repairs a CLI, and reruns unchanged checks | Copilot access and approved isolation for generated code |
+| [Excel skill comparison](excel-skill-value/) | MCP and CLI tasks with/without skills, checked through saved workbooks | Windows, desktop Excel, ExcelMcp executables, and Copilot access |
 
-The [Excel skill-value example](excel-skill-value/) pairs native MCP and CLI
-execution with and without a skill, then checks saved workbooks independently
-through desktop Excel. Default checks are offline; Excel checker proofs and
-paid comparisons are explicit. Its [case study](../docs/use-cases/excel-skill-value.md)
-records equal correctness and higher recorded token usage with broad skills,
-and separates that outcome from future narrow-formatting comparisons.
+Live runs may consume premium requests. Follow each project's README: the
+workflow sample has its own environment and lock, while the Excel example uses
+the repository-root environment.
 
-The repository's own integration tests demonstrate advanced scenarios:
+## Historical experiments
 
-- `test_02_models.py` — model comparison
-- `test_03_instructions.py` — system prompt comparison
-- `test_05_skills.py` — skill comparison
-- `test_09_cli.py` — CLI workflows
-- `test_12_custom_agents.py` — custom agent dispatch
+The workflow sample preserves the guidance from our
+[companion-skill study](../docs/use-cases/companion-skill.md) as frozen test data.
+That study did not demonstrate a benefit, so no framework companion skill ships.
+Testing your own domain skills remains supported.
 
-Those tests validate pytest-skill-engineering itself. New users should run the
-quickstart first rather than treating the repository test suite as a template.
+The [Excel study](../docs/use-cases/excel-skill-value.md) recorded equal
+correctness and higher token usage with broad skills on its selected tasks.
+The smaller runnable example demonstrates the method; it does not reproduce
+the full historical workload or establish a benefit for new formatting skills.
+
+Do not edit the historical guidance under either project's `fixtures`
+directory. Those files are inputs to the experiments, not current product docs.
+
+## Advanced framework scenarios
+
+The repository's `tests/integration/copilot/` files cover model comparisons
+(`test_02_models.py`), system prompts (`test_03_instructions.py`), skills
+(`test_05_skills.py`), CLI workflows (`test_09_cli.py`), and custom agent dispatch
+(`test_12_custom_agents.py`).
+
+Those tests validate the framework itself. Use the quickstart as your first
+consumer project rather than running the repository's integration suite.

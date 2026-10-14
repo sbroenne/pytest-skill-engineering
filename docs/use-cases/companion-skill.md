@@ -1,18 +1,22 @@
-# Does a skill help a coding agent? A real-world case study
+# Case study: our framework companion skill
 
-**We tested a skill intended to help coding agents use this framework. It did
-not demonstrate a benefit, so we chose not to ship it.** We kept the test
-runner, saved execution records, documentation, and examples.
+**Adding our proposed companion skill did not demonstrate a benefit on the
+tested workflow, so we chose not to ship it.** This is a historical experiment,
+not a setup guide.
 
-You do not need to install a companion skill to use pytest-skill-engineering.
-The framework still supports testing **your own skills**. Removing our guidance
-package did not remove that capability.
+The completed harder comparison on **30 September 2026** observed:
 
-## What were we trying to improve?
+| Result | Without skill | With skill |
+| --- | --- | --- |
+| Completed the whole workflow | 1 of 3 | 0 of 3 |
+| Wrote a test with correct expected amounts | 1 of 3 | 0 of 3 |
+| Repaired the application to pass all 42 independent checks | 2 of 3 | 1 of 3 |
 
-A coding agent can write code, run tests, and investigate failures. A *skill*
-is a package of instructions and reference material that the agent can read
-while working.
+The sample is too small to establish general harm or the value of skills in
+other tasks. It did not justify adding this guidance package to the product.
+Testing **your own domain skills** remains supported.
+
+## Question: does framework guidance help?
 
 Our proposed companion skill explained how to use the framework: write tests,
 check actual results, inspect saved execution records, and investigate failures.
@@ -21,7 +25,7 @@ It was guidance for the agent using the framework, not a separate AI judge.
 The question was simple: **does adding that guidance help the agent complete a
 real task more reliably than giving it the same project without the skill?**
 
-## What we asked the agent to do
+## Method: author a test and repair a real application
 
 We gave the agent a small application with deliberate bugs. It had to:
 
@@ -62,22 +66,12 @@ with it. Both groups received the same requirements, inputs, starting code,
 model, and limits. We alternated which group went first. The skill was actually
 read in each skill-enabled attempt, not merely made available.
 
-## What happened?
+## Result: incorrect tests obscured correct repairs
 
-The completed comparison on **30 September 2026** showed no improvement:
-
-| Result in the harder task | Without skill | With skill |
-| --- | --- | --- |
-| Completed the whole task | 1 of 3 | 0 of 3 |
-| Wrote a test with correct expected amounts | 1 of 3 | 0 of 3 |
-| Repaired the application to pass all 42 separate checks | 2 of 3 | 1 of 3 |
-
-"Completed the whole task" means the agent wrote a valid test, caught a real
+"Completed the whole workflow" means the agent wrote a valid test, caught a real
 failure, repaired the application correctly, and passed its unchanged test.
 All six attempts reached a real application failure and completed the repair
 session. The remaining failures were not login, connection, or import failures.
-
-### The important failure: a test can expect the wrong answer
 
 Five of the six generated tests contained incorrect expected amounts.
 
@@ -98,7 +92,7 @@ place; we did not rewrite failed tests to make the comparison look better.
 **A completed agent session is not the same as a correct result. Neither is
 agreement between a broken application and an incorrect test.**
 
-## Why not keep improving the skill?
+## Decision: remove the extra guidance package
 
 We started a revision that told the agent to derive expected answers from the
 requirements, double-check calculations, and distinguish a wrong test from a
@@ -117,24 +111,18 @@ Our answer was no. Framework-specific knowledge belongs in clear documentation,
 working examples, and helpful errors. The coding agent can investigate ordinary
 pytest failures and saved execution records directly.
 
-## What this means for users
+## What users can take from the study
 
 Use the framework to run tasks and record what happened. Use ordinary assertions
 to check actual application output. Give your coding agent the failure, saved
 records, requirements, and relevant source when you need help investigating.
 
-There is no framework companion skill to install and no separate AI judge.
-You can still use the framework to compare your own domain skills: guidance
-containing knowledge specific to the tasks your users need to complete.
+Keep fixed, independent checks outside the agent's writable files. Diagnose
+the test as well as the application: agreement between them is not proof of
+correctness. Use repetitions and representative tasks before drawing a broader
+conclusion about guidance.
 
-This was a small experiment on one project and one model. It does **not** prove
-that skills are useless, or that our skill generally made agents worse. It did
-not demonstrate enough value to justify shipping ours.
-
-**The useful conclusion was a simpler product: test whether an extra layer
-deserves to exist, and be willing to remove it.**
-
-## Explore the example
+## Run a new observation
 
 The runnable project is
 [`examples/skill-dogfood`](https://github.com/sbroenne/pytest-skill-engineering/tree/main/examples/skill-dogfood).
@@ -143,8 +131,8 @@ explains setup and explicitly selected live comparisons.
 
 From the repository root, these commands run only the offline checks:
 
-```powershell
-cd examples\skill-dogfood
+```bash
+cd examples/skill-dogfood
 uv sync --frozen
 uv run --frozen python -m pytest -q
 ```
@@ -155,16 +143,16 @@ generated code, so run them only with authorization and suitable isolation.
 A temporary folder and file-access checks are not a security sandbox.
 
 The original skill text is retained only as historical test data under
-`fixtures\retired-companion`. The sample turns it into a loadable skill inside
+`fixtures/retired-companion`. The sample turns it into a loadable skill inside
 a temporary experiment folder. It is not an installable or maintained product.
 New runs save new records rather than overwrite the original experiment.
 
-## Experiment details
+## Historical versions and complete results
 
 The details below explain how we ran the comparison. You do not need them
 to get started with the framework.
 
-### Conditions and complete results
+### Conditions
 
 The recorded runs used `gpt-5.6-luna`, Python 3.11.15, and GitHub Copilot SDK
 1.0.15. These are the versions used then, not necessarily the current versions.
@@ -203,7 +191,7 @@ setup failures to the skill.
 Draft revision 1.0.1 began a separate three-pair comparison, but it was stopped
 before completion. We make no improvement claim for that revision.
 
-### What readers can reproduce
+### Reproduction limits
 
 The linked sample contains the application, checks, and original guidance needed
 to run a new comparison. The original generated execution records are not

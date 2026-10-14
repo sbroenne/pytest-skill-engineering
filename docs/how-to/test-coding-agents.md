@@ -1,88 +1,93 @@
 ---
-description: "Test real GitHub Copilot coding sessions with CopilotEval, skills, prompt files, and custom agent dispatch."
+description: "Run a verified coding task and configure isolation, budgets, guarded tools, and request audits."
 ---
 
 # Test skills and custom agents
 
-Use `CopilotEval` to run real GitHub Copilot sessions inside pytest. The interface,
-skill, system prompt, or custom agent definition is under test, not the harness.
-Session success and a file's existence are smoke checks; verify its actual
-behavior too. pytest shows the checks' outcomes; JSON records execution for your
-coding agent to investigate, without a separate judge or adviser.
+Run a representative task with `CopilotEval` and verify its actual output.
+Use skills or custom agents only when they are part of the interface you want
+to test. The framework manages sessions, controls, usage, and evidence; your
+fixtures own application state, guarded adapters, and independent verification.
 
 ## Quick start
 
+This complete test verifies generated Python syntax without executing
+untrusted generated code:
+
 ```python
-import pytest
+from __future__ import annotations
+
+import ast
 
 from pytest_skill_engineering.copilot import CopilotEval
 
 
-@pytest.mark.copilot
 async def test_creates_module(copilot_eval, tmp_path):
     agent = CopilotEval(
-        name="coder",
+        name="calculator-module",
         model="gpt-5.6-sol",
-        instructions="Create production-quality Python code.",
+        instructions="Create the requested Python module.",
         working_directory=str(tmp_path),
     )
-
     result = await copilot_eval(
-        agent,
-        "Create calculator.py with add, subtract, multiply, and divide.",
+        agent, "Create calculator.py with functions add(a, b) and subtract(a, b)."
     )
 
-    assert result.success
-    assert result.file_exists("calculator.py")
+    assert result.success, result.error
+    tree = ast.parse((tmp_path / "calculator.py").read_text(encoding="utf-8"))
+    functions = {node.name for node in tree.body if isinstance(node, ast.FunctionDef)}
+    assert {"add", "subtract"} <= functions
 ```
+
+This checks syntax and function presence, not arithmetic correctness. Add
+independent behavior tests in an environment approved for executing generated
+code. A model's statement that its tests passed is not independent verification.
 
 ## Core CopilotEval fields
 
-```python
-agent = CopilotEval(
-    name="my-agent",
-    model="gpt-5.6-sol",
-    instructions="Your system prompt.",
-    working_directory=str(tmp_path),
-    max_turns=10,
-    excluded_tools=["run_in_terminal"],
-    skill_directories=["./skills/my-skill"],
-    custom_agents=[],
-)
-```
+| Field | Use |
+|---|---|
+| `instructions` | Set the system prompt; the user task goes to `copilot_eval` |
+| `working_directory` | Choose the workspace; this is not a security sandbox |
+| `model` / `reasoning_effort` | Choose an accessible model and supported effort |
+| `timeout_s` | Bound execution wall time, including startup |
+| `max_tool_calls` | Cap admitted tool calls; `None` means no cap |
+| `allowed_tools` / `excluded_tools` | Configure runtime tool lists |
+| `skill_directories` | Load and validate explicit skills |
+| `custom_agents` | Supply custom agent definitions |
+
+`max_turns` is advisory for the top-level session, not a hard tool-call or
+wall-clock limit. Permissions are auto-approved by default (`auto_confirm=True`);
+provide appropriate guards and test-only resources.
 
 ## Result helpers
 
-- `result.success`
-- `result.error`
-- `result.final_response`
-- `result.tool_was_called(...)`
-- `result.tool_was_called_with(...)`
-- `result.file(...)`
-- `result.file_exists(...)`
-- `result.files_matching(...)`
-- `result.subagent_invocations`
-- `result.total_premium_requests`
+Use `file()`, `file_exists()`, and `files_matching()` to inspect workspace output.
+Use `tool_calls_for()`, `tool_was_called()`, and `tool_was_called_with()` to
+inspect observed calls. `subagent_invocations` records dispatch.
+
+`success` describes session completion. `final_response` may be `None`.
+Check `error`, `stop_reason`, `capture_errors`, and `evidence_complete` before
+interpreting a trace. Tool presence, a file's existence, and a completion claim
+are not substitutes for checking the required output.
 
 ## Isolated, bounded benchmarks
 
-Use the regular `copilot_eval` fixture, not a separate SDK runner. Application
-fixtures own their tools and verify saved documents or other external state.
-The framework owns model sessions, usage, evidence, and native reports.
+For a controlled application task, explicitly supply guarded SDK tools and
+exclude inherited configuration. This **illustrative test** requires your
+`guarded_tools` and `application` fixtures:
 
 ```python
-from pytest_skill_engineering.copilot import CopilotEval, HeadlessPersona
+from pytest_skill_engineering.copilot import CopilotEval
 
 
-async def test_trial(copilot_eval, record_property, guarded_tools):
-    record_property("route", "controls")
+async def test_application_task(copilot_eval, record_property, guarded_tools, application):
     agent = CopilotEval(
-        name="controls",
-        model="gpt-6-luna",
+        name="guarded-application",
+        model="gpt-5.6-sol",
         instructions="Complete the task using only the supplied tools.",
         system_message_mode="replace",
         client_mode="empty",
-        persona=HeadlessPersona(),
         reasoning_effort="medium",
         timeout_s=600,
         max_tool_calls=80,
@@ -91,130 +96,136 @@ async def test_trial(copilot_eval, record_property, guarded_tools):
         allowed_tools=[tool.name for tool in guarded_tools],
         extra_config={"tools": guarded_tools},
     )
-    result = await copilot_eval(agent, "Complete the application task.")
+    result = await copilot_eval(agent, "Save the application document with the required values.")
+    observed = await application.read_saved_document()
+    passed = observed == application.expected_document
+    record_property("verification", {"observed": observed, "passed": passed})
+
     assert result.success, result.error
-    assert result.evidence_complete
-    # Also assert the application's actual output in this test.
+    assert result.evidence_complete, result.capture_errors
+    assert passed
 ```
 
-`guarded_tools` is your fixture returning SDK `Tool` objects with handlers.
-There is no framework-specific tool wrapper to implement.
+`guarded_tools` returns SDK `Tool` objects with handlers; there is no
+framework-specific tool wrapper. Your application fixture initializes state,
+owns any exclusive application lock, and independently reads saved output.
+Record only JSON-compatible, non-sensitive observations.
 
-| Setting | Behavior |
-|---|---|
-| `client_mode="empty"` | Owns temporary runtime storage, disables inherited configuration, instructions and file hooks, and skips persona injection. Defaults to no available tools unless explicitly supplied. |
-| `max_tool_calls=80` | Admits at most 80 calls after caller pre-tool guards. The next attempted call is denied and the session is aborted with `tool_budget_exceeded`, rather than asking the model to keep trying. Zero permits no calls. |
-| `image_detail="high"` | Rewrites actual outgoing OpenAI image content before HTTP or WebSocket dispatch. `None` leaves detail unchanged. |
-| `audit_requests=True` | Records actual outgoing model, tool names, reasoning effort, image details and system prompt hash; unsupported requests fail rather than inventing evidence. |
+### Isolation and budgets
 
-Each execution makes one attempt, including startup and connection failures.
-The framework never silently reruns a task. Inspect its failure and captured
-evidence before requesting an explicit pytest rerun.
+`client_mode="empty"` uses framework-owned runtime storage and disables ambient
+configuration, custom instructions, file hooks, and managed settings. It skips
+persona injection and defaults to no available tools. Explicit skills can
+still be loaded. This isolates configuration, not the machine or network.
 
-The normal defaults remain CLI mode, no tool-call limit, no image override, and
-no request audit. `max_turns` remains advisory; it is not a tool-call limit.
-The call cap applies to the current session, not independently created sessions.
-`tool_calls_admitted` counts admissions, not verified application actions:
-runtime permissions can still deny an admitted call.
+`max_tool_calls=80` admits at most 80 calls after caller pre-tool guards. The
+next attempted call is denied and aborts the session with
+`stop_reason="tool_budget_exceeded"`. Zero permits no calls. The cap applies to
+the current session, not independently created sessions.
+`tool_calls_admitted` counts admissions; permissions can still deny a call.
 
-The wall-clock limit includes startup and session creation. On timeout or a
-budget stop, the framework closes dispatch, aborts the session, and waits for
-already-running custom handlers **before returning**. Draining can exceed
-`timeout_s`; safety takes priority over starting another trial. Handlers must
-await all work they start. For remote MCP actions, cancellation of the local
-request is not proof the action stopped: adapters must track and drain the
-remote work before releasing their application lock or closing the application.
-Never launch untracked background input from a handler.
+Each `copilot_eval` call makes one attempt. Startup, connection, timeout, and
+budget failures are not silently retried. Rerun selected pytest cases
+explicitly after investigation.
 
-Caller pre-tool guards are retained alongside persona pre-tool guards; denials
-cannot be overridden by an allow decision. Caller permission handlers are not
-replaced by automatic approval. Conflicting non-pre-tool hooks fail explicitly.
+### Cleanup and application safety
 
-Request auditing supports HTTP OpenAI Responses and Chat Completions payloads,
-and WebSocket Responses `response.create` text messages, with function tools.
-The SDK's transport selection and caller `capi` options are left unchanged.
-Auditing does not rely on the SDK's HTTP preference: consumer execution with
-SDK 1.0.15 still selected WebSockets when that preference was supplied.
+On timeout or a budget stop, the framework closes dispatch, aborts the session,
+and drains running custom handlers before returning. Draining can exceed
+`timeout_s`: cleanup safety takes precedence over starting another task.
 
-Every outgoing WebSocket message is checked and rewritten before forwarding,
-including repeated requests on a persistent connection. Continuations with
-`previous_response_id` must explicitly supply model, instructions, tools and
-input; missing settings are rejected, not reconstructed from earlier messages.
-Unsupported frames, binary frames, other provider schemas, malformed requests,
-and runs with no observed request fail explicitly. WebSocket transport errors
-also fail closed, blocking subsequent inference forwarding rather than silently
-retrying over HTTP. Do not disable auditing to make a benchmark appear valid.
+Handlers must await all work they start. Cancelling a local MCP request does
+not prove a remote action stopped. Adapters must track and drain remote work
+before releasing an application lock or closing the application. Do not launch
+untracked background input from a handler.
+
+Caller and persona pre-tool guards are retained; a denial cannot be overridden
+by an allow decision. Caller permission handlers are not replaced by automatic
+approval. Conflicting non-pre-tool hooks fail explicitly.
+
+### Image controls and request audits
+
+`image_detail="high"` rewrites outgoing OpenAI image content before HTTP or
+WebSocket dispatch; `None` leaves it unchanged. `audit_requests=True` records
+observed outgoing model, tool names, reasoning effort, image details, and system
+prompt hash. These settings leave the SDK's transport selection and caller
+`capi` options unchanged.
+
+Auditing supports HTTP OpenAI Responses and Chat Completions requests, plus
+WebSocket Responses `response.create` text messages with function tools.
+Every outgoing WebSocket message is checked, including continuations.
+Requests with `previous_response_id` must explicitly include model,
+instructions, tools, and input; missing settings are rejected rather than
+reconstructed.
+
+Unsupported frames, binary frames, provider schemas, malformed requests, and
+runs with no observed request fail explicitly. A WebSocket transport error
+blocks subsequent inference forwarding rather than retrying over HTTP.
+Do not disable auditing just to turn a control failure into an apparent pass.
+
 The audit stores no raw messages, image bytes, credentials, URLs, or headers.
-Normal native reports still contain their ordinary conversation/tool evidence.
+Ordinary native evidence still contains conversation and tool output, which
+can contain sensitive application data. Audited transport shutdown precedes
+SDK-client shutdown.
 
-An offline regression runs the actual cached runtime through `copilot_eval`
-against a loopback WebSocket server and an in-memory image tool. It covers
-continuations, image rewriting, tool budgets, transport failure and timeout cleanup without
-real credentials, model calls or desktop input. Set `PYTEST_COPILOT_RUNTIME_PATH`
-to an already cached runtime executable, then run:
+### Offline control regression
 
-```powershell
-uv run python -m pytest tests\unit\test_request_websocket_runtime.py -q -o addopts=""
+The repository's runtime regression uses a loopback WebSocket server and an
+in-memory image tool. Set `PYTEST_COPILOT_RUNTIME_PATH` to an already-cached
+runtime executable, then run:
+
+```bash
+uv run python -m pytest tests/unit/test_request_websocket_runtime.py -q -o addopts=
 ```
 
-Without that explicit path, the runtime regression is skipped rather than
-downloading or launching an unspecified runtime. These checks validate control
-behavior, not model performance or the live Copilot API's transport selection.
+Without the explicit path, it skips rather than downloading a runtime. It
+checks continuations, image rewriting, budgets, transport failures, and timeout
+cleanup without credentials, live model calls, or desktop input. It proves
+control behavior, not model performance or live transport selection.
 
-For a JSON-only benchmark, explicitly override
-repository report defaults:
+### Save application verification
 
-```powershell
-uv run python -m pytest tests\benchmarks -o addopts="" --aitest-json=results\native.json --junitxml=results\junit.xml
+For your authorized task suite:
+
+```bash
+uv run python -m pytest tests/benchmarks -o addopts= --aitest-json=results/native.json --junitxml=results/junit.xml
 ```
 
-Use a fresh persistent output directory. `record_property` values appear in
-native JSON `tests[].properties` as name/value pairs as well as in JUnit.
-Audit, usage and stop information are under `tests[].eval_result`. Stop the
-remaining benchmark cases on setup, transport, audit, or cleanup failure;
-a timeout or tool budget failure is a failed task, never a successful result.
+This command is illustrative: supply your own test path. Use a fresh persistent
+output destination. `record_property` values are saved as name/value pairs in
+`tests[].properties`; audits, usage, and stop information are in `eval_result`.
+Stop further application trials on setup, transport, audit, or cleanup failure.
+A timeout or tool-budget stop is a failed task.
 
 ## Custom agents
 
-Attach loaded `.agent.md` definitions to test **custom agent dispatch**:
+Load `.agent.md` definitions with `load_custom_agent()` or
+`load_custom_agents()` and supply `custom_agents`. Check dispatch through
+`result.subagent_invocations` and the task output separately.
 
-```python
-from pytest_skill_engineering import load_custom_agent
-
-
-reviewer = load_custom_agent(".github/agents/reviewer.agent.md")
-
-agent = CopilotEval(
-    name="orchestrator",
-    model="gpt-5.6-sol",
-    instructions="Delegate code review requests to the reviewer custom agent.",
-    custom_agents=[reviewer],
-)
-```
-
-The `.agent.md` file defines a **custom agent**. It becomes a **subagent** only when Copilot dispatches to it at runtime. Assert on those runtime events with `result.subagent_invocations`.
+See [Custom agents](../getting-started/custom-agents.md) for a definition,
+completed-dispatch check, and child evidence.
 
 ## Testing skills
 
-```python
-agent = CopilotEval(
-    name="with-skill",
-    model="gpt-5.6-sol",
-    instructions="Use the available skills.",
-    skill_directories=["skills/banking-advisor"],
-)
-```
+Supply `skill_directories=["skills/my-skill"]` and any tools the task needs.
+Inspect `skill_discovery` for runtime availability, observed reads for usage,
+and actual artifacts for correctness.
+
+See [Skills](../getting-started/skills.md) for local preflight and an artifact
+test. Use [Comparing configurations](../getting-started/comparing.md) to
+investigate a change with fixed criteria.
 
 ## Authentication
 
-Supported auth paths:
-
-```bash
-gh auth login
-```
-
-or `GITHUB_TOKEN` in CI.
+Authenticate locally with `gh auth login --hostname github.com`, or supply an
+authorized `GITHUB_TOKEN` or `GH_TOKEN`. The runtime selects `GITHUB_TOKEN`
+first, then `GH_TOKEN`, then the signed-in SDK user. The selected account needs
+Copilot access.
 
 ## Models
 
-Start with `gpt-5.6-sol` for routine tests. Add larger models only for targeted comparisons.
+The starter uses `gpt-5.6-sol`. Check availability with
+`uv run pytest-skill-engineering doctor`; configure another accessible model
+explicitly when your task requires it. Live tests may consume premium requests.
+See [Cost estimation](cost-estimation.md) before running a case matrix.

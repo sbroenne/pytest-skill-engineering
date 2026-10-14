@@ -1,44 +1,50 @@
-# Excel skill-value example
+# Excel: compare a task with and without a skill
 
-This small project compares one self-authored formatting request through native
-MCP tools and `excelcli`, with and without the matching skill. Fixed checks
-inspect the saved workbook using desktop Excel COM. The model cannot edit the
-checks or expected answers.
+This example sends one authored formatting task through native MCP tools and
+`excelcli`, with and without the matching skill. Fixed checks reopen the saved
+workbook through desktop Excel COM. The model cannot edit those checks or their
+expected answers.
 
-This is a method demonstration, not the 48-case benchmark. The historical
+**This demonstrates the method, not the historical 48-case workload.** The
 [case study](../../docs/use-cases/excel-skill-value.md) and
 [receipt](evidence/real-world-1.0.3.json) describe broad skills. No paid run of
 this small example or the new formatting skills is claimed.
 
-## Requirements and setup
+## Choose what to run
 
-Live and checker-proof commands require Windows, PowerShell 7, desktop Excel,
-and built ExcelMcp MCP/CLI executables. Live commands also require authenticated
-GitHub Copilot and `gpt-6.1-sol`. GitHub-hosted runners do not supply Excel.
-Place this project under `examples/excel-skill-value` in the
-pytest-skill-engineering repository first. It uses that repository's local
-framework source and committed root `uv.lock`, not a separate dependency setup.
-Run the following commands from this example's directory:
+| Mode | Purpose | Requirements |
+| --- | --- | --- |
+| Default offline tests | Check example logic without desktop or model calls | Repository Python environment |
+| `--prove-excel` | Prove the checker rejects wrong workbooks and accepts correct formatting | Windows, PowerShell 7, desktop Excel, and built ExcelMcp executables |
+| `--run-live` | Execute four paid skill/no-skill cases | The desktop requirements plus Copilot access and `gpt-6.1-sol` |
+
+## Set up from this directory
+
+This directory uses the repository's local source and root `uv.lock`, not a
+separate dependency environment. GitHub-hosted runners do not supply desktop
+Excel. Run the commands below from `examples/excel-skill-value`.
 
 ```powershell
 uv sync --project ..\.. --frozen --all-extras
-$env:EXCEL_MCP_EXECUTABLE = 'C:\Tools\ExcelMcp\Sbroenne.ExcelMcp.McpServer.exe'
-$env:EXCEL_CLI_EXECUTABLE = 'C:\Tools\ExcelMcp\excelcli.exe'
-uv run --project ..\.. --frozen pytest -q
-uv run --project ..\.. --frozen pytest tests\offline\test_checks.py --prove-excel -q
+uv run --project ..\.. --frozen python -m pytest -q
 ```
 
-Default checks need neither Excel nor model calls. Keeping the existing root
-lock avoids duplicating dependencies or rewriting the upstream registry.
-The preparation was validated in an isolated public-source snapshot of
-upstream v1.0.3; no existing upstream checkout was modified.
+For the desktop checker proof, configure the executables and opt in:
+
+```powershell
+$env:EXCEL_MCP_EXECUTABLE = 'C:\Tools\ExcelMcp\Sbroenne.ExcelMcp.McpServer.exe'
+$env:EXCEL_CLI_EXECUTABLE = 'C:\Tools\ExcelMcp\excelcli.exe'
+uv run --project ..\.. --frozen python -m pytest tests\offline\test_checks.py --prove-excel -q
+```
+
 The opt-in proof rejects the unformatted input, accepts proper formatting, and
 rejects a changed fractional rate in a real workbook.
 
 ## Explicit paid comparison
 
 ```powershell
-uv run --project ..\.. --frozen pytest tests\live --run-live --paid-limit 4 --receipt-dir receipts\new-broad-run --aitest-json receipts\new-broad-native.json -v
+gh auth login --hostname github.com
+uv run --project ..\.. --frozen python -m pytest tests\live --run-live --paid-limit 4 --receipt-dir receipts\new-broad-run --aitest-json receipts\new-broad-native.json -v
 ```
 
 Four selected cases reserve four attempts before model execution. Existing
@@ -46,7 +52,9 @@ receipt directories are rejected. Supply `--prior-attempts` for a resumed
 allowance and never exceed the user's authorized ceiling, at most 100.
 This example makes one attempt per case, with no retries or judging model.
 Do not add iterations; the example rejects multiplicative iteration counts.
-Every paid smoke or rerun counts, including interrupted executions.
+Every paid smoke test or rerun counts, including interrupted executions.
+
+## Select the skill profile
 
 The default `--skill-profile broad` uses frozen `fixtures\excel-mcp` and
 `fixtures\excel-cli`. These reproduce the historical *guidance*, not all
@@ -57,8 +65,13 @@ To test the new, unproven narrow skills instead:
 ```powershell
 $env:EXCEL_MCP_SKILL_DIRECTORY = 'C:\PreparedSkills\excel-mcp-report-formatting'
 $env:EXCEL_CLI_SKILL_DIRECTORY = 'C:\PreparedSkills\excel-cli-report-formatting'
-uv run --project ..\.. --frozen pytest tests\live --run-live --skill-profile formatting --paid-limit 4 --receipt-dir receipts\new-formatting-run --aitest-json receipts\new-formatting-native.json -v
+uv run --project ..\.. --frozen python -m pytest tests\live --run-live --skill-profile formatting --paid-limit 4 --receipt-dir receipts\new-formatting-run --aitest-json receipts\new-formatting-native.json -v
 ```
+
+Do not pool a formatting-profile run with the historical broad-skill result.
+No paid run of the new formatting skills is established by this example.
+
+## What the comparison holds fixed
 
 Within each entry point the request, tools, permissions, model, and budgets
 are unchanged between conditions. The CLI is one custom SDK tool that accepts
@@ -68,8 +81,12 @@ non-executable task inputs. No expected result is put in the task directory.
 
 The public skill loader and no-send SDK discovery run before paid execution,
 including exact treatment names/source paths and empty baselines. Returned
-execution is saved before verification; discovery, skill reads, nullable token
-usage, and independent verification are separate fields. `passed: true` means
+execution is saved before verification.
+
+## Read evidence and handle cleanup
+
+Discovery, skill reads, nullable token usage, and independent verification are
+separate fields. `passed: true` means
 the workbook check passed, not merely that the agent said it finished.
 There is no claimed live event journal. `reserved` or `verifying` records left
 by interruption are incomplete, not free attempts or verified successes.

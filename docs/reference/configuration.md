@@ -4,6 +4,10 @@ description: "Configure CopilotEval, MCP servers, execution controls, and JSON e
 
 # Configuration
 
+`CopilotEval` configures a session; the task is passed separately to
+`copilot_eval`. This page covers the common settings. The
+[API reference](api.md) contains the full signature.
+
 ## Authentication
 
 Supported authentication paths:
@@ -15,7 +19,7 @@ Eval sessions select `GITHUB_TOKEN` first, then `GH_TOKEN`. If neither
 is set, the SDK uses its signed-in user. Tokens must authorize the intended
 GitHub account and Copilot access.
 
-No separate provider classes or third-party provider auth configuration is required.
+The framework uses GitHub Copilot. There is no separate provider configuration.
 
 ## CopilotEval
 
@@ -24,38 +28,56 @@ from pytest_skill_engineering.copilot import CopilotEval
 
 
 agent = CopilotEval(
-    name="banking-default",
+    name="my-task",
     model="gpt-5.6-sol",
-    instructions="Use the banking tools before answering.",
-    mcp_servers={},
-    allowed_tools=None,
-    custom_agents=[],
-    skill_directories=[],
-    working_directory=None,
-    max_turns=5,
+    instructions="Use the supplied tools to complete the user's task.",
+    timeout_s=120,
+    max_tool_calls=10,
 )
 ```
 
-### Important fields
+### Common settings
 
 | Field | Meaning |
 |---|---|
 | `name` | Label identifying the configuration in saved evidence |
-| `model` | Copilot model name such as `gpt-5.6-sol` |
-| `instructions` | System prompt content |
+| `model` | Copilot model name; `None` uses Copilot's default |
+| `instructions` | System prompt content; distinct from the user task |
+| `system_message_mode` | `append` by default; `replace` replaces the SDK system message content |
+| `working_directory` | Session workspace; not a security sandbox |
 | `mcp_servers` | Copilot SDK server config mapping |
 | `allowed_tools` | Optional global tool allow-list |
+| `excluded_tools` | Tool block-list |
 | `custom_agents` | Loaded `.agent.md` definitions |
+| `active_agent` | Custom agent to activate at session start |
 | `skill_directories` | Explicit individual skill directories or parents; enable loading and check SDK availability before sending |
 | `disabled_skills` | Skill names deliberately disabled, retained in discovery evidence |
 | `max_turns` | Advisory top-level turn budget; used for subagent turn caps |
 | `timeout_s` | Hard wall-clock limit for the run |
+| `max_tool_calls` | Optional hard tool-admission budget; nonnegative integer |
+| `auto_confirm` | Auto-approve permission requests by default |
+| `audit_requests` | Capture actual outgoing request metadata when enabled |
+| `client_mode` | `copilot-cli` by default; `empty` disables ambient configuration and persona injection |
+| `extra_config` | SDK settings not exposed as direct fields; overrides subject to validation |
+
+### Limits and permissions
+
+`max_turns` is not a hard top-level limit. Use `timeout_s` and, where appropriate,
+`max_tool_calls` to bound execution. Tool admission does not prove a tool
+completed or the application operation succeeded.
+
+`auto_confirm=True` is convenient for deterministic tests, but it is not an
+isolation boundary. Restrict tools and use guarded adapters and an approved
+execution environment. A temporary working directory alone does not prevent
+filesystem or network access.
+
+### One attempt per call
 
 Each `copilot_eval` call makes one execution attempt. Startup, connection, and
 task failures are recorded without automatically starting another session.
 Rerun a selected pytest case explicitly when appropriate.
 
-### Explicit skills and empty mode
+## Explicit skills and empty mode
 
 Nonempty `skill_directories` set the public SDK `enable_skills=True` by default.
 `enable_config_discovery` remains false. In empty mode, personal/project discovery,
@@ -74,7 +96,7 @@ is recorded as an execution error with no model send. SDK metadata and diagnosti
 are available as `result.skill_discovery` and in native JSON, separately from reads.
 See [Skills](../getting-started/skills.md) for input and evidence details.
 
-## MCP server config shape
+## MCP server mappings
 
 Attach servers directly to `CopilotEval(mcp_servers={...})`.
 
@@ -94,6 +116,8 @@ agent = CopilotEval(
 
 This opt-in can expose machine-specific tools and configuration; avoid it in
 tests intended to be reproducible across developer machines and CI.
+
+For example, attach the bundled Banking server over stdio:
 
 ```python
 import sys
@@ -120,9 +144,10 @@ REMOTE_MCP = {
 }
 ```
 
-## CLIServer helper
+## CLI process configuration
 
-`CLIServer` is a lower-level wrapper and does not take `name=`:
+`CLIServer` configures a lower-level CLI wrapper. It is not a `CopilotEval`
+configuration and does not take `name`:
 
 ```python
 from pytest_skill_engineering import CLIServer
@@ -149,10 +174,9 @@ addopts = """
 `pytest-skill-engineering init` adds these settings to an existing
 project. It reports conflicting values instead of replacing them.
 
-## Notes
+## Related references
 
-- Use Copilot model names only
-- use only documented `CopilotEval` fields and pytest options
-- evidence loading expects the current JSON schema exactly
-- reading saved evidence never starts a model session
-- ordinary pytest assertions and consumer-owned checks determine task correctness
+Use [CLI options](cli.md) for repetition and evidence flags,
+[CopilotResult](result.md) for returned fields, and
+[assertions](assertions.md) for independent output checks. Saved evidence requires
+the current schema exactly; loading it does not execute a model.

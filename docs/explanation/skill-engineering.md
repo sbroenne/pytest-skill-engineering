@@ -1,26 +1,26 @@
-# Skill engineering
+# Improving an AI-facing interface
 
-Tool descriptions, parameter schemas, system prompts, skills, custom agent
-definitions, and task phrasing shape how Copilot uses an interface. Test that
-interface with real tasks and independent output checks.
+An AI-facing interface is what Copilot sees when it decides how to act: tool
+descriptions, parameter schemas, system prompts, skills, custom agent
+definitions, and the user's task. Improving that interface is what this project
+calls *skill engineering*. It is broader than editing a `SKILL.md` file.
 
-Static checks can establish valid schemas and files; they cannot establish that
-a model will interpret the interface correctly. Conversely, model execution
-does not replace tests of the tool implementation.
+Unit tests can show that a tool calculates the right answer. A Copilot test can
+show whether the agent selects that tool and supplies the right inputs for a
+real task. You need both: neither substitutes for the other.
 
 ## The improvement loop
 
 1. Define a representative user task and observable success criteria.
-2. Execute it through `CopilotEval` and save native evidence.
+2. Configure `CopilotEval`, execute the task with `copilot_eval`, and save JSON.
 3. Verify actual output, not just a model's claim or a call's presence.
 4. Investigate failures alongside the source and environment.
-5. Change one supported cause and rerun affected cases.
+5. Change the source or instructions supported by that investigation and rerun affected cases.
 6. Check regressions and repeat cases when reliability is the question.
 
-The framework supplies execution and evidence. The coding agent already working
-in your repository supplies the investigation. Framework usage belongs in
-documentation and examples, not a mandatory companion skill. There is no separate
-automated adviser and no automatic free-text answer grading.
+The framework supplies execution and evidence. Your tests supply verification.
+Your existing coding agent or a human investigates the evidence alongside the
+source; the framework does not automatically grade free-text expectations.
 
 ## Do not assume every failure is an instruction problem
 
@@ -28,16 +28,24 @@ Wrong fixture data, startup problems, permission denials, application bugs,
 ambiguous tasks, and incorrect tests can look like skill failures. Read actual
 arguments and returned operation results before rewriting a system prompt.
 
-Keep criteria fixed across comparisons. If a criterion was wrong, explain its
-replacement and establish a new baseline openly. A good-looking recommendation
-or one passing run is not measured production reliability.
+Keep criteria fixed across comparisons. If the test's criterion was wrong,
+correct it and establish a new baseline for both configurations. Do not count
+the new result as an improvement against the old criterion.
+
+One passing run establishes an observation, not production reliability.
+Repeated, representative tasks are needed when reliability is the question.
 
 ## What you are testing
 
-An Agent Skill is a domain-knowledge package. A custom agent is a `.agent.md`
-definition; custom agent dispatch is its runtime use. A system prompt configures
-behavior, while a prompt is the user task. `CopilotEval` is the test harness,
-not the thing under test.
+| Term | Meaning here |
+| --- | --- |
+| Skill | A domain-guidance package with a `SKILL.md` entry point |
+| System prompt | Instructions configuring behavior, supplied through `CopilotEval.instructions` |
+| Prompt | The user task sent to `copilot_eval` |
+| Custom agent | A `.agent.md` definition |
+| Custom agent dispatch | The runtime routing being tested |
+| Subagent | An actual runtime invocation, recorded in `result.subagent_invocations` |
+| Eval | The test harness, not the interface under test |
 
 Start with [a first test](../getting-started/index.md), then
 [compare configurations](../getting-started/comparing.md) using fixed checks.

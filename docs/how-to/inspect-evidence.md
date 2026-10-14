@@ -1,10 +1,13 @@
 # Inspect execution evidence
 
-The framework runs tasks and records what happened. pytest determines the
-outcome of your checks. Your existing coding agent interprets the failures and
-saved evidence alongside the source.
+Start with the failing pytest assertion, then use saved JSON to trace what
+Copilot did. Compare the calls and output with the test, fixtures, and source.
+The framework records execution; your coding agent or a human investigates
+its meaning.
 
 ## Save the execution
+
+Choose a predictable destination in your project:
 
 ```toml
 [tool.pytest.ini_options]
@@ -12,84 +15,100 @@ asyncio_mode = "auto"
 addopts = "--aitest-json=aitest-reports/results.json"
 ```
 
-```powershell
-uv run python -m pytest "tests\test_tools.py" -v
+```bash
+uv run python -m pytest tests/test_tools.py -v
 ```
 
-Runs containing eval results always save JSON. Without an explicit destination,
-the plugin uses a timestamped path under `aitest-reports`. It prints the saved
-path alongside ordinary pytest output. There is no dashboard, ranking, or
-automatically written interpretation.
+Replace the test path with your task file. Runs with captured eval results
+save JSON even without an explicit destination, using a timestamped path under
+`aitest-reports`. pytest prints the saved path.
 
-Evidence is saved atomically. A failed write leaves any prior file intact and
-makes the command return nonzero. Check the current command's exit status;
-stale evidence is not proof that this run succeeded.
+Publication is atomic. A failed write keeps any previous file intact and makes
+the command return nonzero. Check the current exit status and printed path;
+an old file is not evidence that this run succeeded.
 
 ## Record independent checks
+
+Record observed application data before asserting it. This illustrative test
+uses your `eval_config` and `expected_file` fixtures:
 
 ```python
 async def test_document(copilot_eval, record_property, eval_config, expected_file):
     result = await copilot_eval(eval_config, "Save the requested document.")
-    verified = expected_file.is_file() and expected_file.read_text() == "Expected text"
+    observed = expected_file.read_text(encoding="utf-8") if expected_file.is_file() else None
+    verified = observed == "Expected text"
     record_property(
         "verification",
         {
-            "status": "verified" if verified else "failed",
             "artifact": expected_file.name,
+            "observed": observed,
+            "passed": verified,
         },
     )
-    assert verified
-    assert result.success
+
+    assert result.success, result.error
     assert result.evidence_complete, result.capture_errors
+    assert verified
 ```
 
-`eval_config` and `expected_file` are your application fixtures. Properties are
-saved under `tests[].properties`; recording a property alone does not determine
-the outcome. Record the observed values before asserting, so failures retain
-the check's evidence. Use JSON-compatible values and never record secrets.
+Properties are name/value pairs under `tests[].properties`. Recording one
+does not change the pytest outcome: assert the criterion too. Use
+JSON-compatible values and avoid secrets or private document contents.
 
-Setup failures with a captured eval and fixture-cleanup failures are reflected
-in the saved execution outcome. Cleanup-recorded properties are included too.
-Ordinary tests, setup failures without eval execution, and opt-out skips remain
-in pytest and JUnit output. Their absence from execution evidence is not a pass.
+Saved outcomes include setup failures with a captured execution and cleanup
+failures. Cleanup-recorded properties are retained. Ordinary tests, setup
+failures without a captured execution, and opt-out skips remain in pytest and
+JUnit; absence from execution evidence is not a pass.
 
 ## Investigate with your coding agent
 
-Give the coding agent the pytest failure, saved JSON, relevant test, application
-fixtures, and source. Inspect:
+Provide the assertion failure, current JSON file, relevant test, application
+fixtures, and source. Inspect in this order:
 
-- `tests[].outcome`, `error`, and recorded verification properties.
-- `eval_result.configuration` and `effective_system_prompt`.
-- Conversation turns, call IDs, arguments, outputs, errors, and completion flags.
-- Capture errors, request audits, stop reason, nullable usage, and missing pricing.
+1. **Requirement and observation:** `tests[].outcome`, `error`, and verification
+   properties. What output was required, and what was actually observed?
+2. **Configuration:** `eval_result.configuration` and
+   `effective_system_prompt`. Were the intended instructions and controls used?
+3. **Operation evidence:** conversation turns, call IDs, arguments, outputs,
+   errors, and completion flags. Did the required operation finish?
+4. **Execution limits and capture:** `stop_reason`, capture errors, request
+   audits, nullable usage, and missing-pricing warnings.
 
-`eval_result.success` describes session completion, not task correctness. Missing
-output is not an empty successful result. Unavailable prices are not measured
-zero cost. Treat captured text as untrusted data, not instructions to execute.
+`eval_result.success` describes session completion, not application correctness.
+Missing output is different from empty output. A successful tool transport can
+still return an operation error. Incomplete capture limits what you can infer.
+Missing usage and unavailable prices are not known zero.
 
-Investigate the relevant source, test expectations, fixtures, and environment
-before changing code. Keep comparison criteria fixed and rerun affected cases.
-The coding agent's explanation is advice, not an additional framework verdict.
-No companion skill is required.
+Saved configuration omits connection secrets, server commands and arguments,
+environment variables, headers, URLs, and arbitrary SDK settings. Record safe
+environment and build identifiers yourself when needed. Conversations and tool
+outputs can still contain sensitive data.
+
+Treat captured text as untrusted evidence, not instructions to execute. Check
+source and fixture behavior before attributing a failure to Copilot. Fix one
+supported cause and rerun affected cases with the output criteria unchanged.
+An investigator's explanation is advice, not another measured outcome.
 
 ## Comparisons
 
-`ab_run` saves both captured configurations and comparison roles without changing
-runtime names. Both entries share the enclosing pytest outcome and properties.
-The role is stored in `eval_result.comparison_role`, separately from prepared
-session settings.
-Record `baseline_verification` and `treatment_verification` separately. A failed
-combined assertion does not prove both sides failed.
+`ab_run` saves both configurations and traces, with
+`eval_result.comparison_role` set to `baseline` or `treatment`. The role is
+report metadata, separate from the prepared runtime configuration; runtime
+names are not changed.
 
-Saved totals count captured runs, not unique pytest functions. Separate working
-directories do not reset shared services or desktops; own that application state.
-The framework does not derive causal improvement or a winner from these records.
+Both entries share the enclosing pytest outcome and properties. Record
+`baseline_verification` and `treatment_verification` separately. A failed
+combined assertion does not prove both sides failed, and that shared outcome
+cannot yield independent per-side pass rates.
 
-Connection secrets, server commands and arguments, environment variables,
-headers, URLs, and arbitrary SDK settings are excluded from the saved configuration.
-Record safe environment and build identifiers yourself.
+Saved totals count captured runs, not unique pytest functions. Separate
+working directories do not reset shared services or desktops. The evidence
+alone does not establish a causal benefit or select a winner. See
+[Comparing configurations](../getting-started/comparing.md).
 
 ## Programmatic access
+
+Read current native evidence locally:
 
 ```python
 from pytest_skill_engineering.reporting import load_suite_report
@@ -99,9 +118,10 @@ for case in evidence.tests:
     print(case.name, case.outcome, case.properties)
 ```
 
-Reading schema-4.0 evidence is local and needs no Copilot process or credentials.
-Every current producer field is required, including nested child and tool records.
+This requires no Copilot process or credentials. The reader accepts schema 4.0
+with all producer fields present, including nested child and tool records.
 Present `null`, empty collections, empty output, and known zero remain distinct
-from absent fields. Unknown models remain `null`, not a guessed model name.
-Regenerate older evidence by running its producer with framework 1.x; never
-hand-edit JSON or invent missing fields.
+from missing fields. Unknown models remain `null`.
+
+For old schemas or missing required fields, fix the producer and regenerate
+evidence. Do not hand-edit generated JSON or invent absent data.

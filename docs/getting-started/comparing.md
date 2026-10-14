@@ -1,7 +1,8 @@
 # Comparing configurations
 
-Choose a question, fix the output criteria, and vary one factor: model, system
-prompt, skill, custom agent definition, or server configuration.
+Run the same task with two configurations to investigate a specific change.
+Define the output checks first, then vary one factor: model, system prompt,
+skill, custom agent definition, or server configuration.
 
 For separate parametrized tests, each test has its own pytest outcome. For
 `ab_run`, both saved entries share the combined test's outcome; record checks
@@ -12,7 +13,6 @@ from __future__ import annotations
 
 import json
 from dataclasses import replace
-from pathlib import Path
 
 from pytest_skill_engineering.copilot import CopilotEval
 
@@ -35,11 +35,14 @@ async def test_skill_comparison(ab_run, record_property):
     )
     verified = []
     for side, result in (("baseline", before), ("treatment", after)):
-        assert result.agent is not None
-        assert result.agent.working_directory is not None
-        path = Path(result.agent.working_directory) / "amount.json"
-        observed = json.loads(path.read_text())
-        passed = abs(observed["total"] - 1000 * 1.05**3) < 0.00001
+        path = result.working_directory / "amount.json"
+        observed = json.loads(path.read_text(encoding="utf-8")) if path.is_file() else None
+        passed = (
+            isinstance(observed, dict)
+            and set(observed) == {"total"}
+            and type(observed["total"]) in (int, float)
+            and abs(observed["total"] - 1000 * 1.05**3) < 0.00001
+        )
         record_property(
             f"{side}_verification",
             {
@@ -52,7 +55,8 @@ async def test_skill_comparison(ab_run, record_property):
     assert all(verified)
 ```
 
-Supply your own skill at that path. `ab_run` creates separate working directories
+Supply your own skill at that path; this is a live test that runs two tasks.
+`ab_run` creates separate working directories
 and executes sequentially, but does not reset shared external services or
 desktops. Own those resets when relevant.
 

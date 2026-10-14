@@ -1,123 +1,118 @@
 ---
-description: "Test prompt files (slash commands) — verify that .prompt.md files produce the right LLM behavior when invoked."
+description: "Load reusable prompt-file bodies as user tasks and verify their output."
 ---
 
 # Prompt Files (Slash Commands)
 
-**Prompt files** are reusable user prompts that editors expose as slash commands
-(e.g. `/review`, `/explain`). VS Code uses `.prompt.md` files in
-`.github/prompts/`; Claude Code uses `.md` files in `.claude/commands/`.
-The loader tests the file's body as a user prompt, not editor slash-command
-registration or variable expansion. A system prompt instead configures agent
-behavior through `CopilotEval.instructions`.
+Use `load_prompt_file()` to test the task text in a reusable prompt file.
+Editors may expose these files as slash commands, but this harness sends the
+body as a user prompt. It does not test editor registration, frontmatter-driven
+routing, or variable expansion.
 
 ## Loading a Prompt File
 
-Use `load_prompt_file()` to load the body of a single prompt file:
+Create `.github/prompts/save-total.prompt.md`:
+
+```markdown
+---
+description: Save a calculated total as JSON.
+---
+
+Write total.json containing only the numeric field total, equal to 2 + 3.
+```
+
+Then check its output:
 
 ```python
+import json
+
 from pytest_skill_engineering import load_prompt_file
 from pytest_skill_engineering.copilot import CopilotEval
 
-agent = CopilotEval(name="prompt-test")
 
-
-async def test_review_command(copilot_eval):
-    """The /review slash command produces actionable feedback."""
-    prompt = load_prompt_file(".github/prompts/review.prompt.md")
+async def test_save_total_prompt(copilot_eval, tmp_path):
+    prompt = load_prompt_file(".github/prompts/save-total.prompt.md")
+    agent = CopilotEval(
+        name=f"prompt-{prompt['name']}",
+        model="gpt-5.6-sol",
+        working_directory=str(tmp_path),
+    )
     result = await copilot_eval(agent, prompt["body"])
-    assert result.success
+
+    assert result.success, result.error
+    assert json.loads((tmp_path / "total.json").read_text(encoding="utf-8")) == {"total": 5}
 ```
 
-`load_prompt_file()` returns a dict with:
+This establishes that the prompt produced the specified artifact in this run,
+not that an editor's `/save-total` command works.
 
-| Key | Description |
-|-----|-------------|
-| `name` | Derived from filename (e.g. `review`) |
-| `body` | The markdown body — what gets sent to the LLM |
-| `description` | From frontmatter `description:` field, or an empty string |
+The returned dictionary contains:
+
+| Key | Value |
+|---|---|
+| `name` | Filename-derived name, such as `save-total` |
+| `body` | Markdown below the frontmatter |
+| `description` | Frontmatter description, or `""` |
 | `metadata` | Full frontmatter mapping |
 
 ## Prompt File Format
 
-```markdown title=".github/prompts/review.prompt.md"
----
-description: Review code for quality and security issues
-mode: agent
----
-
-Review the current file for:
-- Security vulnerabilities
-- Performance issues
-- Code style problems
-
-Provide specific line numbers and suggested fixes.
-```
-
-The `body` is the content below the frontmatter separator.
+Frontmatter is parsed and retained as metadata; the loader does not use it to
+select the eval's model, tools, or custom agent. Configure those explicitly on
+`CopilotEval`. Missing files, malformed frontmatter, or an empty body are errors.
 
 ## Testing All Prompt Files
 
-Use `load_prompt_files()` to load every prompt file in a directory and parametrize over them:
+`load_prompt_files(directory)` reads immediate prompt files. For a directory
+whose prompts all share the same output contract:
 
 ```python
 import pytest
+
 from pytest_skill_engineering import load_prompt_files
-from pytest_skill_engineering.copilot import CopilotEval
 
-PROMPTS = load_prompt_files(".github/prompts/")
-
-agent = CopilotEval(name="prompt-test")
+PROMPTS = load_prompt_files(".github/prompts/total-variants")
 
 
-@pytest.mark.parametrize("prompt", PROMPTS, ids=lambda p: p["name"])
-async def test_prompt_files(copilot_eval, prompt):
-    """All slash commands produce a successful response."""
+@pytest.mark.parametrize("prompt", PROMPTS, ids=lambda item: item["name"])
+async def test_total_variants(copilot_eval, tmp_path, prompt):
+    agent = CopilotEval(
+        name=prompt["name"],
+        model="gpt-5.6-sol",
+        working_directory=str(tmp_path),
+    )
     result = await copilot_eval(agent, prompt["body"])
-    assert result.success
+    assert result.success, result.error
+    assert json.loads((tmp_path / "total.json").read_text(encoding="utf-8")) == {"total": 5}
 ```
+
+This builds on the imports above and requires your own variant files. Give
+different tasks their own fixtures and checks instead of using one generic
+session-success assertion.
 
 ## VS Code vs Claude Code
 
-| Format | Location | Extension | Invoked as |
-|--------|----------|-----------|-----------|
-| VS Code | `.github/prompts/` | `.prompt.md` | `/review` in Copilot Chat |
-| Claude Code | `.claude/commands/` | `.md` | `/review` in Claude Code |
+| Source format | Typical location | Extension |
+|---|---|---|
+| VS Code prompt file | `.github/prompts/` | `.prompt.md` |
+| Claude Code command | `.claude/commands/` | `.md` |
 
-`load_prompt_files()` handles both — `.prompt.md` files take precedence if both exist with the same name.
+Both bodies can be loaded. Duplicate filename-derived names, including a
+`.prompt.md` and `.md` with the same name, raise an error. Execution remains
+GitHub Copilot in either case.
 
 ## Identifying prompt files in evidence
 
-These completion checks are smoke tests, not proof of actionable review quality.
-Add output-specific checks for the behavior each task actually requires.
-
-Use pytest parameter IDs, as in the example above, to identify each prompt file
-in test results. `copilot_eval` accepts an eval and a prompt string; it has no
-`prompt_name` keyword, and `CopilotResult` has no `prompt_name` field.
+Use eval names and pytest parameter IDs. `copilot_eval` takes an eval and a
+prompt string; it has no `prompt_name` keyword, and `CopilotResult` has no
+`prompt_name` field. Record safe source names with `record_property` if needed.
 
 ## Combining with Tools
 
-Prompt files often reference tools. Configure the tools and workspace explicitly.
-This example uses Copilot's file-reading tools rather than an MCP server:
+Configure tools and workspace explicitly when a prompt depends on them. Seed
+any referenced files or application state in your fixtures. Tool presence only
+shows that a call occurred; validate returned data or final state too.
 
-```python
-from pytest_skill_engineering import load_prompt_file
-from pytest_skill_engineering.copilot import CopilotEval
-
-
-async def test_explain_command(copilot_eval, tmp_path):
-    """The /explain command reads the file before explaining."""
-    prompt = load_prompt_file(".github/prompts/explain.prompt.md")
-    (tmp_path / "example.py").write_text("def add(a, b):\n    return a + b\n")
-    agent = CopilotEval(name="explain-test", working_directory=str(tmp_path))
-    result = await copilot_eval(agent, prompt["body"] + "\nRead and explain example.py.")
-
-    assert result.success
-    assert result.tool_was_called("read_file")
-```
-
-## Next Steps
-
-- [MCP Server Prompts](mcp-prompts.md) — Test server-side prompt templates
-- [Custom Agents](custom-agents.md) — Test `.agent.md` specialist agent files
-- [CopilotResult Reference](../reference/result.md) — All result fields
+See [MCP server prompts](mcp-prompts.md) for server-rendered tasks,
+[System prompts](system-prompts.md) for instructions, and
+[Custom agents](custom-agents.md) for definitions.

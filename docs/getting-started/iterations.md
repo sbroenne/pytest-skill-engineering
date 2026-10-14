@@ -1,10 +1,10 @@
 # Test repetitions
 
-One passing model execution establishes an observation, not reliability.
-Repeat representative tasks with fixed criteria to see variation:
+Repeat a fixed task and its output checks to observe variation across model
+executions. One passing run does not establish reliability.
 
-```powershell
-uv run python -m pytest "tests\test_tools.py" --aitest-iterations=3
+```bash
+uv run python -m pytest tests/test_tools.py --aitest-iterations=3
 ```
 
 The option repeats every collected test, not just eval tests. It multiplies live
@@ -13,8 +13,8 @@ execution cost. Authorize the scope before running a large case matrix.
 ## What is recorded
 
 Each repetition has its own pytest outcome. Native JSON preserves that execution,
-its iteration number, configuration, usage, cost estimate, duration, and recorded
-checks. There is no grouped dashboard verdict or automatic explanation.
+its iteration number, configuration, available usage, cost estimate, duration,
+and recorded checks.
 Grouped and stacked pytest parameters retain their user-supplied IDs. Only the
 framework's repetition axis is removed from the saved case name; the iteration
 number remains a separate field.
@@ -23,9 +23,9 @@ Saved outcomes are finalized after fixture cleanup. A cleanup failure changes
 the captured execution's outcome to failed and retains cleanup-recorded checks,
 even when the test body passed.
 
-There is no AI flakiness explanation. Inspect the individual traces and source
-to distinguish intermittent interface behavior from unstable fixtures or
-environment failures.
+Inspect the individual traces, fixtures, and source to distinguish variation in
+Copilot behavior from unstable test data or environment failures. The saved
+outcome does not explain the cause.
 
 ## Repetitions versus retries
 
@@ -39,12 +39,14 @@ repetitions with fixed criteria; failed executions remain recorded.
 
 ## Thresholds and interpretation
 
-```powershell
-uv run python -m pytest "tests\test_tools.py" --aitest-iterations=3 --aitest-min-pass-rate=80
+```bash
+uv run python -m pytest tests/test_tools.py --aitest-iterations=3 --aitest-min-pass-rate=80
 ```
 
 The threshold is an observed saved-outcome gate, not a production guarantee.
 Choose sample size and representative cases for your question. Three
 repetitions may reveal variability but cannot establish high reliability.
+For `ab_run`, both entries share the test's outcome; this gate cannot establish
+independent per-side pass rates.
 
 See [comparisons](comparing.md) and [evidence inspection](../how-to/inspect-evidence.md).
