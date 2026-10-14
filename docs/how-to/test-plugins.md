@@ -1,314 +1,279 @@
 ---
-description: "Test complete plugin directories — instructions, skills, agents, and MCP servers — as a unified composition with pytest-skill-engineering."
+description: "Inspect a configuration bundle, load it into Copilot, and verify a task that exercises it."
 ---
 
 # How to Test Plugins
 
-Test GitHub Copilot CLI plugins and Claude Code projects as a whole. Plugin testing validates the full composition — instructions, skills, custom agents, and MCP servers working together — not just individual pieces.
+Use `CopilotEval.from_plugin()` to run a task with a bundle of instructions,
+skills, custom agents, and MCP server definitions. Inspect what the loader
+found first, then choose a task and output checks that exercise the components
+you care about.
 
 ## Why Plugin Testing?
 
-Individual tool tests verify that one MCP server works in isolation. But real plugins combine multiple components:
-
-- **Instructions** that set agent behavior
-- **Skills** that inject domain knowledge
-- **Custom agents** that handle specialized tasks
-- **MCP servers** that provide tools
-
-A plugin test loads everything from a directory and validates the combined behavior. If the instructions conflict with the skill, or a custom agent can't find the right tool, plugin testing catches it.
+A task may require several components to work together. For example, an
+instruction can route a task to a custom agent that needs an MCP tool and a
+skill's output schema. A test of that task can expose a composition failure.
+Loading a directory or completing a session alone does not verify the bundle.
 
 ## Plugin Directory Layouts
 
-pytest-skill-engineering auto-detects three directory formats:
+The loader accepts these layouts:
 
-| Format | Detection | Typical Use |
-|--------|-----------|-------------|
-| `plugin.json` manifest | `plugin.json` exists at root | VS Code Copilot extensions |
-| `.github/` project | `copilot-instructions.md` exists in `.github/` | GitHub repos with Copilot customization |
-| `.claude/` project | `CLAUDE.md` at root or `.claude/` directory | Claude Code workspaces |
+| Input | Detection and discovery |
+|---|---|
+| Manifest bundle | `plugin.json` at the supplied directory root |
+| GitHub config directory | Supplied directory named `.github` |
+| GitHub project root | `.github/agents/` exists under the root |
+| Claude config directory | Supplied directory named `.claude` |
+| Claude project root | Root contains `CLAUDE.md` or `.claude/` |
 
-### plugin.json (VS Code Extensions)
+Manifest detection takes precedence. A root with only
+`.github/copilot-instructions.md` and no `.github/agents/` is not detected as a
+GitHub plugin root; pass the `.github` directory or use
+`CopilotEval.from_copilot_config(root)`.
 
-```
+### plugin.json (manifest bundles)
+
+```text
 my-plugin/
-├── plugin.json              # Manifest with name, instructions, MCP config
+├── plugin.json
+├── instructions.md
 ├── agents/
-│   ├── reviewer.agent.md
 │   └── writer.agent.md
 └── skills/
-    └── code-standards/
+    └── invoice-format/
         └── SKILL.md
 ```
+
+A minimal manifest:
+
+```json
+{
+  "name": "invoice-plugin",
+  "instructions": ["instructions.md"],
+  "mcp_servers": {}
+}
+```
+
+Manifest `instructions` contains paths, not inline instruction text. The loader
+also reads root `copilot-instructions.md` and `CLAUDE.md` when present.
+Agents and skills are discovered from their conventional subdirectories.
 
 ### .github/ Project (GitHub Repos)
 
-```
+```text
 my-project/
-├── .github/
-│   ├── copilot-instructions.md   # System prompt
-│   └── agents/
-│       ├── reviewer.agent.md
-│       └── writer.agent.md
-├── .mcp.json                      # MCP server configurations
-└── skills/
-    └── domain-knowledge/
-        └── SKILL.md
+└── .github/
+    ├── copilot-instructions.md
+    ├── agents/
+    │   └── writer.agent.md
+    └── skills/
+        └── invoice-format/
+            └── SKILL.md
 ```
+
+The generic GitHub loader discovers these components from `.github/`. It does
+not read a project-root `.mcp.json`. Supply `mcp_servers` explicitly if needed.
 
 ### .claude/ Project (Claude Code)
 
-```
+```text
 my-project/
-├── CLAUDE.md                # System prompt
-├── .claude/
-│   └── settings.json        # Claude-specific config
-├── .mcp.json                # MCP server configurations
-└── skills/
-    └── domain-knowledge/
-        └── SKILL.md
+├── CLAUDE.md
+├── .mcp.json
+└── .claude/
+    ├── CLAUDE.md
+    ├── agents/
+    │   └── writer.md
+    └── skills/
+        └── invoice-format/
+            └── SKILL.md
 ```
+
+Pass the **project root** to load the root instructions and `.mcp.json` along
+with `.claude/` agents and skills. Passing only `.claude/` changes the discovery
+root and does not include the parent project's files.
 
 ## Loading Plugins
 
-Use `load_plugin()` to inspect a plugin directory before testing:
+Inspect your bundle without starting Copilot:
 
 ```python
 from pytest_skill_engineering import load_plugin
 
-plugin = load_plugin("path/to/my-plugin")
-
-# Inspect what was discovered
-print(plugin.metadata.name)  # Plugin name from manifest or directory
-print(plugin.instructions)  # Merged instructions from all sources
-print(plugin.agents)  # List of loaded .agent.md definitions
-print(plugin.skills)  # Loaded Skill objects
-print(plugin.mcp_configs)  # MCP server configurations from manifest
+plugin = load_plugin("plugins/my-plugin")
+print(plugin.metadata.name)
+print(plugin.instructions)
+print([agent["name"] for agent in plugin.agents])
+print([skill.name for skill in plugin.skills])
+print(sorted(plugin.mcp_servers))
 ```
 
-`load_plugin()` auto-detects the format based on directory contents and loads all components. Use this for programmatic inspection, or pass the path directly to `CopilotEval.from_plugin()`.
+The public attribute is `plugin.mcp_servers`, not `mcp_configs`. Invalid files
+and metadata raise errors; do not silently replace an invalid bundle with an
+empty configuration.
+
+`load_plugin()` also exposes hook definitions and extension paths.
+`from_plugin()` does **not** automatically execute those hooks or extensions.
+For lifecycle behavior, supply SDK-compatible hooks explicitly and verify them.
 
 ## Testing Plugins
 
-Use `CopilotEval.from_plugin()` to test plugin behavior:
+This test requires your own bundle at `plugins/my-plugin`:
 
 ```python
-import pytest
+from __future__ import annotations
+
+import json
+
 from pytest_skill_engineering.copilot import CopilotEval
 
 
-async def test_plugin_tool_usage(copilot_eval):
-    agent = CopilotEval.from_plugin("path/to/my-plugin")
-    result = await copilot_eval(agent, "What's my checking balance?")
+async def test_plugin_output(copilot_eval, tmp_path, record_property):
+    agent = CopilotEval.from_plugin(
+        "plugins/my-plugin",
+        model="gpt-5.6-sol",
+        working_directory=str(tmp_path),
+    )
+    result = await copilot_eval(agent, 'Write answer.json containing exactly {"total": 5}.')
+    path = tmp_path / "answer.json"
+    observed = json.loads(path.read_text(encoding="utf-8")) if path.is_file() else None
+    record_property("verification", {"observed": observed, "passed": observed == {"total": 5}})
 
-    assert result.success
-    assert result.tool_was_called("get_balance")
+    assert result.success, result.error
+    assert result.evidence_complete, result.capture_errors
+    assert observed == {"total": 5}
 ```
 
-`CopilotEval.from_plugin()` loads instructions, skills, and custom agents from the directory. The Copilot SDK handles model selection and tool access.
-Custom-agent definitions retain their declared names and supported SDK settings,
-including model, tools, skills, reasoning effort, and MCP servers, just as they do
-when loaded through the project factories. Missing names use the filename;
-duplicate resolved names are errors.
+This verifies the artifact. Tailor the task to your bundle's purpose; a generic
+file task does not establish that a banking tool or review agent works.
 
 ### Overriding Plugin Settings
 
-```python
-# Override the model
-agent = CopilotEval.from_plugin(
-    "path/to/my-plugin",
-    model="gpt-5.6-luna",
-)
+`model`, `name`, `working_directory`, and other eval fields can be supplied
+explicitly. The factory's `instructions` argument **appends** to discovered
+instructions; it does not replace them:
 
-# Override instructions (ignores plugin instructions)
+```python
 agent = CopilotEval.from_plugin(
-    "path/to/my-plugin",
-    instructions="Custom override instructions.",
+    "plugins/my-plugin",
+    model="gpt-5.6-sol",
+    instructions="Also keep the final reply brief.",
 )
 ```
+
+To replace the combined instructions deliberately:
+
+```python
+from dataclasses import replace
+
+agent = replace(agent, instructions="Use only these replacement instructions.")
+```
+
+This is separate from `system_message_mode`, which controls whether the eval
+instructions append to or replace Copilot's base system prompt.
 
 ## Testing with Copilot SDK (CopilotEval)
 
-Use `CopilotEval.from_plugin()` when testing with the real GitHub Copilot agent — including custom agent dispatch, skill loading, and file operations:
-
-```python
-import pytest
-from pytest_skill_engineering.copilot import CopilotEval
-
-
-@pytest.mark.copilot
-async def test_plugin_with_copilot(copilot_eval, tmp_path):
-    agent = CopilotEval.from_plugin(
-        "path/to/my-plugin",
-        model="gpt-5.6-sol",
-        working_directory=str(tmp_path),
-    )
-    result = await copilot_eval(agent, "Create a hello world script")
-
-    assert result.success
-    assert (tmp_path / "hello.py").exists()
-```
+All task executions use GitHub Copilot. The loader selects `ClaudeCodePersona`
+for `.claude` paths or roots containing `.claude/`, otherwise `VSCodePersona`,
+unless you supply a persona. These provide supported runtime conventions, not
+a complete editor or Claude Code runtime.
 
 ### Verifying Custom Agent Dispatch
 
-When your plugin includes custom agents, verify that Copilot dispatches to the right one:
+For a bundle with a `writer` custom agent, add a dispatch requirement to an
+artifact test:
 
 ```python
-@pytest.mark.copilot
-async def test_plugin_routes_to_reviewer(copilot_eval, tmp_path):
-    agent = CopilotEval.from_plugin(
-        "path/to/my-plugin",
-        model="gpt-5.6-sol",
-        working_directory=str(tmp_path),
-    )
-    result = await copilot_eval(agent, "Review this code for security issues")
-
-    assert result.success
-    invoked = [s.name for s in result.subagent_invocations]
-    assert "reviewer" in invoked
+assert any(
+    invocation.name == "writer" and invocation.status == "completed"
+    for invocation in result.subagent_invocations
+)
 ```
+
+This fragment belongs after a task that explicitly requires dispatch. Keep the
+artifact assertions too. Loaded definitions retain names and supported SDK
+settings; duplicate resolved names are errors. See
+[Custom agents](../getting-started/custom-agents.md) for child evidence.
 
 ## Claude Code Projects
 
-Use `CopilotEval.from_claude_config()` to test Claude Code project directories. This loads `CLAUDE.md` as the system prompt and `.claude/` settings:
+Use `CopilotEval.from_claude_config(project_root)` for explicit Claude-format
+project loading:
 
 ```python
-from pytest_skill_engineering.copilot import CopilotEval
-
-
-@pytest.mark.copilot
-async def test_claude_project(copilot_eval, tmp_path):
-    agent = CopilotEval.from_claude_config(
-        "path/to/claude-project",
-        model="gpt-5.6-sol",
-        working_directory=str(tmp_path),
-    )
-    result = await copilot_eval(agent, "Explain this project")
-
-    assert result.success
+agent = CopilotEval.from_claude_config(
+    "projects/my-claude-project",
+    model="gpt-5.6-sol",
+)
 ```
 
-!!! note "Claude Config ≠ Claude Model"
-    `from_claude_config()` loads the project's *configuration format* (CLAUDE.md, .claude/ settings). The agent still runs on whatever model you specify — typically a GitHub Copilot model.
+It reads root and `.claude/CLAUDE.md`, `.claude/agents/*.md`,
+`.claude/skills/`, and root `.mcp.json`. Its `instructions` argument also
+appends. This loads a configuration format; it does not run Claude Code or
+force a Claude model.
 
 ## MCP Config Loading
 
-Load MCP server configurations from `.mcp.json` files independently:
+Load a server configuration independently:
 
 ```python
 from pytest_skill_engineering.copilot import load_mcp_config
 
-configs = load_mcp_config("path/to/.mcp.json")
-# Returns dict of server name → config
-
-for name, config in configs.items():
-    print(f"Server: {name}")
-    print(f"  Command: {config.get('command')}")
-    print(f"  Args: {config.get('args', [])}")
+servers = load_mcp_config("projects/my-project/.mcp.json")
+agent = CopilotEval(name="project-tools", mcp_servers=servers)
 ```
 
-This is useful when you need to inspect MCP configurations without loading the full plugin, or when building custom test fixtures from a project's server definitions.
+Inspect safe server names rather than printing commands, environment variables,
+or headers that may contain secrets.
 
 ## Assertion Helpers
 
-### Basic Assertions
+`tool_was_called()`, `tool_calls_for()`, `tool_call_count()`, and
+`tool_was_called_with()` inspect captured calls. Use the exact runtime name,
+including an MCP prefix when present. `CopilotResult` has no
+`tool_was_called_from_server()` method.
 
-```python
-# Agent completed successfully
-assert result.success
-
-# Specific tool was called
-assert result.tool_was_called("get_balance")
-
-# Tool called at least N times
-assert result.tool_call_count("transfer") >= 1
-
-# Total tool calls
-assert len(result.all_tool_calls) >= 2
-```
-
-### Multi-Server Assertions
-
-When plugins have multiple MCP servers, assert which server handled a tool call:
-
-```python
-# Verify the tool came from the expected server
-assert result.tool_was_called_from_server("get_balance", "banking-server")
-
-# Useful when two servers expose similarly-named tools
-assert result.tool_was_called_from_server("search", "document-server")
-assert not result.tool_was_called_from_server("search", "web-server")
-```
-
-### Independent output checks
-
-Session completion and tool presence are smoke checks. Also verify concrete
-output schemas, exact values, produced files, or fixture-store state. Save
-observations with `record_property`, then assert the check. Subjective review
-belongs to the current coding agent or a human, not a separate framework judge.
+Tool selection is a diagnostic or routing requirement, not independent output
+verification. Assert concrete file content, returned operation data, or fixture
+state, and save safe observations with `record_property`.
 
 ## SDK Passthroughs
 
-`CopilotEval` supports additional SDK configuration for advanced scenarios:
+Useful eval fields include:
 
-```python
-from pytest_skill_engineering.copilot import CopilotEval
+| Field | Purpose |
+|---|---|
+| `active_agent` | Select a custom agent by name at session start |
+| `custom_agents` | Supply loaded definitions |
+| `skill_directories` | Load explicit skills |
+| `allowed_tools` / `excluded_tools` | Configure SDK tool lists |
+| `hooks` | Supply SDK `SessionHooks` handlers |
+| `reasoning_effort` | Request a model-supported reasoning effort |
+| `extra_config` | Supply other supported SDK session settings |
 
-agent = CopilotEval(
-    name="my-test",
-    model="gpt-5.6-sol",
-    active_agent="banking-advisor",  # Route to a specific custom agent
-    hooks={"onSessionStart": "path/to/hook.py"},  # Lifecycle hooks
-    working_directory=str(tmp_path),
-)
-```
-
-| Parameter | Description |
-|-----------|-------------|
-| `active_agent` | Route the session to a specific custom agent by name |
-| `hooks` | Lifecycle hook configuration (dict of event → handler path) |
-| `excluded_tools` | List of tool names to block from the agent |
-| `skill_directories` | Directories containing skills to load |
-| `reasoning_effort` | Reasoning effort level (`"low"`, `"medium"`, `"high"`) |
-| `custom_agents` | List of custom agent definitions for custom agent dispatch |
+Hooks are typed SDK handlers, not a dictionary of event names to script paths.
+Validate passthrough settings against your installed SDK; unsupported shapes
+are not a portable example.
 
 ## Comparing Plugin Configurations
 
-Parametrize tests to compare different plugin versions or configurations:
-
-```python
-from pathlib import Path
-
-PLUGIN_DIRS = [
-    "plugins/v1-minimal",
-    "plugins/v2-with-skills",
-    "plugins/v3-with-agents",
-]
-
-
-@pytest.mark.parametrize("plugin_path", PLUGIN_DIRS, ids=lambda p: Path(p).name)
-async def test_plugin_versions(copilot_eval, plugin_path):
-    agent = CopilotEval.from_plugin(plugin_path)
-    result = await copilot_eval(agent, "What's my checking balance?")
-
-    assert result.success
-    assert result.tool_was_called("get_balance")
-```
-
-pytest shows each outcome, and JSON records calls, usage, and captured configuration
-for each plugin version. Your coding agent investigates those records alongside
-source; the framework does not generate recommendations or diagnose causes.
+Parametrize over plugin paths and apply the same task, state, permissions,
+limits, and independent checks. Record safe version identifiers. Each
+parameter has its own pytest outcome; paired `ab_run` entries instead share
+one outcome and require side-specific verification.
 
 ## Supported Formats Reference
 
-| Format | Detection | Use With |
-|--------|-----------|----------|
-| `plugin.json` | File exists at root | `CopilotEval.from_plugin()` |
-| `.github/` project | `copilot-instructions.md` exists | `CopilotEval.from_plugin()` |
-| `.claude/` project | `CLAUDE.md` or `.claude/` dir exists | `CopilotEval.from_claude_config()`, `CopilotEval.from_plugin()` |
+See the [layout table](#plugin-directory-layouts) above for discovery roots.
+Do not assume an arbitrary directory or an editor extension package is a
+supported manifest bundle.
 
 ## Next Steps
 
-- **[Test MCP Servers](test-mcp-servers.md)** — Deep dive into MCP server configuration and transports
-- **[Test Coding Agents](test-coding-agents.md)** — Test real coding agents with the Copilot SDK
-- **[Complete Example](complete-example.md)** — End-to-end test suite demonstrating all features
-- **[Getting Started: Plugin Testing](../getting-started/plugins.md)** — Quick intro to plugin testing concepts
+- [Test MCP servers](test-mcp-servers.md): transports and completed operation data.
+- [Test skills and custom agents](test-coding-agents.md): bounded application tasks.
+- [Complete example](complete-example.md): a self-contained bundled-server test.
+- [Plugin configuration](../getting-started/plugins.md): a short introduction.

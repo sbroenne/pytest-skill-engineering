@@ -4,7 +4,8 @@ description: "CopilotClient sessions, event mapping, ordinary pytest checks, and
 
 # Architecture
 
-pytest-skill-engineering is built around the real GitHub Copilot runtime.
+The framework creates real Copilot SDK sessions and records what happened.
+Application fixtures and independent output checks belong to the consumer.
 
 ## End-to-end flow
 
@@ -19,51 +20,60 @@ CopilotEval
   -> pytest plugin collection
   -> SuiteReport
   -> JSON evidence
-  -> coding-agent-led investigation alongside source
 ```
+
+After the run, a coding agent or human can inspect the JSON alongside source.
+That investigation is not another framework execution stage.
 
 ## Main components
 
-### 1. Copilot execution
+### Copilot execution
 
 `src/pytest_skill_engineering/copilot/`
 
 - `eval.py` — `CopilotEval` configuration
 - `runner.py` — single-attempt session lifecycle and event streaming
-- `events.py` — contains EventMapper, which converts SDK events into normalized result data
+- `events.py` — `EventMapper`, which converts SDK events into result records
 - `result.py` — `CopilotResult`
+- `requests.py` — actual outgoing request auditing
+- `skills.py` — explicit skill validation and pre-send SDK discovery
 
 Each call makes one attempt and preserves its failure evidence. The framework
 does not start replacement sessions after startup or execution failures.
 
-### 2. pytest integration
+Audited transports must shut down before their owning SDK client. Cleanup
+events and errors are captured before the final result is built.
+
+### pytest integration
 
 `src/pytest_skill_engineering/plugin.py`
 
 The plugin captures results and ordinary pytest outcomes, preserves genuine
 pytest parameter IDs, and writes native JSON evidence.
 
-### 3. Evidence persistence
+Consumer assertions determine the pytest verdict. A captured session's
+`success` flag is not an independent task verdict.
+
+### Evidence persistence
 
 `src/pytest_skill_engineering/reporting/`
 
 - `collector.py` builds `SuiteReport`
 - `generator.py` atomically saves JSON and loads current-schema evidence
 
-No HTML/Markdown UI, rankings, or interpretation layer exists.
-The framework owns execution and evidence;
-consumers own application fixtures and verification. The existing coding agent
-interprets the evidence using the source and documentation. There is no
-framework companion skill or framework-owned adviser.
+The persistence layer records execution and outcomes without interpreting them.
+It does not render a dashboard, rank configurations, or select a winner.
 
-### 4. Serialization boundary
+### Serialization boundary
 
 `src/pytest_skill_engineering/core/serialization.py`
 
-Serialization is strict. The current report loader expects the current schema exactly and does not silently accept legacy field aliases.
+Serialization is strict. The loader requires schema 4.0 and all required
+fields; it does not fill missing records from defaults or accept legacy aliases.
+See [evidence structure](evidence-structure.md) for the lossless-data contract.
 
 ## Development guidance
 
-- preserve native evidence contracts without inventing missing data
-- use deterministic round-trip and failure-path checks for persistence changes
-- use real Copilot integration tests for runtime changes
+Use deterministic round-trip and failure-path contracts for persistence
+changes. Use relevant real-Copilot integration files for execution changes.
+Never treat fake SDK behavior as proof of model performance.

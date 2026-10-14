@@ -1,14 +1,17 @@
 # CLI options
 
+The package provides setup commands and pytest options. Tests run through
+pytest; there is no separate execution or report-rendering command.
+
 ## Project setup
 
-```powershell
+```bash
 uv run pytest-skill-engineering init [PROJECT_DIR]
 uv run pytest-skill-engineering doctor [PROJECT_DIR]
 ```
 
 `init` requires an existing `pyproject.toml`. It creates
-`tests\test_copilot_eval.py`, sets `asyncio_mode = "auto"`, adds a JSON evidence
+`tests/test_copilot_eval.py`, sets `asyncio_mode = "auto"`, adds a JSON evidence
 destination, and records explicit starter-model pricing. Existing rates are
 preserved; conflicts fail without overwriting existing content.
 
@@ -16,17 +19,27 @@ preserved; conflicts fail without overwriting existing content.
 and starter-model availability. It contacts Copilot but does not execute a task
 under test. Failed checks produce a nonzero exit code.
 
+## Running tests
+
+```bash
+uv run python -m pytest tests/test_tools.py -v --aitest-json=results.json
+```
+
+Live Copilot tests may consume premium requests. Select relevant files or cases
+rather than running a whole paid suite unnecessarily.
+
 ## pytest options
 
 | Option | Meaning |
 | --- | --- |
 | `--aitest-json=PATH` | Save captured execution evidence and pytest outcomes |
-| `--aitest-min-pass-rate=N` | Fail when the saved eval outcomes fall below N percent |
+| `--aitest-min-pass-rate=N` | Fail when the observed pytest pass rate for recorded executions falls below N percent (0-100) |
 | `--aitest-iterations=N` | Repeat each test N times with newly created pytest fixtures |
 
-```powershell
-uv run python -m pytest "tests\test_tools.py" -v --aitest-json=results.json
-```
+These flags configure evidence and repeated observations; they do not introduce
+an independent AI verdict.
+
+## Where results go
 
 pytest prints ordinary results and assertion failures. Without an explicit JSON
 path, runs containing eval results save a timestamped file under `aitest-reports`.
@@ -58,4 +71,8 @@ There is no HTML/Markdown renderer or report CLI.
 ## Authentication
 
 Task execution selects `GITHUB_TOKEN` first, then `GH_TOKEN`; otherwise the SDK
-uses its signed-in user. The retired `AITEST_SUMMARY_MODEL` setting has no effect.
+uses its signed-in user. Tokens must authorize the intended account and its
+Copilot access. Reading saved JSON requires neither authentication nor model
+access.
+
+For removed 0.6.x flags, see [migration](../migration.md).

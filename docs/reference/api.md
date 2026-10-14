@@ -1,12 +1,15 @@
 ---
-description: "Auto-generated API documentation for pytest-skill-engineering core types: CopilotEval, Skill, EvalResult, and more."
+description: "Public configuration, result, loader, and native evidence APIs generated from source."
 ---
 
-# API Reference
+# API reference
 
-Auto-generated API documentation from source code.
+Signatures and type documentation below are generated from the current source.
+Most tests start with `CopilotEval` and the `copilot_eval` pytest fixture. Use the
+[configuration guide](configuration.md) for settings and the
+[result reference](result.md) for interpreting returned evidence.
 
-## Copilot Types
+## Session configuration and result
 
 ::: pytest_skill_engineering.copilot.eval.CopilotEval
     options:
@@ -18,7 +21,9 @@ Auto-generated API documentation from source code.
       show_source: false
       heading_level: 3
 
-## Result Types
+## Shared result records
+
+These types describe captured execution. They are not independent task verdicts.
 
 ::: pytest_skill_engineering.core.result.EvalResult
     options:
@@ -55,10 +60,11 @@ Auto-generated API documentation from source code.
       show_source: false
       heading_level: 3
 
-## Explicit case loading and export
+## Skill test cases and grading export
 
-Free-text expectations are descriptions, not automatically executed checks.
-Consumers supply their own booleans and evidence to the exporter.
+Load skill test cases to parametrize ordinary pytest tests. Free-text expectations
+are descriptions that your test must translate into checks. `export_grading`
+formats supplied booleans and evidence; it does not run a judge.
 
 ::: pytest_skill_engineering.core.skill_evals.load_skill_evals
     options:
@@ -77,8 +83,9 @@ Consumers supply their own booleans and evidence to the exporter.
 
 ## Native execution evidence
 
-These APIs save and load captured execution and ordinary pytest outcomes.
-They do not render reports, interpret results, rank configurations, or select winners.
+`SuiteReport` contains captured executions and their ordinary pytest outcomes.
+`generate_json` saves it; `load_suite_report` reads schema-4.0 JSON without
+starting Copilot. These APIs do not interpret or render the evidence.
 
 ::: pytest_skill_engineering.reporting.collector.TestReport
     options:
@@ -100,7 +107,7 @@ They do not render reports, interpret results, rank configurations, or select wi
       show_source: false
       heading_level: 3
 
-## Skill Types
+## Skill files
 
 ::: pytest_skill_engineering.core.skill.Skill
     options:
@@ -117,7 +124,7 @@ They do not render reports, interpret results, rank configurations, or select wi
       show_source: false
       heading_level: 3
 
-## Custom Agent Types
+## Custom agent files
 
 ::: pytest_skill_engineering.core.evals.load_custom_agent
     options:
@@ -129,7 +136,7 @@ They do not render reports, interpret results, rank configurations, or select wi
       show_source: false
       heading_level: 3
 
-## Plugin Types
+## Plugin records
 
 ::: pytest_skill_engineering.core.plugin.Plugin
     options:
@@ -146,7 +153,7 @@ They do not render reports, interpret results, rank configurations, or select wi
       show_source: false
       heading_level: 3
 
-## Plugin Loading
+## Plugin loading
 
 ::: pytest_skill_engineering.core.plugin.load_plugin
     options:

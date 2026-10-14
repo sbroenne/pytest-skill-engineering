@@ -1,19 +1,21 @@
-# Migrating to 1.0.0
+# Migrating from 0.6.x to 1.x
 
-**This is a breaking release.** Version 1.0 keeps real Copilot execution,
-controls, ordinary pytest output, and JSON evidence. It removes the separate AI
-judging, analysis, refinement, and report-presentation layers. There are no
-compatibility aliases, legacy readers, or optional versions of the removed features.
+**Version 1.0 is a breaking change.** Tests now use real Copilot execution,
+ordinary pytest assertions, and saved JSON evidence. Built-in AI judging,
+analysis, refinement, and report rendering were removed, not deprecated.
+
+This page is for existing 0.6.x users. New projects should follow
+[getting started](getting-started/index.md).
 
 ## Upgrade
 
-```powershell
+```bash
 uv add "pytest-skill-engineering>=1.0.0,<2"
 ```
 
-No companion skill installation is required or distributed. Use the framework
-documentation and [evidence inspection guide](how-to/inspect-evidence.md).
-The [case study](use-cases/companion-skill.md) explains that product decision.
+After upgrading, replace removed assertions, delete retired flags, and regenerate
+evidence with the current producer. There are no compatibility aliases or legacy
+readers. No framework companion skill is required or distributed.
 
 ## Removed fixtures and APIs
 
@@ -48,7 +50,7 @@ errors. Read the recorded failure before choosing a pytest rerun, such as
 
 ## Replace judging with actual verification
 
-Before:
+Old 0.6.x code (no longer supported):
 
 ```python
 async def test_document(copilot_eval, llm_assert):
@@ -56,9 +58,12 @@ async def test_document(copilot_eval, llm_assert):
     assert llm_assert(result.final_response, "confirms that the document was saved")
 ```
 
-After:
+Current code:
 
 ```python
+from pytest_skill_engineering.copilot import CopilotEval
+
+
 async def test_document(copilot_eval, tmp_path, record_property):
     agent = CopilotEval(
         name="document",
@@ -74,8 +79,7 @@ async def test_document(copilot_eval, tmp_path, record_property):
     assert result.success, result.error
 ```
 
-Import `CopilotEval` from `pytest_skill_engineering.copilot`. This is a different,
-stronger criterion: a saved file, not a convincing claim about saving it. Do not
+The new criterion checks a saved file, not a convincing claim about saving it. Do not
 pretend a substring check is equivalent to a removed semantic judge. If a
 requirement remains subjective, review the evidence and label the conclusion
 advice rather than a measured framework result.
@@ -111,21 +115,22 @@ addopts = """
 """
 ```
 
-There is no summary-model requirement. Model authentication is needed for task
-execution, not for reading recorded evidence.
+There is no summary-model requirement. Authentication is needed for live task
+execution, not for reading saved evidence.
 
 ## Native evidence API and schema
 
-Current signatures:
+To read or write current native evidence:
 
 ```python
+from pytest_skill_engineering.reporting import generate_json, load_suite_report
+
 report = load_suite_report(path)
 generate_json(report, json_path)
 ```
 
-`load_suite_report` now returns a `SuiteReport`, not `(report, insights)`.
-Import `load_suite_report` and `generate_json` from
-`pytest_skill_engineering.reporting`. There is no rendering API or regeneration CLI.
+`load_suite_report` returns a `SuiteReport`, not `(report, insights)`.
+There is no rendering API or regeneration CLI.
 
 Schema **4.0** replaces 3.0. The `insights` payload, score presentation, and
 analysis-cost fields are gone. `models_without_pricing` is saved with the suite,
@@ -161,6 +166,5 @@ evidence, images, plugins, configuration loaders, pytest repetitions, pass-rate
 gates, request auditing, usage, permission controls, guarded tool adapters,
 timeouts, and safe cleanup remain.
 
-The incoming WebSocket audit-finalization fix is preserved: audited transports
-close before their owning SDK client. No extra judge or adviser session is
-started at pytest session finish.
+Audited transports close before their owning SDK client. Reading evidence and
+finishing a pytest session do not start an extra judge or adviser session.

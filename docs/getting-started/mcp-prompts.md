@@ -1,99 +1,95 @@
 ---
-description: "Test MCP server prompt templates — verify that bundled slash commands produce the right LLM behavior."
+description: "Discover an MCP prompt template, render it, and send its task text to Copilot."
 ---
 
 # MCP Server Prompts
 
-MCP servers can bundle **prompt templates** alongside their tools — reusable message templates that surface in VS Code as slash commands (e.g. `/mcp.servername.code_review`). Discover and render them explicitly with `MCPServerProcess`, then pass the rendered text to `copilot_eval`.
+Use `MCPServerProcess` to discover and render server-provided prompt templates.
+Then pass the rendered task text to `copilot_eval`. These are two different
+checks: template rendering can be tested without a model; task execution uses
+real Copilot and may consume premium requests.
 
 ## What are MCP Prompts?
 
-A prompt template is a server-side message recipe. When a user invokes `/mcp.myserver.code_review`, the MCP server renders the template (filling in arguments) and sends the resulting messages to the LLM. Testing prompt templates means verifying:
-
-- The server exposes the expected templates (`list_prompts`)
-- The rendered output contains what you expect
-- The LLM behaves correctly when given the rendered prompt
+A prompt template is a server-side message recipe with named arguments.
+Editors may expose it as a slash command. This harness tests the server's
+template API and the rendered task, not an editor's slash-command registration.
 
 ## Discovering Prompts
 
-Use `MCPServerProcess.list_prompts()` to discover what templates your server exposes:
+The bundled banking server provides an `account_summary` template:
 
 ```python
+from __future__ import annotations
+
 import sys
+
 from pytest_skill_engineering import MCPServer
 from pytest_skill_engineering.execution.servers import MCPServerProcess
 
 
 async def test_prompts_are_discoverable():
-    """Server exposes the expected prompt templates."""
     config = MCPServer(
-        command=sys.executable,
+        command=[sys.executable],
         args=["-m", "pytest_skill_engineering.testing.banking_mcp"],
     )
     async with MCPServerProcess(config) as server:
         prompts = await server.list_prompts()
-        assert "account_summary" in {prompt.name for prompt in prompts}
+    assert "account_summary" in {prompt.name for prompt in prompts}
 ```
 
-`list_prompts()` returns `list[MCPPrompt]`. Each `MCPPrompt` has:
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `name` | `str` | Template identifier |
-| `description` | `str` | Human-readable description (empty if omitted) |
-| `arguments` | `list[MCPPromptArgument]` | Template parameters |
+`list_prompts()` returns `MCPPrompt` objects with `name`, `description`, and
+`arguments`. Each argument has a name, description, and required flag. Assert
+expected names explicitly: the current helper can return an empty list when
+listing fails or prompts are unsupported.
 
 ## Rendering and Testing a Prompt
 
-Render a template using its advertised arguments:
+Using the imports above:
 
 ```python
 async def test_account_summary_template():
     config = MCPServer(
-        command=sys.executable,
-        args=["-m", "pytest_skill_engineering.testing.banking_mcp"],
-    )
-    async with MCPServerProcess(config) as server:
-        messages = await server.get_prompt("account_summary", {"account": "checking"})
-    assert messages
-    assert messages[0]["role"] == "user"
-    assert "checking" in messages[0]["content"]
-```
-
-`get_prompt()` returns a list of dictionaries with `role` and `content` keys.
-The banking template returns one user message, which can be sent directly.
-For templates with several messages, explicitly decide how to represent their
-roles and context in the single prompt string accepted by `copilot_eval`; do
-not silently discard all but the first message.
-
-## Testing the Full Flow
-
-Combine MCP tools with LLM behavioral assertions:
-
-The wording check below is deliberately limited: it checks that "balance"
-appears, not that the answer is correct. Also verify the actual returned account
-data for an independently checked full-flow test.
-
-```python
-from pytest_skill_engineering.copilot import CopilotEval
-
-
-async def test_account_summary_prompt(copilot_eval):
-    """The rendered account-summary prompt produces a balance response."""
-    config = MCPServer(
-        command=sys.executable,
+        command=[sys.executable],
         args=["-m", "pytest_skill_engineering.testing.banking_mcp"],
     )
     async with MCPServerProcess(config) as server:
         messages = await server.get_prompt("account_summary", {"account": "checking"})
     assert len(messages) == 1
     assert messages[0]["role"] == "user"
+    assert "checking" in messages[0]["content"]
+```
+
+`get_prompt()` returns dictionaries containing `role` and `content`. Validate
+both before executing the task. `copilot_eval` accepts one prompt string, not
+a list of role-tagged messages. For a multi-message template, explicitly decide
+how to represent its context and roles; do not silently discard messages.
+
+## Testing the Full Flow
+
+This test renders the bundled template, starts a separate banking server for
+Copilot, and checks the returned account data:
+
+```python
+import json
+
+from pytest_skill_engineering.copilot import CopilotEval
+
+
+async def test_account_summary_prompt(copilot_eval):
+    config = MCPServer(
+        command=[sys.executable],
+        args=["-m", "pytest_skill_engineering.testing.banking_mcp"],
+    )
+    async with MCPServerProcess(config) as server:
+        messages = await server.get_prompt("account_summary", {"account": "checking"})
+    assert len(messages) == 1 and messages[0]["role"] == "user"
     agent = CopilotEval(
         name="account-summary",
-        instructions="You are a banking assistant. Use MCP tools for account data.",
+        model="gpt-5.6-sol",
+        instructions="Use banking tools for account data.",
         mcp_servers={
             "banking": {
-                "type": "local",
                 "command": sys.executable,
                 "args": ["-m", "pytest_skill_engineering.testing.banking_mcp"],
                 "tools": ["*"],
@@ -101,18 +97,32 @@ async def test_account_summary_prompt(copilot_eval):
         },
     )
     result = await copilot_eval(agent, messages[0]["content"])
-    assert result.success
-    assert "balance" in (result.final_response or "").lower()
+
+    assert result.success, result.error
+    calls = result.tool_calls_for("banking-get_balance")
+    assert calls
+    call = calls[-1]
+    assert call.arguments == {"account": "checking"}
+    assert call.success is True and call.evidence_complete
+    assert call.result is not None
+    display, structured = call.result.rsplit("\n\n", 1)
+    assert json.loads(structured) == {"result": display}
+    assert json.loads(display)["balance"] == 1500
 ```
+
+The two server processes do not share in-memory state. This read-only fixture
+has a known starting balance. For stateful templates, own initialization and
+output verification in your application fixtures. Checking the returned balance
+does not assess the quality of Copilot's prose summary.
 
 ## Naming tests
 
-Use descriptive test names or pytest parameter IDs to identify templates in
-reports. `CopilotResult` does not expose discovered MCP prompts or a
-`prompt_name` field; `copilot_eval` does not accept a `prompt_name` keyword.
+Use test names or parameter IDs to identify templates. `CopilotResult` does not
+expose discovered prompts or a `prompt_name` field; `copilot_eval` has no
+`prompt_name` keyword.
 
 ## Next Steps
 
-- [Prompt Files](prompt-files.md) — Test user-facing slash commands (`.prompt.md` files)
-- [Test MCP Servers](../how-to/test-mcp-servers.md) — Full guide for MCP server testing
-- [CopilotResult Reference](../reference/result.md) — All result fields
+- [Prompt files](prompt-files.md): load reusable file bodies.
+- [Test MCP servers](../how-to/test-mcp-servers.md): attach tools and verify operations.
+- [Result reference](../reference/result.md): inspect captured calls.

@@ -1,13 +1,16 @@
 ---
-description: "Concepts behind CopilotEval, execution evidence, and coding-agent-led investigation."
+description: "Understand what a Copilot test verifies and how to use its evidence."
 ---
 
 # Explanation
 
-These pages explain how pytest-skill-engineering works with GitHub Copilot.
+These pages explain the test design, rather than walk through API calls.
 
-- [CopilotEval](evals.md) — the execution harness
-- [Copilot test harness choice](choosing-a-harness.md) — what to vary now that there is one public harness
-- [Skill engineering](skill-engineering.md)
-- [Execution and evidence](execution-and-evidence.md)
-- [Migration](../migration.md)
+| Question | Read |
+| --- | --- |
+| What does `CopilotEval` configure? | [Session configuration](evals.md) |
+| Which part of my interface should I test? | [Choosing what to test](choosing-a-harness.md) |
+| How do I improve it without changing the success criteria? | [Improving an AI-facing interface](skill-engineering.md) |
+| What does a successful session actually prove? | [Execution, evidence, and investigation](execution-and-evidence.md) |
+
+For commands and examples, start with [your first test](../getting-started/index.md).

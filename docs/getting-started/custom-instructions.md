@@ -1,186 +1,160 @@
 ---
-description: "Test custom instruction files — verify that .github/copilot-instructions.md, *.instructions.md, AGENTS.md, and CLAUDE.md produce the right LLM behavior."
+description: "Load instruction-file content as a system prompt and check the generated output."
 ---
 
 # Custom Instructions
 
-**Custom instruction files** define HOW the AI should behave — coding conventions, naming rules, architecture patterns. They are always-on context injected into every interaction. pytest-skill-engineering lets you test whether the LLM actually follows these conventions.
+Load an instruction file when you want to test a project's conventions with
+Copilot. Pass its content to `CopilotEval.instructions`, then assert on the
+output those conventions require.
 
-| File | Where | Purpose |
-|------|-------|---------|
-| `.github/copilot-instructions.md` | Repo root | Project-wide coding standards (VS Code Copilot) |
-| `*.instructions.md` | Anywhere | File-scoped rules with optional `applyTo` glob |
-| `AGENTS.md` | Repo root | Workspace instructions used by some coding-agent tools |
-| `CLAUDE.md` | Repo root | Claude Code workspace instructions |
-
-These are distinct from Custom Agents (`.agent.md` specialist personas) and Prompt Files (slash commands). Custom instructions define conventions; prompt files are user inputs.
+This tests explicitly supplied instructions. It does **not** reproduce an
+editor's automatic file matching or prove that ambient instructions were loaded.
+SDK configuration discovery is disabled by default.
 
 ## Loading a Single Instruction File
 
-Use `load_instruction_file()` to load a single file:
+For example, create `.github/instructions/python-style.instructions.md`:
 
-```python
-from pytest_skill_engineering.copilot import CopilotEval
-from pytest_skill_engineering import load_instruction_file
+```markdown
+---
+applyTo: "**/*.py"
+description: Python function conventions
+---
 
-
-async def test_follows_naming_conventions(copilot_eval):
-    """Agent follows snake_case naming conventions from coding-standards.instructions.md."""
-    instr = load_instruction_file(".github/copilot-instructions.md")
-    agent = CopilotEval(
-        name="standards-test",
-        instructions=instr["content"],
-    )
-    result = await copilot_eval(agent, "Write a function that adds two numbers")
-    assert result.success
-    assert "add_numbers" in result.final_response  # Checks wording only, not code correctness.
+Use snake_case function names.
+Annotate every function parameter and return value.
+Give every public function a docstring.
 ```
 
-`load_instruction_file()` returns a dict with:
+Load and check it in a test:
 
-| Key | Description |
-|-----|-------------|
-| `name` | Derived from filename (e.g. `copilot-instructions`, `coding-standards`) |
-| `content` | The instruction text (frontmatter stripped) |
-| `apply_to` | From frontmatter `applyTo:` field, or empty string |
-| `description` | From frontmatter `description:` field, or empty string |
-| `metadata` | All other frontmatter fields |
-| `path` | Absolute path to the file (as string) |
+```python
+from __future__ import annotations
+
+import ast
+import re
+
+from pytest_skill_engineering import load_instruction_file
+from pytest_skill_engineering.copilot import CopilotEval
+
+
+async def test_function_conventions(copilot_eval, tmp_path):
+    instruction = load_instruction_file(".github/instructions/python-style.instructions.md")
+    agent = CopilotEval(
+        name="python-style",
+        model="gpt-5.6-sol",
+        instructions=instruction["content"],
+        working_directory=str(tmp_path),
+    )
+    result = await copilot_eval(
+        agent, "Create arithmetic.py with a public function that adds two numbers."
+    )
+
+    assert result.success, result.error
+    tree = ast.parse((tmp_path / "arithmetic.py").read_text(encoding="utf-8"))
+    functions = [node for node in tree.body if isinstance(node, ast.FunctionDef)]
+    assert functions
+    for function in functions:
+        assert re.fullmatch(r"_?[a-z][a-z0-9]*(?:_[a-z0-9]+)*", function.name)
+        assert ast.get_docstring(function)
+        parameters = function.args.posonlyargs + function.args.args + function.args.kwonlyargs
+        if function.args.vararg is not None:
+            parameters.append(function.args.vararg)
+        if function.args.kwarg is not None:
+            parameters.append(function.args.kwarg)
+        assert all(parameter.annotation is not None for parameter in parameters)
+        assert function.returns is not None
+```
+
+These checks inspect syntax, annotations, docstrings, and the shown snake_case
+rule. They do not establish that addition works. Add your project's independent
+behavior tests for a complete check.
+Run generated code only in an environment approved for untrusted code.
+
+`load_instruction_file()` returns:
+
+| Key | Value |
+|---|---|
+| `name` | Filename-derived name, with the instruction suffix removed |
+| `content` | Markdown body, with frontmatter removed |
+| `apply_to` | Frontmatter `applyTo`, or `""` |
+| `description` | Frontmatter description, or `""` |
+| `metadata` | Full parsed frontmatter mapping |
+| `path` | Supplied source path as a string |
 
 ## Instruction File Formats
 
+The same loader accepts `.instructions.md`, `.github/copilot-instructions.md`,
+`AGENTS.md`, and `CLAUDE.md`. Plain Markdown needs no frontmatter.
+
 ### `.instructions.md` (VS Code)
 
-```markdown title=".github/instructions/coding-standards.instructions.md"
----
-applyTo: "**/*.py"
-description: Python coding standards
----
-
-Use snake_case for all variable and function names.
-Never use abbreviations — prefer `calculate_total` over `calc_tot`.
-All functions must have type annotations.
-```
-
-The `applyTo` glob tells VS Code which files trigger this instruction.
-pytest-skill-engineering stores it in `apply_to` for reporting.
+`applyTo` describes editor file matching. The loader returns it as `apply_to`;
+passing `content` to an eval does not apply that glob or save the file metadata
+automatically.
 
 ### `.github/copilot-instructions.md` (VS Code, project-wide)
 
-```markdown title=".github/copilot-instructions.md"
-# Project Coding Standards
-
-All code must follow these conventions:
-- Use snake_case for Python identifiers
-- Write docstrings for all public functions
-- Prefer explicit over implicit
-```
-
-No frontmatter required — just plain markdown.
+Use this file for repository-wide conventions. To load it with project custom
+agent definitions, use `CopilotEval.from_copilot_config(project_root)`.
 
 ### `AGENTS.md` / `CLAUDE.md` (plain markdown)
 
-```markdown title="AGENTS.md"
-You are working in a Python monorepo. Always:
-1. Run tests before committing
-2. Check for type errors with mypy
-3. Follow the project's naming conventions in docs/conventions.md
-```
+You can explicitly load either file and use its body as instructions. Doing so
+does not switch the execution to another coding-agent product.
 
 ## Testing loaded instructions
 
-Load the file and pass its content as the system prompt. `CopilotEval` does not
-have a `from_instruction_files()` factory:
+There is no `CopilotEval.from_instruction_files()` factory. Load the files
+explicitly or use the appropriate project loader.
+
+### Combining Multiple Instruction Files
+
+This configuration fragment concatenates files in the chosen order:
 
 ```python
 from pytest_skill_engineering import load_instruction_file
 from pytest_skill_engineering.copilot import CopilotEval
 
-instruction = load_instruction_file(".github/copilot-instructions.md")
-agent = CopilotEval(
-    name="conventions-test",
-    instructions=instruction["content"],
-)
-
-
-async def test_naming_conventions(copilot_eval):
-    """Agent follows project naming conventions."""
-    result = await copilot_eval(agent, "Write a Python function to compute factorial")
-    assert result.success
-    assert "def " in result.final_response
-```
-
-### Combining Multiple Instruction Files
-
-```python
 paths = [
     ".github/copilot-instructions.md",
     ".github/instructions/python-style.instructions.md",
-    ".github/instructions/testing-conventions.instructions.md",
 ]
 instructions = [load_instruction_file(path) for path in paths]
 agent = CopilotEval(
-    name="full-conventions",
+    name="combined-conventions",
     instructions="\n\n".join(item["content"] for item in instructions),
 )
 ```
 
-The files are concatenated in order, separated by a blank line.
+All concatenated instructions apply to this session, regardless of their
+`applyTo` values. Resolve conflicting rules deliberately.
 
 ## Loading All Instruction Files from a Directory
 
-Use `load_instruction_files()` to load all `*.instructions.md` files and
-well-known files (`copilot-instructions.md`, `AGENTS.md`, `CLAUDE.md`):
+`load_instruction_files()` loads immediate `*.instructions.md` files and
+well-known instruction filenames. Filter by filename-derived name:
 
 ```python
-import pytest
-from pytest_skill_engineering.copilot import CopilotEval
 from pytest_skill_engineering import load_instruction_files
 
-INSTRUCTIONS = load_instruction_files(".github/instructions/")
-
-
-@pytest.mark.parametrize("instr", INSTRUCTIONS, ids=lambda i: i["name"])
-async def test_instruction_file(copilot_eval, instr):
-    """Each instruction file produces adherent LLM behavior."""
-    agent = CopilotEval(
-        name=f"test-{instr['name']}",
-        instructions=instr["content"],
-    )
-    result = await copilot_eval(agent, "Write a Python class for a bank account")
-    assert result.success
-```
-
-`load_instruction_files()` accepts `include` and `exclude` sets to filter by name:
-
-```python
-# Only load specific files
-INSTRUCTIONS = load_instruction_files(
-    ".github/instructions/",
-    include={"coding-standards", "testing-conventions"},
-)
-
-# Skip certain files
-INSTRUCTIONS = load_instruction_files(
-    ".github/instructions/",
+instructions = load_instruction_files(
+    ".github/instructions",
+    include={"python-style", "testing-conventions"},
     exclude={"experimental"},
 )
 ```
 
+Use pytest parametrization when each file should have its own task and outcome.
+Do not apply unrelated files to one generic task and call session completion
+evidence of adherence.
+
 ## Instruction file evidence
 
-Use descriptive eval names and pytest parameter IDs to identify instruction
-variants. The combined system prompt is included in the saved eval configuration,
-but passing file content through `instructions` does not automatically
-preserve file names or create per-file pass rates. Assert the required behavior
-in each test.
+Name evals and pytest parameters after their variants. JSON captures the
+configured system prompt, not automatically the source filenames or per-file
+results. Record safe filenames with `record_property` if you need them.
 
-The examples above are smoke or wording checks. To validate a coding convention,
-inspect the generated source (for example with Python's AST) and execute its
-required behavior independently.
-
-## Next Steps
-
-- [Prompt Files](prompt-files.md) — Test user-facing slash commands
-- [Custom Agents](custom-agents.md) — Test `.agent.md` specialist agent files
-- [CopilotResult Reference](../reference/result.md) — All result fields
+See [System prompts](system-prompts.md), [Prompt files](prompt-files.md), and
+[Custom agents](custom-agents.md) for the corresponding configuration boundaries.

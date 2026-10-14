@@ -4,130 +4,123 @@
 [![CI](https://github.com/sbroenne/pytest-skill-engineering/actions/workflows/ci.yml/badge.svg)](https://github.com/sbroenne/pytest-skill-engineering/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-**A test runner for people working with coding agents.**
+**Test whether GitHub Copilot can complete tasks with your tools and instructions.**
 
-Test whether real GitHub Copilot sessions can use your MCP servers, CLI tools,
-skills, system prompts, and custom agents. Write a user task, execute it through
-pytest, and verify the actual output with ordinary assertions.
+pytest-skill-engineering runs real Copilot sessions from pytest. Give Copilot a
+task, check the actual output with ordinary assertions, and save the execution
+as JSON.
 
-The framework runs the task and records what happened. Your existing coding agent
-investigates the evidence, reads the source, and helps you improve the interface.
-**Version 1.0 removes AI judging, report dashboards, rankings, and skill refinement.**
-See the [migration guide](docs/migration.md) for this breaking change.
+Use it to test MCP servers, CLI tools, skills, system prompts, plugins, and custom
+agents. It answers a different question from your tool's unit tests: **can
+Copilot use the interface correctly?** A working tool can still have confusing
+descriptions or arguments that lead the agent to the wrong result.
 
-## Why this exists
-
-Your tool can pass its own tests while Copilot chooses the wrong operation,
-supplies the wrong arguments, or misunderstands its descriptions. That is a
-different question from whether the tool implementation works.
-
-Use real task execution to test the AI-facing interface, and independent output
-checks to establish correctness. A completed session or a tool call by itself
-does not prove that the requested task succeeded.
+You define what correctness means. The framework manages the Copilot session,
+execution limits, usage, and evidence; it does not grade answers with another AI.
 
 ## Quick start
 
 You need Python 3.11+, [uv](https://docs.astral.sh/uv/), and a GitHub account with
 Copilot access.
 
-```powershell
+Run these commands in an existing Python project with a `pyproject.toml`:
+
+```bash
 uv add pytest-skill-engineering
 gh auth login --hostname github.com
 uv run pytest-skill-engineering init
 uv run pytest-skill-engineering doctor
-uv run python -m pytest "tests\test_copilot_eval.py" -v
+uv run python -m pytest tests/test_copilot_eval.py -v
 ```
 
-`init` creates a Todo MCP starter test, explicit JSON evidence settings, and
-explicit starter-model rates in `pricing.toml`. It refuses conflicting settings
-or an existing starter. Live execution can consume Copilot premium requests.
+`init` creates a test using the bundled Todo MCP server, configures JSON output,
+and adds starter-model rates to `pricing.toml`. It reports conflicts rather than
+overwriting existing files or settings. `doctor` checks setup and Copilot access.
+Real task execution may consume Copilot premium requests.
 
-pytest shows ordinary test results and assertion failures. Give your coding
-agent `aitest-reports\results.json` and the relevant source to investigate what
-happened. No dashboard or second AI judgment is generated.
-
-## What we learned by testing our own idea
-
-We evaluated a companion skill for coding agents using this framework and chose
-not to ship it. The comparison did not demonstrate a benefit; adding general
-test-writing advice was not evidence that users needed another product layer.
-Use the documentation, examples, and native evidence directly.
-
-The [case study](docs/use-cases/companion-skill.md) records the actual results,
-failures, limitations, and removal decision. Its
-[historical experiment](examples/skill-dogfood/) remains reproducible with a
-frozen test fixture, not an installable companion skill. Default sample checks
-are offline; live execution is explicit. The [quickstart](examples/quickstart/)
-is the smaller first example.
-
-Testing your own domain skills remains a supported framework capability.
+The test checks the tool's arguments and returned task state. pytest prints the
+result; `aitest-reports/results.json` preserves the execution. See the
+[setup guide](docs/getting-started/index.md) or the standalone
+[quickstart project](examples/quickstart/).
 
 ## A test that checks the result
 
 ```python
 from __future__ import annotations
 
-import subprocess
-import sys
+import json
 
 from pytest_skill_engineering.copilot import CopilotEval
 
 
-async def test_addition(copilot_eval, tmp_path):
+async def test_order_total(copilot_eval, tmp_path):
     agent = CopilotEval(
-        name="addition",
-        model="gpt-5.6-luna",
-        instructions="Write Python code and save the requested file.",
+        name="order-total",
+        model="gpt-5.6-sol",
+        instructions="Save the requested output as JSON. Use integer cents.",
         working_directory=str(tmp_path),
     )
-    result = await copilot_eval(agent, "Create calc.py with add(a, b) returning a + b.")
-    assert result.success, result.error
-    assert (tmp_path / "calc.py").is_file()
-    checked = subprocess.run(
-        [
-            sys.executable,
-            "-c",
-            "from calc import add; assert add(2, 3) == 5; assert add(-2, 2) == 0",
-        ],
-        cwd=tmp_path,
-        capture_output=True,
-        text=True,
-        timeout=10,
+    result = await copilot_eval(
+        agent,
+        "Save order.json for two items at 1250 cents each plus 20% tax. "
+        "Include subtotal_cents, tax_cents, and total_cents.",
     )
-    assert checked.returncode == 0, checked.stderr
+    assert result.success, result.error
+    output = tmp_path / "order.json"
+    assert output.is_file()
+    assert json.loads(output.read_text(encoding="utf-8")) == {
+        "subtotal_cents": 2500,
+        "tax_cents": 500,
+        "total_cents": 3000,
+    }
 ```
 
-Use your approved isolation when executing generated code. A temporary directory
-is not a security sandbox.
+`CopilotEval` configures the session. The second argument to `copilot_eval` is
+the user task. `result.success` checks execution completion; the file assertions
+check that the task produced the right result.
 
-## What stays in the framework
+For your own tools, check the resulting application state, saved files, or
+operation output. A tool call or a model's claim is not proof of task success.
+Use approved isolation for live tests: a temporary directory is not a sandbox,
+and generated code or tool calls can act with your user's access.
 
-| Capability | What it provides |
+## What the framework provides
+
+| You need | Use |
 | --- | --- |
-| `CopilotEval` and `copilot_eval` | Real SDK sessions with explicit configuration |
-| MCP, CLI, skills, plugins, custom agents | The interfaces and definitions under test |
-| Execution controls | Time, usage, request, tool, and permission controls; one attempt per execution |
-| Captured evidence | Configuration, calls, arguments, outputs, completion flags, errors, and usage |
-| Ordinary pytest checks | Consumer-owned verification and recorded properties |
-| `ab_run` and repetitions | Isolated working directories and repeated observations |
-| Structured JSON | Captured execution and ordinary pytest outcomes, without rankings or advice |
-| Pricing | Explicit USD estimates and recorded Copilot premium requests |
+| Real task execution | `CopilotEval` and the `copilot_eval` pytest fixture |
+| Controlled runs | Timeouts, tool budgets, request controls, and permission settings |
+| Debugging evidence | Configuration, calls, arguments, outputs, errors, and completion records |
+| Repeatable comparisons | `ab_run` and pytest repetitions |
+| Usage visibility | Captured tokens, Copilot premium requests, and explicit price estimates |
+| Saved results | Native JSON with execution evidence and ordinary pytest outcomes |
 
-A/B entries share one pytest outcome. Record side-specific checks; do not read
-that shared outcome as independent per-side success or causal improvement.
-Missing prices and incomplete evidence are recorded explicitly.
+Your tests supply application fixtures, guarded tool adapters, and independent
+output checks. The framework makes one execution attempt per call; it does not
+retry failures automatically. Missing usage, prices, and incomplete evidence
+remain visible.
 
-## Let your coding agent investigate
+## Investigate and compare
 
-Ask your existing coding agent to inspect a failed test, its saved JSON evidence,
-and the source. It can explain the supported cause and help fix it, without
-changing the test's success criteria after seeing the failure.
+Give your coding agent a failed test, its JSON evidence, the requirements, and
+the relevant source. It can investigate the failure and help you change the
+interface. Keep the success criteria fixed when rerunning a comparison.
 
-Reading current schema-4.0 evidence needs no authentication or paid call.
-The framework records results; the coding agent interprets them. Subjective
-review is advice, not an automatic pytest verdict.
+For A/B tests, record verification separately for each side: both saved
+executions share one pytest outcome. That outcome alone cannot establish
+independent pass rates or a causal improvement. See
+[comparing configurations](docs/getting-started/comparing.md).
 
-Read the [full documentation](https://sbroenne.github.io/pytest-skill-engineering/).
+## Documentation
+
+- [Getting started](https://sbroenne.github.io/pytest-skill-engineering/getting-started/)
+- [Task guides](docs/how-to/index.md) and [API reference](docs/reference/api.md)
+- [Examples](examples/README.md), including historical skill comparisons
+- [Upgrading from 0.6.x](docs/migration.md): 1.0 removed AI judging, renderers,
+  rankings, and skill refinement
+
+No framework companion skill is required or distributed. Testing your own
+domain skills is supported.
 
 ## License
 

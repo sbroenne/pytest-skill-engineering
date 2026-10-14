@@ -1,39 +1,46 @@
 # Execution, evidence, and investigation
 
-The framework and your coding agent have different jobs.
+Running a session, verifying the task, and explaining a failure are three
+different jobs.
 
-The framework executes the task, enforces configured controls, captures evidence,
-and saves JSON alongside ordinary pytest output. Your test owns the output checks. Your existing
-coding agent investigates source and evidence, proposes changes, and helps you
-rerun the relevant cases.
+| Job | Owner | Output |
+| --- | --- | --- |
+| Execute | Framework | Copilot session, controls, usage, and captured events |
+| Verify | Your pytest test | Assertions against actual output and the pytest outcome |
+| Investigate | Your coding agent or a human | An explanation based on evidence, requirements, and source |
 
-## Why no separate AI analysis layer?
-
-An adviser receiving a shortened report has less context than the coding agent
-already working in the repository. It cannot independently establish the cause
-of a failure from a transcript alone. Its prose can sound authoritative while
-misdiagnosing an environment problem, a wrong test, or a bug in the tool.
-
-Another model session also adds cost and a failure point unrelated to whether
-the task under test passed. Reading captured results should not need another paid call.
-
-Version 1.0 therefore removes built-in judging, answer scoring, report advice,
-dashboards, rankings, and automatic skill refinement. The existing coding agent
-investigates source and evidence without another framework-owned guidance layer.
-We also tested and removed our proposed companion skill; the
-[case study](../use-cases/companion-skill.md) explains why.
+The framework saves execution and pytest results as JSON. Reading that JSON
+does not start another model session or require authentication.
 
 ## What evidence can establish
 
-`result.success` records session completion. Calls show which tool and arguments
-were selected. Completion flags and errors show what was captured. Usage records
-describe the observed execution. None of these automatically establishes that
-the user's desired state exists.
+`result.success` records execution completion. Tool calls show what was selected,
+with which arguments. Completion flags and capture errors show whether those
+observed calls have complete evidence. Usage describes the recorded execution.
 
-Use ordinary assertions against files, output schemas, exact values, fixture
-state, or returned operation results. Save those checks with `record_property`.
-Subjective review can still be useful, but label it advice, not a measured pass
-rate or a framework verdict.
+Those facts are useful for diagnosis, but none establishes that the requested
+application state exists. For example, a completed `save` call is not a check
+that the file contains the requested values.
+
+Check files, output schemas, exact values, fixture state, or returned operation
+results with ordinary assertions. Save useful observations with
+`record_property` before asserting so failed checks remain inspectable.
+Properties record evidence; they do not change pytest's verdict by themselves.
+
+Missing output is not empty output, unavailable usage is not zero usage, and
+missing pricing is not zero cost. Preserve these distinctions when interpreting
+the result. See the [result reference](../reference/result.md).
+
+## Why there is no separate judge
+
+A transcript alone may not reveal whether the cause was a tool bug, wrong test,
+permission denial, or ambiguous requirement. Your existing coding agent has
+access to the source and environment needed to investigate that distinction.
+An extra framework-owned judge would add cost without independent verification.
+
+Subjective review can still be useful, but label it advice rather than a
+measured result. Version 1.0 removed built-in judging and report advice; the
+[migration guide](../migration.md) covers the retired APIs.
 
 ## Comparisons need discipline
 
@@ -43,6 +50,7 @@ or all inherited environment state. Its two entries have one shared pytest
 outcome. Repetitions and representative cases matter more than an eloquent
 explanation of a single run.
 
-The framework does not select a winner. Your coding agent must consider sample
-size, side-specific verification, incomplete evidence, and missing prices before
-drawing conclusions from the observations.
+Record each side's verification separately. The framework does not select a
+winner: interpreting a difference requires considering sample size, incomplete
+evidence, and missing prices. A shared pytest outcome cannot establish
+independent per-side pass rates or a causal improvement.

@@ -1,9 +1,11 @@
 # Multi-step tasks and explicit context
 
-Every `copilot_eval` call creates a new Copilot session. The public fixture does
-not reuse conversation history between calls or between pytest tests.
+Every `copilot_eval` call starts a new Copilot session. The fixture does not
+retain conversation history across calls or pytest tests. Use one prompt for a
+task requiring several steps.
 
-For a workflow, place the required context and actions in one task:
+The following fragment assumes `agent` has your banking tools and an initialized
+test account:
 
 ```python
 result = await copilot_eval(
@@ -14,26 +16,27 @@ assert result.success, result.error
 assert result.tool_was_called("banking-transfer")
 ```
 
-Here `agent` is your configured banking eval. Also verify exact arguments,
-returned operation data, call order when required, and final account values.
-Tool presence alone does not establish a correct transfer.
+The tool check establishes only that a call was observed. Also check completed
+calls, exact arguments, operation errors, and final account values through your
+application fixture. Assert call order only when it is part of the requirement.
 
 ## Do not confuse descriptions with persisted state
 
-Writing "a previous transfer occurred" in a new prompt does not change a fresh
-fixture database. If a follow-up test requires changed account state, initialize
-that state explicitly in its own application fixture.
+An earlier task can change files or external state, but it does not give the next
+call conversation history. Likewise, writing "a previous transfer occurred" in
+the prompt does not initialize a fixture database.
 
-Sharing a test class or recording two runs does not create a shared conversation
-or prove history retention. For context-dependent behavior,
-declare the necessary context in the task and check its actual output.
+For independent tests, initialize required state in each application fixture.
+For context-dependent behavior, include the required context explicitly in the
+task and verify its output. That tests use of supplied context, not retention
+of a prior conversation.
 
 ## Compare and repeat
 
-Parametrize independent eval configurations or use `ab_run` with fixed checks.
-Each repetition recreates function-scoped fixtures; session-scoped external
-state is not automatically reset.
+[Parametrization and `ab_run`](comparing.md) execute independent configurations.
+[Repetitions](iterations.md) recreate function-scoped fixtures, not shared
+services or desktops. Own any external-state reset.
 
-See [comparisons](comparing.md), [iterations](iterations.md), and the real
+The repository's
 [`test_06_sessions.py`](https://github.com/sbroenne/pytest-skill-engineering/blob/main/tests/integration/copilot/test_06_sessions.py)
-examples.
+shows explicit-context and multi-step tasks.

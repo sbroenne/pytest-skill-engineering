@@ -1,11 +1,13 @@
 # Troubleshooting
 
-Start with `uv run pytest-skill-engineering doctor` for installation,
-project configuration, authentication, SDK startup, and starter-model access.
+When a task cannot start, run `uv run pytest-skill-engineering doctor`. It checks
+installation, project configuration, authentication, SDK startup, and access to
+the starter model. When a task starts but fails an assertion, inspect its actual
+output before changing configuration.
 
 ## Authentication or model access
 
-```powershell
+```bash
 gh auth login --hostname github.com
 gh auth status --hostname github.com
 ```
@@ -19,6 +21,13 @@ user. The selected account needs Copilot access. The starter requires
 Run the configured server command in the same environment. Check imports,
 permissions, and protocol output. Logs belong on stderr, not protocol stdout.
 Do not "fix" a startup failure by weakening the output criterion.
+
+## Missing or unexpected tools
+
+Check `mcp_servers`, each server's `tools` list, and `allowed_tools` or
+`excluded_tools`. Match the actual captured tool name, including any MCP server
+prefix. In `client_mode="empty"`, no tools are available by default; provide them
+explicitly. Skill discovery does not mean the skill was read.
 
 ## Retired arguments or old reports
 
@@ -40,6 +49,10 @@ Session success is not task correctness. Inspect actual outputs and
 `record_property` checks. Check call completion, operation errors, capture
 errors, fixture state, and the source. Give your current coding agent the failure
 and [saved evidence](../how-to/inspect-evidence.md) for investigation.
+
+`final_response` can be `None`, and missing usage remains unknown rather than
+zero. A timeout or tool-budget stop is a failed execution. Check `stop_reason`
+and `error`; do not retry invisibly or treat incomplete evidence as success.
 
 ## Initialization conflicts
 

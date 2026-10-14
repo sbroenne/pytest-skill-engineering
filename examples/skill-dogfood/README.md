@@ -1,172 +1,160 @@
-# Historical experiment: why we removed our companion skill
+# Write, run, fix, and rerun a customer test
 
-This sample preserves the experiment that led us to remove our proposed
-companion skill. It exercises a real customer workflow: write a
-test, run it against a broken invoice CLI, investigate the captured failure,
-repair the application, and rerun the unchanged test.
+This sample gives a coding agent a broken CLI and fixed customer requirements.
+The agent writes a test, observes a real application failure, repairs the CLI,
+and reruns the unchanged test. Separate checks verify the repaired application,
+because the agent's own test can be wrong too.
 
-There is no AI judge. Ordinary pytest assertions and fixed, independent CLI
-checks decide whether the output is correct. The coding agent interprets the
-failure and makes the repair.
+It also preserves our historical framework companion-skill experiment.
+The guidance is frozen test data under `fixtures/retired-companion`, not a
+maintained or installable product skill. The sample materializes it as
+`SKILL.md` only inside temporary experiment workspaces. Its stored
+`instructions.txt` bytes must remain unchanged.
 
-There is no installable framework companion skill. The original evaluated
-guidance is frozen under `fixtures\retired-companion` as test data. The sample
-materializes an SDK skill only inside each temporary experiment workspace.
-It is not maintained, advertised, or installed as product guidance.
+**Default tests are offline.** Live comparisons consume Copilot requests and
+execute generated code; run them only with authorization and approved isolation.
+For a simpler first test, use [quickstart](../quickstart/).
 
-The basic invoice case is a workflow smoke test. The harder imported-order
-checkout case tests interacting money and persistence defects with 42 fixed
-checks and repeated, independently scored workflow cases. See the
-[use case](../../docs/use-cases/companion-skill.md) for the experiment and results.
+## Set up and run offline checks
 
-## Local setup and offline checks
+From the repository root:
 
-Use a checkout containing the 1.0 changes. From the repository root:
-
-```powershell
-cd examples\skill-dogfood
+```bash
+cd examples/skill-dogfood
 uv sync --frozen
 uv run --frozen python -m pytest -q
 ```
 
-The sample explicitly depends on the framework checkout at `..\..`; it does not
-need an unpublished PyPI release. Its lock and environment are separate from the
-repository's development environment.
+The sample uses the framework checkout at `../..` with its own environment and
+lock. Default collection includes only `tests/offline`.
 
-Default collection includes only `tests\offline`. These checks cover the seeded
-rounding fault, the fixed output criteria, file permissions, single execution,
-and rejection of failures that have no real Copilot tool execution. Offline
-checks block creation of Copilot clients; they prove these boundaries, not model
-performance.
+Offline checks cover the seeded fault, fixed output criteria, file-write
+restrictions, single execution, and rejection of failures without real Copilot
+tool execution. They block Copilot client creation. They prove sample
+boundaries, not model performance.
 
-## Run the real comparison explicitly
+## Choose a live workflow
 
-Only run this in an approved environment for executing generated code.
-Authenticate with a GitHub account that has Copilot access:
+| Workflow | Application | Independent checks | Use |
+| --- | --- | --- | --- |
+| Invoice | A CLI with an incorrect tax-rounding calculation | 16 fixed checks | Smaller workflow smoke test |
+| Checkout | Imported orders with rounding, discount/tax, duplicate, conflict, and persistence defects | 42 fixed checks | Harder repeated comparison |
 
-```powershell
+Both compare `without-skill` and `with-skill` under the same tasks, system
+prompts, starting application, fixtures, model, budgets, and checks. Only skill
+availability differs. The treatment must actually read the historical guidance
+during authoring and repair; the control disables it.
+
+### Invoice comparison
+
+From this sample directory:
+
+```bash
 gh auth login --hostname github.com
-uv run --frozen python -m pytest "tests\live\test_workflow.py" -v --aitest-json=..\..\aitest-reports\skill-dogfood\comparison.json
+uv run --frozen python -m pytest tests/live/test_workflow.py -v --aitest-json=../../aitest-reports/skill-dogfood/comparison.json
 ```
 
-The two cases run sequentially: `without-skill` and `with-skill`. To select one,
-add `-k "with-skill"` or `-k "without-skill"`. There is no dedicated GitHub
-workflow, automatic paid job, execution retry, or model fallback.
+The two cases run sequentially. Select one with `-k "with-skill"` or
+`-k "without-skill"`. There is no automatic paid job, execution retry, or model
+fallback.
 
-A completed pair starts eight framework sessions: author, failing consumer run,
-repair, and passing consumer run for each variant. A session can make multiple
-model requests, so this is **not** a fixed billing estimate. The model is
-`gpt-5.6-luna`; authoring and repair have 180-second limits and 24-tool-call caps.
-Each consumer session has a 120-second limit and a four-tool-call cap, with the
-guarded invoice tool allowed to execute only once.
+A completed pair starts eight framework sessions: author, failing consumer
+test, repair, and passing consumer test for each variant. A session may make
+multiple model requests, so this is not a fixed billing estimate.
 
-Both variants get the same tasks, system prompts, starting application,
-requirements, fixtures, model, and checks. Only skill availability differs.
-The control disables the historical skill explicitly. The other case registers
-its temporary fixture directory and must actually read `SKILL.md` during both
-authoring and investigation. The stored source is named `instructions.txt` so it
-is not discoverable as an installable skill. Its bytes match the original
-evaluated version; there is no product skill or installation command.
+The model is `gpt-5.6-luna`. Authoring and repair each have a 180-second timeout
+and 24-tool-call cap. Each consumer session has a 120-second timeout and
+four-tool-call cap; the guarded application tool may execute only once.
 
-## What must happen
+### Repeated checkout comparison
 
-The coding agent can write only `test_invoice.py` while authoring. Trusted
-fixtures supply `CopilotEval`, `copilot_eval`, the exact invoice request, and the
-actual CLI response. The written test must fail on the original application's
-rounding behavior, after a genuine completed invoice tool execution. A syntax
-error, authentication failure, skipped test, or session-completion check alone
-does not satisfy this requirement.
+Authorize the repetitions before running:
 
-The repair stage receives the actual native `before.json`, requirements,
-application source, and authored test. It can write only `invoice_cli.py`.
-The original test, requirements, fixture configuration, and before evidence
-must remain unchanged. Sixteen independent checks then cover integer-cent
-output, ordinary invoices, rounding boundaries, zero amounts, and invalid input.
-The unchanged authored test must also pass after repair.
+```bash
+uv run --frozen python -m pytest tests/live/test_checkout_workflow.py --aitest-iterations=3 -v --aitest-json=../../aitest-reports/skill-dogfood/checkout-reproduction.json
+```
 
-The first child pytest run is **supposed to fail**. The full workflow passes
-only when the real failure was observed and the repair satisfies both sets of
-checks. Each comparison case has its own pytest outcome; a control failure stays
-visible rather than being retried or marked as an expected failure.
+This runs three fresh pairs, alternating the first variant. A full comparison
+starts up to 24 framework sessions. A failure stops that case's remaining
+stages; it does not trigger retries.
 
-## Read the evidence
+The workflow previews an order, posts it, repeats the post, attempts a
+conflicting request, posts a different order, and reads the ledger. Checks
+inspect actual command replies and saved state, including invalid inputs and
+missing-ledger behavior. A successful response alone cannot satisfy them.
 
-All evidence uses the framework's native schema:
+## What makes a workflow pass
 
-| File | Contains |
+The agent may write only `test_invoice.py` during invoice authoring. Trusted
+fixtures supply `CopilotEval`, `copilot_eval`, the exact request, and the actual
+CLI response. The test must fail on the original application after genuine,
+completed tool execution. Syntax errors, authentication failures, skips, and
+session-completion checks do not count as detecting the application fault.
+
+The repair stage receives the native `before.json`, requirements, application
+source, and authored test. It may write only `invoice_cli.py`. The test,
+requirements, fixture setup, and before evidence stay unchanged. The repaired
+application must pass both the original test and the 16 independent checks.
+Checkout uses the same principle with its own files and 42 checks.
+
+The first child pytest run is **supposed to fail**. The outer workflow passes
+only when it observes that real failure and the repair satisfies both sets of
+checks. Each variant has its own pytest outcome; failures stay visible.
+
+## Find and interpret the evidence
+
+All paths below are relative to the repository root:
+
+| Path | Contents |
 | --- | --- |
-| `aitest-reports\skill-dogfood\comparison.json` at the repository root | Authoring/repair sessions and recorded workflow checks |
-| `aitest-reports\skill-dogfood\<variant>\<run-id>\before.json` | Actual failed consumer test and invoice output |
-| `aitest-reports\skill-dogfood\<variant>\<run-id>\after.json` | Actual passing consumer test and invoice output |
+| `aitest-reports/skill-dogfood/comparison.json` | Invoice authoring/repair sessions and recorded workflow checks |
+| `aitest-reports/skill-dogfood/<variant>/<run-id>/before.json` | Failed consumer test and actual invoice output |
+| `aitest-reports/skill-dogfood/<variant>/<run-id>/after.json` | Passing consumer test and actual invoice output |
+| `aitest-reports/skill-dogfood/checkout/<variant>/<run-id>/` | Checkout child evidence |
+| The selected checkout reproduction JSON | Checkout authoring/repair sessions and recorded workflow checks |
 
-The outer evidence records child file locations, pytest output, actual guidance
-reads, and independent CLI checks through `record_property`. It does not fold
-child sessions into its usage totals. Inspect each native file for its own usage;
-missing usage or pricing is not zero. Failed runs retain whatever evidence was
-produced, and generated JSON must never be hand-edited.
+Outer `record_property` values retain child paths, pytest output, guidance
+reads, and independent checks. Checkout also records trial, hashes, versions,
+criteria, and completed milestones.
 
-Both variants passing is a valid result. One pair establishes that this example
-works, **not** that the skill improves performance. Any larger comparison needs
-explicitly authorized repetitions and the same fixed criteria.
+Each file uses the framework's native schema. Outer usage does not include the
+separately invoked child pytest sessions; inspect each native file for its own
+usage. Missing usage or pricing is not zero. Failed runs preserve whatever
+evidence was produced. Never hand-edit generated JSON.
 
-## Harder, repeated checkout comparison
+## Historical result, not an expected winner
 
-From this sample directory, explicitly select the harder file:
+The simple invoice pair passed in both conditions. That showed the workflow
+worked, not that the skill improved it.
 
-```powershell
-uv run --frozen python -m pytest "tests\live\test_checkout_workflow.py" --aitest-iterations=3 -v --aitest-json=..\..\aitest-reports\skill-dogfood\checkout-reproduction.json
-```
+The corrected **30 September 2026** checkout comparison completed **1 of 3**
+control workflows and **0 of 3** skill-enabled workflows. Two control repairs
+and one skill-enabled repair passed all 42 application checks, but two of those
+still failed their unchanged, incorrectly authored tests. The comparison did
+not demonstrate a skill benefit; the small sample does not prove general harm.
 
-This collects three pairs, alternating which variant goes first. Every case
-starts with fresh files. A complete comparison starts up to 24 framework
-sessions; failures stop that case's remaining stages rather than trigger retries.
-Those sessions can make multiple model requests.
+A later revision added general test-writing advice, but its comparison was
+stopped. It supports no completed improvement claim. We removed the product
+skill rather than keep tuning this task.
 
-The imported-order CLI has interacting rounding, discount/tax, duplicate-post,
-conflict, and persistence faults. A successful response is not enough: the
-customer test sees real command replies and snapshots of the actual ledger.
-The workflow previews an order, posts it, repeats the post, attempts a conflicting
-request, posts a different order, and reads the ledger. Repairs must pass 42
-fixed checks, preserve all inputs and criteria, and pass the unchanged authored
-test. Invalid-input and missing-ledger behavior are checked independently too.
+The [case study](../../docs/use-cases/companion-skill.md) explains the full
+results, excluded runs, and limitations. New execution produces new
+observations, not a promised reproduction of those counts.
 
-Native child evidence lives under
-`aitest-reports\skill-dogfood\checkout\<variant>\<run-id>` at the repository root.
-Outer properties record the actual variant, trial, criteria, protocol and skill hashes,
-Python/SDK versions, completed milestones, and evidence paths. No custom report
-or combined usage total is produced.
+## Implementation and isolation boundaries
 
-Do not select repetitions until paid execution is authorized. The recorded
-comparison and its limitations belong in the [use case](../../docs/use-cases/companion-skill.md),
-not in a claim that the skill must win.
+`starter.py` is copied to a fresh consumer project. `application.py` owns the
+fixed cases; `consumer.py` supplies trusted fixtures; `workflow.py` runs the
+author-fail-repair-pass sequence. The agent's exposed write tools cannot modify
+those trusted sample files.
 
-The corrected 30 September 2026 run completed **1 of 3** control workflows and
-**0 of 3** skill-enabled workflows. Correct application repairs passed all 42
-checks in two control cases and one skill case, but two of those still failed
-their unchanged, incorrectly authored tests. This run demonstrated no skill
-benefit. Failures remain recorded; a small sample does not prove general harm.
+All model execution uses `CopilotEval` and `copilot_eval`. The sample owns the
+application, guarded adapters, child pytest subprocesses, and independent checks.
+It has no separate SDK runner, usage collector, or report format.
+`tests/integration/copilot/test_19_customer_workflow.py` reuses the no-skill
+workflow as framework regression coverage.
 
-An attempted revision added general test-writing advice rather than knowledge
-specific to using the framework. That comparison was stopped and supports no
-completed improvement claim. We chose to remove the product skill rather than
-keep tuning this known task. The case study preserves that decision.
-
-## Boundaries and source layout
-
-All model execution belongs to `CopilotEval` and `copilot_eval`. The sample owns
-the application, guarded tool adapters, subprocess invocation of pytest, and
-independent checks. It creates no SDK sessions, usage collector, or alternate
-report format. The repository regression test in
-`tests\integration\copilot\test_19_customer_workflow.py` reuses the no-skill
-workflow. Testing other domain skills remains a framework capability.
-
-`starter.py` is copied into a fresh temporary consumer project. `application.py`
-owns the fixed cases; `consumer.py` owns trusted consumer fixtures; `workflow.py`
-owns the author-run-repair-rerun sequence. Agents cannot write those sample files
-through the exposed tools.
-
-File permissions and AST checks are **not an operating-system sandbox**.
+**File-write restrictions and AST checks are not an operating-system sandbox.**
 Generated tests run with the current user's access and Copilot authentication.
-The CLI subprocess gets a reduced environment, but can still access files and
-the network as that user. Do not run untrusted generated code on a sensitive
-machine merely because it passes these checks.
+The CLI subprocess has a reduced environment but can still access files and the
+network. Do not run untrusted generated code on a sensitive machine.

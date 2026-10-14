@@ -4,20 +4,31 @@ description: "CopilotResult reference: tool calls, responses, token usage, files
 
 # CopilotResult
 
-`copilot_eval(...)` returns a `CopilotResult`.
+`result = await copilot_eval(agent, prompt)` returns a `CopilotResult` describing
+the execution. It is not a verdict on the requested task.
+
+## Read a result in this order
+
+1. Check `success`, `error`, and `stop_reason` for execution failures.
+2. Check `evidence_complete` and `capture_errors` before relying on tool records.
+3. Verify the actual task output with your own assertions.
+4. Inspect calls, discovery, dispatch, and usage to explain what happened.
+
+The [assertion guide](assertions.md) shows how to keep execution checks separate
+from application correctness.
 
 ## Common fields
 
 | Field | Meaning |
 |---|---|
-| `success` | Whether the eval completed successfully |
+| `success` | Whether session execution completed successfully; not application correctness |
 | `error` | Error message when `success` is false |
 | `turns` | Normalized conversation turns |
 | `usage` | Per-turn token usage entries for this session |
 | `all_usage` | Captured usage across this session and framework-owned descendants |
 | `model_used` | Actual Copilot model used, or `None` when unknown |
 | `total_premium_requests` | Premium-request accounting |
-| `subagent_invocations` | Runtime subagent events from custom agent dispatch |
+| `subagent_invocations` | Observed custom agent routing/invocation records, with status and captured child result where available |
 | `permission_requested` | Whether Copilot requested permissions |
 | `raw_events` | Raw SDK events for advanced inspection |
 | `evidence_complete` | Every observed tool call has a correlated completion, known tool outcome, and captured output, error, or image |
@@ -37,7 +48,7 @@ Missing completion, uncorrelated events, conflicting duplicate events, and
 cancellation make session `success` false. A completed call whose output was not
 captured makes `evidence_complete` false without changing the reported tool outcome.
 
-## Skill availability
+## Skill discovery: available is not used
 
 For explicit directories, `skill_discovery` contains `skills`, `warnings`,
 `errors`, and `complete`. `complete=True` means discovery finished, not that it
@@ -56,7 +67,7 @@ Actual reads remain in the ordinary tool calls; application checks establish
 task correctness. The runner neither forces a read nor changes the task prompt.
 Native JSON saves discovery separately from configuration and tool calls.
 
-## Captured tool evidence
+## Tool records: missing is not empty
 
 Each item in `all_tool_calls` has these fields:
 
@@ -81,8 +92,8 @@ structured `{"result": ...}` representation. Parse the known tool contract and
 verify both agree; do not discard unexplained trailing data or invent a missing
 payload. The bundled starter demonstrates this explicitly.
 
-The existing `ToolCall` string representation is unchanged. Check
-`evidence_complete` explicitly rather than using `repr()` as an evidence verdict.
+Check `evidence_complete` explicitly; a `ToolCall` string representation is not
+an evidence verdict.
 
 ## Response helpers
 
@@ -119,7 +130,7 @@ premium-request totals, and saved cost estimates include descendant work once.
 Do not add already-inclusive child totals to the parent's totals again.
 Parent `evidence_complete` also checks captured child evidence.
 
-## Token helpers
+## Usage: unknown is not zero
 
 ```python
 result.total_input_tokens
@@ -137,7 +148,7 @@ totals. Known zero remains zero.
 Cost is an estimate from reported input/output counts, not a claim of complete
 billing evidence; unknown cache reads receive no cache discount in that estimate.
 
-## Prepared settings
+## Configuration snapshot
 
 `configuration` records the supplied settings after `extra_config` overrides,
 persona instructions, and tool setup, rather than rebuilding them during report
@@ -193,7 +204,9 @@ result.file_exists("src/app.py")
 result.files_matching("**/*.py")
 ```
 
-## Custom agent dispatch terminology
+## Custom agents and subagents
 
-A `.agent.md` file defines a **custom agent**.
-`result.subagent_invocations` records the runtime **subagent** events that happen only if Copilot dispatches to that custom agent.
+A `.agent.md` file defines a **custom agent**. Attaching that definition does not
+prove that Copilot invoked it as a subagent. Inspect the runtime records in
+`subagent_invocations`, including their statuses, and still verify the task
+output independently.

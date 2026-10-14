@@ -1,12 +1,20 @@
-# Do broad Excel skills help an agent?
+# Case study: broad Excel skills
 
-ExcelMcp tested whether a skill improved an agent's use of two equal product
-entry points: native MCP tools and `excelcli`. The comparison found no
-correctness advantage on the selected tasks, while recorded tokens increased.
-Useful documentation and useful automatically loaded instructions are not
-the same thing.
+**Broad skills produced no observed correctness advantage on the selected
+Excel tasks, while recorded token usage increased.** This historical study
+tested ExcelMcp, an Excel automation product with two entry points: native MCP
+tools and `excelcli`.
 
-## What was compared
+| Entry point | Without skill | With broad skill | Correct cases in each condition |
+| --- | ---: | ---: | ---: |
+| MCP | 4,312,584 recorded tokens | 5,320,118 recorded tokens | 12/12 |
+| CLI | 1,794,556 recorded tokens | 3,092,967 recorded tokens | 12/12 |
+
+The [runnable example](https://github.com/sbroenne/pytest-skill-engineering/tree/main/examples/excel-skill-value)
+demonstrates the checking method with a smaller, authored task. It is not the
+full historical workload and does not establish a benefit for new narrow skills.
+
+## Method: hold the task fixed, change skill availability
 
 The completed comparison used public **pytest-skill-engineering 1.0.3**,
 `github-copilot-sdk` **1.0.16**, `mcp` **2.2.0**, and **gpt-6.1-sol**.
@@ -26,7 +34,7 @@ SHA256 was `10ef893dd29cb13ab97143ea787e68cdc9574a13873ab9a54e50b31dc03fc949`.
 SpreadsheetBench declares CC BY-SA 4.0. No upstream workbook, answer file, or
 adapted benchmark instruction is included in this example.
 
-## Evidence, not completion claims
+## Verification: reopen the saved workbook
 
 Fixed checks ran outside the model-writable task directory. They reopened
 saved workbooks through desktop Excel COM, checked every requested result,
@@ -45,12 +53,7 @@ then SDK discovery checked the exact enabled name and resolved source path.
 Discovery probes forbade `send` and `send_and_wait`; they made no model requests.
 Actual treatment calls separately established that the skills were read.
 
-## Measured result
-
-| Entry point | Without skill | With broad skill | Correct cases per condition |
-|---|---:|---:|---:|
-| MCP | 4,312,584 recorded tokens | 5,320,118 recorded tokens | 12/12 |
-| CLI | 1,794,556 recorded tokens | 3,092,967 recorded tokens | 12/12 |
+## Recorded usage and attempted runs
 
 Recorded token usage increased **23.4% for MCP** and **72.4% for CLI**.
 All **24 treatment cases read the matching skill**. This was not a
@@ -65,7 +68,7 @@ The [compact receipt](https://github.com/sbroenne/pytest-skill-engineering/blob/
 preserves case metrics, frozen hashes, and invocation boundaries without private
 workbook paths or raw conversations.
 
-## Limits and the recording problem
+## Limits: small sample and incomplete interrupted runs
 
 One capable model, six tasks, and two repetitions do not establish universal
 skill value. Repeated cases reused input contents; public cases may already be
@@ -79,9 +82,9 @@ used atomic attempt snapshots. Those protections worked. The configured public
 `on_event` callback received **zero live events** in the actual comparison.
 Mocked callback tests are not evidence that live journaling works.
 
-## Product decision
+## Decision in ExcelMcp: move broad guidance to documentation
 
-The broad default skills were replaced by two optional report-formatting
+In ExcelMcp, broad default skills were replaced by two optional report-formatting
 skills. General workflows, limitations, recovery, and command references moved
 to ordinary documentation, with the existing website addresses preserved.
 The `skills` directory now contains actual skills, not a documentation corpus.
@@ -93,7 +96,7 @@ establish that the new narrow skills help. Their separate, unrun comparison has
 positive formatting tasks and ordinary non-trigger tasks; it checks selection,
 workbook correctness, and usage separately.
 
-## Small runnable example
+## Run a separate, smaller comparison
 
 The [Excel example](https://github.com/sbroenne/pytest-skill-engineering/tree/main/examples/excel-skill-value) demonstrates the
 method with one self-authored workbook task, both entry points, and paired

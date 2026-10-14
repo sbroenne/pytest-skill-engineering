@@ -1,71 +1,84 @@
 # CI/CD integration
 
-Run authorized live cases with Copilot access, and upload native evidence plus
-ordinary pytest outcomes. Your coding agent interprets the evidence.
-
-```powershell
-uv run python -m pytest "tests\test_tools.py" --junitxml=results.xml --aitest-json=results.json
-```
-
-JUnit includes all collected test outcomes. Eval reports include tests with
-captured eval execution; setup failures and ordinary tests without eval results
-remain visible through pytest and JUnit.
+Run explicitly authorized live tasks in CI and upload native JSON with ordinary
+pytest outcomes. Keep paid workflows separate from offline checks. A saved
+report records execution; your assertions still determine task correctness.
 
 ## GitHub Actions
 
+This complete workflow assumes a committed uv lockfile, installed test
+dependencies, and your live task file at `tests/test_tools.py`:
+
 ```yaml
-permissions:
-  contents: read
-  copilot-requests: write
+name: Copilot task checks
 
-steps:
-  - uses: actions/checkout@v4
-  - uses: astral-sh/setup-uv@v7
-  - run: uv sync --frozen
-  - name: Run authorized evals
-    env:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    run: |
-      uv run python -m pytest tests/test_tools.py -o addopts= \
-        --junitxml=reports/results.xml \
-        --aitest-json=reports/results.json
+on:
+  workflow_dispatch:
 
-  - uses: actions/upload-artifact@v4
-    if: always()
-    with:
-      name: test-evidence
-      path: reports/
+jobs:
+  task-checks:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      copilot-requests: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10
+      - run: uv sync --frozen
+      - name: Run authorized tasks
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          uv run python -m pytest tests/test_tools.py -o addopts= \
+            --junitxml=reports/results.xml \
+            --aitest-json=reports/results.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-evidence
+          path: reports/
 ```
 
-Use the authentication and organization billing settings approved for your
-repository. The runtime selects `GITHUB_TOKEN` before `GH_TOKEN`; a token alone
-does not establish Copilot entitlement. Protect paid workflows with appropriate
-approvals and do not expose credentials to untrusted pull-request code.
+Use authentication and organization billing settings approved for your
+repository. The permission and token do not by themselves establish Copilot
+entitlement. `GITHUB_TOKEN` takes precedence over `GH_TOKEN`. Protect paid jobs
+with appropriate approvals and never expose credentials to untrusted
+pull-request code. Pin action revisions according to your repository policy.
 
-The repository's integration workflow is an example of explicitly authorized
-live execution. The old banking showcase and its dedicated workflow are retired.
-The [skill dogfooding sample](https://github.com/sbroenne/pytest-skill-engineering/tree/main/examples/skill-dogfood)
-is local-only, with offline defaults and an explicit live file. Do not add an
-automatic paid comparison or report-judging job. Reading saved JSON does not
-require those permissions.
+`workflow_dispatch` makes this example manual; it is not an automatic paid PR
+check. Reading saved JSON requires no Copilot credentials or request permission.
+
+## Preserve all pytest outcomes
+
+JUnit includes ordinary tests and setup failures, including cases with no
+captured eval result. Native JSON includes captured task executions and their
+pytest outcomes. Absence from task evidence does not mean a test passed.
+
+The `-o addopts=` override removes inherited options so the destinations above
+are explicit. A failed JSON publication returns nonzero and keeps a prior file
+intact; stale evidence must not be mistaken for the current run.
 
 ## Verification properties and metrics
 
-Use `record_property` for safe application checks and build identifiers.
-Framework JUnit metadata includes eval identity, model, server names, tool
-filters, usage, and session success where available. Session success is not
-application correctness; assert the independent check too.
+Record safe build identifiers and application observations with
+`record_property`, then assert the independent check. Framework JUnit metadata
+also includes available configuration and execution fields, such as model,
+tool filters, usage, and session success.
 
-Missing usage is not known zero. USD values are estimates requiring explicit
-pricing. A/B entries share one test outcome: preserve side-specific verification.
+Session success is not application correctness. Missing usage is unknown,
+not zero. USD estimates need explicit [pricing](cost-estimation.md).
+Paired A/B entries share one pytest outcome; save verification for each side.
 
 ## Offline checks
 
-Control, schema, and report contracts can run without paid model calls:
+For changes to this repository's controls and evidence contracts:
 
-```powershell
-uv run python -m pytest "tests\contracts" -q -o addopts=
+```bash
+uv run python -m pytest tests/contracts -q -o addopts=
 ```
 
-These establish framework boundaries and evidence fidelity, not model performance.
-Use real integration cases for AI-facing execution changes.
+These checks need no paid model calls and establish framework behavior, not
+model performance. The
+[skill dogfooding sample](https://github.com/sbroenne/pytest-skill-engineering/tree/main/examples/skill-dogfood)
+also defaults to offline tests; its local live cases are explicit.
+Use authorized real integration cases when changing AI-facing execution.

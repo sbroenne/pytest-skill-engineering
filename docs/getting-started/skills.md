@@ -1,112 +1,94 @@
 ---
-description: "Add domain knowledge to AI agents with Eval Skills following the agentskills.io specification. Test whether skills improve agent performance."
+description: "Validate your own skills, load them into Copilot, and check task output."
 ---
 
-# Eval Skills
+# Skills
 
-An **Eval Skill** is a domain knowledge module following the [agentskills.io](https://agentskills.io/specification) specification. Skills provide:
+Supply `skill_directories` when a task should use your domain skill. Copilot
+loads the skill natively; pytest checks the output you require. Loading a skill
+does not prove that Copilot read or followed it.
 
-- **Instructions** — Domain knowledge and behavioral guidelines for the agent
-- **References** — On-demand documents the agent can look up
+The framework does not distribute a companion skill for its own use. This
+page covers consumer-provided skills following the
+[Agent Skills specification](https://agentskills.io/specification).
 
 ## Creating a Skill
 
-A skill is a directory with a `SKILL.md` file:
+A skill directory contains `SKILL.md` and optional reference documents:
 
-```
-financial-advisor/
-├── SKILL.md           # Instructions (required)
-└── references/        # On-demand lookup docs (optional)
-    └── budgeting-guide.md
+```text
+skills/
+└── invoice-format/
+    ├── SKILL.md
+    └── references/
+        └── fields.md
 ```
 
 ### SKILL.md Format
 
 ```markdown
 ---
-name: financial-advisor
-description: Guidelines for personal finance management
+name: invoice-format
+description: Save invoices in the project's JSON format.
 ---
 
-# Financial Advisor Guidelines
-
-## Budget Analysis
-- Follow the 50/30/20 rule: 50% needs, 30% wants, 20% savings
-- Emergency fund should cover 3-6 months of expenses
-- Track spending categories: housing, food, transport, entertainment
-
-## Red Flags
-- Savings below 10% of income
-- No emergency fund
-- High-interest debt accumulating
-
-For detailed budgeting advice, use the reference document.
+When creating an invoice, read references/fields.md for the required fields.
+Write JSON only to the requested artifact path.
 ```
+
+Put the task-routing guidance and core rules in `SKILL.md`. Put detailed
+schemas, tables, or examples in references linked from it.
 
 ## Skill References
 
-References are documents the agent can look up **on demand** rather than having
-them always in context. Copilot loads skills natively and can read their
-`references/` files using its file tools. The supplied personas also expose
-`list_skill_references` and `read_skill_reference` for validated enabled
-references. `client_mode="empty"` does not inject persona tools.
-
-Reference documents may be organized in subdirectories, for example
-`references/commands/read.md`. Link to them directly from `SKILL.md` using paths
-relative to the skill root. The specification's advice to keep reference chains
-one level deep is not a ban on nested folders.
-
-The package validates all reference files recursively as nonempty UTF-8 Markdown.
-`Skill.references` uses paths relative to `references/`, with `/` separators on
-every platform: `commands/read.md`. Flat names such as `budgeting-guide.md` are
-unchanged, and equal basenames in different folders remain distinct.
-Reference tools use these same relative paths. Disabled skills are not
-advertised or readable through the reference tools. This does not block ordinary
-filesystem access by other tools. Duplicate relative reference paths across
-enabled skills are rejected rather than silently replacing a document.
-Links are accepted only when their resolved targets stay within `references/`;
-the `references/` directory itself must resolve within the skill directory.
-Broken links, directory cycles, unreadable entries, and non-file entries are
-explicit errors. These checks also apply to Windows directory junctions.
+Copilot can read `references/` files using its file tools. Supplied personas
+also expose `list_skill_references` and `read_skill_reference` for validated,
+enabled references. `client_mode="empty"` does not inject persona tools.
+Neither mechanism guarantees that the model will consult a reference.
 
 ### Example Reference Document
 
-```markdown title="references/budgeting-guide.md"
-# Budgeting Guide
+```markdown
+# Invoice fields
 
-## The 50/30/20 Rule
-- 50% Needs: rent, utilities, groceries, insurance
-- 30% Wants: dining out, entertainment, shopping
-- 20% Savings: emergency fund, investments, debt payoff
-
-## Building an Emergency Fund
-- Start with $1,000 mini-fund
-- Build to 3 months of expenses
-- Keep in high-yield savings account
-- Don't invest emergency fund
-...
+Use exactly these fields:
+- quantity: the requested integer quantity
+- unit_price: the requested numeric price
+- total: quantity multiplied by unit_price
 ```
 
 ### How the Eval Uses References
 
-When you tell the skill to "use the reference document for budgeting advice", the agent will:
+The runner validates references before execution. The model can then choose
+to read them and use their content. Inspect observed reads if they matter to
+your requirement, but verify the saved artifact independently.
 
-1. Read the skill's guidance about when to consult references
-2. Read `references/budgeting-guide.md` with its available file tools
-3. Use that content to formulate a detailed response
+Reference files may live in subdirectories, such as
+`references/commands/read.md`. Link from `SKILL.md` using paths relative to
+the skill root. `Skill.references` and the reference tools use paths relative
+to `references/`, with `/` separators on every platform.
 
-This keeps the skill's main instructions lean while providing detail when needed.
+Validation recursively checks nonempty UTF-8 Markdown. Equal basenames in
+different folders are distinct, but duplicate relative reference paths across
+enabled skills are rejected. Disabled skills are not advertised or readable
+through reference tools; that does not prevent access through other filesystem
+tools.
+
+Links must resolve within `references/`, and that directory must resolve within
+the skill directory. Broken links, directory cycles, unreadable entries, and
+non-file entries are explicit errors. Checks also apply to Windows junctions.
 
 ### When to Use References vs Instructions
 
-| Use Instructions (SKILL.md) | Use References |
-|-----------------------------|----------------|
-| Core decision logic | Detailed lookup tables |
-| Always-needed context | Supplementary details |
-| Short, critical rules | Long documentation |
-| < 500 tokens | > 500 tokens per doc |
+Use `SKILL.md` for when and how to apply the skill. Use references for details
+that can be read on demand. Use `CopilotEval.instructions` for session-wide
+behavior rather than copying the entire skill into the system prompt.
 
-**Example**: Put budget analysis rules in SKILL.md, but detailed budgeting breakdowns in `references/budgeting-guide.md`.
+The frontmatter name must match its directory name. Names use lowercase
+letters, digits, and single hyphens; descriptions and Markdown bodies must be
+nonempty. Local validation also supports optional `scripts/` and `assets/`
+directories, but loading them is not proof that the model executed a script
+or used an asset.
 
 ## Using a Skill
 
@@ -114,143 +96,106 @@ This keeps the skill's main instructions lean while providing detail when needed
 from pytest_skill_engineering.copilot import CopilotEval
 
 agent = CopilotEval(
-    name="with-skill",
-    client_mode="empty",
-    skill_directories=["skills/financial-advisor"],
+    name="invoice-format",
+    model="gpt-5.6-sol",
+    skill_directories=["skills/invoice-format"],
 )
 ```
 
-Supply either a directory containing `SKILL.md` or its parent containing multiple
-immediate skill directories. Relative paths are resolved from the Python process's
-current directory, not `working_directory`.
+Each path can identify an individual skill directory or a parent containing
+immediate skill directories. Relative paths resolve from the Python process's
+current directory, **not** from `working_directory`.
 
-Explicit `skill_directories` enable native SDK skill loading automatically,
-including in `client_mode="empty"`. This does **not** enable ambient configuration
-discovery. Empty mode still excludes personal/project skills and custom instructions,
-file hooks, managed settings, and persona-provided instructions/tools. Supply the
-tools needed by your task explicitly; empty mode's default tool list is empty.
+Explicit directories enable native SDK skill loading, including in
+`client_mode="empty"`. They do not enable ambient configuration discovery.
+Empty mode still excludes personal/project configuration, custom instructions,
+file hooks, managed settings, and persona injection. Supply task tools
+explicitly; its default available-tool list is empty.
 
-Before sending the task, the runner validates every requested skill using the
-existing skill format checks, then checks availability through the public SDK
-`session.rpc.skills.ensure_loaded()`, `reload()`, and `list()` APIs. Missing,
-unreadable, invalid, duplicate-name, or undiscovered skills return
-`success=False`, `stop_reason="execution_error"`, and a setup error without
-sending a model message. A parent with no immediate `SKILL.md` files is an error;
-unrelated child directories without `SKILL.md` are not skill packages.
-SDK loading warnings are logged and saved; loading errors stop execution.
-There is still only one execution attempt.
+Before sending the prompt, the runner validates the requested skills, then
+checks SDK availability through `session.rpc.skills.ensure_loaded()`,
+`reload()`, and `list()`. Missing, unreadable, invalid, duplicate-name, or
+undiscovered skills yield `success=False`, `stop_reason="execution_error"`,
+and a setup error without sending a model message.
 
-`extra_config={"enable_skills": False}` conflicts with nonempty explicit
-directories and raises `ValueError` from `build_session_config()`. For a
-no-skill baseline, remove the directories instead. To deliberately disable
-particular discovered skills, use `disabled_skills=["skill-name"]`; these skills
-remain in discovery evidence with `enabled=False`. Passthrough directories follow
-the same enable/check rules and cannot replace a nonempty `skill_directories` field.
+A parent with no immediate `SKILL.md` packages is an error. Unrelated child
+directories without `SKILL.md` are ignored. Loading warnings are logged and
+saved; loading errors stop execution. There is one execution attempt.
 
-`result.skill_discovery` records actual SDK metadata and loading diagnostics,
-not a claim that the agent read or followed a skill. Observed reads remain
-ordinary tool-call evidence. No setup check tells the agent to read a skill.
+`extra_config={"enable_skills": False}` conflicts with explicit nonempty
+directories and raises `ValueError` from `build_session_config()`. Remove the
+directories for a no-skill baseline. Use `disabled_skills=["skill-name"]` to
+disable particular discovered skills; they remain in discovery evidence with
+`enabled=False`. Passthrough directories follow the same checks and cannot
+replace a nonempty `skill_directories` field.
 
 ### Preflight Without Model Execution
 
-Use the existing public `load_skill()` function (or `Skill.from_path()`) before
-an SDK discovery probe:
+Validate an individual skill locally:
 
 ```python
 from pytest_skill_engineering import load_skill
 
-# Each path must identify an individual skill, not a parent collection.
-skill = load_skill(r"skills\financial-advisor")
-assert skill.name == "financial-advisor"
+skill = load_skill("skills/invoice-format")
+assert skill.name == "invoice-format"
 print(sorted(skill.references))
 ```
 
-This uses the same local format, reference, and readability validation as the
-evaluation runner. It starts no client and sends no model message; invalid input
-raises `SkillError`. For a parent collection, call it for each immediate child
-containing `SKILL.md`; a collection with no such children is not a valid input.
+`load_skill()` and `Skill.from_path()` perform local format, reference, and
+readability checks. They start no SDK client and send no model message. Invalid
+input raises `SkillError`. For a collection, validate each immediate child
+containing `SKILL.md`; a collection path is not itself a valid individual skill.
 
-Then use `CopilotEval.build_session_config()` and the public SDK
-`session.rpc.skills.ensure_loaded()`, `reload()`, and `list()` APIs to check
-discovered paths, names, enabled state, and loading errors, without calling
-`send()` or `send_and_wait()`. Local validation and SDK discovery are separate
-checks: SDK discovery alone does not exercise the package's local validation,
-and `load_skill()` alone does not prove runtime availability or detect duplicate
-names across multiple skill directories.
+Local validation does not establish runtime availability or detect duplicate
+names across several requested directories. If you perform a separate SDK
+discovery probe, use `build_session_config()` and the public skills RPCs without
+calling `send()` or `send_and_wait()`. Discovery alone does not replace local
+validation.
 
 ## Testing Skill Effectiveness
 
-Compare agents with and without skills:
+With the sample skill above, check the saved invoice:
 
 ```python
-from pytest_skill_engineering.copilot import CopilotEval
-
-agent_without_skill = CopilotEval(
-    name="without-skill",
-    instructions="You are a banking assistant.",
-)
-
-agent_with_skill = CopilotEval(
-    name="with-skill",
-    instructions="You are a banking assistant.",
-    skill_directories=["skills/financial-advisor"],
-)
-
-AGENTS = [agent_without_skill, agent_with_skill]
+import json
 
 
-@pytest.mark.parametrize("agent", AGENTS, ids=lambda a: a.name)
-async def test_financial_advice(copilot_eval, agent):
-    """Does the skill improve financial recommendations?"""
-    result = await copilot_eval(
-        agent, "I have $5,000 to allocate. How should I split it between needs, savings, and wants?"
+async def test_invoice_skill(copilot_eval, tmp_path):
+    agent = CopilotEval(
+        name="invoice-format",
+        model="gpt-5.6-sol",
+        skill_directories=["skills/invoice-format"],
+        working_directory=str(tmp_path),
     )
-    assert result.success
+    result = await copilot_eval(
+        agent,
+        "Use invoice-format to save invoice.json for 3 items priced at 12.50 each.",
+    )
+
+    assert result.success, result.error
+    assert json.loads((tmp_path / "invoice.json").read_text(encoding="utf-8")) == {
+        "quantity": 3,
+        "unit_price": 12.5,
+        "total": 37.5,
+    }
 ```
 
-This example checks session completion only, not advice quality or skill
-effectiveness. Add fixed checks of concrete output, such as exact allocation
-amounts in a JSON artifact, to establish task correctness. Compare both sides
-with the same checks and repeat representative cases before claiming improvement.
-
-## Next Steps
-
-- [Comparing Configurations](comparing.md) — Systematic testing patterns
-- [Multi-Turn Sessions](sessions.md) — Conversations with context
-
-> 📁 **Real Examples:**
-> - [copilot/test_05_skills.py](https://github.com/sbroenne/pytest-skill-engineering/blob/main/tests/integration/copilot/test_05_skills.py) — Skill loading and A/B comparisons
+This checks the artifact contract for one task. To investigate the skill's
+effect, compare a no-skill configuration with the same model, instructions,
+tools, task, initial state, and checks. See [Comparing configurations](comparing.md).
+Do not require a baseline to fail just to make a skill appear useful.
 
 ## Copilot Skills
 
-Use `CopilotEval` with `skill_directories` to test native skill loading.
-`Skill.from_path()` loads skill metadata for inspection and other skill workflows;
-it is not a `CopilotEval` constructor argument.
+`result.skill_discovery` records SDK metadata and loading diagnostics. It is
+not a claim that the model used the skill. Observed reads remain tool-call
+evidence; exact output checks remain your test's responsibility.
 
-When your skill is built for Copilot (e.g. distributed via `npx skills add`), you want the real Copilot agent to load it — exactly as end users will experience it:
+`Skill.from_path()` is a metadata loader, not a `CopilotEval` constructor
+argument. Attach any required MCP servers through `mcp_servers`.
 
-```python
-from pytest_skill_engineering.copilot import CopilotEval
+## Next Steps
 
-
-async def test_skill_presents_scenarios(copilot_eval):
-    agent = CopilotEval(
-        name="with-skill",
-        skill_directories=["skills/my-skill"],  # loads SKILL.md + references/
-        max_turns=10,
-    )
-    result = await copilot_eval(agent, "What can you help me with?")
-    assert result.success
-    assert "baseline" in result.final_response.lower()
-```
-
-Copilot loads the skill natively — no synthetic tool injection. Attach required
-MCP servers through `mcp_servers`; ambient SDK configuration discovery is disabled
-by default. See [Configuration](../reference/configuration.md) for the explicit
-discovery opt-in.
-
-See [Test Coding Agents](../how-to/test-coding-agents.md#testing-skills) for a full example.
-
-The framework does not distribute a companion skill for its own use. Testing
-your domain skills remains supported; the
-[case study](../use-cases/companion-skill.md) explains the distinction.
+- [Test skills and custom agents](../how-to/test-coding-agents.md#testing-skills).
+- [Multi-step tasks and explicit context](sessions.md).
+- [Configuration reference](../reference/configuration.md) for discovery opt-in.
