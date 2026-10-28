@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [1.0.4] - 2026-10-28
+
 ### Added
 
 - Added an Excel skill-value case study and four-case formatting example using
@@ -17,8 +19,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 - Refreshed runtime, development, documentation, and build dependency minimums
-  to current supported releases, including GitHub Copilot SDK 1.0.16. Updated
-  the framework and historical sample lockfiles, including cryptography 50.0.2.
+  to current supported releases, including GitHub Copilot SDK 1.0.28, MCP 2.3.0,
+  pytest 9.2.0, and Pydantic 2.14.1. Updated the framework and historical sample
+  lockfiles, including cryptography 50.0.2.
 
 ### Removed
 

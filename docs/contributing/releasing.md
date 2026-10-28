@@ -1,16 +1,19 @@
 ---
-description: "Prepare a version and publish it through the maintainer-run release workflow."
+description: "Prepare a version and publish it through the release workflow."
 ---
 
 # Releasing
 
-Releases are published by manually dispatching
+Releases are published through
 [the Release workflow](https://github.com/sbroenne/pytest-skill-engineering/actions/workflows/release.yml).
 The checked-in `project.version` in `pyproject.toml` determines the version.
 The workflow creates its matching tag; no manual tagging is required.
 
-Preparing a version bump is not authorization to publish. A maintainer chooses
-when to dispatch the release.
+Pushing a new, untagged version to `main` automatically starts the release
+workflow through Auto Release. Merge a version bump only when publication is
+intended. Preparing a version bump on a separate branch does not publish it.
+A maintainer can also dispatch Release manually, including when retrying a
+failed release.
 
 ## Before dispatching
 
