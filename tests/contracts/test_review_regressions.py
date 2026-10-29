@@ -4,8 +4,6 @@ from __future__ import annotations
 
 import base64
 import json
-import shlex
-import sys
 from inspect import isawaitable
 from pathlib import Path
 from typing import Any, get_type_hints
@@ -28,7 +26,6 @@ from pytest_skill_engineering.copilot.result import CopilotResult, SubagentInvoc
 from pytest_skill_engineering.core.evals import load_custom_agent, load_custom_agents
 from pytest_skill_engineering.core.result import ToolCall, Turn, UsageInfo
 from pytest_skill_engineering.core.serialization import serialize_dataclass
-from pytest_skill_engineering.execution.servers import CLIServer, CLIServerProcess
 from pytest_skill_engineering.reporting import build_suite_report, generate_json, load_suite_report
 from pytest_skill_engineering.reporting.collector import TestReport as CaseReport
 
@@ -111,23 +108,6 @@ async def test_disabled_and_nested_references(tmp_path: Path, parent_directory: 
     _inject_skill_reference_tools(agent, config)
     assert "tools" not in config
     assert "system_message" not in config
-
-
-@pytest.mark.skipif(sys.platform != "win32", reason="Windows direct argument parsing")
-@pytest.mark.parametrize("arguments", [r"C:\work\input.txt", r'"C:\work folder\input.txt" ""'])
-async def test_direct_cli_windows_paths(arguments: str) -> None:
-    server = CLIServerProcess(
-        CLIServer(
-            tool_prefix="echo",
-            command=f"{shlex.quote(sys.executable)} -c 'import sys,json; print(json.dumps(sys.argv[1:]))'",
-            shell="none",
-        )
-    )
-    result: dict[str, Any] = json.loads(await server.call_tool("echo_execute", {"args": arguments}))
-    assert result["exit_code"] == 0, result
-    assert json.loads(result["stdout"]) == (
-        [r"C:\work\input.txt"] if arguments.startswith("C:") else [r"C:\work folder\input.txt", ""]
-    )
 
 
 def _event(kind: str, **data: Any) -> SessionEvent:

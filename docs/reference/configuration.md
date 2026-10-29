@@ -144,22 +144,13 @@ REMOTE_MCP = {
 }
 ```
 
-## CLI process configuration
+## Command-line tools
 
-`CLIServer` configures a lower-level CLI wrapper. It is not a `CopilotEval`
-configuration and does not take `name`:
-
-```python
-from pytest_skill_engineering import CLIServer
-
-
-server = CLIServer(command="git", tool_prefix="git")
-```
-
-With `shell="none"`, the command runs directly without a shell. Single or double
-quotes group words and are removed before execution. Windows base commands keep
-backslashes as path separators, including unquoted paths; other platforms use
-POSIX escaping. Tool-supplied arguments use POSIX quoting on every platform.
+Use Copilot's built-in shell tools with `CopilotEval(working_directory=...)`
+for command-line tasks. If commands need additional restrictions, provide your
+own MCP server through `mcp_servers`; the framework does not wrap commands.
+See [Test CLI tools](../how-to/test-cli-tools.md) for setup and independent
+checks of the resulting state.
 
 ## pytest configuration
 

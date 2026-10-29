@@ -8,7 +8,7 @@ class AITestError(Exception):
 
 
 class ServerStartError(AITestError):
-    """Error starting an MCP or CLI server."""
+    """Error starting an MCP server."""
 
     def __init__(self, server_type: str, command: list[str], message: str) -> None:
         self.server_type = server_type

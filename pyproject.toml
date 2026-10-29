@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "pytest-skill-engineering"
-version = "1.0.4"
+version = "1.0.5"
 description = "Reliable Copilot execution and evidence for coding-agent-led testing of MCP servers, CLI tools, skills, and custom agents."
 readme = "README.md"
 license = { text = "MIT" }
@@ -130,7 +130,7 @@ markers = [
     "clarification: clarification detection tests",
     "iterations: iteration reliability tests",
     "abtest: A/B server comparison tests",
-    "cli: CLI server tests",
+    "cli: command-line tool tests",
     "copilot: marks tests as requiring GitHub Copilot SDK credentials",
     "slow: marks tests as slow/expensive (skipped by default, opt-in with --run-slow)",
 ]

@@ -1,6 +1,6 @@
 """Level 09 — CLI / shell tool usage: verify Copilot can run shell commands.
 
-Copilot has native terminal/shell tools built in — no CLIServer needed.
+Copilot has native terminal/shell tools built in — no command wrapper needed.
 We simply instruct the agent and verify it uses shell commands to complete
 file-system and pipeline tasks.
 
