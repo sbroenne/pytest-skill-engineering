@@ -66,52 +66,14 @@ This verifies the staged artifact, unchanged working file, and absence of a comm
 Keep the test in an approved environment: `working_directory` is not a sandbox,
 and permissions are auto-approved by default.
 
-## When you have a wrapped CLI tool
+## When you need restricted command access
 
-`CLIServer` is a lower-level configuration helper for exposing a CLI as a
-single tool. It is not an argument to `CopilotEval`, and its constructor does
-not accept `name`.
+The framework does not provide a command wrapper. If your test needs restricted
+command access rather than general shell access, expose approved commands through
+your own MCP server. Your server owns command validation and permissions; your
+test independently verifies the resulting state.
 
-```python
-from pytest_skill_engineering import CLIServer
-
-git_server = CLIServer(
-    command="git",
-    tool_prefix="git",
-    shell="none",
-    discover_help=True,
-)
-```
-
-Use a wrapper when you need a constrained command surface rather than general
-shell access. Your adapter owns command validation, permissions, and state
-verification.
-
-## Configuration options
-
-```python
-git_server = CLIServer(
-    command="git",
-    tool_prefix="git",
-    shell="none",
-    cwd="path/to/test-repo",
-    env={"LC_ALL": "C"},
-    discover_help=False,
-    help_flag="--help",
-    timeout=30,
-    description="Run approved Git commands.",
-)
-```
-
-With `shell="none"`, the command and tool arguments are split into direct process
-arguments without shell expansion. Windows backslashes are preserved; quote
-paths containing spaces. Grouping quotes are removed, while quoted empty
-arguments stay empty arguments. The default `shell=None` auto-selects a shell;
-it is not the same as `"none"`.
-
-## Complete Copilot-facing example
-
-For a CLI exposed by your own MCP server, attach the server configuration:
+Attach your server configuration to Copilot:
 
 ```python
 import sys

@@ -1,8 +1,6 @@
 """Execution module - server management and utility functions."""
 
 from pytest_skill_engineering.execution.servers import (
-    CLIServer,
-    CLIServerProcess,
     MCPServer,
     MCPServerProcess,
     Wait,
@@ -10,8 +8,6 @@ from pytest_skill_engineering.execution.servers import (
 )
 
 __all__ = [
-    "CLIServer",
-    "CLIServerProcess",
     "MCPServer",
     "MCPServerProcess",
     "Wait",

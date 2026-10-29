@@ -130,7 +130,7 @@ markers = [
     "clarification: clarification detection tests",
     "iterations: iteration reliability tests",
     "abtest: A/B server comparison tests",
-    "cli: CLI server tests",
+    "cli: command-line tool tests",
     "copilot: marks tests as requiring GitHub Copilot SDK credentials",
     "slow: marks tests as slow/expensive (skipped by default, opt-in with --run-slow)",
 ]

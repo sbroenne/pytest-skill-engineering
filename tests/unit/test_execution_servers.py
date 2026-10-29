@@ -3,9 +3,6 @@
 from __future__ import annotations
 
 import contextlib
-import json
-import os
-import shlex
 import shutil
 import sys
 from dataclasses import FrozenInstanceError
@@ -20,19 +17,12 @@ from mcp import types
 from pytest_skill_engineering.core.errors import ServerStartError
 from pytest_skill_engineering.core.result import MCPPrompt
 from pytest_skill_engineering.execution.servers import (
-    CLIServer,
-    CLIServerProcess,
     MCPServer,
     MCPServerProcess,
     Wait,
     WaitStrategy,
     _expand_env,
 )
-
-
-def _python_command(code: str) -> str:
-    """Build a direct Python command string for shell='none' tests."""
-    return f"{shlex.quote(sys.executable)} -c {shlex.quote(code)}"
 
 
 def _write_test_mcp_server(runtime_dir: Path) -> Path:
@@ -105,18 +95,6 @@ class TestServerConfigurations:
         """Remote MCP transports validate that a URL is present."""
         with pytest.raises(ValueError, match="requires a url"):
             MCPServer(transport=transport)
-
-    def test_cli_server_defaults(self) -> None:
-        """CLIServer exposes the documented defaults."""
-        config = CLIServer(command="git", tool_prefix="git")
-
-        assert config.env == {}
-        assert config.shell is None
-        assert config.cwd is None
-        assert not config.discover_help
-        assert config.help_flag == "--help"
-        assert config.timeout == 30
-        assert config.description is None
 
     def test_expand_env_uses_os_path_expandvars(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """_expand_env expands shell-style variables."""
@@ -461,238 +439,3 @@ class TestMCPServerProcessHelpers:
 
         assert captured["url"] == "http://example.test/mcp"
         assert captured["http_client"].headers == {"Authorization": "Bearer xyz789"}
-
-
-class TestCLIServerProcess:
-    """Tests for the CLI-to-tool wrapper."""
-
-    def test_init_uses_explicit_shell_and_auto_detects_platform(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
-        """Shell selection honors explicit config and platform defaults."""
-        explicit = CLIServerProcess(CLIServer(command="git", tool_prefix="git", shell="none"))
-        assert explicit._shell == "none"
-
-        monkeypatch.setattr(sys, "platform", "win32")
-        windows_default = CLIServerProcess(CLIServer(command="git", tool_prefix="git"))
-        assert windows_default._shell == "powershell"
-
-        monkeypatch.setattr(sys, "platform", "linux")
-        linux_default = CLIServerProcess(CLIServer(command="git", tool_prefix="git"))
-        assert linux_default._shell == "bash"
-
-    @pytest.mark.parametrize(
-        ("platform", "command", "expected"),
-        [
-            (
-                "win32",
-                r'"C:\Program Files\tool.exe" --file C:\data\input.txt',
-                [r"C:\Program Files\tool.exe", "--file", r"C:\data\input.txt"],
-            ),
-            (
-                "win32",
-                r"""'C:\Python\python.exe' -c 'print('"'"'hello'"'"')'""",
-                [r"C:\Python\python.exe", "-c", "print('hello')"],
-            ),
-            ("linux", r"/opt/my\ tool --file 'a b.txt'", ["/opt/my tool", "--file", "a b.txt"]),
-        ],
-    )
-    async def test_direct_command_removes_quotes_and_preserves_platform_paths(
-        self, monkeypatch: pytest.MonkeyPatch, platform: str, command: str, expected: list[str]
-    ) -> None:
-        captured: list[str] = []
-
-        async def communicate() -> tuple[bytes, bytes]:
-            return b"", b""
-
-        async def spawn(*args: str, **kwargs: Any) -> Any:
-            captured.extend(args)
-            return SimpleNamespace(communicate=communicate, returncode=0)
-
-        monkeypatch.setattr(sys, "platform", platform)
-        monkeypatch.setattr("asyncio.create_subprocess_exec", spawn)
-        server = CLIServerProcess(CLIServer(command=command, tool_prefix="tool", shell="none"))
-        result = await server._run_command("'alpha beta'")
-        assert result["exit_code"] == 0
-        assert captured == [*expected, "alpha beta"]
-
-    async def test_start_discovers_help_and_truncates_long_output(self) -> None:
-        """Discovered help text is truncated before being exposed to the LLM."""
-        server = CLIServerProcess(
-            CLIServer(
-                command=_python_command("print('x' * 3001)"),
-                tool_prefix="python",
-                shell="none",
-                discover_help=True,
-                help_flag="",
-            )
-        )
-
-        await server.start()
-
-        assert server._help_text is not None
-        assert server._help_text.startswith("x" * 2_000)
-        assert server._help_text.endswith("\n... (truncated)")
-        assert "Help:" in server.get_tools()["python_execute"]["description"]
-
-    @pytest.mark.parametrize(
-        ("command", "shell"),
-        [
-            ("printf ''", "bash"),
-            ("exit 4", "bash"),
-        ],
-    )
-    async def test_discover_help_returns_none_for_empty_or_failed_output(
-        self, command: str, shell: str
-    ) -> None:
-        """Help discovery is skipped when stdout is empty or the command fails."""
-        server = CLIServerProcess(
-            CLIServer(
-                command=command,
-                tool_prefix="cmd",
-                shell=shell,
-                discover_help=True,
-                help_flag="",
-            )
-        )
-
-        await server.start()
-
-        assert server._help_text is None
-
-    async def test_run_command_shell_none_splits_arguments_and_records_execution(self) -> None:
-        """Direct execution splits base command and user args independently."""
-        server = CLIServerProcess(
-            CLIServer(
-                command=_python_command("import json, sys; print(json.dumps(sys.argv[1:]))"),
-                tool_prefix="python",
-                shell="none",
-            )
-        )
-
-        execution = await server._run_command("'alpha beta' gamma")
-
-        assert execution["command"] == server.config.command
-        assert execution["args"] == "'alpha beta' gamma"
-        assert execution["exit_code"] == 0
-        assert json.loads(execution["stdout"]) == ["alpha beta", "gamma"]
-        assert execution["duration_ms"] >= 0
-        assert server.get_executions() == [execution]
-
-    async def test_run_command_uses_env_and_cwd_and_captures_nonzero_exit(
-        self, runtime_dir: Path
-    ) -> None:
-        """CLI execution passes env/cwd through and records stderr plus exit code."""
-        work_dir = runtime_dir / "cwd"
-        work_dir.mkdir()
-        server = CLIServerProcess(
-            CLIServer(
-                command=_python_command(
-                    "import os, pathlib, sys; "
-                    "print(os.environ['EXEC_SERVER_VAR']); "
-                    "print(pathlib.Path.cwd()); "
-                    "print('boom', file=sys.stderr); "
-                    "raise SystemExit(7)"
-                ),
-                tool_prefix="python",
-                shell="none",
-                cwd=str(work_dir),
-                env={"EXEC_SERVER_VAR": "set"},
-            )
-        )
-
-        execution = await server._run_command("")
-        stdout_lines = execution["stdout"].strip().splitlines()
-
-        assert execution["exit_code"] == 7
-        assert stdout_lines == ["set", str(work_dir)]
-        assert execution["stderr"].strip() == "boom"
-
-    async def test_run_command_times_out_and_records_execution(self) -> None:
-        """Timeouts kill the process and return a synthetic error result."""
-        server = CLIServerProcess(
-            CLIServer(
-                command=_python_command("import time; time.sleep(2)"),
-                tool_prefix="python",
-                shell="none",
-                timeout=1,
-            )
-        )
-
-        execution = await server._run_command("")
-
-        assert execution["exit_code"] == -1
-        assert execution["stdout"] == ""
-        assert "timed out" in execution["stderr"].lower()
-        assert 800 <= execution["duration_ms"] < 4_000
-
-    async def test_run_command_records_spawn_errors(self) -> None:
-        """Process spawn failures are converted into execution records."""
-        server = CLIServerProcess(
-            CLIServer(
-                command="/definitely/missing-command",
-                tool_prefix="missing",
-                shell="none",
-            )
-        )
-
-        execution = await server._run_command("")
-
-        assert execution["exit_code"] == -1
-        assert execution["stdout"] == ""
-        assert execution["stderr"].startswith("Error:")
-
-    def test_get_tools_description_priority(self) -> None:
-        """Custom description wins, then discovered help, then the generic fallback."""
-        custom = CLIServerProcess(
-            CLIServer(command="git", tool_prefix="git", description="Custom description.")
-        )
-        with_help = CLIServerProcess(CLIServer(command="git", tool_prefix="git"))
-        with_help._help_text = "git help text"
-        default = CLIServerProcess(CLIServer(command="git", tool_prefix="git"))
-
-        custom_description = custom.get_tools()["git_execute"]["description"]
-        help_description = with_help.get_tools()["git_execute"]["description"]
-        default_description = default.get_tools()["git_execute"]["description"]
-
-        assert custom_description == "Execute git CLI command.\n\nCustom description."
-        assert help_description == "Execute git CLI command.\n\nHelp:\ngit help text"
-        assert default_description == "Execute git CLI command with arguments."
-
-    async def test_call_tool_returns_json_and_validates_tool_name(self) -> None:
-        """call_tool validates the synthetic tool name and returns JSON output."""
-        server = CLIServerProcess(
-            CLIServer(
-                command=_python_command("import sys; print(' '.join(sys.argv[1:]))"),
-                tool_prefix="python",
-                shell="none",
-            )
-        )
-
-        with pytest.raises(ValueError, match="Unknown tool: wrong_execute"):
-            await server.call_tool("wrong_execute", {})
-
-        result = json.loads(await server.call_tool("python_execute", {"args": "one two"}))
-
-        assert result == {"exit_code": 0, "stdout": f"one two{os.linesep}", "stderr": ""}
-
-    async def test_get_executions_accumulates_and_stop_clears(self) -> None:
-        """Execution history persists across runs until stop() is called."""
-        server = CLIServerProcess(
-            CLIServer(
-                command=_python_command("import sys; print(' '.join(sys.argv[1:]))"),
-                tool_prefix="python",
-                shell="none",
-            )
-        )
-
-        await server.call_tool("python_execute", {"args": "alpha"})
-        await server.call_tool("python_execute", {"args": "beta"})
-
-        executions = server.get_executions()
-        assert len(executions) == 2
-        assert [item["args"] for item in executions] == ["alpha", "beta"]
-
-        await server.stop()
-
-        assert server.get_executions() == []

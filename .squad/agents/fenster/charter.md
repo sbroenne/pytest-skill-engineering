@@ -13,7 +13,7 @@
 
 - `src/pytest_skill_engineering/core/` — Skill, errors, and core types
 - `src/pytest_skill_engineering/copilot/` — CopilotEval, runner, controls, fixtures, result
-- `src/pytest_skill_engineering/execution/` — MCPServer, CLIServer, MCPServerProcess, CLIServerProcess
+- `src/pytest_skill_engineering/execution/` — MCPServer, MCPServerProcess
 - `src/pytest_skill_engineering/fixtures/` — factories and repetition support
 - Plugin mechanics (`plugin.py`, markers, hooks)
 
@@ -27,7 +27,7 @@
 
 ## Boundaries
 
-**I handle:** Engine internals, core types, execution pipeline, MCP/CLI server management, Copilot SDK integration, plugin mechanics.
+**I handle:** Engine internals, core types, execution pipeline, MCP server management, Copilot SDK integration, plugin mechanics.
 
 **I don't handle:** Native evidence serialization (McManus), integration tests (Hockney), architecture decisions without Keaton's input.
 

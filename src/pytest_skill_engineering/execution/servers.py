@@ -1,17 +1,15 @@
-"""Server management for MCP and CLI servers.
+"""Server management for MCP servers.
 
-Provides process classes for connecting to MCP servers and wrapping CLI tools,
-plus configuration dataclasses (``MCPServer``, ``CLIServer``, ``Wait``).
+Provides a process class for connecting to MCP servers,
+plus configuration dataclasses (``MCPServer``, ``Wait``).
 """
 
 from __future__ import annotations
 
 import asyncio
 import contextlib
-import json
 import logging
 import os
-import sys
 import time
 from dataclasses import dataclass, field
 from enum import Enum
@@ -95,34 +93,6 @@ class MCPServer:
         if self.transport in ("sse", "streamable-http") and not self.url:
             msg = f"transport={self.transport!r} requires a url"
             raise ValueError(msg)
-
-
-@dataclass(slots=True)
-class CLIServer:
-    """Configuration for a CLI tool wrapped as an MCP-compatible server.
-
-    Example::
-
-        CLIServer(
-            command="git",
-            tool_prefix="git",
-            shell="bash",
-            cwd="/path/to/repo",
-        )
-    """
-
-    command: str
-    tool_prefix: str
-    env: dict[str, str] = field(default_factory=dict)
-    shell: str | None = None
-    """Shell to use. None = auto-detect (bash on Linux/macOS, powershell on Windows)."""
-    cwd: str | None = None
-    discover_help: bool = False
-    help_flag: str = "--help"
-    timeout: int = 30
-    """Command timeout in seconds."""
-    description: str | None = None
-    """Custom tool description (overrides auto-discovered help text)."""
 
 
 def _expand_env(value: str) -> str:
@@ -470,197 +440,3 @@ class MCPServerProcess:
         if self.config.transport == "stdio":
             return self.config.command + self.config.args
         return [self.config.transport, self.config.url or ""]
-
-
-class CLIServerProcess:
-    """Manages a CLI command wrapped as an MCP-like tool.
-
-    Wraps a single CLI command and exposes it as a tool that accepts
-    an `args` parameter. Optionally discovers help text to improve
-    the tool description.
-
-    Example:
-        server = CLIServerProcess(cli_config)
-        await server.start()  # Discovers help if enabled
-        tools = server.get_tools()  # Returns {prefix}_execute tool
-        result = await server.call_tool("git_execute", {"args": "status"})
-        await server.stop()
-    """
-
-    def __init__(self, config: CLIServer) -> None:
-        self.config = config
-        self._env = {**os.environ, **config.env}
-        self._tool_name = f"{config.tool_prefix}_execute"
-        self._help_text: str | None = None
-        self._executions: list[dict[str, Any]] = []
-
-        # Determine shell
-        if config.shell:
-            self._shell = config.shell
-        elif sys.platform == "win32":
-            self._shell = "powershell"
-        else:
-            self._shell = "bash"
-
-    async def start(self) -> None:
-        """Initialize the CLI server and discover help if enabled."""
-        if self.config.discover_help:
-            self._help_text = await self._discover_help()
-
-    async def stop(self) -> None:
-        """Stop the CLI server (clears execution history)."""
-        self._executions = []
-
-    async def _discover_help(self) -> str | None:
-        """Run command with help flag to get tool description."""
-        try:
-            result = await self._run_command(self.config.help_flag)
-            if result["exit_code"] == 0 and result["stdout"]:
-                # Truncate help text to avoid token bloat
-                help_text = result["stdout"]
-                if len(help_text) > 2000:
-                    help_text = help_text[:2000] + "\n... (truncated)"
-                return help_text
-        except (TimeoutError, OSError):
-            # Help discovery is optional - if it fails, just skip it
-            return None
-        return None
-
-    async def _run_command(self, args: str) -> dict[str, Any]:
-        """Execute the CLI command with given arguments."""
-        import shlex
-        import time
-
-        start_time = time.perf_counter()
-
-        full_cmd = self.config.command
-        if args:
-            full_cmd = f"{full_cmd} {args}"
-
-        # Build shell command
-        if self._shell == "none":
-            # Remove grouping quotes without treating Windows path separators as escapes.
-            def split_arguments(value: str) -> list[str]:
-                lexer = shlex.shlex(value, posix=True)
-                lexer.whitespace_split = True
-                lexer.commenters = ""
-                if sys.platform == "win32":
-                    lexer.escape = ""
-                return list(lexer)
-
-            cmd = split_arguments(self.config.command) + split_arguments(args)
-        elif self._shell in ("powershell", "pwsh"):
-            shell_exe = "powershell" if self._shell == "powershell" else "pwsh"
-            cmd = [shell_exe, "-NoProfile", "-NonInteractive", "-Command", full_cmd]
-        elif self._shell == "cmd":
-            cmd = ["cmd", "/C", full_cmd]
-        else:
-            # bash, sh, zsh
-            cmd = [self._shell, "-c", full_cmd]
-
-        try:
-            proc = await asyncio.create_subprocess_exec(
-                *cmd,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-                env=self._env,
-                cwd=self.config.cwd,
-            )
-            stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=self.config.timeout)
-
-            duration_ms = int((time.perf_counter() - start_time) * 1000)
-
-            execution = {
-                "command": self.config.command,
-                "args": args,
-                "full_cmd": full_cmd,
-                "exit_code": proc.returncode or 0,
-                "stdout": stdout.decode(errors="replace") if stdout else "",
-                "stderr": stderr.decode(errors="replace") if stderr else "",
-                "duration_ms": duration_ms,
-            }
-
-            self._executions.append(execution)
-            return execution
-
-        except TimeoutError:
-            # Kill the subprocess to avoid process leak
-            if proc.returncode is None:
-                proc.kill()
-                await proc.wait()
-            duration_ms = int((time.perf_counter() - start_time) * 1000)
-            execution = {
-                "command": self.config.command,
-                "args": args,
-                "full_cmd": full_cmd,
-                "exit_code": -1,
-                "stdout": "",
-                "stderr": f"Error: Command timed out after {self.config.timeout} seconds",
-                "duration_ms": duration_ms,
-            }
-            self._executions.append(execution)
-            return execution
-
-        except Exception as e:
-            duration_ms = int((time.perf_counter() - start_time) * 1000)
-            execution = {
-                "command": self.config.command,
-                "args": args,
-                "full_cmd": full_cmd,
-                "exit_code": -1,
-                "stdout": "",
-                "stderr": f"Error: {e}",
-                "duration_ms": duration_ms,
-            }
-            self._executions.append(execution)
-            return execution
-
-    def get_tools(self) -> dict[str, dict[str, Any]]:
-        """Get available tools as MCP-compatible schema."""
-        # Priority: custom description > discovered help > default
-        cmd = self.config.command
-        if self.config.description:
-            description = f"Execute {cmd} CLI command.\n\n{self.config.description}"
-        elif self._help_text:
-            description = f"Execute {cmd} CLI command.\n\nHelp:\n{self._help_text}"
-        else:
-            description = f"Execute {cmd} CLI command with arguments."
-
-        args_desc = f"Command-line arguments to pass to {cmd}"
-        return {
-            self._tool_name: {
-                "name": self._tool_name,
-                "description": description,
-                "inputSchema": {
-                    "type": "object",
-                    "properties": {
-                        "args": {
-                            "type": "string",
-                            "description": args_desc,
-                        }
-                    },
-                    "required": [],
-                },
-            }
-        }
-
-    async def call_tool(self, name: str, arguments: dict[str, Any]) -> str:
-        """Execute a CLI tool and return JSON result with exit_code, stdout, stderr."""
-        if name != self._tool_name:
-            raise ValueError(f"Unknown tool: {name}")
-
-        args = arguments.get("args", "")
-        execution = await self._run_command(args)
-
-        # Return JSON result like agent-benchmark
-        return json.dumps(
-            {
-                "exit_code": execution["exit_code"],
-                "stdout": execution["stdout"],
-                "stderr": execution["stderr"],
-            }
-        )
-
-    def get_executions(self) -> list[dict[str, Any]]:
-        """Get all recorded command executions for assertions."""
-        return self._executions

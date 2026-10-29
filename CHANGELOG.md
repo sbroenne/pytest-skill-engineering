@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Removed
+
+- Removed `CLIServer` and `CLIServerProcess`, including their public exports.
+  Command-line testing continues through Copilot's built-in shell tools.
+  Tests needing restricted commands must provide their own tool adapter.
+
 ## [1.0.4] - 2026-10-28
 
 ### Added

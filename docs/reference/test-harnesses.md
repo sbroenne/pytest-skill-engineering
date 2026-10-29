@@ -54,10 +54,9 @@ Attach either mapping to `CopilotEval(mcp_servers=...)`. The
 - `MCPServer` — process configuration for local or remote MCP servers
 - `MCPServerProcess` — direct protocol interaction for prompt discovery or lower-level checks
 - `Wait` — startup readiness helpers such as `Wait.for_tools(...)`
-- `CLIServer` — wraps a CLI as a single tool surface; constructor is `CLIServer(command=..., tool_prefix=...)`
 
 Use these helpers when a fixture needs direct protocol access or deterministic
 process setup. Do not pass an `MCPServer` object where `CopilotEval` expects an SDK
 `mcp_servers` mapping; they have different configuration shapes. See
 [MCP server prompts](../getting-started/mcp-prompts.md) for direct protocol use
-and [CLI testing](../how-to/test-cli-tools.md) for tool adapters.
+and [CLI testing](../how-to/test-cli-tools.md) for native shell workflows.

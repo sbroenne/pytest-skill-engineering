@@ -57,7 +57,6 @@ from pytest_skill_engineering.core import (  # noqa: E402
     load_system_prompts,
 )
 from pytest_skill_engineering.execution import (  # noqa: E402
-    CLIServer,
     MCPServer,
     Wait,
     WaitStrategy,
@@ -118,7 +117,6 @@ __all__ = [  # noqa: RUF022
     "VSCodePersona",
     "run_copilot",
     # Server config types
-    "CLIServer",
     "MCPServer",
     "Wait",
     "WaitStrategy",
