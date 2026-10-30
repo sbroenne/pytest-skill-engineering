@@ -4,10 +4,9 @@ from __future__ import annotations
 
 import os
 import stat
-import subprocess
 from collections.abc import Callable, Iterator
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any
 
 import pytest
 
@@ -123,95 +122,6 @@ def test_nonregular_nested_reference_fails_before_reading(
     monkeypatch.setattr(Path, "stat", inspect)
     with pytest.raises(SkillError, match="must be a file"):
         load_skill(nested_reference_skill)
-
-
-def _link_directory(link: Path, target: Path, kind: Literal["symlink", "junction"]) -> None:
-    if kind == "symlink":
-        link.symlink_to(target, target_is_directory=True)
-    else:
-        subprocess.run(
-            [os.environ["COMSPEC"], "/c", "mklink", "/J", str(link), str(target)],
-            check=True,
-            capture_output=True,
-        )
-
-
-@pytest.mark.parametrize(
-    "kind",
-    [
-        "symlink",
-        pytest.param("junction", marks=pytest.mark.skipif(os.name != "nt", reason="Windows")),
-    ],
-)
-@pytest.mark.parametrize("target_kind", ["internal", "outside", "cycle", "root-outside"])
-def test_reference_directory_links_are_contained_and_cycle_checked(
-    nested_reference_skill: Path,
-    tmp_path: Path,
-    kind: Literal["symlink", "junction"],
-    target_kind: str,
-) -> None:
-    references = nested_reference_skill / "references"
-    if target_kind == "internal":
-        target = references / "commands"
-    elif target_kind == "cycle":
-        target = references
-    else:
-        target = tmp_path / "outside"
-        target.mkdir()
-        (target / "secret.md").write_text("# Not a skill reference", encoding="utf-8")
-    if target_kind == "root-outside":
-        # Use a fresh skill so references/ itself can be a link.
-        skill = tmp_path / "linked-root"
-        skill.mkdir()
-        (skill / "SKILL.md").write_text(
-            "---\nname: linked-root\ndescription: Linked root test\n---\n\n# Instructions",
-            encoding="utf-8",
-        )
-        link = skill / "references"
-    else:
-        skill = nested_reference_skill
-        link = references / "linked"
-    _link_directory(link, target, kind)
-    try:
-        if target_kind == "internal":
-            loaded = load_skill(skill)
-            assert loaded.references["linked/read.md"] == "# Read command"
-            assert loaded.references["linked/advanced/read.md"] == "# Advanced read command"
-        else:
-            message = "cycle" if target_kind == "cycle" else "escapes its root"
-            with pytest.raises(SkillError, match=message):
-                load_skill(skill)
-    finally:
-        if kind == "symlink":
-            link.unlink()
-        else:
-            link.rmdir()
-
-
-@pytest.mark.parametrize("target_kind", ["internal", "outside", "broken", "cycle"])
-def test_reference_file_links_are_contained_and_resolvable(
-    nested_reference_skill: Path, tmp_path: Path, target_kind: str
-) -> None:
-    references = nested_reference_skill / "references"
-    link = references / "linked.md"
-    if target_kind == "internal":
-        target = references / "commands" / "read.md"
-    elif target_kind == "cycle":
-        target = link
-    else:
-        target = tmp_path / "outside.md"
-        if target_kind == "outside":
-            target.write_text("# Not a skill reference", encoding="utf-8")
-    link.symlink_to(target)
-    try:
-        if target_kind == "internal":
-            assert load_skill(nested_reference_skill).references["linked.md"] == "# Read command"
-        else:
-            message = "escapes its root" if target_kind == "outside" else "Cannot resolve"
-            with pytest.raises(SkillError, match=message):
-                load_skill(nested_reference_skill)
-    finally:
-        link.unlink()
 
 
 def test_skill_name_rejects_trailing_hyphen() -> None:

@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Removed
+
+- Removed link-specific containment and cycle checks and their symbolic-link
+  and Windows-junction tests. Skills use ordinary files and directories;
+  linked entries are outside the supported layout. Nested Markdown reference
+  validation remains supported.
+
 ## [1.0.5] - 2026-10-29
 
 ### Removed
