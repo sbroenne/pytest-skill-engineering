@@ -74,9 +74,10 @@ enabled skills are rejected. Disabled skills are not advertised or readable
 through reference tools; that does not prevent access through other filesystem
 tools.
 
-Links must resolve within `references/`, and that directory must resolve within
-the skill directory. Broken links, directory cycles, unreadable entries, and
-non-file entries are explicit errors. Checks also apply to Windows junctions.
+Skills must use ordinary files and directories. Symbolic links and Windows
+junctions are outside the supported skill layout; the loader does not perform
+link-specific containment or cycle checks. Unreadable entries and non-file
+entries in reference folders are explicit errors.
 
 ### When to Use References vs Instructions
 

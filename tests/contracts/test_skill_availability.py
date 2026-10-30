@@ -129,8 +129,6 @@ async def test_invalid_directory_argument_shapes_fail_before_start(
         "nested-utf8",
         "nested-empty",
         "nested-unreadable",
-        "nested-outside",
-        "nested-cycle",
     ],
 )
 async def test_bad_skill_inputs_fail_before_client_start(
@@ -173,12 +171,6 @@ async def test_bad_skill_inputs_fail_before_client_start(
             reference.write_bytes(b"\xff")
         elif invalid == "nested-empty":
             reference.write_text(" \n", encoding="utf-8")
-        elif invalid == "nested-outside":
-            target = tmp_path / "outside.md"
-            target.write_text("# Outside references", encoding="utf-8")
-            reference.symlink_to(target)
-        elif invalid == "nested-cycle":
-            reference.symlink_to(commands, target_is_directory=True)
         else:
             reference.write_text("# Unreadable reference", encoding="utf-8")
             original_read = Path.read_text

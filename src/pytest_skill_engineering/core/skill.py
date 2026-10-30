@@ -199,7 +199,7 @@ class Skill:
 
         for name in ("references", "scripts", "assets"):
             component = skill_dir / name
-            if (component.exists() or component.is_symlink()) and not component.is_dir():
+            if component.exists() and not component.is_dir():
                 raise SkillError(f"{component}: skill component must be a directory")
 
         # Load references if directory exists
@@ -322,30 +322,26 @@ def _parse_skill_md(content: str) -> tuple[SkillMetadata, str]:
 
 
 def _load_references(refs_dir: Path) -> dict[str, str]:
-    """Load Markdown files recursively, without escaping references/ or following cycles.
+    """Load Markdown files recursively from ordinary files and directories.
 
     Returns:
         Dict mapping slash-separated paths relative to references/ to content
     """
-    root = _resolve_reference_path(refs_dir, refs_dir.parent.resolve())
     references: dict[str, str] = {}
-    pending = [(refs_dir, frozenset({root}))]
+    pending = [refs_dir]
     while pending:
-        directory, ancestors = pending.pop()
+        directory = pending.pop()
         try:
             entries = sorted(directory.iterdir())
         except OSError as exc:
             raise SkillError(f"Cannot read references directory {directory}: {exc}") from exc
         for file_path in entries:
-            resolved = _resolve_reference_path(file_path, root)
             try:
-                mode = resolved.stat().st_mode
+                mode = file_path.stat().st_mode
             except OSError as exc:
                 raise SkillError(f"Cannot inspect reference entry {file_path}: {exc}") from exc
             if stat.S_ISDIR(mode):
-                if resolved in ancestors:
-                    raise SkillError(f"Reference directory cycle: {file_path}")
-                pending.append((file_path, ancestors | {resolved}))
+                pending.append(file_path)
                 continue
             if not stat.S_ISREG(mode):
                 raise SkillError(f"Invalid references entry (must be a file): {file_path}")
@@ -354,7 +350,7 @@ def _load_references(refs_dir: Path) -> dict[str, str]:
                     f"Invalid reference file '{file_path}': only .md files are allowed"
                 )
             try:
-                content = resolved.read_text(encoding="utf-8")
+                content = file_path.read_text(encoding="utf-8")
             except UnicodeDecodeError as exc:
                 raise SkillError(f"Reference file must be valid UTF-8 text: {file_path}") from exc
             except OSError as exc:
@@ -364,17 +360,6 @@ def _load_references(refs_dir: Path) -> dict[str, str]:
             references[file_path.relative_to(refs_dir).as_posix()] = content
 
     return dict(sorted(references.items()))
-
-
-def _resolve_reference_path(path: Path, root: Path) -> Path:
-    """Resolve links before traversal or reads, keeping their targets within the root."""
-    try:
-        resolved = path.resolve(strict=True)
-    except (OSError, RuntimeError) as exc:
-        raise SkillError(f"Cannot resolve reference path {path}: {exc}") from exc
-    if not resolved.is_relative_to(root):
-        raise SkillError(f"Reference path escapes its root {root}: {path}")
-    return resolved
 
 
 _SCRIPT_EXTENSIONS = frozenset({".py", ".sh", ".js", ".bash"})
