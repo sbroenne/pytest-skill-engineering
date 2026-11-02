@@ -59,4 +59,4 @@ Use these helpers when a fixture needs direct protocol access or deterministic
 process setup. Do not pass an `MCPServer` object where `CopilotEval` expects an SDK
 `mcp_servers` mapping; they have different configuration shapes. See
 [MCP server prompts](../getting-started/mcp-prompts.md) for direct protocol use
-and [CLI testing](../how-to/test-cli-tools.md) for native shell workflows.
+and [CLI testing](../how-to/test-cli-tools.md) for direct executable tools.

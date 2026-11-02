@@ -9,6 +9,7 @@ Install with: ``uv add pytest-skill-engineering``
 from __future__ import annotations
 
 from pytest_skill_engineering.copilot.api import run_copilot
+from pytest_skill_engineering.copilot.commands import CommandCancelledError, create_command_tool
 from pytest_skill_engineering.copilot.config import load_mcp_config
 from pytest_skill_engineering.copilot.eval import CopilotEval
 from pytest_skill_engineering.copilot.fixtures import copilot_eval
@@ -25,6 +26,8 @@ from pytest_skill_engineering.core.evals import load_custom_agent, load_custom_a
 from pytest_skill_engineering.core.result import DiscoveredSkill, SkillDiscovery
 
 __all__ = [
+    "CommandCancelledError",
+    "create_command_tool",
     "CopilotEval",
     "CopilotResult",
     "DiscoveredSkill",
