@@ -21,6 +21,18 @@ Most tests start with `CopilotEval` and the `copilot_eval` pytest fixture. Use t
       show_source: false
       heading_level: 3
 
+## Direct command tools
+
+::: pytest_skill_engineering.copilot.commands.create_command_tool
+    options:
+      show_source: false
+      heading_level: 3
+
+::: pytest_skill_engineering.copilot.commands.CommandCancelledError
+    options:
+      show_source: false
+      heading_level: 3
+
 ## Shared result records
 
 These types describe captured execution. They are not independent task verdicts.

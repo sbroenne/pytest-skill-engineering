@@ -146,11 +146,13 @@ REMOTE_MCP = {
 
 ## Command-line tools
 
-Use Copilot's built-in shell tools with `CopilotEval(working_directory=...)`
-for command-line tasks. If commands need additional restrictions, provide your
-own MCP server through `mcp_servers`; the framework does not wrap commands.
-See [Test CLI tools](../how-to/test-cli-tools.md) for setup and independent
-checks of the resulting state.
+Use `create_command_tool` from `pytest_skill_engineering.copilot` for direct
+executable calls with separate arguments, including native help, setup, and
+supporting commands. Attach tools through `extra_config={"tools": [tool]}`;
+use `client_mode="empty"` and `allowed_tools` to expose only the intended tools.
+No shell or MCP wrapper is needed. Consumers still own application permissions
+and independent checks. See [Test CLI tools](../how-to/test-cli-tools.md) for
+the shared helper's input, output, time limits, and shell-specific exceptions.
 
 ## pytest configuration
 

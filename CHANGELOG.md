@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [1.0.7] - 2026-11-02
+
+### Fixed
+
+- Ordinary CLI guidance and examples now run any selected executable directly
+  with an argument array, including help, setup, and supporting commands.
+  Shell-specific tests remain separate; no shell or MCP wrapper is required.
+- Added `create_command_tool`, a shared SDK tool preserving arguments, optional
+  standard input, working directory, environment overrides, output bytes and
+  exit status. Invalid input, startup errors, command failures and timeouts are
+  explicit failures. Bounded timeout and cancellation cleanup retain partial
+  output, with caller-selected process-tree or root-process-only ownership.
+
 ## [1.0.6] - 2026-10-30
 
 ### Removed

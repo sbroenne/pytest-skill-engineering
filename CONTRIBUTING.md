@@ -37,6 +37,13 @@ This project validates the **AI interface** around tools:
 
 The main harness is `CopilotEval`. Keep new contributions on the current Copilot-only public API surface.
 
+For ordinary CLI tests, use `create_command_tool` with a caller-selected
+executable and a separate argument array. This also applies to help, setup,
+discovery, and supporting commands for every CLI. Keep native product commands
+and help; do not require a shell or MCP wrapper. Consumers still own application
+guards and independent checks. Keep tests of actual shell features, such as
+pipelines and redirection, explicitly separate.
+
 ## Validation workflow
 
 Use the smallest command that proves the change you made.
@@ -102,6 +109,10 @@ uv run python -m pytest tests/integration/copilot/test_02_models.py -v --run-slo
 ```
 
 Do not claim success from mock-only tests.
+
+When paid requests or desktop activity are explicitly forbidden, run the relevant
+offline checks instead and state that real-model behavior was not verified.
+Do not run live cases merely to complete the checklist.
 
 Run integration files one at a time. Fix every failure before moving to the
 next file, and use `--lf` rather than repeating successful, paid runs.

@@ -29,6 +29,12 @@ Copilot task execution, controls, ordinary pytest output, and saved JSON evidenc
   errors, request auditing, and missing-pricing warnings.
 - Preserve audited transport shutdown before SDK-client shutdown.
 - Surface errors rather than returning success-shaped defaults.
+- For any ordinary CLI, use `create_command_tool` with a selected executable
+  and argument array, including help, setup, discovery, and supporting commands.
+  Do not route CLI work through PowerShell, cmd, Bash, or an MCP wrapper.
+  Consumers retain application-specific guards and independent output checks.
+  Native shell tests are only for actual shell features such as pipelines
+  and redirection; preserve product command names and native help.
 
 ## Terminology
 

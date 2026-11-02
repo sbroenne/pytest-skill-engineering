@@ -37,6 +37,8 @@ That investigation is not another framework execution stage.
 - `result.py` — `CopilotResult`
 - `requests.py` — actual outgoing request auditing
 - `skills.py` — explicit skill validation and pre-send SDK discovery
+- `commands.py` — shared direct-executable SDK tool; no shell, MCP server,
+  replacement runner, or command-language translation
 
 Each call makes one attempt and preserves its failure evidence. The framework
 does not start replacement sessions after startup or execution failures.
