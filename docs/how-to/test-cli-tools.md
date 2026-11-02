@@ -97,9 +97,10 @@ Copilot SDK `Tool`.
   inherited unless explicitly overridden.
   Use an absolute executable path when selection must not depend on `PATH`.
 - The JSON result has `stdout`, `stderr`, `exit_code`, `error`, and `error_kind`.
-  Text is decoded as UTF-8 with replacement for invalid bytes; `stdout_base64`
-  and `stderr_base64` preserve the exact bytes, including native line endings.
-  Output is not truncated.
+  Text is decoded as UTF-8, preserving native line endings. Only streams with
+  invalid UTF-8 also include `stdout_base64` or `stderr_base64` to preserve the
+  exact bytes; their text uses replacement characters. Normal help and other
+  valid text are not duplicated as base64. Output is not truncated.
 - Invalid input, startup errors, nonzero exits, timeouts, and cleanup errors
   return `ToolResult(result_type="failure")`, not success-shaped output.
   `error_kind` is respectively `invalid_input`, `start`, `exit`, `timeout`,

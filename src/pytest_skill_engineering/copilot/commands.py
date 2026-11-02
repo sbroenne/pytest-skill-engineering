@@ -32,17 +32,19 @@ def _result(
     error: str | None = None,
     error_kind: str | None = None,
 ) -> ToolResult:
-    payload = {
-        "stdout": stdout.decode("utf-8", errors="replace"),
-        "stderr": stderr.decode("utf-8", errors="replace"),
-        "stdout_base64": base64.b64encode(stdout).decode("ascii"),
-        "stderr_base64": base64.b64encode(stderr).decode("ascii"),
+    payload: dict[str, str | int | None] = {
         "exit_code": exit_code,
         "error": error,
         "error_kind": error_kind,
     }
+    for label, output in (("stdout", stdout), ("stderr", stderr)):
+        try:
+            payload[label] = output.decode("utf-8")
+        except UnicodeDecodeError:
+            payload[label] = output.decode("utf-8", errors="replace")
+            payload[f"{label}_base64"] = base64.b64encode(output).decode("ascii")
     return ToolResult(
-        text_result_for_llm=json.dumps(payload),
+        text_result_for_llm=json.dumps(payload, ensure_ascii=False),
         result_type="failure" if error is not None else "success",
         error=error,
     )
@@ -75,8 +77,9 @@ def create_command_tool(
     file or a shell launcher. Caller-owned adapters must enforce application
     permissions; selecting an executable is not a security sandbox.
 
-    Output is JSON with stdout, stderr, exact bytes in corresponding base64 fields,
-    exit_code, error and error_kind. Nonzero exit, invalid input, startup failure,
+    Output is JSON with stdout, stderr, exit_code, error and error_kind. A stream
+    with invalid UTF-8 also has a base64 field preserving its exact bytes.
+    Nonzero exit, invalid input, startup failure,
     timeout and cleanup failure are tool failures. Cancellation propagates as
     ``CommandCancelledError`` with partial output in ``result``.
     """

@@ -47,6 +47,7 @@ async def test_arguments_stdin_cwd_and_environment_are_preserved(tmp_path: Path)
     result = await invoke(tool, {"args": ["-c", code, *args], "stdin": "line 1\nline 2\n"})
     assert result.result_type == "success", result.error
     data = payload(result)
+    assert set(data) == {"stdout", "stderr", "exit_code", "error", "error_kind"}
     assert json.loads(data["stdout"]) == [
         args,
         "line 1\nline 2\n",
@@ -71,6 +72,24 @@ async def test_stdin_absence_is_eof_and_bytes_are_lossless() -> None:
     )
     assert result.result_type == "success", result.error
     assert base64.b64decode(payload(result)["stdout_base64"]) == b"\xff\r\n"
+    assert "stderr_base64" not in payload(result)
+
+
+async def test_valid_utf8_is_not_duplicated_and_binary_stderr_is_lossless() -> None:
+    result = await invoke(
+        create_command_tool(sys.executable),
+        {
+            "args": [
+                "-c",
+                "import sys; sys.stdout.buffer.write(b'\\xc3\\xa9\\r\\n'); sys.stderr.buffer.write(b'\\x80')",
+            ]
+        },
+    )
+    data = payload(result)
+    assert result.result_type == "success", result.error
+    assert data["stdout"] == "\u00e9\r\n"
+    assert "stdout_base64" not in data
+    assert base64.b64decode(data["stderr_base64"]) == b"\x80"
 
 
 @pytest.mark.parametrize(
@@ -308,6 +327,7 @@ async def test_native_help_and_empty_or_nul_stdin() -> None:
     result = await invoke(create_command_tool(sys.executable), {"args": ["--help"]})
     assert result.result_type == "success", result.error
     assert "usage:" in payload(result)["stdout"].lower()
+    assert set(payload(result)) == {"stdout", "stderr", "exit_code", "error", "error_kind"}
     for stdin in ("", "with\0nul"):
         result = await invoke(
             create_command_tool(sys.executable),
@@ -317,7 +337,8 @@ async def test_native_help_and_empty_or_nul_stdin() -> None:
             },
         )
         assert result.result_type == "success", result.error
-        assert base64.b64decode(payload(result)["stdout_base64"]) == stdin.encode()
+        assert payload(result)["stdout"] == stdin
+        assert "stdout_base64" not in payload(result)
 
 
 @pytest.mark.skipif(os.name != "nt", reason="Windows job assignment failure")
