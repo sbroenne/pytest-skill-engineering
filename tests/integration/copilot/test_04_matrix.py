@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import pytest
 
-from pytest_skill_engineering.copilot.eval import CopilotEval
+from pytest_copilot.copilot.task import CopilotTask
 
 from .conftest import MODELS
 
@@ -35,20 +35,20 @@ class TestModelSystemPromptMatrix:
     @pytest.mark.parametrize("system_prompt_name", SYSTEM_PROMPTS)
     async def test_greeting_module(
         self,
-        copilot_eval,
+        copilot_run,
         tmp_path,
         model: str,
         system_prompt_name: str,
     ) -> None:
         """Each matrix cell creates the requested module in its required style."""
-        agent = CopilotEval(
+        agent = CopilotTask(
             name=f"{model}-{system_prompt_name}",
             model=model,
             instructions=SYSTEM_PROMPTS[system_prompt_name],
             working_directory=str(tmp_path),
         )
 
-        result = await copilot_eval(
+        result = await copilot_run(
             agent,
             "Create greeting.py with greet(name), returning 'Hello, {name}!'.",
         )

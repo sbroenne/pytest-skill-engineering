@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from pytest_skill_engineering.core.result import EvalResult, ImageContent, ToolCall, Turn
+from pytest_copilot.core.result import EvalResult, ImageContent, ToolCall, Turn
 
 
 class TestImageContent:

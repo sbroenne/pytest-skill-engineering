@@ -8,7 +8,33 @@ from pathlib import Path
 
 import pytest
 
-import pytest_skill_engineering as framework
+import pytest_copilot as framework
+from pytest_copilot import copilot
+
+
+def test_task_api_uses_current_names_without_aliases() -> None:
+    assert framework.CopilotTask is copilot.CopilotTask
+    assert framework.CopilotTask(name="task").name == "task"
+    assert callable(copilot.copilot_run)
+    assert callable(copilot.run_copilot)
+    assert not hasattr(framework, "CopilotEval")
+    assert not hasattr(copilot, "CopilotEval")
+    assert not hasattr(copilot, "copilot_eval")
+    assert importlib.util.find_spec("pytest_copilot.copilot.eval") is None
+    assert importlib.util.find_spec("pytest_skill_engineering") is None
+
+
+def test_task_fixture_is_registered_without_old_alias(pytester: pytest.Pytester) -> None:
+    pytester.makepyfile("""
+        import pytest
+
+        def test_current_fixture(copilot_run, request):
+            assert callable(copilot_run)
+            with pytest.raises(pytest.FixtureLookupError):
+                request.getfixturevalue("copilot_eval")
+    """)
+    result = pytester.runpytest_subprocess("-o", "addopts=", "-q")
+    result.assert_outcomes(passed=1)
 
 
 @pytest.mark.parametrize(
@@ -35,7 +61,7 @@ import pytest_skill_engineering as framework
     ],
 )
 def test_no_separate_model_judging_or_advice_modules(module: str) -> None:
-    assert importlib.util.find_spec(f"pytest_skill_engineering.{module}") is None
+    assert importlib.util.find_spec(f"pytest_copilot.{module}") is None
 
 
 @pytest.mark.parametrize(
@@ -46,13 +72,13 @@ def test_no_separate_model_judging_or_advice_modules(module: str) -> None:
         "docs/reports",
         "screenshots/ai_analysis.png",
         "scripts/generate_fixture_html.py",
-        "src/pytest_skill_engineering/templates",
-        "src/pytest_skill_engineering/reporting/components",
-        "src/pytest_skill_engineering/prompts",
+        "src/pytest_copilot/templates",
+        "src/pytest_copilot/reporting/components",
+        "src/pytest_copilot/prompts",
         "tests/fixtures/reports",
         "tests/showcase",
         ".github/workflows/hero-tests.yml",
-        "skills/pytest-skill-engineering/SKILL.md",
+        "skills/pytest-copilot/SKILL.md",
         "docs/getting-started/companion-skill.md",
         "tests/integration/copilot/test_19_companion_skill.py",
         "tests/unit/test_copilot_plugin.py",
@@ -107,13 +133,13 @@ def test_plugin_saves_evidence_and_preserves_real_assertion_failures(
     pytester: pytest.Pytester,
 ) -> None:
     pytester.makepyfile("""
-        from pytest_skill_engineering.copilot import CopilotEval, CopilotResult
-        from pytest_skill_engineering.copilot.fixtures import stash_on_item
+        from pytest_copilot.copilot import CopilotTask, CopilotResult
+        from pytest_copilot.copilot.fixtures import stash_on_item
 
         def test_verified_file(request, record_property, tmp_path):
             expected = tmp_path / "output.txt"
             record_property("verification", {"artifact": str(expected), "exists": expected.exists()})
-            stash_on_item(request.node, CopilotEval(name="evidence", model="recorded"),
+            stash_on_item(request.node, CopilotTask(name="evidence", model="recorded"),
                           CopilotResult(success=True))
             assert expected.exists(), "The requested file does not exist"
     """)

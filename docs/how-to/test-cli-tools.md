@@ -22,16 +22,16 @@ from __future__ import annotations
 import shutil
 import subprocess
 
-from pytest_skill_engineering.copilot import CopilotEval, create_command_tool
+from pytest_copilot.copilot import CopilotTask, create_command_tool
 
 
-async def test_git_add(copilot_eval, tmp_path):
+async def test_git_add(copilot_run, tmp_path):
     git = shutil.which("git")
     assert git is not None, "Install Git before running this test"
     subprocess.run([git, "init", "-q"], cwd=tmp_path, check=True)
     (tmp_path / "note.txt").write_text("hello\n", encoding="utf-8")
     tool = create_command_tool(git, name="git", cwd=tmp_path, timeout_s=30)
-    agent = CopilotEval(
+    agent = CopilotTask(
         name="git-stage-file",
         model="gpt-5.6-sol",
         client_mode="empty",
@@ -45,7 +45,7 @@ async def test_git_add(copilot_eval, tmp_path):
         extra_config={"tools": [tool]},
         timeout_s=120,
     )
-    result = await copilot_eval(
+    result = await copilot_run(
         agent, "Stage note.txt with git add. Do not edit the file or create a commit."
     )
 

@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from pytest_skill_engineering.copilot import CopilotEval
+from pytest_copilot.copilot import CopilotTask
 
 from .conftest import DEFAULT_MODEL
 
@@ -17,18 +17,18 @@ SKILL_DIR = PLUGIN_DIR / "skills" / "financial-literacy"
 
 
 async def test_plugin_skill_workflow_has_concrete_arithmetic_verification(
-    copilot_eval,
+    copilot_run,
     tmp_path,
     record_property,
 ):
-    agent = CopilotEval(
+    agent = CopilotTask(
         name="plugin-financial-literacy",
         model=DEFAULT_MODEL,
         instructions="Apply the financial-literacy skill. Save the requested JSON artifact.",
         working_directory=str(tmp_path),
         skill_directories=[str(SKILL_DIR)],
     )
-    result = await copilot_eval(
+    result = await copilot_run(
         agent,
         "Starting balances are checking=1500 and savings=3000. A transfer of 100 from "
         "checking to savings has no fees. Calculate the new balances and write balances.json "

@@ -6,9 +6,9 @@ Only the latest released version is supported. Please upgrade before reporting a
 
 ## Reporting a Vulnerability
 
-If you discover a security vulnerability in pytest-skill-engineering, please **do not open a public issue**. Instead, use GitHub's private vulnerability reporting:
+If you discover a security vulnerability in pytest-copilot, please **do not open a public issue**. Instead, use GitHub's private vulnerability reporting:
 
-**[Report a vulnerability](https://github.com/sbroenne/pytest-skill-engineering/security/advisories/new)** (Security tab → "Report a vulnerability")
+**[Report a vulnerability](https://github.com/sbroenne/pytest-copilot/security/advisories/new)** (Security tab → "Report a vulnerability")
 
 **Please include:**
 - Description of the vulnerability
@@ -20,7 +20,7 @@ We will acknowledge receipt within 48 hours and provide a timeline for a fix.
 
 ## Security Considerations
 
-This library makes calls to external LLM APIs and can execute MCP servers and CLI tools. When using pytest-skill-engineering:
+This library makes calls to external LLM APIs and can execute MCP servers and CLI tools. When using pytest-copilot:
 
 - **API Keys**: Never commit API keys to version control. Use environment variables.
 - **Sensitive Data**: Be cautious about what content you send to LLM providers for evaluation.

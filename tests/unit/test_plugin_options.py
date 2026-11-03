@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from _pytest.config.argparsing import Parser
 
-from pytest_skill_engineering.plugin_options import add_aitest_options
+from pytest_copilot.plugin_options import add_aitest_options
 
 
 def test_only_execution_evidence_options_are_registered() -> None:

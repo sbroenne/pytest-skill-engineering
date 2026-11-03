@@ -23,10 +23,10 @@ def variant(request: pytest.FixtureRequest, _aitest_iteration: int) -> Variant:
 
 @pytest.mark.parametrize("variant", [0, 1], indirect=True, ids=["first", "second"])
 async def test_checkout_customer_workflow(
-    copilot_eval, tmp_path, record_property, variant, _aitest_iteration
+    copilot_run, tmp_path, record_property, variant, _aitest_iteration
 ):
     await run_checkout_workflow(
-        copilot_eval=copilot_eval,
+        copilot_run=copilot_run,
         record_property=record_property,
         root=Path(__file__).resolve().parents[4],
         workspace=tmp_path,

@@ -13,21 +13,21 @@ import pytest
 from copilot.generated.session_events import SessionEvent
 from copilot.tools import ToolInvocation
 
-from pytest_skill_engineering.copilot.config import snapshot_session_configuration
-from pytest_skill_engineering.copilot.contracts import CopilotEvalConfig
-from pytest_skill_engineering.copilot.eval import CopilotEval
-from pytest_skill_engineering.copilot.events import EventMapper
-from pytest_skill_engineering.copilot.fixtures import _convert_to_aitest
-from pytest_skill_engineering.copilot.personas import (
+from pytest_copilot.copilot.config import snapshot_session_configuration
+from pytest_copilot.copilot.contracts import CopilotTaskConfig
+from pytest_copilot.copilot.events import EventMapper
+from pytest_copilot.copilot.fixtures import _convert_to_aitest
+from pytest_copilot.copilot.personas import (
     _inject_skill_reference_tools,
     _make_subagent_dispatch_tool,
 )
-from pytest_skill_engineering.copilot.result import CopilotResult, SubagentInvocation
-from pytest_skill_engineering.core.evals import load_custom_agent, load_custom_agents
-from pytest_skill_engineering.core.result import ToolCall, Turn, UsageInfo
-from pytest_skill_engineering.core.serialization import serialize_dataclass
-from pytest_skill_engineering.reporting import build_suite_report, generate_json, load_suite_report
-from pytest_skill_engineering.reporting.collector import TestReport as CaseReport
+from pytest_copilot.copilot.result import CopilotResult, SubagentInvocation
+from pytest_copilot.copilot.task import CopilotTask
+from pytest_copilot.core.evals import load_custom_agent, load_custom_agents
+from pytest_copilot.core.result import ToolCall, Turn, UsageInfo
+from pytest_copilot.core.serialization import serialize_dataclass
+from pytest_copilot.reporting import build_suite_report, generate_json, load_suite_report
+from pytest_copilot.reporting.collector import TestReport as CaseReport
 
 
 def test_runtime_result_type_hints_resolve() -> None:
@@ -50,10 +50,10 @@ def test_agent_settings_are_shared_across_loaders(tmp_path: Path) -> None:
     assert expected["name"] == "declared-name"
     assert expected["tools"] == []
     assert expected["mcp_servers"]["helper"]["command"] == "helper"
-    assert CopilotEval.from_plugin(plugin).custom_agents == [expected]
+    assert CopilotTask.from_plugin(plugin).custom_agents == [expected]
     for folder, factory in (
-        (".github", CopilotEval.from_copilot_config),
-        (".claude", CopilotEval.from_claude_config),
+        (".github", CopilotTask.from_copilot_config),
+        (".claude", CopilotTask.from_claude_config),
     ):
         directory = tmp_path / folder / "agents"
         directory.mkdir(parents=True)
@@ -64,7 +64,7 @@ def test_agent_settings_are_shared_across_loaders(tmp_path: Path) -> None:
     with pytest.raises(ValueError, match="Duplicate custom agent name"):
         load_custom_agents(agent_file.parent)
     with pytest.raises(ValueError, match="Duplicate custom agent name"):
-        CopilotEval.from_plugin(plugin)
+        CopilotTask.from_plugin(plugin)
 
 
 def _skill(parent: Path, name: str, reference: str = "commands/guide.md") -> Path:
@@ -84,7 +84,7 @@ def _skill(parent: Path, name: str, reference: str = "commands/guide.md") -> Pat
 async def test_disabled_and_nested_references(tmp_path: Path, parent_directory: bool) -> None:
     enabled = _skill(tmp_path, "enabled")
     disabled = _skill(tmp_path, "disabled", "secret.md")
-    agent = CopilotEval(
+    agent = CopilotTask(
         skill_directories=[str(tmp_path)] if parent_directory else [str(enabled), str(disabled)],
         extra_config={"disabled_skills": ["disabled"]},
     )
@@ -142,7 +142,7 @@ def test_sdk_images_are_captured_and_round_trip(tmp_path: Path, field: str) -> N
     assert result.evidence_complete
     assert call.image_content == payloads[0]
     assert [image.data for image in call.additional_images] == payloads[1:]
-    converted = _convert_to_aitest(CopilotEval(), result)
+    converted = _convert_to_aitest(CopilotTask(), result)
     assert converted is not None
     suite = build_suite_report([CaseReport("image-test", "passed", 1, converted[0])], "Images")
     output = tmp_path / "images.json"
@@ -180,9 +180,9 @@ def test_invalid_image_is_an_explicit_capture_error() -> None:
 async def test_child_evidence_is_separate_and_counted_once(
     tmp_path: Path, successful: bool
 ) -> None:
-    child_agent = CopilotEval(name="child", model="child-model")
+    child_agent = CopilotTask(name="child", model="child-model")
     grandchild = CopilotResult(
-        agent=CopilotEval(name="grandchild", model="grandchild-model"),
+        agent=CopilotTask(name="grandchild", model="grandchild-model"),
         usage=[UsageInfo("grandchild-model", 7, 3)],
         total_premium_requests=1,
     )
@@ -215,10 +215,10 @@ async def test_child_evidence_is_separate_and_counted_once(
         total_premium_requests=2,
     )
 
-    async def nested(agent: CopilotEvalConfig, prompt: str) -> CopilotResult:
+    async def nested(agent: CopilotTaskConfig, prompt: str) -> CopilotResult:
         return child
 
-    parent = CopilotEval(name="parent", model="parent-model")
+    parent = CopilotTask(name="parent", model="parent-model")
     mapper = EventMapper()
     mapper.handle(_event("assistant.usage", model="parent-model", inputTokens=10, outputTokens=5))
     tool = _make_subagent_dispatch_tool(
@@ -262,7 +262,7 @@ async def test_child_evidence_is_separate_and_counted_once(
 
 
 def test_prepared_settings_are_saved_not_reconstructed() -> None:
-    agent = CopilotEval(
+    agent = CopilotTask(
         model="configured-model",
         instructions="Original prompt",
         allowed_tools=["read"],
@@ -285,7 +285,7 @@ def test_prepared_settings_are_saved_not_reconstructed() -> None:
 
 def test_unknown_model_is_null_and_unavailable_settings_remain_missing(tmp_path: Path) -> None:
     converted = _convert_to_aitest(
-        CopilotEval(), CopilotResult(success=False, error="startup failed")
+        CopilotTask(), CopilotResult(success=False, error="startup failed")
     )
     assert converted is not None
     assert converted[1].provider.model is None
@@ -314,7 +314,7 @@ def test_unknown_model_is_null_and_unavailable_settings_remain_missing(tmp_path:
     ],
 )
 def test_current_schema_rejects_missing_evidence(tmp_path: Path, field: str) -> None:
-    converted = _convert_to_aitest(CopilotEval(), CopilotResult())
+    converted = _convert_to_aitest(CopilotTask(), CopilotResult())
     assert converted is not None
     suite = build_suite_report([CaseReport("missing", "passed", 1, converted[0])], "Missing")
     path = tmp_path / "missing.json"
@@ -332,7 +332,7 @@ def test_all_usage_models_contribute_pricing_warnings(
     monkeypatch.chdir(tmp_path)
     pricing = tmp_path / "pricing.toml"
     pricing.write_text("[models.last-model]\ninput = 1\noutput = 2\n", encoding="utf-8")
-    agent = CopilotEval(model="last-model")
+    agent = CopilotTask(model="last-model")
     result = CopilotResult(
         model_used="last-model",
         usage=[UsageInfo("first-model", 100, 20), UsageInfo("last-model", 50, 10)],

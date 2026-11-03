@@ -1,15 +1,15 @@
 # Contributing
 
-Thanks for improving pytest-skill-engineering.
+Thanks for improving pytest-copilot.
 
 ## Development setup
 
 ```bash
-git clone https://github.com/sbroenne/pytest-skill-engineering.git
-cd pytest-skill-engineering
+git clone https://github.com/sbroenne/pytest-copilot.git
+cd pytest-copilot
 uv sync --frozen --all-extras
 uv run --frozen pre-commit install
-uv run --frozen pytest-skill-engineering --version
+uv run --frozen pytest-copilot --version
 uv run --frozen python -m pytest tests/contracts/ -q -o addopts=
 ```
 
@@ -35,7 +35,7 @@ This project validates the **AI interface** around tools:
 - custom agents
 - prompt files
 
-The main harness is `CopilotEval`. Keep new contributions on the current Copilot-only public API surface.
+The main harness is `CopilotTask`. Keep new contributions on the current Copilot-only public API surface.
 
 For ordinary CLI tests, use `create_command_tool` with a caller-selected
 executable and a separate argument array. This also applies to help, setup,
@@ -148,7 +148,7 @@ See `docs/contributing/architecture.md` for the current Copilot pipeline:
 
 Use these terms consistently:
 
-- **system prompt** — `CopilotEval.instructions`
+- **system prompt** — `CopilotTask.instructions`
 - **prompt** — the user task you send into the eval
 - **custom agent** — a `.agent.md` definition
 - **custom agent dispatch** — when Copilot routes work to a custom agent

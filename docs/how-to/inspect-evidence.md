@@ -33,8 +33,8 @@ Record observed application data before asserting it. This illustrative test
 uses your `eval_config` and `expected_file` fixtures:
 
 ```python
-async def test_document(copilot_eval, record_property, eval_config, expected_file):
-    result = await copilot_eval(eval_config, "Save the requested document.")
+async def test_document(copilot_run, record_property, eval_config, expected_file):
+    result = await copilot_run(eval_config, "Save the requested document.")
     observed = expected_file.read_text(encoding="utf-8") if expected_file.is_file() else None
     verified = observed == "Expected text"
     record_property(
@@ -111,7 +111,7 @@ alone does not establish a causal benefit or select a winner. See
 Read current native evidence locally:
 
 ```python
-from pytest_skill_engineering.reporting import load_suite_report
+from pytest_copilot.reporting import load_suite_report
 
 evidence = load_suite_report("aitest-reports/results.json")
 for case in evidence.tests:

@@ -18,11 +18,11 @@ from copilot import CopilotRequestContext
 from copilot.session import PreToolUseHookOutput
 from copilot.tools import Tool, ToolInvocation, ToolResult
 
-from pytest_skill_engineering.copilot import CopilotEval
-from pytest_skill_engineering.copilot.api import run_copilot
-from pytest_skill_engineering.copilot.events import EventMapper
-from pytest_skill_engineering.copilot.fixtures import _convert_to_aitest
-from pytest_skill_engineering.core.serialization import serialize_dataclass
+from pytest_copilot.copilot import CopilotTask
+from pytest_copilot.copilot.api import run_copilot
+from pytest_copilot.copilot.events import EventMapper
+from pytest_copilot.copilot.fixtures import _convert_to_aitest
+from pytest_copilot.core.serialization import serialize_dataclass
 
 
 def event(name: str, **data: Any) -> Any:
@@ -156,12 +156,12 @@ def fake_client(
         options.update(kwargs)
         return client
 
-    monkeypatch.setattr("pytest_skill_engineering.copilot.runner.create_client", create)
+    monkeypatch.setattr("pytest_copilot.copilot.runner.create_client", create)
     return client, options
 
 
 def test_controls_validate_and_do_not_leak_to_session() -> None:
-    agent = CopilotEval(
+    agent = CopilotTask(
         client_mode="empty", max_tool_calls=80, image_detail="high", audit_requests=True
     )
     config = agent.build_session_config()
@@ -175,8 +175,8 @@ def test_controls_validate_and_do_not_leak_to_session() -> None:
     ]
     for kwargs in invalid:
         with pytest.raises(ValueError):
-            CopilotEval(**kwargs)
-    assert CopilotEval().client_mode == "copilot-cli"
+            CopilotTask(**kwargs)
+    assert CopilotTask().client_mode == "copilot-cli"
 
 
 async def test_empty_runtime_forwarding_and_no_inherited_persona(
@@ -190,7 +190,7 @@ async def test_empty_runtime_forwarding_and_no_inherited_persona(
 
     client, options = fake_client(monkeypatch, behavior)
     result = await run_copilot(
-        CopilotEval(client_mode="empty", working_directory=str(tmp_path)), "go"
+        CopilotTask(client_mode="empty", working_directory=str(tmp_path)), "go"
     )
     assert result.success
     assert options["mode"] == "empty"
@@ -215,7 +215,7 @@ async def test_budget_stops_instead_of_repeating_denials(monkeypatch: pytest.Mon
 
     client, _ = fake_client(monkeypatch, behavior)
     result = await run_copilot(
-        CopilotEval(
+        CopilotTask(
             max_tool_calls=2,
             timeout_s=1,
             extra_config={"tools": [Tool("act", "act", handler)]},
@@ -254,7 +254,7 @@ async def test_budget_waits_for_last_admitted_completion(
 
     client, _ = fake_client(monkeypatch, behavior)
     result = await run_copilot(
-        CopilotEval(
+        CopilotTask(
             max_tool_calls=1,
             timeout_s=1,
             extra_config={"tools": [Tool("act", "act", handler)]},
@@ -281,7 +281,7 @@ async def test_budget_waits_for_denied_call_completion_in_runtime_event_order(
 
     client, _ = fake_client(monkeypatch, behavior)
     result = await run_copilot(
-        CopilotEval(
+        CopilotTask(
             max_tool_calls=1,
             timeout_s=1,
             extra_config={"tools": [Tool("act", "act", handler)]},
@@ -304,7 +304,7 @@ async def test_caller_guard_survives_budget(monkeypatch: pytest.MonkeyPatch) -> 
         assert not await session.dispatch(1)
 
     fake_client(monkeypatch, behavior)
-    result = await run_copilot(CopilotEval(max_tool_calls=2, hooks={"on_pre_tool_use": deny}), "go")
+    result = await run_copilot(CopilotTask(max_tool_calls=2, hooks={"on_pre_tool_use": deny}), "go")
     assert result.tool_calls_admitted == 0
     assert result.stop_reason == "completed"
 
@@ -326,7 +326,7 @@ async def test_timeout_drains_handler_and_preserves_incomplete_evidence(
 
     client, _ = fake_client(monkeypatch, behavior)
     result = await run_copilot(
-        CopilotEval(
+        CopilotTask(
             timeout_s=0.02,
             extra_config={"tools": [Tool("act", "act", handler)]},
         ),
@@ -364,14 +364,14 @@ async def test_startup_completion_cannot_swallow_execution_cancellation(
     monkeypatch.setattr(client, "start", cancel_before_start_returns)
     monkeypatch.setattr(client, "create_session", create_after_yield)
     with pytest.raises(asyncio.CancelledError):
-        await run_copilot(CopilotEval(timeout_s=1), "go")
+        await run_copilot(CopilotTask(timeout_s=1), "go")
     assert client.stopped
     assert client.session is None
 
 
 @pytest.mark.parametrize("shape", ["responses", "chat"])
 async def test_audit_rewrites_actual_payload_and_headers(shape: str) -> None:
-    from pytest_skill_engineering.copilot.requests import RequestAuditHandler
+    from pytest_copilot.copilot.requests import RequestAuditHandler
 
     observed: list[httpx.Request] = []
 
@@ -423,7 +423,7 @@ async def test_audit_rewrites_actual_payload_and_headers(shape: str) -> None:
 
 
 async def test_invalid_request_is_not_forwarded() -> None:
-    from pytest_skill_engineering.copilot.requests import RequestAuditHandler
+    from pytest_copilot.copilot.requests import RequestAuditHandler
 
     handler = RequestAuditHandler(image_detail="high", audit=True)
     with pytest.raises(ValueError, match="Unsupported"):
@@ -454,7 +454,7 @@ async def test_invalid_request_is_not_forwarded() -> None:
     ],
 )
 async def test_malformed_audit_cannot_be_counted_as_valid(payload: dict[str, Any]) -> None:
-    from pytest_skill_engineering.copilot.requests import RequestAuditHandler
+    from pytest_copilot.copilot.requests import RequestAuditHandler
 
     handler = RequestAuditHandler(image_detail="high", audit=True)
     with pytest.raises(ValueError, match="Unsupported"):
@@ -468,7 +468,7 @@ async def test_missing_audit_fails_closed(monkeypatch: pytest.MonkeyPatch) -> No
         pass
 
     fake_client(monkeypatch, behavior)
-    result = await run_copilot(CopilotEval(audit_requests=True), "go")
+    result = await run_copilot(CopilotTask(audit_requests=True), "go")
     assert not result.success
     assert result.stop_reason == "request_audit_error"
     assert not result.evidence_complete
@@ -496,7 +496,7 @@ def test_usage_nullable_counts_and_native_serialization() -> None:
     assert usage.reasoning_tokens == 3
     assert usage.reasoning_effort == "medium"
     assert usage.duration_ms == 500
-    converted = _convert_to_aitest(CopilotEval(), result)
+    converted = _convert_to_aitest(CopilotTask(), result)
     assert converted is not None
     data = serialize_dataclass(converted[0])
     assert data["usage"][0]["cache_read_tokens"] is None
@@ -507,7 +507,7 @@ def test_usage_nullable_counts_and_native_serialization() -> None:
 
 
 async def test_parallel_admissions_never_exceed_cap() -> None:
-    from pytest_skill_engineering.copilot.controls import RunControls
+    from pytest_copilot.copilot.controls import RunControls
 
     controls = RunControls(80)
     config: dict[str, Any] = {}
@@ -529,7 +529,7 @@ async def test_parallel_admissions_never_exceed_cap() -> None:
 
 
 async def test_admitted_handler_starts_after_budget_closes_dispatch() -> None:
-    from pytest_skill_engineering.copilot.controls import RunControls
+    from pytest_copilot.copilot.controls import RunControls
 
     invoked = False
 
@@ -553,7 +553,7 @@ async def test_admitted_handler_starts_after_budget_closes_dispatch() -> None:
 
 
 async def test_persona_and_user_guards_compose_without_mutation() -> None:
-    from pytest_skill_engineering.copilot.controls import RunControls
+    from pytest_copilot.copilot.controls import RunControls
 
     calls: list[str] = []
 
@@ -590,7 +590,7 @@ async def test_guard_exception_denies_and_stops(monkeypatch: pytest.MonkeyPatch)
         await asyncio.Event().wait()
 
     fake_client(monkeypatch, behavior)
-    result = await run_copilot(CopilotEval(hooks={"on_pre_tool_use": guard}), "go")
+    result = await run_copilot(CopilotTask(hooks={"on_pre_tool_use": guard}), "go")
     assert not result.success
     assert result.stop_reason == "execution_error"
     assert result.tool_calls_admitted == 0
@@ -598,7 +598,7 @@ async def test_guard_exception_denies_and_stops(monkeypatch: pytest.MonkeyPatch)
 
 
 async def test_cancellation_of_sdk_callback_does_not_release_live_action() -> None:
-    from pytest_skill_engineering.copilot.controls import RunControls
+    from pytest_copilot.copilot.controls import RunControls
 
     entered, release, finished = asyncio.Event(), asyncio.Event(), asyncio.Event()
 
@@ -635,11 +635,11 @@ async def test_timeout_keeps_missing_completion_incomplete(monkeypatch: pytest.M
         await asyncio.Event().wait()
 
     fake_client(monkeypatch, behavior)
-    result = await run_copilot(CopilotEval(timeout_s=0.02), "go")
+    result = await run_copilot(CopilotTask(timeout_s=0.02), "go")
     assert result.stop_reason == "timeout"
     assert not result.evidence_complete
     assert result.all_tool_calls[0].completion_received is False
-    converted = _convert_to_aitest(CopilotEval(), result)
+    converted = _convert_to_aitest(CopilotTask(), result)
     assert converted is not None
     data = serialize_dataclass(converted[0])
     assert data["stop_reason"] == "timeout"
@@ -667,7 +667,7 @@ async def test_single_attempt_after_uncertain_action(monkeypatch: pytest.MonkeyP
 
     fake_client(monkeypatch, behavior)
     result = await run_copilot(
-        CopilotEval(extra_config={"tools": [Tool("act", "act", handler)]}), "go"
+        CopilotTask(extra_config={"tools": [Tool("act", "act", handler)]}), "go"
     )
     assert not result.success
     assert attempts == 1
@@ -683,7 +683,7 @@ async def test_cleanup_failure_cannot_look_successful(monkeypatch: pytest.Monkey
         raise RuntimeError("stop failed")
 
     monkeypatch.setattr(client, "stop", fail)
-    result = await run_copilot(CopilotEval(), "go")
+    result = await run_copilot(CopilotTask(), "go")
     assert result.stop_reason == "cleanup_error"
     assert not result.success
     assert not result.evidence_complete
@@ -691,18 +691,18 @@ async def test_cleanup_failure_cannot_look_successful(monkeypatch: pytest.Monkey
 
 
 async def test_audit_records_in_native_json_with_bound_handler(tmp_path: Any) -> None:
-    from pytest_skill_engineering.copilot.config import snapshot_session_configuration
-    from pytest_skill_engineering.copilot.requests import RequestAudit
-    from pytest_skill_engineering.copilot.result import CopilotResult, UsageInfo
-    from pytest_skill_engineering.core.serialization import deserialize_suite_report
-    from pytest_skill_engineering.reporting.collector import TestReport, build_suite_report
-    from pytest_skill_engineering.reporting.generator import generate_json
+    from pytest_copilot.copilot.config import snapshot_session_configuration
+    from pytest_copilot.copilot.requests import RequestAudit
+    from pytest_copilot.copilot.result import CopilotResult, UsageInfo
+    from pytest_copilot.core.serialization import deserialize_suite_report
+    from pytest_copilot.reporting.collector import TestReport, build_suite_report
+    from pytest_copilot.reporting.generator import generate_json
 
     class Adapter:
         async def act(self, invocation: ToolInvocation) -> ToolResult:
             raise AssertionError("Must never execute")
 
-    agent = CopilotEval(
+    agent = CopilotTask(
         name="fixture",
         extra_config={
             "tools": [
@@ -753,7 +753,7 @@ async def test_audit_records_in_native_json_with_bound_handler(tmp_path: Any) ->
 
 
 async def test_streamed_request_rebuilds_length_and_developer_hash() -> None:
-    from pytest_skill_engineering.copilot.requests import RequestAuditHandler
+    from pytest_copilot.copilot.requests import RequestAuditHandler
 
     async def stream() -> AsyncIterator[bytes]:
         yield json.dumps(
@@ -821,7 +821,7 @@ async def test_controls_forwarding_keeps_permission_and_event_callbacks(
 
     fake_client(monkeypatch, behavior)
     result = await run_copilot(
-        CopilotEval(
+        CopilotTask(
             client_mode="empty",
             model="gpt-6-luna",
             reasoning_effort="medium",
@@ -851,7 +851,7 @@ async def test_request_audit_failure_wakes_runner_before_timeout(
         await asyncio.Event().wait()
 
     client, options = fake_client(monkeypatch, behavior)
-    result = await run_copilot(CopilotEval(audit_requests=True, timeout_s=600), "go")
+    result = await run_copilot(CopilotTask(audit_requests=True, timeout_s=600), "go")
     assert result.stop_reason == "request_audit_error"
     assert not result.evidence_complete
     assert client.session is not None and client.session.aborted
@@ -942,7 +942,7 @@ async def test_audited_execution_preserves_transport_options(
         )
 
     client, options = fake_client(monkeypatch, behavior)
-    result = await run_copilot(CopilotEval(**settings, extra_config={"capi": supplied_capi}), "go")
+    result = await run_copilot(CopilotTask(**settings, extra_config={"capi": supplied_capi}), "go")
     assert result.success, result.error
     assert result.stop_reason == "completed"
     assert result.evidence_complete
@@ -971,7 +971,7 @@ async def test_ordinary_execution_keeps_sdk_transport_default(
 
     fake_client(monkeypatch, behavior)
     result = await run_copilot(
-        CopilotEval(extra_config={"capi": capi} if capi is not None else {}), "go"
+        CopilotTask(extra_config={"capi": capi} if capi is not None else {}), "go"
     )
     assert result.success
 
@@ -1006,7 +1006,7 @@ async def test_actual_sdk_serializes_caller_http_preference_without_network(
 
     fake_client(monkeypatch, behavior)
     result = await run_copilot(
-        CopilotEval(
+        CopilotTask(
             image_detail="high",
             extra_config={
                 "capi": {"auto_tier": "intelligence", "enable_web_socket_responses": False}

@@ -76,7 +76,7 @@ async def comparison(request, tmp_path_factory):
             "skills": hashes,
             "packages": {
                 name: importlib.metadata.version(name)
-                for name in ("pytest-skill-engineering", "github-copilot-sdk", "mcp")
+                for name in ("pytest-copilot", "github-copilot-sdk", "mcp")
             },
             "checks": {
                 name: hashlib.sha256((ROOT / name).read_bytes()).hexdigest()
@@ -100,7 +100,7 @@ async def comparison(request, tmp_path_factory):
 
 @pytest.mark.parametrize("transport", ["mcp", "cli"])
 @pytest.mark.parametrize("with_skill", [False, True], ids=["without-skill", "with-skill"])
-async def test_comparison(copilot_eval, comparison, transport, with_skill):
+async def test_comparison(copilot_run, comparison, transport, with_skill):
     directory, tasks, skills, profile = comparison
     work = tasks / f"{transport}-{with_skill}"
     work.mkdir()
@@ -126,7 +126,7 @@ async def test_comparison(copilot_eval, comparison, transport, with_skill):
     output = directory / f"{transport}-{with_skill}.json"
     save(output, record)
     try:
-        result = await copilot_eval(configured, prompt)
+        result = await copilot_run(configured, prompt)
         record.update(
             status="verifying",
             tokens=result.total_tokens,

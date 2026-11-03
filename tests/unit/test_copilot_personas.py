@@ -10,19 +10,19 @@ from pathlib import Path
 
 import pytest
 
-from pytest_skill_engineering.copilot.contracts import CopilotEvalConfig
-from pytest_skill_engineering.copilot.eval import CopilotEval
-from pytest_skill_engineering.copilot.events import EventMapper
-from pytest_skill_engineering.copilot.personas import (
+from pytest_copilot.copilot.contracts import CopilotTaskConfig
+from pytest_copilot.copilot.events import EventMapper
+from pytest_copilot.copilot.personas import (
     ClaudeCodePersona,
     CopilotCLIPersona,
     VSCodePersona,
     _inject_skill_reference_tools,
 )
-from pytest_skill_engineering.copilot.result import CopilotResult
+from pytest_copilot.copilot.result import CopilotResult
+from pytest_copilot.copilot.task import CopilotTask
 
 
-async def _unused_nested_runner(agent: CopilotEvalConfig, prompt: str) -> CopilotResult:
+async def _unused_nested_runner(agent: CopilotTaskConfig, prompt: str) -> CopilotResult:
     raise AssertionError(f"Unexpected nested run for {agent.name}: {prompt}")
 
 
@@ -57,21 +57,21 @@ class TestInjectSkillReferenceTools:
 
     def test_no_skill_directories(self) -> None:
         """No-op when agent has no skill_directories."""
-        agent = CopilotEval(skill_directories=[])
+        agent = CopilotTask(skill_directories=[])
         config: dict = {}
         _inject_skill_reference_tools(agent, config)
         assert "tools" not in config
 
     def test_skill_without_references_no_tools(self, skill_dir_no_refs: Path) -> None:
         """No tools injected when skill has no references/ dir."""
-        agent = CopilotEval(skill_directories=[str(skill_dir_no_refs)])
+        agent = CopilotTask(skill_directories=[str(skill_dir_no_refs)])
         config: dict = {}
         _inject_skill_reference_tools(agent, config)
         assert "tools" not in config
 
     def test_skill_with_references_injects_tools(self, skill_dir: Path) -> None:
         """Two tools injected when skill has references/."""
-        agent = CopilotEval(skill_directories=[str(skill_dir)])
+        agent = CopilotTask(skill_directories=[str(skill_dir)])
         config: dict = {}
         _inject_skill_reference_tools(agent, config)
         assert "tools" in config
@@ -81,7 +81,7 @@ class TestInjectSkillReferenceTools:
 
     def test_only_supported_extensions(self, skill_dir: Path) -> None:
         """Only .md, .txt, .json, .yaml, .yml files are included."""
-        agent = CopilotEval(skill_directories=[str(skill_dir)])
+        agent = CopilotTask(skill_directories=[str(skill_dir)])
         config: dict = {}
         _inject_skill_reference_tools(agent, config)
         read_tool = next(t for t in config["tools"] if t.name == "read_skill_reference")
@@ -92,7 +92,7 @@ class TestInjectSkillReferenceTools:
 
     def test_system_message_added(self, skill_dir: Path) -> None:
         """System message mentioning references is prepended."""
-        agent = CopilotEval(skill_directories=[str(skill_dir)])
+        agent = CopilotTask(skill_directories=[str(skill_dir)])
         config: dict = {}
         _inject_skill_reference_tools(agent, config)
         assert "system_message" in config
@@ -113,7 +113,7 @@ class TestInjectSkillReferenceTools:
         refs.mkdir()
         (refs / "doc.md").write_text("# Doc")
 
-        agent = CopilotEval(skill_directories=[str(parent)])
+        agent = CopilotTask(skill_directories=[str(parent)])
         config: dict = {}
         _inject_skill_reference_tools(agent, config)
         assert "tools" in config
@@ -124,8 +124,8 @@ class TestInjectSkillReferenceTools:
 class TestPersonaSkillRefIntegration:
     """Test that each persona calls _inject_skill_reference_tools."""
 
-    def _make_agent(self, skill_dir: Path) -> CopilotEval:
-        return CopilotEval(
+    def _make_agent(self, skill_dir: Path) -> CopilotTask:
+        return CopilotTask(
             skill_directories=[str(skill_dir)],
         )
 

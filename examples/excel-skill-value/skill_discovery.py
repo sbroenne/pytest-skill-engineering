@@ -10,11 +10,11 @@ from unittest.mock import patch
 
 from copilot import CopilotClient, CopilotSession, PermissionHandler
 
-from pytest_skill_engineering import load_skill
-from pytest_skill_engineering.copilot import CopilotEval
+from pytest_copilot import load_skill
+from pytest_copilot.copilot import CopilotTask
 
 
-async def discover_skills(agent: CopilotEval) -> list[dict[str, Any]]:
+async def discover_skills(agent: CopilotTask) -> list[dict[str, Any]]:
     config = agent.build_session_config()
     for directory in agent.skill_directories or []:
         load_skill(directory)

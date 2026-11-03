@@ -6,8 +6,8 @@ from pathlib import Path
 
 import pytest
 
-from pytest_skill_engineering.core.plugin import _validate_skill_reference_names
-from pytest_skill_engineering.core.skill import Skill
+from pytest_copilot.core.plugin import _validate_skill_reference_names
+from pytest_copilot.core.skill import Skill
 
 
 def _make_skill(root: Path, name: str, reference_name: str) -> Skill:

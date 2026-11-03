@@ -6,7 +6,7 @@ description: "Bundled Todo and Banking MCP servers and lower-level process helpe
 
 The bundled servers provide small applications for examples and framework
 tests. They are not alternative runners: real Copilot execution still uses
-`CopilotEval` and `copilot_eval`.
+`CopilotTask` and `copilot_run`.
 
 ## Bundled MCP servers
 
@@ -23,7 +23,7 @@ import sys
 TODO_MCP = {
     "todo": {
         "command": sys.executable,
-        "args": ["-m", "pytest_skill_engineering.testing.todo_mcp"],
+        "args": ["-m", "pytest_copilot.testing.todo_mcp"],
         "tools": ["*"],
     }
 }
@@ -40,13 +40,13 @@ import sys
 BANKING_MCP = {
     "banking": {
         "command": sys.executable,
-        "args": ["-m", "pytest_skill_engineering.testing.banking_mcp"],
+        "args": ["-m", "pytest_copilot.testing.banking_mcp"],
         "tools": ["*"],
     }
 }
 ```
 
-Attach either mapping to `CopilotEval(mcp_servers=...)`. The
+Attach either mapping to `CopilotTask(mcp_servers=...)`. The
 [quickstart](../getting-started/index.md) shows Todo execution and verification.
 
 ## Lower-level helpers
@@ -56,7 +56,7 @@ Attach either mapping to `CopilotEval(mcp_servers=...)`. The
 - `Wait` — startup readiness helpers such as `Wait.for_tools(...)`
 
 Use these helpers when a fixture needs direct protocol access or deterministic
-process setup. Do not pass an `MCPServer` object where `CopilotEval` expects an SDK
+process setup. Do not pass an `MCPServer` object where `CopilotTask` expects an SDK
 `mcp_servers` mapping; they have different configuration shapes. See
 [MCP server prompts](../getting-started/mcp-prompts.md) for direct protocol use
 and [CLI testing](../how-to/test-cli-tools.md) for direct executable tools.

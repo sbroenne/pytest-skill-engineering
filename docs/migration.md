@@ -1,16 +1,39 @@
-# Migrating from 0.6.x to 1.x
+# Upgrading to pytest-copilot 2.0
+
+Version 2.0 renames the project without changing how tasks run or how assertions
+check their results. Replace your dependency on `pytest-skill-engineering` with
+`pytest-copilot>=2.0.0,<3`; update imports from `pytest_skill_engineering` to
+`pytest_copilot`, `CopilotEval` to `CopilotTask`, and the `copilot_eval` fixture to
+`copilot_run`. Direct calls to `run_copilot` keep their name.
+
+The command is now `pytest-copilot`, and `init` creates
+`tests/test_copilot_run.py`. There are no old-name imports, commands, or fixtures.
+Report options such as `--aitest-json`, report folders, native JSON schema 4.0,
+and consumer-owned output checks are unchanged. Existing saved evidence does not
+need to be rewritten.
+
+```bash
+uv remove pytest-skill-engineering
+uv add "pytest-copilot>=2.0.0,<3"
+```
+
+The existing GitHub repository was renamed, not replaced. Old releases
+remain historical; the new package is published separately on PyPI.
+
+## Changes for users upgrading from 0.6.x
 
 **Version 1.0 is a breaking change.** Tests now use real Copilot execution,
 ordinary pytest assertions, and saved JSON evidence. Built-in AI judging,
 analysis, refinement, and report rendering were removed, not deprecated.
 
-This page is for existing 0.6.x users. New projects should follow
+The remaining sections explain the earlier 1.0 removals using current examples.
+New projects should follow
 [getting started](getting-started/index.md).
 
 ## Upgrade
 
 ```bash
-uv add "pytest-skill-engineering>=1.0.0,<2"
+uv add "pytest-copilot>=2.0.0,<3"
 ```
 
 After upgrading, replace removed assertions, delete retired flags, and regenerate
@@ -24,7 +47,7 @@ readers. No framework companion skill is required or distributed.
 | `llm_assert`, `llm_score`, `LLMScore` | Ordinary assertions against concrete output; subjective review is advice |
 | `ScoringDimension`, `ScoreResult`, `assert_score` | Explicit measurable checks, not automatic answer scores |
 | `skill_refiner`, `analyze_skill_failures`, `RefinementResult`, `RefinementSuggestion` | Current coding agent, source investigation, and targeted reruns |
-| `skill_eval_runner`, `SkillCaseResult`, `SkillGradingResult` | `load_skill_evals`, pytest parametrization, `copilot_eval`, consumer-owned checks |
+| `skill_eval_runner`, `SkillCaseResult`, `SkillGradingResult` | `load_skill_evals`, pytest parametrization, `copilot_run`, consumer-owned checks |
 | `skill_benchmark`, `SkillBenchmarkResult`, `CaseBenchmark`, `BenchmarkComparison` | `ab_run`, fixed criteria, side-specific verification, and repetitions |
 | `InsightsResult` and `reporting.insights` | Native execution evidence and coding-agent-led interpretation |
 | `generate_html`, `generate_md`, `generate_mermaid_sequence` | Ordinary pytest output and JSON evidence |
@@ -61,17 +84,17 @@ async def test_document(copilot_eval, llm_assert):
 Current code:
 
 ```python
-from pytest_skill_engineering.copilot import CopilotEval
+from pytest_copilot.copilot import CopilotTask
 
 
-async def test_document(copilot_eval, tmp_path, record_property):
-    agent = CopilotEval(
+async def test_document(copilot_run, tmp_path, record_property):
+    agent = CopilotTask(
         name="document",
         model="gpt-5.6-luna",
         instructions="Save the requested document exactly.",
         working_directory=str(tmp_path),
     )
-    result = await copilot_eval(agent, "Write document.txt containing exactly Approved.")
+    result = await copilot_run(agent, "Write document.txt containing exactly Approved.")
     output = tmp_path / "document.txt"
     verified = output.is_file() and output.read_text() == "Approved."
     record_property("verification", {"artifact": str(output), "passed": verified})
@@ -123,7 +146,7 @@ execution, not for reading saved evidence.
 To read or write current native evidence:
 
 ```python
-from pytest_skill_engineering.reporting import generate_json, load_suite_report
+from pytest_copilot.reporting import generate_json, load_suite_report
 
 report = load_suite_report(path)
 generate_json(report, json_path)
@@ -139,7 +162,7 @@ configuration, usage, request audits, tool completion evidence, and verification
 properties remain.
 
 Old JSON is rejected. Archive it if needed, then rerun its test producer with
-1.x. Never hand-edit JSON or synthesize missing evidence to upgrade its version.
+the current version. Never hand-edit JSON or synthesize missing evidence to upgrade its version.
 The synthetic report corpus, screenshots, and report-generation script are retired.
 
 Evidence is published atomically. Unsupported property values or failed writes
@@ -161,7 +184,7 @@ Unavailable prices are not measured zero cost.
 
 ## What is preserved
 
-`CopilotEval`, `copilot_eval`, `ab_run`, native tool and custom agent dispatch
+`CopilotTask`, `copilot_run`, `ab_run`, native tool and custom agent dispatch
 evidence, images, plugins, configuration loaders, pytest repetitions, pass-rate
 gates, request auditing, usage, permission controls, guarded tool adapters,
 timeouts, and safe cleanup remain.

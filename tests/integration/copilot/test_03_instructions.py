@@ -1,6 +1,6 @@
 """Level 03 — Instructions: prove different instructions produce different outputs.
 
-Tests that CopilotEval instructions measurably change behavior:
+Tests that CopilotTask instructions measurably change behavior:
 verbose vs concise documentation, framework steering, defensive coding.
 Also tests excluded_tools for tool restriction.
 
@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import pytest
 
-from pytest_skill_engineering.copilot.eval import CopilotEval
+from pytest_copilot.copilot.task import CopilotTask
 
 from .conftest import DEFAULT_MODEL
 
@@ -21,9 +21,9 @@ pytestmark = [pytest.mark.copilot]
 class TestInstructionsDifferentiate:
     """Different instructions produce measurably different outputs."""
 
-    async def test_verbose_instructions_produce_documented_code(self, copilot_eval, tmp_path):
+    async def test_verbose_instructions_produce_documented_code(self, copilot_run, tmp_path):
         """Instructions requiring docstrings produce documented code."""
-        agent = CopilotEval(
+        agent = CopilotTask(
             name="documented-coder",
             model=DEFAULT_MODEL,
             instructions=(
@@ -34,7 +34,7 @@ class TestInstructionsDifferentiate:
             ),
             working_directory=str(tmp_path),
         )
-        result = await copilot_eval(
+        result = await copilot_run(
             agent,
             "Create calculator.py with add(a, b), subtract(a, b), multiply(a, b), divide(a, b).",
         )
@@ -45,9 +45,9 @@ class TestInstructionsDifferentiate:
         )
         assert "->" in content, "Verbose instructions required return type hints — none found."
 
-    async def test_concise_instructions_suppress_documentation(self, copilot_eval, tmp_path):
+    async def test_concise_instructions_suppress_documentation(self, copilot_run, tmp_path):
         """Instructions forbidding documentation produce minimal code."""
-        agent = CopilotEval(
+        agent = CopilotTask(
             name="minimal-coder",
             model=DEFAULT_MODEL,
             instructions=(
@@ -57,7 +57,7 @@ class TestInstructionsDifferentiate:
             ),
             working_directory=str(tmp_path),
         )
-        result = await copilot_eval(
+        result = await copilot_run(
             agent,
             "Create calculator.py with add(a, b), subtract(a, b), multiply(a, b), divide(a, b).",
         )
@@ -67,9 +67,9 @@ class TestInstructionsDifferentiate:
             "Concise instructions forbade docstrings — but they appeared."
         )
 
-    async def test_framework_instruction_steers_library_choice(self, copilot_eval, tmp_path):
+    async def test_framework_instruction_steers_library_choice(self, copilot_run, tmp_path):
         """Instructions specifying FastAPI result in FastAPI being used."""
-        agent = CopilotEval(
+        agent = CopilotTask(
             name="fastapi-dev",
             model=DEFAULT_MODEL,
             instructions=(
@@ -78,7 +78,7 @@ class TestInstructionsDifferentiate:
             ),
             working_directory=str(tmp_path),
         )
-        result = await copilot_eval(
+        result = await copilot_run(
             agent,
             'Create a web API with a GET /health endpoint that returns {"status": "ok"}.',
         )
@@ -91,9 +91,9 @@ class TestInstructionsDifferentiate:
             f"Files created: {[f.name for f in py_files]}"
         )
 
-    async def test_error_handling_instruction_produces_defensive_code(self, copilot_eval, tmp_path):
+    async def test_error_handling_instruction_produces_defensive_code(self, copilot_run, tmp_path):
         """Instructions requiring defensive coding produce try/except blocks."""
-        agent = CopilotEval(
+        agent = CopilotTask(
             name="defensive-coder",
             model=DEFAULT_MODEL,
             instructions=(
@@ -104,7 +104,7 @@ class TestInstructionsDifferentiate:
             ),
             working_directory=str(tmp_path),
         )
-        result = await copilot_eval(
+        result = await copilot_run(
             agent,
             "Create file_reader.py with a read_json(path) function that "
             "reads and returns parsed JSON.",
@@ -119,16 +119,16 @@ class TestInstructionsDifferentiate:
 class TestToolRestrictions:
     """excluded_tools prevents the eval from calling blocked tools."""
 
-    async def test_excluded_tool_is_never_called(self, copilot_eval, tmp_path):
+    async def test_excluded_tool_is_never_called(self, copilot_run, tmp_path):
         """Eval with run_in_terminal excluded never calls that tool."""
-        agent = CopilotEval(
+        agent = CopilotTask(
             name="no-terminal",
             model=DEFAULT_MODEL,
             instructions="Create files as requested. Do not run any terminal commands.",
             working_directory=str(tmp_path),
             excluded_tools=["run_in_terminal"],
         )
-        result = await copilot_eval(agent, "Create safe.py with print('safe')")
+        result = await copilot_run(agent, "Create safe.py with print('safe')")
         assert result.success
         assert not result.tool_was_called("run_in_terminal"), (
             f"Excluded tool 'run_in_terminal' was called. "

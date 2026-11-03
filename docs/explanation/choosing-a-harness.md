@@ -14,10 +14,10 @@ the interface feature whose effect you want to observe.
 | Do behavioral instructions help? | `instructions` | The same task output under both configurations |
 | Does domain guidance help? | `skill_directories` | Skill availability/read evidence and independent task checks |
 | Does it route to the right custom agent? | `custom_agents` and dispatch settings | Runtime invocation evidence and the actual result |
-| Is user phrasing ambiguous? | The prompt sent to `copilot_eval` | Correct output for each representative phrasing |
+| Is user phrasing ambiguous? | The prompt sent to `copilot_run` | Correct output for each representative phrasing |
 | Does a different model meet my needs? | `model` | Fixed output checks, repeated observations, and recorded usage |
 
-All of these use `CopilotEval` and the `copilot_eval` fixture. There is no
+All of these use `CopilotTask` and the `copilot_run` fixture. There is no
 separate runner to choose.
 
 ## Start with one question

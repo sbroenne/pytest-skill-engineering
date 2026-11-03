@@ -1,6 +1,6 @@
 # Copilot Integration Tests
 
-These tests validate pytest-skill-engineering with real GitHub Copilot models and tools. They use `CopilotEval` with the `copilot_eval` fixture; no mocked LLM execution is used.
+These tests validate pytest-copilot with real GitHub Copilot models and tools. They use `CopilotTask` with the `copilot_run` fixture; no mocked LLM execution is used.
 
 ## Structure
 
@@ -77,18 +77,18 @@ treat outer usage as the total cost of all sessions.
 Create evals inline and use the shared constants from `copilot/conftest.py`:
 
 ```python
-from pytest_skill_engineering.copilot import CopilotEval
+from pytest_copilot.copilot import CopilotTask
 
 
-async def test_my_feature(copilot_eval, tmp_path):
-    agent = CopilotEval(
+async def test_my_feature(copilot_run, tmp_path):
+    agent = CopilotTask(
         name="my-feature",
         model="gpt-5.6-sol",
         instructions="Create files as requested.",
         working_directory=str(tmp_path),
     )
 
-    result = await copilot_eval(agent, "Create hello.py that prints 'hello'.")
+    result = await copilot_run(agent, "Create hello.py that prints 'hello'.")
 
     assert result.success
     assert (tmp_path / "hello.py").exists()

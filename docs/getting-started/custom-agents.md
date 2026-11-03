@@ -25,11 +25,11 @@ Use exactly the fields and values requested.
 Then load it:
 
 ```python
-from pytest_skill_engineering import load_custom_agent
-from pytest_skill_engineering.copilot import CopilotEval
+from pytest_copilot import load_custom_agent
+from pytest_copilot.copilot import CopilotTask
 
 writer = load_custom_agent(".github/agents/writer.agent.md")
-agent = CopilotEval(
+agent = CopilotTask(
     name="orchestrator",
     model="gpt-5.6-sol",
     instructions="Delegate JSON file-writing tasks to the writer custom agent.",
@@ -51,9 +51,9 @@ import json
 from dataclasses import replace
 
 
-async def test_dispatches_to_writer(copilot_eval, tmp_path):
+async def test_dispatches_to_writer(copilot_run, tmp_path):
     config = replace(agent, working_directory=str(tmp_path))
-    result = await copilot_eval(
+    result = await copilot_run(
         config, 'Ask writer to create answer.json containing exactly {"total": 5}.'
     )
 
@@ -82,7 +82,7 @@ parent's registry.
 ## Load a directory of custom agents
 
 ```python
-from pytest_skill_engineering import load_custom_agents
+from pytest_copilot import load_custom_agents
 
 specialists = load_custom_agents(
     ".github/agents",

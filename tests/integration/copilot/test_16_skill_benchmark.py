@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from pytest_skill_engineering.copilot import CopilotEval
+from pytest_copilot.copilot import CopilotTask
 
 from .conftest import DEFAULT_MODEL
 
@@ -20,7 +20,7 @@ async def test_skill_comparison_preserves_isolation_and_side_verification(
     ab_run,
     record_property,
 ):
-    baseline = CopilotEval(
+    baseline = CopilotTask(
         name="math-baseline",
         model=DEFAULT_MODEL,
         instructions="Use Python arithmetic and save only the requested JSON artifact.",

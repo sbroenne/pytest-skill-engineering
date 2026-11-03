@@ -4,12 +4,12 @@ description: "Install the harness, run one real Copilot task, and check its outp
 
 # Getting Started
 
-Use pytest-skill-engineering to ask GitHub Copilot to complete a task, assert on
+Use pytest-copilot to ask GitHub Copilot to complete a task, assert on
 the actual output, and save the execution as JSON. Start with one small task
 before comparing models, instructions, skills, or tools.
 
-You write the test and its output checks. `CopilotEval` configures the session;
-the `copilot_eval` fixture runs it and captures evidence. pytest decides whether
+You write the test and its output checks. `CopilotTask` configures the session;
+the `copilot_run` fixture runs it and captures evidence. pytest decides whether
 your assertions pass.
 
 ## Install, initialize, and diagnose
@@ -17,10 +17,10 @@ your assertions pass.
 In a Python 3.11+ project managed by uv:
 
 ```bash
-uv add pytest-skill-engineering
+uv add pytest-copilot
 gh auth login --hostname github.com
-uv run pytest-skill-engineering init
-uv run pytest-skill-engineering doctor
+uv run pytest-copilot init
+uv run pytest-copilot doctor
 ```
 
 The signed-in account needs GitHub Copilot access. In CI, use an authorized
@@ -30,7 +30,7 @@ to the starter model.
 
 `init` creates:
 
-- `tests/test_copilot_eval.py`, using the bundled todo MCP server;
+- `tests/test_copilot_run.py`, using the bundled todo MCP server;
 - pytest settings for async tests and JSON output;
 - explicit example rates for `gpt-5.6-sol` in `pricing.toml`, preserving any
   existing rate.
@@ -41,7 +41,7 @@ Resolve the named conflict and run it again.
 ## Run the first eval
 
 ```bash
-uv run python -m pytest tests/test_copilot_eval.py -v
+uv run python -m pytest tests/test_copilot_run.py -v
 ```
 
 This is a **live Copilot execution** and may consume premium requests. The
@@ -70,8 +70,8 @@ Replace four parts of the generated test:
 
 1. **Tools and state:** replace `TODO_MCP` with your server configuration or
    explicitly supplied SDK tools. Your fixtures initialize application state.
-2. **System prompt:** set `CopilotEval.instructions` to the behavior you need.
-3. **Prompt:** pass a representative user task to `copilot_eval`.
+2. **System prompt:** set `CopilotTask.instructions` to the behavior you need.
+3. **Prompt:** pass a representative user task to `copilot_run`.
 4. **Verification:** check produced files, exact values, or application state
    independently. Tool presence and session completion are not enough.
 
@@ -81,9 +81,9 @@ Bound live work with `timeout_s` and, when needed, `max_tool_calls`. Keep creden
 and production data out of tasks and saved evidence.
 
 The generated test is also in
-[`examples/quickstart`](https://github.com/sbroenne/pytest-skill-engineering/tree/main/examples/quickstart).
+[`examples/quickstart`](https://github.com/sbroenne/pytest-copilot/tree/main/examples/quickstart).
 For an offline-first write, investigate, and repair workflow, see
-[`examples/skill-dogfood`](https://github.com/sbroenne/pytest-skill-engineering/tree/main/examples/skill-dogfood).
+[`examples/skill-dogfood`](https://github.com/sbroenne/pytest-copilot/tree/main/examples/skill-dogfood).
 Its live cases require an explicit opt-in.
 
 ## What to compare next

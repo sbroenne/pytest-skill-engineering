@@ -6,7 +6,7 @@ license: MIT
 compatibility: Requires Python 3.11+ and bash
 allowed-tools: bash python
 metadata:
-  author: pytest-skill-engineering-team
+  author: pytest-copilot-team
   category: testing
 tags:
   - testing

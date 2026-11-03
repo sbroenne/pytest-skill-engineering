@@ -6,7 +6,7 @@ import time
 
 import pytest
 
-from pytest_skill_engineering.execution.rate_limiter import (
+from pytest_copilot.execution.rate_limiter import (
     RateLimiter,
     get_rate_limiter,
     reset_rate_limiters,

@@ -20,11 +20,11 @@ from copilot.session import ModelCapabilitiesOverride, ModelSupportsOverride
 from copilot.tools import Tool, ToolBinaryResult, ToolInvocation, ToolResult
 from websockets.asyncio.server import ServerConnection, serve
 
-from pytest_skill_engineering.copilot import CopilotEval
-from pytest_skill_engineering.copilot import runner as runner_module
-from pytest_skill_engineering.copilot.fixtures import _convert_to_aitest
-from pytest_skill_engineering.copilot.requests import RequestAuditHandler
-from pytest_skill_engineering.core.serialization import serialize_dataclass
+from pytest_copilot.copilot import CopilotTask
+from pytest_copilot.copilot import runner as runner_module
+from pytest_copilot.copilot.fixtures import _convert_to_aitest
+from pytest_copilot.copilot.requests import RequestAuditHandler
+from pytest_copilot.core.serialization import serialize_dataclass
 
 PNG = (
     "iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAE0lEQVR4nGP8//8/"
@@ -176,7 +176,7 @@ async def respond_with_parallel_tools(socket: ServerConnection) -> None:
     ],
 )
 async def test_native_runtime_websocket_audit(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, copilot_eval: Any, outcome: str
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, copilot_run: Any, outcome: str
 ) -> None:
     runtime = os.environ.get("PYTEST_COPILOT_RUNTIME_PATH")
     if not runtime:
@@ -218,7 +218,7 @@ async def test_native_runtime_websocket_audit(
             **kwargs,
         )
 
-    monkeypatch.setattr("pytest_skill_engineering.copilot.runner.create_client", create)
+    monkeypatch.setattr("pytest_copilot.copilot.runner.create_client", create)
     frames: list[dict[str, Any]] = []
     connections: list[ServerConnection] = []
     tools_called: list[str] = []
@@ -285,7 +285,7 @@ async def test_native_runtime_websocket_audit(
 
     try:
         async with serve(upstream, "127.0.0.1", 0) as server:
-            agent = CopilotEval(
+            agent = CopilotTask(
                 model="offline-model",
                 client_mode="empty",
                 instructions="Offline system prompt.",
@@ -320,7 +320,7 @@ async def test_native_runtime_websocket_audit(
                     },
                 },
             )
-            result = await copilot_eval(agent, "Read the in-memory image and report ready.")
+            result = await copilot_run(agent, "Read the in-memory image and report ready.")
             if outcome in ("completed", "peer_closed_after_completed"):
                 assert result.success, result.error
                 assert result.stop_reason == "completed"

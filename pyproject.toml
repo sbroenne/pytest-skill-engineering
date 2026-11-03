@@ -3,16 +3,16 @@ requires = ["hatchling>=1.32.4"]
 build-backend = "hatchling.build"
 
 [project]
-name = "pytest-skill-engineering"
-version = "1.0.7"
-description = "Reliable Copilot execution and evidence for coding-agent-led testing of MCP servers, CLI tools, skills, and custom agents."
+name = "pytest-copilot"
+version = "2.0.0"
+description = "Run GitHub Copilot tasks in pytest. Check results with your own assertions."
 readme = "README.md"
 license = { text = "MIT" }
 requires-python = ">=3.11"
 authors = [
     { name = "Stefan Brunner" }
 ]
-keywords = ["pytest", "ai", "llm", "mcp", "testing", "agents", "skill-engineering", "skills", "custom-agents"]
+keywords = ["pytest", "copilot", "ai", "llm", "mcp", "testing", "agents", "skills", "custom-agents"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Framework :: Pytest",
@@ -59,25 +59,25 @@ docs = [
 ]
 
 [project.scripts]
-pytest-skill-engineering = "pytest_skill_engineering.onboarding:main"
+pytest-copilot = "pytest_copilot.onboarding:main"
 
 [project.entry-points.pytest11]
-aitest = "pytest_skill_engineering.plugin"
+aitest = "pytest_copilot.plugin"
 
 [project.urls]
-Homepage = "https://github.com/sbroenne/pytest-skill-engineering"
-Repository = "https://github.com/sbroenne/pytest-skill-engineering"
+Homepage = "https://github.com/sbroenne/pytest-copilot"
+Repository = "https://github.com/sbroenne/pytest-copilot"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/pytest_skill_engineering"]
+packages = ["src/pytest_copilot"]
 
 [tool.hatch.build.targets.wheel.sources]
 "src" = ""
 
 [tool.hatch.build]
 include = [
-    "src/pytest_skill_engineering/**/*.py",
-    "src/pytest_skill_engineering/**/*.md",
+    "src/pytest_copilot/**/*.py",
+    "src/pytest_copilot/**/*.md",
 ]
 
 [tool.ruff]
@@ -89,7 +89,7 @@ select = ["E", "F", "B", "I"]
 
 [tool.ruff.lint.per-file-ignores]
 # Test harnesses have long tool descriptions for LLM readability
-"src/pytest_skill_engineering/testing/*.py" = ["E501"]
+"src/pytest_copilot/testing/*.py" = ["E501"]
 # Test files have long descriptions and variable declarations
 "tests/**/*.py" = ["E402", "E501", "F841"]
 
@@ -112,7 +112,7 @@ asyncio_mode = "auto"
 filterwarnings = [
     "ignore:enable_cleanup_closed:DeprecationWarning:aiohttp",
 ]
-# pytest-skill-engineering configuration for this project's own tests.
+# pytest-copilot configuration for this project's own tests.
 # This demonstrates the recommended setup - configure once in pyproject.toml.
 # LLM auth is handled by the GitHub Copilot SDK (gh auth login or GITHUB_TOKEN)
 addopts = """
@@ -138,9 +138,9 @@ markers = [
 # UV/PEP 735 dependency groups (for uv sync)
 [dependency-groups]
 dev = [
-    "pytest-skill-engineering[dev,test,docs]",
-    "pytest-skill-engineering-dogfood",
+    "pytest-copilot[dev,test,docs]",
+    "pytest-copilot-dogfood",
 ]
 
 [tool.uv.sources]
-pytest-skill-engineering-dogfood = { path = "examples/skill-dogfood", editable = true }
+pytest-copilot-dogfood = { path = "examples/skill-dogfood", editable = true }

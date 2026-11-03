@@ -86,7 +86,7 @@ missing-ledger behavior. A successful response alone cannot satisfy them.
 ## What makes a workflow pass
 
 The agent may write only `test_invoice.py` during invoice authoring. Trusted
-fixtures supply `CopilotEval`, `copilot_eval`, the exact request, and the actual
+fixtures supply `CopilotTask`, `copilot_run`, the exact request, and the actual
 CLI response. The test must fail on the original application after genuine,
 completed tool execution. Syntax errors, authentication failures, skips, and
 session-completion checks do not count as detecting the application fault.
@@ -148,7 +148,7 @@ fixed cases; `consumer.py` supplies trusted fixtures; `workflow.py` runs the
 author-fail-repair-pass sequence. The agent's exposed write tools cannot modify
 those trusted sample files.
 
-All model execution uses `CopilotEval` and `copilot_eval`. The sample owns the
+All model execution uses `CopilotTask` and `copilot_run`. The sample owns the
 application, guarded adapters, child pytest subprocesses, and independent checks.
 It has no separate SDK runner, usage collector, or report format.
 `tests/integration/copilot/test_19_customer_workflow.py` reuses the no-skill

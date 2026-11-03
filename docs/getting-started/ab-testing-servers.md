@@ -28,13 +28,13 @@ import sys
 
 import pytest
 
-from pytest_skill_engineering.copilot import CopilotEval
+from pytest_copilot.copilot import CopilotTask
 
 
 @pytest.mark.parametrize("version", ["v1", "v2"])
-async def test_transfer(copilot_eval, banking_store, version):
+async def test_transfer(copilot_run, banking_store, version):
     banking_store.reset(checking=1500, savings=3000)
-    agent = CopilotEval(
+    agent = CopilotTask(
         name=f"banking-{version}",
         model="gpt-5.6-sol",
         instructions="Use banking tools for account operations.",
@@ -47,7 +47,7 @@ async def test_transfer(copilot_eval, banking_store, version):
             }
         },
     )
-    result = await copilot_eval(agent, "Transfer exactly $100 from checking to savings.")
+    result = await copilot_run(agent, "Transfer exactly $100 from checking to savings.")
 
     assert result.success, result.error
     assert result.evidence_complete, result.capture_errors

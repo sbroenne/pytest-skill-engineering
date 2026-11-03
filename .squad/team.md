@@ -1,6 +1,6 @@
 # Squad Team
 
-> pytest-skill-engineering — The testing framework for skill engineering.
+> pytest-copilot — The testing framework for skill engineering.
 
 ## Coordinator
 

@@ -57,7 +57,7 @@ Use exactly these fields:
 - total: quantity multiplied by unit_price
 ```
 
-### How the Eval Uses References
+### How Tasks Use References
 
 The runner validates references before execution. The model can then choose
 to read them and use their content. Inspect observed reads if they matter to
@@ -82,7 +82,7 @@ entries in reference folders are explicit errors.
 ### When to Use References vs Instructions
 
 Use `SKILL.md` for when and how to apply the skill. Use references for details
-that can be read on demand. Use `CopilotEval.instructions` for session-wide
+that can be read on demand. Use `CopilotTask.instructions` for session-wide
 behavior rather than copying the entire skill into the system prompt.
 
 The frontmatter name must match its directory name. Names use lowercase
@@ -94,9 +94,9 @@ or used an asset.
 ## Using a Skill
 
 ```python
-from pytest_skill_engineering.copilot import CopilotEval
+from pytest_copilot.copilot import CopilotTask
 
-agent = CopilotEval(
+agent = CopilotTask(
     name="invoice-format",
     model="gpt-5.6-sol",
     skill_directories=["skills/invoice-format"],
@@ -135,7 +135,7 @@ replace a nonempty `skill_directories` field.
 Validate an individual skill locally:
 
 ```python
-from pytest_skill_engineering import load_skill
+from pytest_copilot import load_skill
 
 skill = load_skill("skills/invoice-format")
 assert skill.name == "invoice-format"
@@ -161,14 +161,14 @@ With the sample skill above, check the saved invoice:
 import json
 
 
-async def test_invoice_skill(copilot_eval, tmp_path):
-    agent = CopilotEval(
+async def test_invoice_skill(copilot_run, tmp_path):
+    agent = CopilotTask(
         name="invoice-format",
         model="gpt-5.6-sol",
         skill_directories=["skills/invoice-format"],
         working_directory=str(tmp_path),
     )
-    result = await copilot_eval(
+    result = await copilot_run(
         agent,
         "Use invoice-format to save invoice.json for 3 items priced at 12.50 each.",
     )
@@ -192,7 +192,7 @@ Do not require a baseline to fail just to make a skill appear useful.
 not a claim that the model used the skill. Observed reads remain tool-call
 evidence; exact output checks remain your test's responsibility.
 
-`Skill.from_path()` is a metadata loader, not a `CopilotEval` constructor
+`Skill.from_path()` is a metadata loader, not a `CopilotTask` constructor
 argument. Attach any required MCP servers through `mcp_servers`.
 
 ## Next Steps

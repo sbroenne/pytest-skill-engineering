@@ -11,8 +11,8 @@
 
 ## What I Own
 
-- `src/pytest_skill_engineering/reporting/` — native collector, JSON generation, schema
-- `src/pytest_skill_engineering/core/serialization.py` — lossless serialization
+- `src/pytest_copilot/reporting/` — native collector, JSON generation, schema
+- `src/pytest_copilot/core/serialization.py` — lossless serialization
 - `tests/contracts/` — native evidence and persistence boundaries, with Hockney
 
 ## How I Work

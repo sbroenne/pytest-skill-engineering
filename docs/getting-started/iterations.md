@@ -33,7 +33,7 @@ outcome does not explain the cause.
 fixtures. It does not reset session-scoped fixtures, a shared desktop, or an
 external service automatically.
 
-Each `copilot_eval` call makes one attempt. The framework does not retry startup,
+Each `copilot_run` call makes one attempt. The framework does not retry startup,
 connection, or task failures. Rerun a selected case explicitly, or request
 repetitions with fixed criteria; failed executions remain recorded.
 

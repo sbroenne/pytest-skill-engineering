@@ -27,8 +27,8 @@ This **illustrative test** requires your `screenshot_eval` fixture, configured
 with a screenshot tool and a known application state:
 
 ```python
-async def test_screenshot_returns_png(copilot_eval, screenshot_eval):
-    result = await copilot_eval(screenshot_eval, "Capture a screenshot of the chart.")
+async def test_screenshot_returns_png(copilot_run, screenshot_eval):
+    result = await copilot_run(screenshot_eval, "Capture a screenshot of the chart.")
 
     assert result.success, result.error
     assert result.evidence_complete, result.capture_errors
@@ -54,7 +54,7 @@ without starting Copilot:
 ```python
 from pathlib import Path
 
-from pytest_skill_engineering.reporting import load_suite_report
+from pytest_copilot.reporting import load_suite_report
 
 evidence = load_suite_report("results.json")
 result = evidence.tests[0].eval_result

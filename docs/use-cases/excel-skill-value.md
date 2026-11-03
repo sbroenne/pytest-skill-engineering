@@ -10,7 +10,7 @@ tools and `excelcli`.
 | MCP | 4,312,584 recorded tokens | 5,320,118 recorded tokens | 12/12 |
 | CLI | 1,794,556 recorded tokens | 3,092,967 recorded tokens | 12/12 |
 
-The [runnable example](https://github.com/sbroenne/pytest-skill-engineering/tree/main/examples/excel-skill-value)
+The [runnable example](https://github.com/sbroenne/pytest-copilot/tree/main/examples/excel-skill-value)
 demonstrates the checking method with a smaller, authored task. It is not the
 full historical workload and does not establish a benefit for new narrow skills.
 
@@ -64,7 +64,7 @@ unique cases and two interrupted reservations. Interrupted usage is unknown,
 excluded from those percentages, and never represented as zero. Earlier
 package-1.0.2 comparisons had a separate allowance and are not pooled here.
 
-The [compact receipt](https://github.com/sbroenne/pytest-skill-engineering/blob/main/examples/excel-skill-value/evidence/real-world-1.0.3.json)
+The [compact receipt](https://github.com/sbroenne/pytest-copilot/blob/main/examples/excel-skill-value/evidence/real-world-1.0.3.json)
 preserves case metrics, frozen hashes, and invocation boundaries without private
 workbook paths or raw conversations.
 
@@ -98,9 +98,9 @@ workbook correctness, and usage separately.
 
 ## Run a separate, smaller comparison
 
-The [Excel example](https://github.com/sbroenne/pytest-skill-engineering/tree/main/examples/excel-skill-value) demonstrates the
+The [Excel example](https://github.com/sbroenne/pytest-copilot/tree/main/examples/excel-skill-value) demonstrates the
 method with one self-authored workbook task, both entry points, and paired
-skill/no-skill cases using the public 1.x API. Its frozen broad fixtures match
+skill/no-skill cases using the current public API. Its frozen broad fixtures match
 the historical manifests. A formatting-profile run instead uses explicitly
 supplied prepared narrow skills and must not be pooled with the broad result.
 

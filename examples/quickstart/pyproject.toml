@@ -1,8 +1,8 @@
 [project]
-name = "pytest-skill-engineering-quickstart"
+name = "pytest-copilot-quickstart"
 version = "0.1.0"
 requires-python = ">=3.11"
-dependencies = ["pytest-skill-engineering>=1.0.0,<2"]
+dependencies = ["pytest-copilot>=2.0.0,<3"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

@@ -26,18 +26,18 @@ Then check its output:
 ```python
 import json
 
-from pytest_skill_engineering import load_prompt_file
-from pytest_skill_engineering.copilot import CopilotEval
+from pytest_copilot import load_prompt_file
+from pytest_copilot.copilot import CopilotTask
 
 
-async def test_save_total_prompt(copilot_eval, tmp_path):
+async def test_save_total_prompt(copilot_run, tmp_path):
     prompt = load_prompt_file(".github/prompts/save-total.prompt.md")
-    agent = CopilotEval(
+    agent = CopilotTask(
         name=f"prompt-{prompt['name']}",
         model="gpt-5.6-sol",
         working_directory=str(tmp_path),
     )
-    result = await copilot_eval(agent, prompt["body"])
+    result = await copilot_run(agent, prompt["body"])
 
     assert result.success, result.error
     assert json.loads((tmp_path / "total.json").read_text(encoding="utf-8")) == {"total": 5}
@@ -59,7 +59,7 @@ The returned dictionary contains:
 
 Frontmatter is parsed and retained as metadata; the loader does not use it to
 select the eval's model, tools, or custom agent. Configure those explicitly on
-`CopilotEval`. Missing files, malformed frontmatter, or an empty body are errors.
+`CopilotTask`. Missing files, malformed frontmatter, or an empty body are errors.
 
 ## Testing All Prompt Files
 
@@ -69,19 +69,19 @@ whose prompts all share the same output contract:
 ```python
 import pytest
 
-from pytest_skill_engineering import load_prompt_files
+from pytest_copilot import load_prompt_files
 
 PROMPTS = load_prompt_files(".github/prompts/total-variants")
 
 
 @pytest.mark.parametrize("prompt", PROMPTS, ids=lambda item: item["name"])
-async def test_total_variants(copilot_eval, tmp_path, prompt):
-    agent = CopilotEval(
+async def test_total_variants(copilot_run, tmp_path, prompt):
+    agent = CopilotTask(
         name=prompt["name"],
         model="gpt-5.6-sol",
         working_directory=str(tmp_path),
     )
-    result = await copilot_eval(agent, prompt["body"])
+    result = await copilot_run(agent, prompt["body"])
     assert result.success, result.error
     assert json.loads((tmp_path / "total.json").read_text(encoding="utf-8")) == {"total": 5}
 ```
@@ -103,7 +103,7 @@ GitHub Copilot in either case.
 
 ## Identifying prompt files in evidence
 
-Use eval names and pytest parameter IDs. `copilot_eval` takes an eval and a
+Use eval names and pytest parameter IDs. `copilot_run` takes an eval and a
 prompt string; it has no `prompt_name` keyword, and `CopilotResult` has no
 `prompt_name` field. Record safe source names with `record_property` if needed.
 

@@ -79,6 +79,6 @@ uv run python -m pytest tests/contracts -q -o addopts=
 
 These checks need no paid model calls and establish framework behavior, not
 model performance. The
-[skill dogfooding sample](https://github.com/sbroenne/pytest-skill-engineering/tree/main/examples/skill-dogfood)
+[skill dogfooding sample](https://github.com/sbroenne/pytest-copilot/tree/main/examples/skill-dogfood)
 also defaults to offline tests; its local live cases are explicit.
 Use authorized real integration cases when changing AI-facing execution.

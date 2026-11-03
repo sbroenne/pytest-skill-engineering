@@ -1,0 +1,222 @@
+"""Shared Copilot runtime contracts and SDK-backed type aliases."""
+
+from __future__ import annotations
+
+from collections.abc import Awaitable, Callable, Mapping
+from typing import Any, Literal, Protocol, TypeAlias
+
+from copilot.session import CustomAgentConfig, MCPServerConfig, ReasoningEffort, SessionHooks
+
+from pytest_copilot.copilot.result import CopilotResult, CopilotResultAgent
+
+CopilotCustomAgentConfig: TypeAlias = CustomAgentConfig
+CopilotMCPServerConfig: TypeAlias = MCPServerConfig
+CopilotReasoningEffort: TypeAlias = ReasoningEffort
+CopilotSessionHooks: TypeAlias = SessionHooks
+
+
+class CopilotRunResult(Protocol):
+    """Result surface needed by recursive Copilot execution."""
+
+    agent: CopilotResultAgent | None
+
+    @property
+    def success(self) -> bool:
+        raise NotImplementedError
+
+    @property
+    def error(self) -> str | None:
+        raise NotImplementedError
+
+    @property
+    def final_response(self) -> str | None:
+        raise NotImplementedError
+
+
+class CopilotEventMapper(Protocol):
+    """Subagent lifecycle operations needed by persona dispatch tools."""
+
+    def record_subagent_start(self, *, invocation_id: str, name: str) -> None:
+        raise NotImplementedError
+
+    def record_subagent_complete(self, *, invocation_id: str, name: str) -> None:
+        raise NotImplementedError
+
+    def record_subagent_failed(self, *, invocation_id: str, name: str) -> None:
+        raise NotImplementedError
+
+    def record_subagent_result(
+        self, *, invocation_id: str, name: str, result: CopilotResult
+    ) -> None:
+        raise NotImplementedError
+
+
+class CopilotTaskConfig(CopilotResultAgent, Protocol):
+    """Configuration surface consumed by the runner and personas."""
+
+    @property
+    def client_mode(self) -> Literal["copilot-cli", "empty"]:
+        raise NotImplementedError
+
+    @property
+    def image_detail(self) -> Literal["auto", "low", "high"] | None:
+        raise NotImplementedError
+
+    @property
+    def audit_requests(self) -> bool:
+        raise NotImplementedError
+
+    @property
+    def max_tool_calls(self) -> int | None:
+        raise NotImplementedError
+
+    @property
+    def name(self) -> str:
+        raise NotImplementedError
+
+    @property
+    def model(self) -> str | None:
+        raise NotImplementedError
+
+    @property
+    def reasoning_effort(self) -> CopilotReasoningEffort | None:
+        raise NotImplementedError
+
+    @property
+    def allowed_tools(self) -> list[str] | None:
+        raise NotImplementedError
+
+    @property
+    def excluded_tools(self) -> list[str] | None:
+        raise NotImplementedError
+
+    @property
+    def max_turns(self) -> int:
+        raise NotImplementedError
+
+    @property
+    def timeout_s(self) -> float:
+        raise NotImplementedError
+
+    @property
+    def auto_confirm(self) -> bool:
+        raise NotImplementedError
+
+    @property
+    def mcp_servers(self) -> dict[str, CopilotMCPServerConfig]:
+        raise NotImplementedError
+
+    @property
+    def custom_agents(self) -> list[CopilotCustomAgentConfig]:
+        raise NotImplementedError
+
+    @property
+    def skill_directories(self) -> list[str]:
+        raise NotImplementedError
+
+    @property
+    def persona(self) -> CopilotPersona:
+        raise NotImplementedError
+
+    def build_session_config(self) -> dict[str, Any]:
+        raise NotImplementedError
+
+    def create_subagent(
+        self,
+        *,
+        name: str,
+        model: str | None,
+        reasoning_effort: CopilotReasoningEffort | None,
+        instructions: str,
+        timeout_s: float,
+        max_turns: int,
+        allowed_tools: list[str] | None,
+        mcp_servers: dict[str, CopilotMCPServerConfig],
+    ) -> CopilotTaskConfig:
+        raise NotImplementedError
+
+
+CopilotNestedRunner: TypeAlias = Callable[
+    [CopilotTaskConfig, str],
+    Awaitable["CopilotResult"],
+]
+
+
+class CopilotPersona(Protocol):
+    """Persona behavior required by a Copilot eval configuration."""
+
+    def apply(
+        self,
+        agent: CopilotTaskConfig,
+        session_config: dict[str, Any],
+        mapper: CopilotEventMapper,
+        nested_runner: CopilotNestedRunner,
+    ) -> None:
+        raise NotImplementedError
+
+
+def declared_agent_tools(
+    agent_config: CopilotCustomAgentConfig,
+) -> list[str] | None:
+    """Return the exact tool allowlist declared on a custom agent."""
+    if "tools" not in agent_config:
+        return None
+    return agent_config["tools"]
+
+
+def merge_agent_mcp_servers(
+    parent_servers: Mapping[str, CopilotMCPServerConfig],
+    agent_config: CopilotCustomAgentConfig,
+) -> dict[str, CopilotMCPServerConfig]:
+    """Merge parent MCP servers with any exact custom-agent overrides."""
+    merged = dict(parent_servers)
+    agent_servers = agent_config.get("mcp_servers")
+    if agent_servers:
+        merged.update(agent_servers)
+    return merged
+
+
+def resolve_agent_reasoning_effort(
+    *,
+    parent_model: str | None,
+    parent_reasoning_effort: CopilotReasoningEffort | None,
+    agent_config: CopilotCustomAgentConfig,
+) -> CopilotReasoningEffort | None:
+    """Resolve a custom agent's reasoning effort like the current SDK contract."""
+    if "reasoning_effort" in agent_config:
+        return agent_config["reasoning_effort"]
+
+    agent_model = agent_config.get("model")
+    if agent_model is None or agent_model == parent_model:
+        return parent_reasoning_effort
+
+    return None
+
+
+def require_custom_agent_prompt(
+    agent_config: CopilotCustomAgentConfig,
+) -> str:
+    """Return the declared prompt or raise when the runtime contract is broken."""
+    prompt = agent_config.get("prompt")
+    if isinstance(prompt, str) and prompt:
+        return prompt
+    msg = f"Custom agent '{agent_config.get('name', 'unknown')}' is missing a prompt"
+    raise ValueError(msg)
+
+
+def require_custom_agent_name(
+    agent_config: CopilotCustomAgentConfig,
+) -> str:
+    """Return the declared machine name or raise when the runtime contract is broken."""
+    name = agent_config.get("name")
+    if isinstance(name, str) and name:
+        return name
+    raise ValueError("Custom agent is missing a name")
+
+
+def require_mapping(arguments: Any) -> dict[str, Any]:
+    """Validate tool arguments that must be object-shaped."""
+    if isinstance(arguments, dict):
+        return arguments
+    msg = "Custom-agent dispatch arguments must be an object"
+    raise ValueError(msg)

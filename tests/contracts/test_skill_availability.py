@@ -11,26 +11,26 @@ from copilot.generated.rpc import Skill as SDKSkill
 from copilot.generated.rpc import SkillList, SkillsLoadDiagnostics
 from copilot.generated.session_events import SkillSource
 
-from pytest_skill_engineering.copilot import CopilotEval, runner
-from pytest_skill_engineering.copilot.fixtures import _convert_to_aitest
-from pytest_skill_engineering.copilot.skills import requested_skill_files
-from pytest_skill_engineering.core.serialization import serialize_dataclass
-from pytest_skill_engineering.reporting import TestReport as CaseReport
-from pytest_skill_engineering.reporting import build_suite_report, generate_json, load_suite_report
+from pytest_copilot.copilot import CopilotTask, runner
+from pytest_copilot.copilot.fixtures import _convert_to_aitest
+from pytest_copilot.copilot.skills import requested_skill_files
+from pytest_copilot.core.serialization import serialize_dataclass
+from pytest_copilot.reporting import TestReport as CaseReport
+from pytest_copilot.reporting import build_suite_report, generate_json, load_suite_report
 
 
 @pytest.mark.parametrize("mode", ["empty", "copilot-cli"])
 def test_explicit_skills_enable_loading_without_ambient_discovery(
     mode: Literal["empty", "copilot-cli"],
 ) -> None:
-    agent = CopilotEval(client_mode=mode, skill_directories=["explicit-skills"])
+    agent = CopilotTask(client_mode=mode, skill_directories=["explicit-skills"])
     config = agent.build_session_config()
     assert config["enable_skills"] is True
     assert config["enable_config_discovery"] is False
 
 
 def test_explicit_skills_cannot_be_globally_disabled() -> None:
-    agent = CopilotEval(
+    agent = CopilotTask(
         client_mode="empty",
         skill_directories=["explicit-skills"],
         extra_config={"enable_skills": False},
@@ -41,30 +41,30 @@ def test_explicit_skills_cannot_be_globally_disabled() -> None:
 
 @pytest.mark.parametrize("enabled", [None, True])
 def test_explicit_skills_with_passthrough_enable_setting(enabled: bool | None) -> None:
-    config = CopilotEval(
+    config = CopilotTask(
         skill_directories=["explicit-skills"], extra_config={"enable_skills": enabled}
     ).build_session_config()
     assert config["enable_skills"] is True
 
 
 def test_explicit_disable_without_directories_is_supported() -> None:
-    config = CopilotEval(
+    config = CopilotTask(
         client_mode="empty", extra_config={"enable_skills": False}
     ).build_session_config()
     assert config["enable_skills"] is False
 
 
 def test_passthrough_directories_cannot_evade_enable_or_replace_explicit_inputs() -> None:
-    config = CopilotEval(
+    config = CopilotTask(
         client_mode="empty", extra_config={"skill_directories": ["explicit-skills"]}
     ).build_session_config()
     assert config["enable_skills"] is True
     with pytest.raises(ValueError, match="override"):
-        CopilotEval(
+        CopilotTask(
             skill_directories=["explicit-skills"], extra_config={"skill_directories": []}
         ).build_session_config()
     with pytest.raises(ValueError, match="enable_skills=False"):
-        CopilotEval(
+        CopilotTask(
             extra_config={"skill_directories": ["explicit-skills"], "enable_skills": False}
         ).build_session_config()
 
@@ -110,7 +110,7 @@ async def test_invalid_directory_argument_shapes_fail_before_start(
         pytest.fail("Invalid directory arguments must not start a client")
 
     monkeypatch.setattr(runner, "create_client", forbid_client)
-    result = await runner.run_copilot(CopilotEval(skill_directories=directories), "Do not send.")
+    result = await runner.run_copilot(CopilotTask(skill_directories=directories), "Do not send.")
     assert not result.success and result.stop_reason == "execution_error"
     assert result.error and "skill_directories" in result.error
 
@@ -187,7 +187,7 @@ async def test_bad_skill_inputs_fail_before_client_start(
 
     monkeypatch.setattr(runner, "create_client", forbid_client)
     result = await runner.run_copilot(
-        CopilotEval(client_mode="empty", skill_directories=directories), "Do not execute."
+        CopilotTask(client_mode="empty", skill_directories=directories), "Do not execute."
     )
     assert not result.success and result.stop_reason == "execution_error"
     assert result.error and "Skill setup failed before model execution" in result.error
@@ -270,7 +270,7 @@ async def test_runner_checks_sdk_availability_before_its_single_send_and_saves_e
             calls.append("stop")
 
     monkeypatch.setattr(runner, "create_client", lambda *args, **kwargs: Client())
-    agent = CopilotEval(
+    agent = CopilotTask(
         client_mode="empty",
         skill_directories=[str(directory)],
         disabled_skills=[directory.name] if outcome == "intentional-disable" else [],

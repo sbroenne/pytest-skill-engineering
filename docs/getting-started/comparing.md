@@ -14,11 +14,11 @@ from __future__ import annotations
 import json
 from dataclasses import replace
 
-from pytest_skill_engineering.copilot import CopilotEval
+from pytest_copilot.copilot import CopilotTask
 
 
 async def test_skill_comparison(ab_run, record_property):
-    baseline = CopilotEval(
+    baseline = CopilotTask(
         name="baseline",
         model="gpt-5.6-luna",
         instructions="Calculate the requested amount and save the JSON file.",

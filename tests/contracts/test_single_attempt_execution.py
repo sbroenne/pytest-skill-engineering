@@ -7,8 +7,8 @@ from typing import Any
 
 import pytest
 
-from pytest_skill_engineering.copilot import CopilotEval, runner
-from pytest_skill_engineering.copilot.fixtures import _convert_to_aitest
+from pytest_copilot.copilot import CopilotTask, runner
+from pytest_copilot.copilot.fixtures import _convert_to_aitest
 
 
 @pytest.mark.parametrize("phase", ["start", "create", "execute"])
@@ -56,7 +56,7 @@ async def test_failure_is_one_attempt_with_cleanup_and_original_evidence(
         return Client()
 
     monkeypatch.setattr(runner, "create_client", create_client)
-    agent = CopilotEval(model="offline", client_mode="empty")
+    agent = CopilotTask(model="offline", client_mode="empty")
     result = await runner.run_copilot(agent, "Check one attempt.")
     assert counts["created"] == counts["start"] == counts["stop"] == 1
     assert counts["create"] == (0 if phase == "start" else 1)
@@ -77,4 +77,4 @@ async def test_failure_is_one_attempt_with_cleanup_and_original_evidence(
 def test_retry_settings_are_not_accepted(setting: str) -> None:
     kwargs: dict[str, Any] = {setting: 0}
     with pytest.raises(TypeError, match=setting):
-        CopilotEval(**kwargs)
+        CopilotTask(**kwargs)

@@ -12,7 +12,7 @@ from pathlib import Path
 
 import pytest
 
-from pytest_skill_engineering.copilot.eval import CopilotEval
+from pytest_copilot.copilot.task import CopilotTask
 
 pytestmark = [pytest.mark.copilot]
 _SKILLS_DIR = Path(__file__).resolve().parents[1] / "skills"
@@ -32,7 +32,7 @@ def _write_skill(parent: Path, name: str, body: str) -> str:
 class TestSkillABComparison:
     """Same task, two configs — skill produces measurably different output."""
 
-    async def test_type_hint_skill_adds_annotations(self, copilot_eval, tmp_path):
+    async def test_type_hint_skill_adds_annotations(self, copilot_run, tmp_path):
         """Skill mandating type hints produces annotated function signatures."""
         skill_dir = _write_skill(
             tmp_path,
@@ -53,7 +53,7 @@ class TestSkillABComparison:
 
         baseline_dir = tmp_path / "baseline"
         baseline_dir.mkdir()
-        baseline = CopilotEval(
+        baseline = CopilotTask(
             name="baseline",
             model=SKILL_MODEL,
             instructions="Write a Python module.",
@@ -62,7 +62,7 @@ class TestSkillABComparison:
 
         treatment_dir = tmp_path / "treatment"
         treatment_dir.mkdir()
-        treatment = CopilotEval(
+        treatment = CopilotTask(
             name="treatment",
             model=SKILL_MODEL,
             instructions=(
@@ -73,8 +73,8 @@ class TestSkillABComparison:
             skill_directories=[skill_dir],
         )
 
-        result_a = await copilot_eval(baseline, task)
-        result_b = await copilot_eval(treatment, task)
+        result_a = await copilot_run(baseline, task)
+        result_b = await copilot_run(treatment, task)
 
         assert result_a.success and result_b.success
 
@@ -90,7 +90,7 @@ class TestSkillABComparison:
             f"Baseline output:\n{content_a}\nTreatment output:\n{content_b}"
         )
 
-    async def test_simple_assistant_skill_applies_greeting_rule(self, copilot_eval, tmp_path):
+    async def test_simple_assistant_skill_applies_greeting_rule(self, copilot_run, tmp_path):
         """Loading the greeting skill should apply its rule to the response."""
         shared_instructions = (
             "Reply with exactly one short greeting sentence. Do not use the word 'Hello' "
@@ -101,14 +101,14 @@ class TestSkillABComparison:
         baseline_dir.mkdir()
         treatment_dir.mkdir()
 
-        baseline = CopilotEval(
+        baseline = CopilotTask(
             name="baseline",
             model=SKILL_MODEL,
             instructions=shared_instructions,
             working_directory=str(baseline_dir),
         )
 
-        treatment = CopilotEval(
+        treatment = CopilotTask(
             name="treatment",
             model=SKILL_MODEL,
             instructions=(
@@ -119,14 +119,14 @@ class TestSkillABComparison:
             skill_directories=[str(_SKILLS_DIR / "simple-assistant")],
         )
 
-        result_a = await copilot_eval(baseline, "Greet me.")
-        result_b = await copilot_eval(treatment, "Greet me.")
+        result_a = await copilot_run(baseline, "Greet me.")
+        result_b = await copilot_run(treatment, "Greet me.")
 
         assert result_a.success and result_b.success
         assert "hello" not in (result_a.final_response or "").lower()
         assert "hello" in (result_b.final_response or "").lower()
 
-    async def test_math_helper_skill_reads_reference_docs(self, copilot_eval, tmp_path):
+    async def test_math_helper_skill_reads_reference_docs(self, copilot_run, tmp_path):
         """Skill references should become usable tools and shape math workflow."""
         prompt = "What is the volume of a cylinder with radius 3 and height 5?"
         baseline_dir = tmp_path / "baseline"
@@ -134,14 +134,14 @@ class TestSkillABComparison:
         baseline_dir.mkdir()
         treatment_dir.mkdir()
 
-        baseline = CopilotEval(
+        baseline = CopilotTask(
             name="baseline",
             model=SKILL_MODEL,
             instructions="Solve math questions clearly.",
             working_directory=str(baseline_dir),
         )
 
-        treatment = CopilotEval(
+        treatment = CopilotTask(
             name="treatment",
             model=SKILL_MODEL,
             instructions=(
@@ -152,8 +152,8 @@ class TestSkillABComparison:
             skill_directories=[str(_SKILLS_DIR / "math-helper")],
         )
 
-        result_a = await copilot_eval(baseline, prompt)
-        result_b = await copilot_eval(treatment, prompt)
+        result_a = await copilot_run(baseline, prompt)
+        result_b = await copilot_run(treatment, prompt)
 
         assert result_a.success and result_b.success
         assert not result_a.tool_was_called("list_skill_references")

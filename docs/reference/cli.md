@@ -6,12 +6,12 @@ pytest; there is no separate execution or report-rendering command.
 ## Project setup
 
 ```bash
-uv run pytest-skill-engineering init [PROJECT_DIR]
-uv run pytest-skill-engineering doctor [PROJECT_DIR]
+uv run pytest-copilot init [PROJECT_DIR]
+uv run pytest-copilot doctor [PROJECT_DIR]
 ```
 
 `init` requires an existing `pyproject.toml`. It creates
-`tests/test_copilot_eval.py`, sets `asyncio_mode = "auto"`, adds a JSON evidence
+`tests/test_copilot_run.py`, sets `asyncio_mode = "auto"`, adds a JSON evidence
 destination, and records explicit starter-model pricing. Existing rates are
 preserved; conflicts fail without overwriting existing content.
 
@@ -57,7 +57,7 @@ an earlier run is not evidence that the current command succeeded.
 Read the JSON directly with your coding agent or load its dataclasses:
 
 ```python
-from pytest_skill_engineering.reporting import load_suite_report
+from pytest_copilot.reporting import load_suite_report
 
 evidence = load_suite_report("results.json")
 for case in evidence.tests:

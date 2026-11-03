@@ -14,9 +14,9 @@ from uuid import uuid4
 import pytest
 from mcp import types
 
-from pytest_skill_engineering.core.errors import ServerStartError
-from pytest_skill_engineering.core.result import MCPPrompt
-from pytest_skill_engineering.execution.servers import (
+from pytest_copilot.core.errors import ServerStartError
+from pytest_copilot.core.result import MCPPrompt
+from pytest_copilot.execution.servers import (
     MCPServer,
     MCPServerProcess,
     Wait,

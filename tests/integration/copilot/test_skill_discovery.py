@@ -11,11 +11,11 @@ import pytest
 from copilot import CopilotRequestContext, CopilotRequestHandler, CopilotWebSocketHandler
 from copilot.session import CopilotSession
 
-from pytest_skill_engineering import load_skill
-from pytest_skill_engineering.copilot import CopilotEval
-from pytest_skill_engineering.copilot.client import create_client, stop_client
-from pytest_skill_engineering.copilot.skills import discover_requested_skills, requested_skill_files
-from pytest_skill_engineering.core.result import SkillDiscovery
+from pytest_copilot import load_skill
+from pytest_copilot.copilot import CopilotTask
+from pytest_copilot.copilot.client import create_client, stop_client
+from pytest_copilot.copilot.skills import discover_requested_skills, requested_skill_files
+from pytest_copilot.core.result import SkillDiscovery
 
 pytestmark = pytest.mark.copilot
 
@@ -69,7 +69,7 @@ async def test_empty_mode_discovers_only_explicit_skills_without_model_sends(
         "parent": {str(first / "SKILL.md"), str(second / "SKILL.md")},
         "disabled": {str(first / "SKILL.md")},
     }[selection]
-    agent = CopilotEval(
+    agent = CopilotTask(
         client_mode="empty",
         working_directory=str(workspace),
         skill_directories=directories,
@@ -122,7 +122,7 @@ async def test_empty_mode_omits_ambient_instructions_from_blocked_request(tmp_pa
     )
     (workspace / "AGENTS.md").write_text("AMBIENT_AGENT_SENTINEL", encoding="utf-8")
     first = _write_skill(tmp_path / "explicit", "explicit-first")
-    agent = CopilotEval(
+    agent = CopilotTask(
         client_mode="empty",
         model="gpt-4.1",
         working_directory=str(workspace),

@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-from pytest_skill_engineering.execution import cost
+from pytest_copilot.execution import cost
 
 
 @pytest.fixture

@@ -5,7 +5,7 @@ description: "Load instruction-file content as a system prompt and check the gen
 # Custom Instructions
 
 Load an instruction file when you want to test a project's conventions with
-Copilot. Pass its content to `CopilotEval.instructions`, then assert on the
+Copilot. Pass its content to `CopilotTask.instructions`, then assert on the
 output those conventions require.
 
 This tests explicitly supplied instructions. It does **not** reproduce an
@@ -35,19 +35,19 @@ from __future__ import annotations
 import ast
 import re
 
-from pytest_skill_engineering import load_instruction_file
-from pytest_skill_engineering.copilot import CopilotEval
+from pytest_copilot import load_instruction_file
+from pytest_copilot.copilot import CopilotTask
 
 
-async def test_function_conventions(copilot_eval, tmp_path):
+async def test_function_conventions(copilot_run, tmp_path):
     instruction = load_instruction_file(".github/instructions/python-style.instructions.md")
-    agent = CopilotEval(
+    agent = CopilotTask(
         name="python-style",
         model="gpt-5.6-sol",
         instructions=instruction["content"],
         working_directory=str(tmp_path),
     )
-    result = await copilot_eval(
+    result = await copilot_run(
         agent, "Create arithmetic.py with a public function that adds two numbers."
     )
 
@@ -91,13 +91,13 @@ The same loader accepts `.instructions.md`, `.github/copilot-instructions.md`,
 ### `.instructions.md` (VS Code)
 
 `applyTo` describes editor file matching. The loader returns it as `apply_to`;
-passing `content` to an eval does not apply that glob or save the file metadata
+passing `content` to a task does not apply that glob or save the file metadata
 automatically.
 
 ### `.github/copilot-instructions.md` (VS Code, project-wide)
 
 Use this file for repository-wide conventions. To load it with project custom
-agent definitions, use `CopilotEval.from_copilot_config(project_root)`.
+agent definitions, use `CopilotTask.from_copilot_config(project_root)`.
 
 ### `AGENTS.md` / `CLAUDE.md` (plain markdown)
 
@@ -106,7 +106,7 @@ does not switch the execution to another coding-agent product.
 
 ## Testing loaded instructions
 
-There is no `CopilotEval.from_instruction_files()` factory. Load the files
+There is no `CopilotTask.from_instruction_files()` factory. Load the files
 explicitly or use the appropriate project loader.
 
 ### Combining Multiple Instruction Files
@@ -114,15 +114,15 @@ explicitly or use the appropriate project loader.
 This configuration fragment concatenates files in the chosen order:
 
 ```python
-from pytest_skill_engineering import load_instruction_file
-from pytest_skill_engineering.copilot import CopilotEval
+from pytest_copilot import load_instruction_file
+from pytest_copilot.copilot import CopilotTask
 
 paths = [
     ".github/copilot-instructions.md",
     ".github/instructions/python-style.instructions.md",
 ]
 instructions = [load_instruction_file(path) for path in paths]
-agent = CopilotEval(
+agent = CopilotTask(
     name="combined-conventions",
     instructions="\n\n".join(item["content"] for item in instructions),
 )
@@ -137,7 +137,7 @@ All concatenated instructions apply to this session, regardless of their
 well-known instruction filenames. Filter by filename-derived name:
 
 ```python
-from pytest_skill_engineering import load_instruction_files
+from pytest_copilot import load_instruction_files
 
 instructions = load_instruction_files(
     ".github/instructions",
@@ -152,7 +152,7 @@ evidence of adherence.
 
 ## Instruction file evidence
 
-Name evals and pytest parameters after their variants. JSON captures the
+Name tasks and pytest parameters after their variants. JSON captures the
 configured system prompt, not automatically the source filenames or per-file
 results. Record safe filenames with `record_property` if you need them.
 

@@ -13,8 +13,8 @@ import pytest
 from copilot import CopilotRequestContext
 from websockets.asyncio.server import ServerConnection, serve
 
-from pytest_skill_engineering.copilot.requests import RequestAuditHandler
-from pytest_skill_engineering.core.serialization import serialize_dataclass
+from pytest_copilot.copilot.requests import RequestAuditHandler
+from pytest_copilot.core.serialization import serialize_dataclass
 
 
 @dataclass(slots=True)

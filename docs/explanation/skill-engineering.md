@@ -12,7 +12,7 @@ real task. You need both: neither substitutes for the other.
 ## The improvement loop
 
 1. Define a representative user task and observable success criteria.
-2. Configure `CopilotEval`, execute the task with `copilot_eval`, and save JSON.
+2. Configure `CopilotTask`, execute the task with `copilot_run`, and save JSON.
 3. Verify actual output, not just a model's claim or a call's presence.
 4. Investigate failures alongside the source and environment.
 5. Change the source or instructions supported by that investigation and rerun affected cases.
@@ -40,8 +40,8 @@ Repeated, representative tasks are needed when reliability is the question.
 | Term | Meaning here |
 | --- | --- |
 | Skill | A domain-guidance package with a `SKILL.md` entry point |
-| System prompt | Instructions configuring behavior, supplied through `CopilotEval.instructions` |
-| Prompt | The user task sent to `copilot_eval` |
+| System prompt | Instructions configuring behavior, supplied through `CopilotTask.instructions` |
+| Prompt | The user task sent to `copilot_run` |
 | Custom agent | A `.agent.md` definition |
 | Custom agent dispatch | The runtime routing being tested |
 | Subagent | An actual runtime invocation, recorded in `result.subagent_invocations` |

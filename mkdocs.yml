@@ -1,9 +1,9 @@
-site_name: pytest-skill-engineering
+site_name: pytest-copilot
 site_description: "Test real GitHub Copilot tasks with pytest assertions and saved JSON execution evidence."
-site_url: https://sbroenne.github.io/pytest-skill-engineering
+site_url: https://sbroenne.github.io/pytest-copilot
 site_author: sbroenne
-repo_url: https://github.com/sbroenne/pytest-skill-engineering
-repo_name: sbroenne/pytest-skill-engineering
+repo_url: https://github.com/sbroenne/pytest-copilot
+repo_name: sbroenne/pytest-copilot
 
 theme:
   name: material
@@ -114,7 +114,7 @@ nav:
   - Case Studies:
     - Framework Companion Skill: use-cases/companion-skill.md
     - Broad Excel Skills: use-cases/excel-skill-value.md
-  - Migration from 0.6.x: migration.md
+  - Upgrading to 2.0: migration.md
   - Contributing:
     - Overview: contributing/index.md
     - Architecture: contributing/architecture.md
@@ -124,5 +124,5 @@ nav:
 extra:
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/sbroenne/pytest-skill-engineering
+      link: https://github.com/sbroenne/pytest-copilot
   generator: false

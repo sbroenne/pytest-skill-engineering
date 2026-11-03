@@ -48,7 +48,7 @@ Reject negative subtotals, fractional-cent subtotals, tax outside 0..100,
 non-finite values, and non-numeric input with exit code 2 and a stderr message.
 
 Tests use the supplied invoice_eval and invoice_task fixtures with the ordinary
-copilot_eval fixture. invoice_task requests a $0.05 subtotal with 10 percent tax.
+copilot_run fixture. invoice_task requests a $0.05 subtotal with 10 percent tax.
 The separate invoice_output fixture is a callable taking no arguments; request
 it as a test parameter and call it to obtain the actual CLI response, not a
 model's claim. Write one async test in test_invoice.py that

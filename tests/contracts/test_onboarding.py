@@ -9,8 +9,8 @@ from pathlib import Path
 import pytest
 import tomlkit
 
-from pytest_skill_engineering.execution.cost import estimate_cost
-from pytest_skill_engineering.onboarding import (
+from pytest_copilot.execution.cost import estimate_cost
+from pytest_copilot.onboarding import (
     DEFAULT_MODEL,
     DEFAULT_PRICING,
     PRICING_PATH,
@@ -179,11 +179,11 @@ def test_cli_init_reports_created_files(tmp_path: Path) -> None:
         encoding="utf-8",
     )
     result = subprocess.run(
-        [sys.executable, "-m", "pytest_skill_engineering.onboarding", "init", str(tmp_path)],
+        [sys.executable, "-m", "pytest_copilot.onboarding", "init", str(tmp_path)],
         capture_output=True,
         text=True,
         timeout=30,
     )
     assert result.returncode == 0, result.stderr
     assert "Created" in result.stdout
-    assert f"uv run python -m pytest {Path('tests') / 'test_copilot_eval.py'} -v" in result.stdout
+    assert f"uv run python -m pytest {Path('tests') / 'test_copilot_run.py'} -v" in result.stdout

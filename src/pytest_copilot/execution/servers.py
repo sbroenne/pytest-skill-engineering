@@ -1,0 +1,442 @@
+"""Server management for MCP servers.
+
+Provides a process class for connecting to MCP servers,
+plus configuration dataclasses (``MCPServer``, ``Wait``).
+"""
+
+from __future__ import annotations
+
+import asyncio
+import contextlib
+import logging
+import os
+import time
+from dataclasses import dataclass, field
+from enum import Enum
+from typing import TYPE_CHECKING, Any, Literal
+
+from pytest_copilot.core.errors import ServerStartError
+
+_logger = logging.getLogger(__name__)
+
+if TYPE_CHECKING:
+    from mcp import ClientSession
+
+
+class WaitStrategy(str, Enum):
+    """Strategy for waiting until an MCP server is ready."""
+
+    TOOLS = "tools"
+    """Wait until the server exposes the expected tools."""
+
+
+@dataclass(slots=True, frozen=True)
+class Wait:
+    """Server startup wait configuration.
+
+    Example::
+
+        # Wait until specific tools are available
+        Wait.for_tools(["read_file", "write_file"])
+
+        # No wait — connect immediately
+        Wait(strategy=WaitStrategy.TOOLS, tools=[])
+    """
+
+    strategy: WaitStrategy = WaitStrategy.TOOLS
+    tools: list[str] = field(default_factory=list)
+    timeout_ms: int = 30_000
+
+    @classmethod
+    def for_tools(cls, tools: list[str], timeout_ms: int = 30_000) -> Wait:
+        """Wait until the server exposes the given tools."""
+        return cls(strategy=WaitStrategy.TOOLS, tools=tools, timeout_ms=timeout_ms)
+
+
+@dataclass(slots=True)
+class MCPServer:
+    """Configuration for an MCP server started by MCPServerProcess.
+
+    Supports stdio (subprocess), SSE, and Streamable HTTP transports.
+
+    Example::
+
+        # Stdio — launch a subprocess
+        MCPServer(command=["python", "-m", "my_server"])
+
+        # Stdio with wait — start server and check tools are ready
+        MCPServer(
+            command=["python", "-m", "my_server"],
+            wait=Wait.for_tools(["read_file", "write_file"]),
+        )
+
+        # SSE — connect to a remote endpoint
+        MCPServer(
+            transport="sse",
+            url="http://localhost:8080/sse",
+            headers={"Authorization": "Bearer ${MY_TOKEN}"},
+        )
+    """
+
+    command: list[str] = field(default_factory=list)
+    """Command to launch the server (required for stdio transport)."""
+    transport: Literal["stdio", "sse", "streamable-http"] = "stdio"
+    args: list[str] = field(default_factory=list)
+    env: dict[str, str] = field(default_factory=dict)
+    cwd: str | None = None
+    url: str | None = None
+    """URL for SSE or Streamable HTTP transports."""
+    headers: dict[str, str] = field(default_factory=dict)
+    wait: Wait = field(default_factory=Wait)
+
+    def __post_init__(self) -> None:
+        if self.transport in ("sse", "streamable-http") and not self.url:
+            msg = f"transport={self.transport!r} requires a url"
+            raise ValueError(msg)
+
+
+def _expand_env(value: str) -> str:
+    """Expand environment variables in a string."""
+    return os.path.expandvars(value)
+
+
+class MCPServerProcess:
+    """Manages an MCP server connection using the MCP SDK.
+
+    Supports all three transports via the SDK's ``ClientSession``:
+
+    - **stdio** — Launches a subprocess and communicates via stdin/stdout
+    - **sse** — Connects to a remote SSE endpoint
+    - **streamable-http** — Connects to a remote Streamable HTTP endpoint
+
+    Example:
+        server = MCPServerProcess(mcp_config)
+        await server.start()
+        tools = server.get_tools()
+        result = await server.call_tool("read_file", {"path": "foo.txt"})
+        await server.stop()
+    """
+
+    def __init__(self, config: MCPServer) -> None:
+        self.config = config
+        self._session: ClientSession | None = None
+        self._tools: dict[str, dict[str, Any]] = {}
+        self._prompts: dict[str, Any] = {}
+        self._exit_stack: contextlib.AsyncExitStack | None = None
+
+    async def start(self) -> None:
+        """Start or connect to the MCP server and discover tools and prompts."""
+        from mcp import ClientSession as _ClientSession
+
+        self._exit_stack = contextlib.AsyncExitStack()
+        label = self._transport_label()
+
+        try:
+            read_stream, write_stream = await self._open_transport()
+
+            self._session = await self._exit_stack.enter_async_context(
+                _ClientSession(read_stream, write_stream)
+            )
+            await self._session.initialize()
+
+            if self.config.wait.strategy == WaitStrategy.TOOLS and self.config.wait.tools:
+                await self._wait_for_required_tools(label)
+            else:
+                await self._refresh_capabilities()
+
+        except ServerStartError:
+            await self._cleanup_failed_start("MCP startup")
+            self._session = None
+            raise
+        except Exception as e:
+            await self._cleanup_failed_start("MCP startup")
+            self._session = None
+            raise ServerStartError("MCP", label, str(e)) from e
+
+    async def _cleanup_failed_start(self, context: str) -> None:
+        """Best-effort cleanup for startup failures."""
+        if self._exit_stack is None:
+            return
+        exit_stack = self._exit_stack
+        self._exit_stack = None
+        try:
+            await exit_stack.aclose()
+        except Exception:
+            _logger.warning("%s cleanup failed", context, exc_info=True)
+
+    async def _refresh_capabilities(self) -> None:
+        """Refresh tool and prompt metadata from the connected server."""
+        if self._session is None:
+            raise RuntimeError("Server not started")
+
+        tools_result = await self._session.list_tools()
+        self._tools = {
+            tool.name: {
+                "name": tool.name,
+                "description": tool.description or "",
+                "inputSchema": tool.input_schema,
+            }
+            for tool in tools_result.tools
+        }
+
+        self._prompts = {}
+        try:
+            prompts_result = await self._session.list_prompts()
+            from pytest_copilot.core.result import MCPPrompt, MCPPromptArgument
+
+            for prompt in prompts_result.prompts:
+                args = [
+                    MCPPromptArgument(
+                        name=a.name,
+                        description=a.description or "",
+                        required=bool(a.required),
+                    )
+                    for a in (prompt.arguments or [])
+                ]
+                self._prompts[prompt.name] = MCPPrompt(
+                    name=prompt.name,
+                    description=prompt.description or "",
+                    arguments=args,
+                )
+        except Exception:
+            _logger.debug("Server does not support prompts capability", exc_info=True)
+
+    async def _wait_for_required_tools(self, label: list[str]) -> None:
+        """Poll until all required tools are exposed or the timeout elapses."""
+        required_tools = tuple(self.config.wait.tools)
+        deadline = time.monotonic() + (self.config.wait.timeout_ms / 1000)
+        delay_s = 0.05
+        last_error: Exception | None = None
+
+        while True:
+            try:
+                await self._refresh_capabilities()
+                last_error = None
+            except Exception as exc:
+                last_error = exc
+
+            available_tools = set(self._tools)
+            missing = sorted(set(required_tools) - available_tools)
+            if not missing:
+                return
+
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                details = [
+                    "Required tools not available.",
+                    "Timed out after "
+                    f"{self.config.wait.timeout_ms}ms waiting for tools {list(required_tools)}.",
+                    f"Last visible tools: {sorted(available_tools)}.",
+                ]
+                if last_error is not None:
+                    details.append(f"Last discovery error: {last_error}")
+                raise ServerStartError("MCP", label, " ".join(details))
+
+            await asyncio.sleep(min(delay_s, remaining))
+            delay_s = min(delay_s * 2, 0.5)
+
+    async def _open_transport(self) -> tuple[Any, Any]:
+        """Open the appropriate transport and return (read_stream, write_stream)."""
+        assert self._exit_stack is not None  # noqa: S101
+
+        match self.config.transport:
+            case "stdio":
+                from mcp.client.stdio import StdioServerParameters, stdio_client
+
+                cmd = self.config.command
+                if not cmd or not isinstance(cmd[0], str) or not cmd[0].strip():
+                    raise ServerStartError(
+                        "MCP",
+                        self._transport_label(),
+                        "stdio transport requires a non-empty command",
+                    )
+                params = StdioServerParameters(
+                    command=cmd[0],
+                    args=[*cmd[1:], *self.config.args],
+                    env={**os.environ, **self.config.env} if self.config.env else None,
+                    cwd=self.config.cwd,
+                )
+                streams = await self._exit_stack.enter_async_context(stdio_client(params))
+                return streams[0], streams[1]
+
+            case "sse":
+                from mcp.client.sse import sse_client
+
+                url = self.config.url
+                assert url is not None  # noqa: S101 — validated in MCPServer.__post_init__
+                headers = {k: _expand_env(v) for k, v in self.config.headers.items()}
+                streams = await self._exit_stack.enter_async_context(
+                    sse_client(url, headers=headers or None)
+                )
+                return streams[0], streams[1]
+
+            case "streamable-http":
+                import httpx2
+                from mcp.client.streamable_http import streamable_http_client
+
+                url = self.config.url
+                assert url is not None  # noqa: S101 — validated in MCPServer.__post_init__
+
+                http_client: httpx2.AsyncClient | None = None
+                if self.config.headers:
+                    headers = {k: _expand_env(v) for k, v in self.config.headers.items()}
+                    http_client = await self._exit_stack.enter_async_context(
+                        httpx2.AsyncClient(headers=headers)
+                    )
+
+                streams = await self._exit_stack.enter_async_context(
+                    streamable_http_client(url, http_client=http_client)
+                )
+                return streams[0], streams[1]
+
+            case _:  # pragma: no cover
+                msg = f"Unknown transport: {self.config.transport}"
+                raise ValueError(msg)
+
+        raise AssertionError("unreachable")  # pragma: no cover
+
+    async def stop(self) -> None:
+        """Stop the MCP server / disconnect from remote."""
+        if self._exit_stack:
+            try:
+                await self._exit_stack.aclose()
+            except Exception:
+                _logger.debug(
+                    "Server cleanup encountered async teardown error",
+                    exc_info=True,
+                )
+            finally:
+                self._exit_stack = None
+        self._session = None
+
+    def get_tools(self) -> dict[str, dict[str, Any]]:
+        """Get available tools."""
+        return self._tools
+
+    def get_prompts(self) -> dict[str, Any]:
+        """Get available prompt templates discovered from the server.
+
+        Returns a dict mapping prompt name to :class:`MCPPrompt`.
+        Empty if the server does not support the prompts capability.
+        """
+        return self._prompts
+
+    async def list_prompts(self) -> list[Any]:
+        """List prompt templates exposed by the MCP server.
+
+        Returns a list of :class:`MCPPrompt` objects. Empty list if the server
+        does not support the prompts capability.
+
+        Example::
+
+            server = MCPServerProcess(mcp_config)
+            await server.start()
+            prompts = await server.list_prompts()
+            for p in prompts:
+                print(p.name, p.description)
+        """
+        if not self._session:
+            raise RuntimeError("Server not started")
+
+        from pytest_copilot.core.result import MCPPrompt, MCPPromptArgument
+
+        try:
+            result = await self._session.list_prompts()
+        except Exception:
+            return []
+
+        prompts = []
+        for prompt in result.prompts:
+            args = [
+                MCPPromptArgument(
+                    name=a.name,
+                    description=a.description or "",
+                    required=bool(a.required),
+                )
+                for a in (prompt.arguments or [])
+            ]
+            prompts.append(
+                MCPPrompt(
+                    name=prompt.name,
+                    description=prompt.description or "",
+                    arguments=args,
+                )
+            )
+        return prompts
+
+    async def get_prompt(
+        self,
+        name: str,
+        arguments: dict[str, str] | None = None,
+    ) -> list[dict[str, Any]]:
+        """Render a prompt template from the MCP server.
+
+        Calls ``prompts/get`` with the given arguments and returns the assembled
+        messages as a list of dicts with ``role`` and ``content`` keys — ready to
+        use as test input or assertions.
+
+        Args:
+            name: Prompt name as returned by :meth:`list_prompts`.
+            arguments: Argument values to fill in the template.
+
+        Returns:
+            List of ``{"role": str, "content": str}`` dicts.
+
+        Raises:
+            RuntimeError: If the server is not started.
+            ValueError: If the prompt name is not found.
+
+        Example::
+
+            messages = await server.get_prompt("code_review", {"code": "def hello(): ..."})
+            # [{"role": "user", "content": "Please review this code: def hello(): ..."}]
+            result = await copilot_run(agent, messages[0]["content"])
+        """
+        if not self._session:
+            raise RuntimeError("Server not started")
+
+        from mcp import types
+
+        result = await self._session.get_prompt(name, arguments)
+
+        messages = []
+        for msg in result.messages:
+            content = ""
+            if isinstance(msg.content, types.TextContent):
+                content = msg.content.text
+            elif isinstance(msg.content, types.EmbeddedResource):
+                # Resource content — extract text if available
+                resource = msg.content.resource
+                if hasattr(resource, "text"):
+                    content = resource.text  # type: ignore[union-attr]
+                else:
+                    content = str(resource)
+            else:
+                content = str(msg.content)
+            role = msg.role.value if hasattr(msg.role, "value") else str(msg.role)  # type: ignore[union-attr]
+            messages.append({"role": role, "content": content})
+
+        return messages
+
+    async def call_tool(self, name: str, arguments: dict[str, Any]) -> str:
+        """Call a tool and return result as text."""
+        if not self._session:
+            raise RuntimeError("Server not started")
+
+        from mcp import types
+
+        result = await self._session.call_tool(name, arguments)
+
+        # Extract text from content blocks
+        if result.content:
+            for block in result.content:
+                if isinstance(block, types.TextContent):
+                    return block.text
+            return str(result.content[0])
+        return ""
+
+    def _transport_label(self) -> list[str]:
+        """Human-readable label for error messages."""
+        if self.config.transport == "stdio":
+            return self.config.command + self.config.args
+        return [self.config.transport, self.config.url or ""]
