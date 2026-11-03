@@ -64,6 +64,11 @@ that silently installs the replacement. Do not reuse the new package's release
 workflow to publish the final old-name release: it deliberately accepts only
 `pytest-copilot` artifacts. Build the final 1.x release separately and use an
 authorized publisher for the old PyPI project.
+The manually started `retire-old-package.yml` workflow builds 1.0.8 from the
+fixed pre-rename commit, changes only its package metadata and README, and checks
+that every packaged Python file is unchanged. It has separate publishing
+permission for `pytest-skill-engineering`; it does not create a new 2.x release
+or deploy the old documentation. Start it only to publish the final move notice.
 If the old project's trusted publisher still names the former GitHub repository,
 update it through the PyPI owner settings before using it after the repository
 rename. GitHub's repository redirects do not update a PyPI publisher identity.

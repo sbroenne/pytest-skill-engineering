@@ -1,10 +1,10 @@
-# pytest-copilot
+# pytest-copilot - pytest for GitHub Copilot
 
 **Test whether GitHub Copilot can complete tasks with your tools and instructions.**
 
 Independently maintained; not an official GitHub product or endorsed by GitHub.
 
-pytest-copilot runs real Copilot sessions from pytest and saves their
+pytest-copilot runs real GitHub Copilot sessions from pytest and saves their
 execution as JSON. Use it for MCP servers, CLI tools, skills, system prompts,
 plugins, and custom agents.
 

@@ -1,0 +1,153 @@
+name: Publish old package move notice
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: retire-old-package
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: 1d8e971ce969dba2a63e48ab54e04e17f31996a3
+          path: old-source
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+
+      - name: Set up Python
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.13"
+
+      - name: Prepare final old-name metadata
+        run: |
+          python <<'PY'
+          from __future__ import annotations
+
+          import json
+          import tomllib
+          from pathlib import Path
+          from urllib.request import urlopen
+
+          with urlopen("https://pypi.org/pypi/pytest-copilot/2.0.0/json", timeout=30) as response:
+              replacement = json.load(response)["info"]
+          if (replacement["name"], replacement["version"]) != ("pytest-copilot", "2.0.0"):
+              raise SystemExit("The replacement package must be published before retiring the old name")
+
+          root = Path("old-source")
+          project_path = root / "pyproject.toml"
+          text = project_path.read_text(encoding="utf-8")
+          project = tomllib.loads(text)["project"]
+          if (project["name"], project["version"]) != ("pytest-skill-engineering", "1.0.7"):
+              raise SystemExit("Expected the frozen 1.0.7 source")
+          text = text.replace('version = "1.0.7"', 'version = "1.0.8"', 1)
+          text = text.replace(
+              f'description = "{project["description"]}"',
+              'description = "Deprecated: moved to pytest-copilot, pytest for GitHub Copilot."',
+              1,
+          )
+          text = text.replace("Development Status :: 4 - Beta", "Development Status :: 7 - Inactive", 1)
+          text = text.replace(
+              "https://github.com/sbroenne/pytest-skill-engineering",
+              "https://github.com/sbroenne/pytest-copilot",
+          )
+          text = text.replace(
+              '[project.urls]\n',
+              '[project.urls]\nMigration = "https://sbroenne.github.io/pytest-copilot/migration/"\n',
+              1,
+          )
+          project_path.write_text(text, encoding="utf-8")
+          readme_path = root / "README.md"
+          readme = readme_path.read_text(encoding="utf-8")
+          notice = (
+              "> **Deprecated: this package has moved to "
+              "[pytest-copilot](https://pypi.org/project/pytest-copilot/), pytest for GitHub Copilot.**\n"
+              "> This is the final release under the old name; it will receive no further updates.\n"
+              "> Its existing 1.x code is unchanged; it does not install the new package.\n\n"
+              "Remove `pytest-skill-engineering` and install `pytest-copilot>=2.0.0,<3`.\n"
+              "Change imports to `pytest_copilot`, `CopilotEval` to `CopilotTask`, and\n"
+              "`copilot_eval` to `copilot_run`. The command is now `pytest-copilot`.\n"
+              "See the [migration guide](https://sbroenne.github.io/pytest-copilot/migration/).\n\n"
+              "The documentation below describes the frozen old API, not the replacement.\n\n"
+          )
+          title, remainder = readme.split("\n\n", 1)
+          readme_path.write_text(f"{title}\n\n{notice}{remainder}", encoding="utf-8")
+          PY
+
+      - name: Build old-name package
+        run: uv build old-source --out-dir dist
+
+      - name: Check package names, move notice, and unchanged Python files
+        run: |
+          python <<'PY'
+          from __future__ import annotations
+
+          import email
+          import tarfile
+          import zipfile
+          from pathlib import Path
+
+          dist = Path("dist")
+          wheel_path = dist / "pytest_skill_engineering-1.0.8-py3-none-any.whl"
+          source_path = dist / "pytest_skill_engineering-1.0.8.tar.gz"
+          if {p for p in dist.iterdir() if p.name != ".gitignore"} != {wheel_path, source_path}:
+              raise SystemExit("Only the two expected old-name distributions may be published")
+
+          def verify_metadata(content: bytes) -> None:
+              metadata = email.message_from_bytes(content)
+              if (metadata["Name"], metadata["Version"]) != ("pytest-skill-engineering", "1.0.8"):
+                  raise SystemExit("Old-name package identity mismatch")
+              if "Development Status :: 7 - Inactive" not in metadata.get_all("Classifier", []):
+                  raise SystemExit("Missing inactive status")
+              if not metadata["Summary"].startswith("Deprecated: moved to pytest-copilot"):
+                  raise SystemExit("Missing move notice in package summary")
+              if "Deprecated: this package has moved to" not in metadata.get_payload():
+                  raise SystemExit("Missing move notice in package description")
+
+          with zipfile.ZipFile(wheel_path) as wheel, tarfile.open(source_path) as source:
+              verify_metadata(wheel.read("pytest_skill_engineering-1.0.8.dist-info/METADATA"))
+              metadata_file = source.extractfile("pytest_skill_engineering-1.0.8/PKG-INFO")
+              if metadata_file is None:
+                  raise SystemExit("Missing source distribution metadata")
+              verify_metadata(metadata_file.read())
+              source_root = Path("old-source/src")
+              expected = {p.relative_to(source_root).as_posix() for p in source_root.rglob("*.py")}
+              actual = {name for name in wheel.namelist() if name.endswith(".py")}
+              if actual != expected:
+                  raise SystemExit("The old-name wheel must retain exactly the frozen Python files")
+              for name in expected:
+                  original = (source_root / name).read_bytes()
+                  packed = source.extractfile(f"pytest_skill_engineering-1.0.8/src/{name}")
+                  if packed is None or packed.read() != original or wheel.read(name) != original:
+                      raise SystemExit(f"Python source changed in old-name distribution: {name}")
+          PY
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: old-package-dist
+          path: dist/
+          if-no-files-found: error
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/project/pytest-skill-engineering/
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: old-package-dist
+          path: dist/
+
+      - uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086 # v1.14.3

@@ -1,4 +1,4 @@
-site_name: pytest-copilot
+site_name: pytest-copilot - pytest for GitHub Copilot
 site_description: "Test real GitHub Copilot tasks with pytest assertions and saved JSON execution evidence."
 site_url: https://sbroenne.github.io/pytest-copilot
 site_author: sbroenne
