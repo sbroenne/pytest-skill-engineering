@@ -156,7 +156,12 @@ async def run_copilot(agent: CopilotTaskConfig, prompt: str) -> CopilotResult:
                         skill_discovery,
                     )
             send_started = True
-            await session.send_and_wait(prompt, timeout=agent.timeout_s)
+            if agent.response_schema is None:
+                await session.send_and_wait(prompt, timeout=agent.timeout_s)
+            else:
+                await session.send_and_wait_typed(
+                    prompt, agent.response_schema, timeout=agent.timeout_s
+                )
 
         execution = asyncio.create_task(execute())
         watchers = [

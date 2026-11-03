@@ -6,6 +6,7 @@ from collections.abc import Awaitable, Callable, Mapping
 from typing import Any, Literal, Protocol, TypeAlias
 
 from copilot.session import CustomAgentConfig, MCPServerConfig, ReasoningEffort, SessionHooks
+from pydantic import BaseModel
 
 from pytest_copilot.copilot.result import CopilotResult, CopilotResultAgent
 
@@ -53,6 +54,10 @@ class CopilotEventMapper(Protocol):
 
 class CopilotTaskConfig(CopilotResultAgent, Protocol):
     """Configuration surface consumed by the runner and personas."""
+
+    @property
+    def response_schema(self) -> type[BaseModel] | None:
+        raise NotImplementedError
 
     @property
     def client_mode(self) -> Literal["copilot-cli", "empty"]:

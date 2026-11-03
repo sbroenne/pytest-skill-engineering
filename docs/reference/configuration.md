@@ -44,6 +44,7 @@ agent = CopilotTask(
 | `model` | Copilot model name; `None` uses Copilot's default |
 | `instructions` | System prompt content; distinct from the user task |
 | `system_message_mode` | `append` by default; `replace` replaces the SDK system message content |
+| `response_schema` | Optional Pydantic model class defining the final JSON answer |
 | `working_directory` | Session workspace; not a security sandbox |
 | `mcp_servers` | Copilot SDK server config mapping |
 | `allowed_tools` | Optional global tool allow-list |
@@ -76,6 +77,44 @@ filesystem or network access.
 Each `copilot_run` call makes one execution attempt. Startup, connection, and
 task failures are recorded without automatically starting another session.
 Rerun a selected pytest case explicitly when appropriate.
+
+### JSON answers with a required shape
+
+Pass a Pydantic model class as `response_schema` to request a JSON answer with
+specific fields and types. The SDK checks the final answer against that model.
+An invalid answer fails the run; the framework does not retry or repair it.
+
+```python
+from pydantic import BaseModel, ConfigDict
+
+from pytest_copilot.copilot import CopilotTask
+
+
+class Answer(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+    count: int
+
+
+async def test_count(copilot_run):
+    agent = CopilotTask(
+        name="count",
+        client_mode="empty",
+        response_schema=Answer,
+    )
+    result = await copilot_run(agent, "What is 19 plus 23? Return the count.")
+    assert result.success, result.error
+    assert result.final_response is not None
+    answer = Answer.model_validate_json(result.final_response)
+    assert answer.count == 42
+```
+
+`final_response` stays the original answer text. The configuration snapshot and
+saved JSON contain the requested JSON schema, not the Python class. The setting
+applies only to the parent's final answer; framework-owned child sessions do not
+inherit it. Omit it for ordinary text answers.
+
+A matching shape does not establish that the answer is correct. Keep ordinary
+assertions against the expected values or actual application output.
 
 ## Explicit skills and empty mode
 

@@ -6,6 +6,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added
+
+- Added `CopilotTask.response_schema` for JSON answers checked against a Pydantic
+  model by the Copilot SDK. Saved evidence retains the requested JSON schema
+  and original answer text, including answers that fail validation.
+
+### Fixed
+
+- Capture cumulative premium-request totals from SDK usage checkpoints even
+  when no final shutdown event arrives, without counting repeated snapshots twice.
+- Reload pricing after file contents change, including edits that preserve the
+  modification time and file size. Read and parse failures do not reuse old prices.
+- Finish the rename in the banking plugin examples.
+
+### Changed
+
+- Refresh dependency locks and minimum versions to current compatible stable
+  releases on public PyPI.
+- Document installation from GitHub release downloads and the removal of
+  GitHub releases older than 2.0.0, while retaining tags and PyPI packages.
+
 ## [2.0.0] - 2026-11-03
 
 ### Changed

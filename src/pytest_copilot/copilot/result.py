@@ -86,7 +86,7 @@ class CopilotResult:
     # Model actually used (from session.start or assistant.usage)
     model_used: str | None = None
 
-    # Premium requests (from session.usage_info — CopilotTask only)
+    # Cumulative premium requests from SDK usage checkpoints and shutdown.
     total_premium_requests: float = 0.0
 
     # Raw SDK events for advanced inspection
