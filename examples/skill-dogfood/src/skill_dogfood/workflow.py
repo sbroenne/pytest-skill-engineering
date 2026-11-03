@@ -13,12 +13,12 @@ from uuid import uuid4
 
 from copilot.tools import Tool, ToolInvocation, ToolResult
 
-from pytest_skill_engineering.copilot import CopilotEval, CopilotResult
-from pytest_skill_engineering.reporting import SuiteReport, load_suite_report
+from pytest_copilot.copilot import CopilotResult, CopilotTask
+from pytest_copilot.reporting import SuiteReport, load_suite_report
 from skill_dogfood.application import inspect_cli, seed_application
 from skill_dogfood.consumer import MODEL
 
-EvalRun = Callable[[CopilotEval, str], Awaitable[CopilotResult]]
+EvalRun = Callable[[CopilotTask, str], Awaitable[CopilotResult]]
 RecordProperty = Callable[[str, Any], None]
 Variant = Literal["without-skill", "with-skill"]
 SYSTEM_PROMPT = (
@@ -28,7 +28,7 @@ SYSTEM_PROMPT = (
     "install packages, change criteria, or create another model runner."
 )
 AUTHOR_TASK = (
-    "Write a meaningful pytest-skill-engineering test for this invoice CLI in "
+    "Write a meaningful pytest-copilot test for this invoice CLI in "
     "test_invoice.py. Use the provided project fixtures and check real output, "
     "including the stated rounding rule. Follow the README. Author the test only; "
     "the customer will execute it."
@@ -41,15 +41,15 @@ REPAIR_TASK = (
 API_GUIDANCE = """# Available test API
 
 The following are separate pytest fixtures, requested as test parameters:
-- invoice_eval: the trusted preconfigured CopilotEval.
+- invoice_eval: the trusted preconfigured CopilotTask.
 - invoice_task: the string "Use the invoice tool for a subtotal of $0.05 with
   10 percent tax."
-- copilot_eval: the framework's async execution fixture.
+- copilot_run: the framework's async execution fixture.
 - invoice_output: a callable taking no arguments, returning the dictionary
   actually printed by the invoice command.
 - record_property: pytest's check-recording function.
 
-Await copilot_eval(invoice_eval, invoice_task) before calling invoice_output().
+Await copilot_run(invoice_eval, invoice_task) before calling invoice_output().
 result.success means session completion, not invoice correctness.
 Use ordinary assertions against that output and record_property(name, value)
 with JSON-compatible values. The user request is supplied by invoice_task.
@@ -92,7 +92,7 @@ def validate_authored_test(path: Path) -> None:
                 "__future__": {"annotations"},
                 "decimal": {"Decimal", "ROUND_HALF_UP"},
                 "hashlib": {"sha256"},
-                "pytest_skill_engineering.copilot": {"CopilotEval", "CopilotResult"},
+                "pytest_copilot.copilot": {"CopilotTask", "CopilotResult"},
             }
             if node.module not in allowed or any(
                 alias.name not in allowed[node.module] for alias in node.names
@@ -131,10 +131,10 @@ def validate_authored_test(path: Path) -> None:
         for node in ast.walk(tree)
         if isinstance(node, ast.Call)
         and isinstance(node.func, ast.Name)
-        and node.func.id == "copilot_eval"
+        and node.func.id == "copilot_run"
     ]
     if len(calls) != 1:
-        raise ValueError("Use the copilot_eval fixture exactly once")
+        raise ValueError("Use the copilot_run fixture exactly once")
 
 
 def project_tools(
@@ -208,8 +208,8 @@ def workflow_eval(
     *,
     system_prompt: str,
     name_prefix: str,
-) -> CopilotEval:
-    return CopilotEval(
+) -> CopilotTask:
+    return CopilotTask(
         name=f"{name_prefix}-{variant}-{phase}",
         model=MODEL,
         instructions=system_prompt,
@@ -219,7 +219,7 @@ def workflow_eval(
         max_tool_calls=24,
         audit_requests=True,
         skill_directories=[str(skill)] if variant == "with-skill" else [],
-        disabled_skills=[] if variant == "with-skill" else ["pytest-skill-engineering"],
+        disabled_skills=[] if variant == "with-skill" else ["pytest-copilot"],
         allowed_tools=[tool.name for tool in tools],
         extra_config={"tools": tools},
     )
@@ -283,7 +283,7 @@ def _check_consumer(
 
 async def run_workflow(
     *,
-    copilot_eval: EvalRun,
+    copilot_run: EvalRun,
     record_property: RecordProperty,
     root: Path,
     workspace: Path,
@@ -320,7 +320,7 @@ async def run_workflow(
     authored = project / "test_invoice.py"
     author_reads: list[str] = []
     tools = project_tools(readable, {"test_invoice.py": authored}, author_reads)
-    result = await copilot_eval(
+    result = await copilot_run(
         workflow_eval(
             variant,
             "author",
@@ -359,7 +359,7 @@ async def run_workflow(
     readable.update({"test_invoice.py": authored, "before.json": before})
     repair_reads: list[str] = []
     tools = project_tools(readable, {"invoice_cli.py": project / "invoice_cli.py"}, repair_reads)
-    result = await copilot_eval(
+    result = await copilot_run(
         workflow_eval(
             variant,
             "repair",

@@ -9,16 +9,16 @@ Example:
     )
 
     @pytest.mark.asyncio
-    async def test_banking(copilot_eval, tmp_path):
-        from pytest_skill_engineering.copilot.eval import CopilotEval
+    async def test_banking(copilot_run, tmp_path):
+        from pytest_copilot.copilot.task import CopilotTask
 
-        agent = CopilotEval(
+        agent = CopilotTask(
             name="banking-test",
             instructions=BANKING_PROMPT,
             working_directory=str(tmp_path),
             max_turns=DEFAULT_MAX_TURNS,
         )
-        result = await copilot_eval(agent, "What's my checking balance?")
+        result = await copilot_run(agent, "What's my checking balance?")
         assert result.success
 """
 

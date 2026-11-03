@@ -13,7 +13,7 @@ from skill_dogfood.application import INVOICE_TASK, seed_application
 from skill_dogfood.consumer import MODEL, create_invoice_eval, guard_execution
 from skill_dogfood.workflow import _check_consumer, project_tools, run_consumer
 
-from pytest_skill_engineering.copilot import CopilotEval, CopilotResult
+from pytest_copilot.copilot import CopilotResult, CopilotTask
 
 
 async def invoke(tool: Tool, arguments: Any) -> ToolResult:
@@ -86,16 +86,16 @@ async def test_invoice_tool_rejects_concurrent_duplicate_execution(tmp_path: Pat
 
 async def test_consumer_guard_allows_only_one_framework_execution(tmp_path: Path) -> None:
     agent = create_invoice_eval(tmp_path, [], lambda name, value: None)
-    calls: list[tuple[CopilotEval, str]] = []
+    calls: list[tuple[CopilotTask, str]] = []
     captured = CopilotResult()
 
-    async def execute(eval_: CopilotEval, prompt: str) -> CopilotResult:
+    async def execute(eval_: CopilotTask, prompt: str) -> CopilotResult:
         calls.append((eval_, prompt))
         return captured
 
     once = guard_execution(execute, agent, INVOICE_TASK)
     with pytest.raises(ValueError, match="supplied"):
-        await once(CopilotEval(name="other", model=MODEL), INVOICE_TASK)
+        await once(CopilotTask(name="other", model=MODEL), INVOICE_TASK)
     with pytest.raises(ValueError, match="supplied"):
         await once(agent, "A different task")
     assert calls == []

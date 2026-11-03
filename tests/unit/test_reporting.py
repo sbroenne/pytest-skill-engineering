@@ -1,11 +1,11 @@
-"""Tests for pytest-skill-engineering reporting module."""
+"""Tests for pytest-copilot reporting module."""
 
 from __future__ import annotations
 
 import pytest
 
-from pytest_skill_engineering.core.result import EvalResult
-from pytest_skill_engineering.reporting import (
+from pytest_copilot.core.result import EvalResult
+from pytest_copilot.reporting import (
     SuiteReport,
     TestReport,
     build_suite_report,

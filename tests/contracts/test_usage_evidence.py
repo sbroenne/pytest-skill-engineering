@@ -10,13 +10,13 @@ from uuid import uuid4
 import pytest
 from copilot.generated.session_events import SessionEvent
 
-from pytest_skill_engineering.copilot.eval import CopilotEval
-from pytest_skill_engineering.copilot.events import EventMapper
-from pytest_skill_engineering.copilot.fixtures import _convert_to_aitest
-from pytest_skill_engineering.core.serialization import deserialize_suite_report
-from pytest_skill_engineering.reporting.collector import TestReport as Report
-from pytest_skill_engineering.reporting.collector import build_suite_report
-from pytest_skill_engineering.reporting.generator import generate_json, load_suite_report
+from pytest_copilot.copilot.events import EventMapper
+from pytest_copilot.copilot.fixtures import _convert_to_aitest
+from pytest_copilot.copilot.task import CopilotTask
+from pytest_copilot.core.serialization import deserialize_suite_report
+from pytest_copilot.reporting.collector import TestReport as Report
+from pytest_copilot.reporting.collector import build_suite_report
+from pytest_copilot.reporting.generator import generate_json, load_suite_report
 
 
 def event(kind: str, **data: Any) -> SessionEvent:
@@ -90,7 +90,7 @@ def test_capture_survives_conversion_and_json_reload(tmp_path: Path, content: st
     for item in [request(), start(), complete(content)]:
         mapper.handle(item)
     result = mapper.build()
-    converted = _convert_to_aitest(CopilotEval(name="CLI", model="test-model"), result)
+    converted = _convert_to_aitest(CopilotTask(name="CLI", model="test-model"), result)
     assert converted is not None
     suite = build_suite_report(
         [
@@ -196,7 +196,7 @@ def test_orphan_completion_is_not_silently_accepted() -> None:
 def test_failed_session_keeps_incomplete_trace_in_json(tmp_path: Path) -> None:
     mapper = EventMapper()
     mapper.handle(start())
-    converted = _convert_to_aitest(CopilotEval(name="CLI", model="test-model"), mapper.build())
+    converted = _convert_to_aitest(CopilotTask(name="CLI", model="test-model"), mapper.build())
     assert converted is not None
     suite = build_suite_report(
         [
@@ -227,15 +227,15 @@ def test_multiple_runs_and_verification_properties_reach_native_report(
     pytester.makepyfile(
         """
         import pytest
-        from pytest_skill_engineering.copilot.eval import CopilotEval
-        from pytest_skill_engineering.copilot.fixtures import stash_on_item
-        from pytest_skill_engineering.copilot.result import CopilotResult
-        from pytest_skill_engineering.copilot.config import snapshot_session_configuration
+        from pytest_copilot.copilot.task import CopilotTask
+        from pytest_copilot.copilot.fixtures import stash_on_item
+        from pytest_copilot.copilot.result import CopilotResult
+        from pytest_copilot.copilot.config import snapshot_session_configuration
 
         def test_comparison(request, record_property):
             record_property("verification", {"status": "failed", "artifact": "expected.txt"})
             for name in ("baseline", "treatment"):
-                agent = CopilotEval(name=name, model="test-model", instructions=name)
+                agent = CopilotTask(name=name, model="test-model", instructions=name)
                 configuration = snapshot_session_configuration(agent, agent.build_session_config())
                 stash_on_item(request.node, agent, CopilotResult(success=True, configuration=configuration))
             assert False, "Independent file check failed"
@@ -267,7 +267,7 @@ def test_json_distinguishes_empty_output_from_incomplete_evidence(tmp_path: Path
         mapper.handle(start())
         if finish:
             mapper.handle(complete(""))
-        converted = _convert_to_aitest(CopilotEval(name=name, model="test-model"), mapper.build())
+        converted = _convert_to_aitest(CopilotTask(name=name, model="test-model"), mapper.build())
         assert converted is not None
         tests.append(
             Report(
@@ -295,7 +295,7 @@ def test_json_distinguishes_empty_output_from_incomplete_evidence(tmp_path: Path
 
 def test_configuration_is_a_snapshot_without_connection_secrets() -> None:
     tools = ["read"]
-    agent = CopilotEval(
+    agent = CopilotTask(
         name="documents",
         model="test-model",
         allowed_tools=tools,
@@ -309,7 +309,7 @@ def test_configuration_is_a_snapshot_without_connection_secrets() -> None:
             }
         },
     )
-    from pytest_skill_engineering.copilot.config import snapshot_session_configuration
+    from pytest_copilot.copilot.config import snapshot_session_configuration
 
     result = EventMapper().build()
     result.configuration = snapshot_session_configuration(agent, agent.build_session_config())
@@ -351,10 +351,10 @@ def test_mcp_call_without_arguments_keeps_its_result() -> None:
 
 
 def test_ab_configs_preserve_runtime_names(tmp_path: Path) -> None:
-    from pytest_skill_engineering.copilot.fixtures import _prepare_ab_configs
+    from pytest_copilot.copilot.fixtures import _prepare_ab_configs
 
-    baseline = CopilotEval(name="helper", model="test-model", instructions="Baseline")
-    treatment = CopilotEval(name="helper", model="test-model", instructions="Treatment")
+    baseline = CopilotTask(name="helper", model="test-model", instructions="Baseline")
+    treatment = CopilotTask(name="helper", model="test-model", instructions="Treatment")
     prepared = _prepare_ab_configs(baseline, treatment, tmp_path)
     assert [config.name for config in prepared] == ["helper", "helper"]
     assert [config.instructions for config in prepared] == ["Baseline", "Treatment"]
@@ -367,12 +367,12 @@ def test_ab_configs_preserve_runtime_names(tmp_path: Path) -> None:
 def test_ab_labels_apply_only_to_saved_reports(pytester: pytest.Pytester) -> None:
     pytester.makepyfile(
         """
-        from pytest_skill_engineering.copilot.eval import CopilotEval
-        from pytest_skill_engineering.copilot.fixtures import stash_on_item
-        from pytest_skill_engineering.copilot.result import CopilotResult
+        from pytest_copilot.copilot.task import CopilotTask
+        from pytest_copilot.copilot.fixtures import stash_on_item
+        from pytest_copilot.copilot.result import CopilotResult
 
         def test_comparison(request):
-            agent = CopilotEval(name="helper", model="test-model")
+            agent = CopilotTask(name="helper", model="test-model")
             for role in ("baseline", "treatment"):
                 result = CopilotResult(agent=agent)
                 stash_on_item(request.node, agent, result, comparison_role=role)
@@ -392,7 +392,7 @@ def test_ab_labels_apply_only_to_saved_reports(pytester: pytest.Pytester) -> Non
 
 
 def test_tool_repr_preserves_existing_status_format() -> None:
-    from pytest_skill_engineering.core.result import ToolCall
+    from pytest_copilot.core.result import ToolCall
 
     success = ToolCall(name="read_file", arguments={}, result="ok")
     error = ToolCall(name="read_file", arguments={}, error="fail")
@@ -403,7 +403,7 @@ def test_tool_repr_preserves_existing_status_format() -> None:
 
 
 def test_native_evidence_retains_output_when_completion_status_is_unknown(tmp_path: Path) -> None:
-    from pytest_skill_engineering.core.result import EvalResult, ToolCall, Turn
+    from pytest_copilot.core.result import EvalResult, ToolCall, Turn
 
     result = EvalResult(
         turns=[

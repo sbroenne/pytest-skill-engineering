@@ -1,9 +1,9 @@
-"""Level 13 — Plugin testing via CopilotEval.
+"""Level 13 — Plugin testing via CopilotTask.
 
 Tests plugin loading, from_claude_config(), and SDK passthroughs
 for the Copilot SDK harness.
 
-Copilot-exclusive — CopilotEval.from_plugin() maps plugin components
+Copilot-exclusive — CopilotTask.from_plugin() maps plugin components
 to SDK session config fields (custom_agents, instructions, skill_directories).
 
 Run with: uv run python -m pytest tests/integration/copilot/test_13_plugins.py -v
@@ -16,7 +16,7 @@ from pathlib import Path
 import pytest
 from copilot.tools import Tool, ToolInvocation, ToolResult
 
-from pytest_skill_engineering.copilot.eval import CopilotEval
+from pytest_copilot.copilot.task import CopilotTask
 
 from .conftest import DEFAULT_MODEL
 
@@ -27,16 +27,16 @@ CLAUDE_DIR = Path(__file__).parents[1] / "plugins" / "claude-project"
 
 
 # =============================================================================
-# CopilotEval Factory Methods for Plugins
+# CopilotTask Factory Methods for Plugins
 # =============================================================================
 
 
 class TestCopilotPluginLoading:
-    """Test CopilotEval factory methods for plugins."""
+    """Test CopilotTask factory methods for plugins."""
 
     def test_from_plugin(self):
-        """CopilotEval.from_plugin() creates a valid eval config."""
-        agent = CopilotEval.from_plugin(
+        """CopilotTask.from_plugin() creates a valid eval config."""
+        agent = CopilotTask.from_plugin(
             PLUGIN_DIR,
             model=DEFAULT_MODEL,
         )
@@ -45,8 +45,8 @@ class TestCopilotPluginLoading:
         assert agent.instructions
 
     def test_from_plugin_custom_agents_populated(self):
-        """CopilotEval.from_plugin() discovers agents from agents/ directory."""
-        agent = CopilotEval.from_plugin(
+        """CopilotTask.from_plugin() discovers agents from agents/ directory."""
+        agent = CopilotTask.from_plugin(
             PLUGIN_DIR,
             model=DEFAULT_MODEL,
         )
@@ -54,8 +54,8 @@ class TestCopilotPluginLoading:
         assert "banking-advisor" in agent_names
 
     def test_from_claude_config(self):
-        """CopilotEval.from_claude_config() discovers Claude Code components."""
-        agent = CopilotEval.from_claude_config(
+        """CopilotTask.from_claude_config() discovers Claude Code components."""
+        agent = CopilotTask.from_claude_config(
             CLAUDE_DIR,
             model=DEFAULT_MODEL,
         )
@@ -64,8 +64,8 @@ class TestCopilotPluginLoading:
         assert agent.custom_agents
 
     def test_from_claude_config_agents(self):
-        """CopilotEval.from_claude_config() loads .claude/agents/ directory."""
-        agent = CopilotEval.from_claude_config(
+        """CopilotTask.from_claude_config() loads .claude/agents/ directory."""
+        agent = CopilotTask.from_claude_config(
             CLAUDE_DIR,
             model=DEFAULT_MODEL,
         )
@@ -73,8 +73,8 @@ class TestCopilotPluginLoading:
         assert "code-reviewer" in agent_names
 
     def test_from_plugin_with_overrides(self):
-        """CopilotEval.from_plugin() accepts field overrides."""
-        agent = CopilotEval.from_plugin(
+        """CopilotTask.from_plugin() accepts field overrides."""
+        agent = CopilotTask.from_plugin(
             PLUGIN_DIR,
             model=DEFAULT_MODEL,
             max_turns=50,
@@ -90,11 +90,11 @@ class TestCopilotPluginLoading:
 
 
 class TestActiveAgent:
-    """Test CopilotEval active_agent for direct agent activation."""
+    """Test CopilotTask active_agent for direct agent activation."""
 
     def test_active_agent_field(self):
-        """CopilotEval supports active_agent for direct agent activation."""
-        agent = CopilotEval(
+        """CopilotTask supports active_agent for direct agent activation."""
+        agent = CopilotTask(
             name="test-active",
             model=DEFAULT_MODEL,
             custom_agents=[{"name": "test-agent", "prompt": "You are a test agent."}],
@@ -104,7 +104,7 @@ class TestActiveAgent:
 
     def test_active_agent_default_none(self):
         """active_agent defaults to None when not specified."""
-        agent = CopilotEval(
+        agent = CopilotTask(
             name="test-default",
             model=DEFAULT_MODEL,
         )
@@ -112,15 +112,15 @@ class TestActiveAgent:
 
 
 # =============================================================================
-# Plugin Execution via CopilotEval
+# Plugin Execution via CopilotTask
 # =============================================================================
 
 
 class TestCopilotPluginExecution:
-    """Test running prompts against plugin-loaded CopilotEval configs."""
+    """Test running prompts against plugin-loaded CopilotTask configs."""
 
-    async def test_plugin_eval_creates_output(self, copilot_eval, tmp_path):
-        """CopilotEval.from_plugin() produces a working eval that can execute tasks."""
+    async def test_plugin_eval_creates_output(self, copilot_run, tmp_path):
+        """CopilotTask.from_plugin() produces a working eval that can execute tasks."""
         balances = {"checking": "$125.00", "savings": "$250.00"}
         receipt = tmp_path / "balances.txt"
 
@@ -136,7 +136,7 @@ class TestCopilotPluginExecution:
                 output.write(entry + "\n")
             return ToolResult(text_result_for_llm=entry)
 
-        agent = CopilotEval.from_plugin(
+        agent = CopilotTask.from_plugin(
             PLUGIN_DIR,
             model=DEFAULT_MODEL,
             working_directory=str(tmp_path),
@@ -161,7 +161,7 @@ class TestCopilotPluginExecution:
                 ]
             },
         )
-        result = await copilot_eval(
+        result = await copilot_run(
             agent,
             "Have banking-advisor use get_balance for both checking and savings accounts. "
             "The banking tool saves each balance to balances.txt.",
@@ -183,14 +183,14 @@ class TestCopilotPluginExecution:
             for child in children
         )
 
-    async def test_claude_project_eval_runs(self, copilot_eval, tmp_path):
-        """CopilotEval.from_claude_config() produces a working eval."""
-        agent = CopilotEval.from_claude_config(
+    async def test_claude_project_eval_runs(self, copilot_run, tmp_path):
+        """CopilotTask.from_claude_config() produces a working eval."""
+        agent = CopilotTask.from_claude_config(
             CLAUDE_DIR,
             model=DEFAULT_MODEL,
             working_directory=str(tmp_path),
         )
-        result = await copilot_eval(
+        result = await copilot_run(
             agent,
             "Create a Python file called greet.py with a greet(name: str) -> str function.",
         )

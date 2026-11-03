@@ -12,7 +12,7 @@ import sys
 
 import pytest
 
-from pytest_skill_engineering.copilot import CopilotEval, create_command_tool
+from pytest_copilot.copilot import CopilotTask, create_command_tool
 
 pytestmark = [pytest.mark.copilot]
 
@@ -20,11 +20,11 @@ pytestmark = [pytest.mark.copilot]
 class TestDirectCommands:
     """Ordinary CLI work uses executable tools, including setup and help."""
 
-    async def test_git_setup_and_stage(self, copilot_eval, tmp_path):
+    async def test_git_setup_and_stage(self, copilot_run, tmp_path):
         git = shutil.which("git")
         assert git is not None, "Install Git before running this test"
         (tmp_path / "note.txt").write_text("hello\n", encoding="utf-8")
-        agent = CopilotEval(
+        agent = CopilotTask(
             name="direct-git",
             client_mode="empty",
             instructions=(
@@ -38,7 +38,7 @@ class TestDirectCommands:
                 "tools": [create_command_tool(git, name="git", cwd=tmp_path)],
             },
         )
-        result = await copilot_eval(
+        result = await copilot_run(
             agent, "Initialize this directory as a Git repository and stage note.txt."
         )
         assert result.success, result.error
@@ -67,14 +67,14 @@ class TestDirectCommands:
         )
         assert head.returncode != 0, "The task must not create a commit"
 
-    async def test_python_preserves_literal_arguments(self, copilot_eval, tmp_path):
+    async def test_python_preserves_literal_arguments(self, copilot_run, tmp_path):
         script = tmp_path / "save_args.py"
         script.write_text(
             "import json, pathlib, sys\n"
             "pathlib.Path('args.json').write_text(json.dumps(sys.argv[1:]), encoding='utf-8')\n",
             encoding="utf-8",
         )
-        agent = CopilotEval(
+        agent = CopilotTask(
             name="direct-python",
             client_mode="empty",
             instructions="Use the python tool with separate arguments. Do not use shell quoting.",
@@ -84,7 +84,7 @@ class TestDirectCommands:
                 "tools": [create_command_tool(sys.executable, name="python", cwd=tmp_path)],
             },
         )
-        result = await copilot_eval(
+        result = await copilot_run(
             agent,
             "Run save_args.py with these three literal arguments, in order: "
             'an empty string; a "quoted" value; $HOME | >.',
@@ -100,29 +100,29 @@ class TestDirectCommands:
 class TestShellFeatures:
     """Only these cases deliberately test the native shell interface."""
 
-    async def test_create_file_with_redirection(self, copilot_eval, tmp_path):
-        agent = CopilotEval(
+    async def test_create_file_with_redirection(self, copilot_run, tmp_path):
+        agent = CopilotTask(
             name="shell-redirection",
             instructions="This test is about shell redirection. Use the native shell.",
             working_directory=str(tmp_path),
         )
-        result = await copilot_eval(
+        result = await copilot_run(
             agent,
             "Use echo with shell redirection to create hello.txt containing exactly Hello World.",
         )
         assert result.success, result.error
         assert (tmp_path / "hello.txt").read_text(encoding="utf-8-sig").strip() == "Hello World"
 
-    async def test_shell_pipeline(self, copilot_eval, tmp_path):
+    async def test_shell_pipeline(self, copilot_run, tmp_path):
         (tmp_path / "names.txt").write_text(
             "Alice\nBob\nCharlie\nDiana\nEdward\n", encoding="utf-8"
         )
-        agent = CopilotEval(
+        agent = CopilotTask(
             name="shell-pipeline",
             instructions="This test is about shell pipelines. Use the native shell.",
             working_directory=str(tmp_path),
         )
-        result = await copilot_eval(
+        result = await copilot_run(
             agent,
             "Use a shell pipeline to count lines in names.txt. "
             "Write only the numeric count to count.txt, leaving names.txt unchanged.",

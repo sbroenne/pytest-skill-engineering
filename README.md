@@ -1,12 +1,14 @@
-# pytest-skill-engineering
+# pytest-copilot
 
-[![PyPI version](https://img.shields.io/pypi/v/pytest-skill-engineering)](https://pypi.org/project/pytest-skill-engineering/)
-[![CI](https://github.com/sbroenne/pytest-skill-engineering/actions/workflows/ci.yml/badge.svg)](https://github.com/sbroenne/pytest-skill-engineering/actions/workflows/ci.yml)
+[![PyPI version](https://img.shields.io/pypi/v/pytest-copilot)](https://pypi.org/project/pytest-copilot/)
+[![CI](https://github.com/sbroenne/pytest-copilot/actions/workflows/ci.yml/badge.svg)](https://github.com/sbroenne/pytest-copilot/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 **Test whether GitHub Copilot can complete tasks with your tools and instructions.**
 
-pytest-skill-engineering runs real Copilot sessions from pytest. Give Copilot a
+Independently maintained; not an official GitHub product or endorsed by GitHub.
+
+pytest-copilot runs real Copilot sessions from pytest. Give Copilot a
 task, check the actual output with ordinary assertions, and save the execution
 as JSON.
 
@@ -26,11 +28,11 @@ Copilot access.
 Run these commands in an existing Python project with a `pyproject.toml`:
 
 ```bash
-uv add pytest-skill-engineering
+uv add pytest-copilot
 gh auth login --hostname github.com
-uv run pytest-skill-engineering init
-uv run pytest-skill-engineering doctor
-uv run python -m pytest tests/test_copilot_eval.py -v
+uv run pytest-copilot init
+uv run pytest-copilot doctor
+uv run python -m pytest tests/test_copilot_run.py -v
 ```
 
 `init` creates a test using the bundled Todo MCP server, configures JSON output,
@@ -50,17 +52,17 @@ from __future__ import annotations
 
 import json
 
-from pytest_skill_engineering.copilot import CopilotEval
+from pytest_copilot.copilot import CopilotTask
 
 
-async def test_order_total(copilot_eval, tmp_path):
-    agent = CopilotEval(
+async def test_order_total(copilot_run, tmp_path):
+    agent = CopilotTask(
         name="order-total",
         model="gpt-5.6-sol",
         instructions="Save the requested output as JSON. Use integer cents.",
         working_directory=str(tmp_path),
     )
-    result = await copilot_eval(
+    result = await copilot_run(
         agent,
         "Save order.json for two items at 1250 cents each plus 20% tax. "
         "Include subtotal_cents, tax_cents, and total_cents.",
@@ -75,7 +77,7 @@ async def test_order_total(copilot_eval, tmp_path):
     }
 ```
 
-`CopilotEval` configures the session. The second argument to `copilot_eval` is
+`CopilotTask` configures the session. The second argument to `copilot_run` is
 the user task. `result.success` checks execution completion; the file assertions
 check that the task produced the right result.
 
@@ -88,7 +90,7 @@ and generated code or tool calls can act with your user's access.
 
 | You need | Use |
 | --- | --- |
-| Real task execution | `CopilotEval` and the `copilot_eval` pytest fixture |
+| Real task execution | `CopilotTask` and the `copilot_run` pytest fixture |
 | Controlled runs | Timeouts, tool budgets, request controls, and permission settings |
 | Debugging evidence | Configuration, calls, arguments, outputs, errors, and completion records |
 | Repeatable comparisons | `ab_run` and pytest repetitions |
@@ -113,11 +115,11 @@ independent pass rates or a causal improvement. See
 
 ## Documentation
 
-- [Getting started](https://sbroenne.github.io/pytest-skill-engineering/getting-started/)
+- [Getting started](https://sbroenne.github.io/pytest-copilot/getting-started/)
 - [Task guides](docs/how-to/index.md) and [API reference](docs/reference/api.md)
 - [Examples](examples/README.md), including historical skill comparisons
-- [Upgrading from 0.6.x](docs/migration.md): 1.0 removed AI judging, renderers,
-  rankings, and skill refinement
+- [Upgrading to 2.0](docs/migration.md): new package, imports, and task names,
+  without compatibility aliases
 
 No framework companion skill is required or distributed. Testing your own
 domain skills is supported.

@@ -1,5 +1,5 @@
 ---
-description: "Contribute to pytest-skill-engineering: development setup, coding standards, and project architecture."
+description: "Contribute to pytest-copilot: development setup, coding standards, and project architecture."
 ---
 
 # Contributing
@@ -10,11 +10,11 @@ tools, use [getting started](../getting-started/index.md).
 ## Set up the checkout
 
 ```bash
-git clone https://github.com/sbroenne/pytest-skill-engineering.git
-cd pytest-skill-engineering
+git clone https://github.com/sbroenne/pytest-copilot.git
+cd pytest-copilot
 uv sync --frozen --all-extras
 uv run --frozen pre-commit install
-uv run --frozen pytest-skill-engineering --version
+uv run --frozen pytest-copilot --version
 uv run --frozen python -m pytest tests/contracts/ -q -o addopts=
 ```
 
@@ -36,7 +36,7 @@ live case before moving on; rerun only affected failures rather than repeating
 successful paid execution.
 
 The
-[full contribution guide](https://github.com/sbroenne/pytest-skill-engineering/blob/main/CONTRIBUTING.md)
+[full contribution guide](https://github.com/sbroenne/pytest-copilot/blob/main/CONTRIBUTING.md)
 contains exact commands, dependency-registry guidance, and PR expectations.
 All PRs are squash merged.
 
@@ -47,7 +47,7 @@ own application fixtures, guarded tool adapters, and output verification.
 Investigation belongs to the coding agent or a human; do not add a second
 runner, AI judge, dashboard, ranking system, or companion skill.
 
-The [workflow sample](https://github.com/sbroenne/pytest-skill-engineering/tree/main/examples/skill-dogfood)
+The [workflow sample](https://github.com/sbroenne/pytest-copilot/tree/main/examples/skill-dogfood)
 preserves a historical skill experiment as test data. Its no-skill workflow is
 reused by `test_19_customer_workflow.py`; default sample checks stay offline.
 

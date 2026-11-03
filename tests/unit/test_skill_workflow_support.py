@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from pytest_skill_engineering.core.skill import Skill
-from pytest_skill_engineering.core.skill_evals import has_skill_evals, load_skill_evals
+from pytest_copilot.core.skill import Skill
+from pytest_copilot.core.skill_evals import has_skill_evals, load_skill_evals
 
 PLUGIN_SKILL_DIR = (
     Path(__file__).parents[1]

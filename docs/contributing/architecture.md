@@ -10,7 +10,7 @@ Application fixtures and independent output checks belong to the consumer.
 ## End-to-end flow
 
 ```text
-CopilotEval
+CopilotTask
   -> CopilotClient
   -> session creation
   -> streaming SDK events
@@ -29,9 +29,9 @@ That investigation is not another framework execution stage.
 
 ### Copilot execution
 
-`src/pytest_skill_engineering/copilot/`
+`src/pytest_copilot/copilot/`
 
-- `eval.py` — `CopilotEval` configuration
+- `eval.py` — `CopilotTask` configuration
 - `runner.py` — single-attempt session lifecycle and event streaming
 - `events.py` — `EventMapper`, which converts SDK events into result records
 - `result.py` — `CopilotResult`
@@ -48,7 +48,7 @@ events and errors are captured before the final result is built.
 
 ### pytest integration
 
-`src/pytest_skill_engineering/plugin.py`
+`src/pytest_copilot/plugin.py`
 
 The plugin captures results and ordinary pytest outcomes, preserves genuine
 pytest parameter IDs, and writes native JSON evidence.
@@ -58,7 +58,7 @@ Consumer assertions determine the pytest verdict. A captured session's
 
 ### Evidence persistence
 
-`src/pytest_skill_engineering/reporting/`
+`src/pytest_copilot/reporting/`
 
 - `collector.py` builds `SuiteReport`
 - `generator.py` atomically saves JSON and loads current-schema evidence
@@ -68,7 +68,7 @@ It does not render a dashboard, rank configurations, or select a winner.
 
 ### Serialization boundary
 
-`src/pytest_skill_engineering/core/serialization.py`
+`src/pytest_copilot/core/serialization.py`
 
 Serialization is strict. The loader requires schema 4.0 and all required
 fields; it does not fill missing records from defaults or accept legacy aliases.

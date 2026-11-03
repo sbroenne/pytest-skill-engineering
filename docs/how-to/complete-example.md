@@ -1,5 +1,5 @@
 ---
-description: "A CopilotEval example that attaches MCP servers, compares configurations, and records native execution evidence."
+description: "A CopilotTask example that attaches MCP servers, compares configurations, and records native execution evidence."
 ---
 
 # Complete example
@@ -16,13 +16,13 @@ import sys
 
 import pytest
 
-from pytest_skill_engineering.copilot import CopilotEval
+from pytest_copilot.copilot import CopilotTask
 
 
 BANKING_MCP = {
     "banking": {
         "command": sys.executable,
-        "args": ["-m", "pytest_skill_engineering.testing.banking_mcp"],
+        "args": ["-m", "pytest_copilot.testing.banking_mcp"],
         "tools": ["*"],
     }
 }
@@ -34,15 +34,15 @@ SYSTEM_PROMPTS = {
 
 
 @pytest.mark.parametrize("system_prompt_name,system_prompt", SYSTEM_PROMPTS.items())
-async def test_balance(copilot_eval, system_prompt_name, system_prompt):
-    agent = CopilotEval(
+async def test_balance(copilot_run, system_prompt_name, system_prompt):
+    agent = CopilotTask(
         name=f"banking-{system_prompt_name}",
         model="gpt-5.6-sol",
         instructions=system_prompt,
         mcp_servers=BANKING_MCP,
     )
 
-    result = await copilot_eval(agent, "Use get_balance to retrieve the checking balance.")
+    result = await copilot_run(agent, "Use get_balance to retrieve the checking balance.")
 
     assert result.success, result.error
     calls = result.tool_calls_for("banking-get_balance")

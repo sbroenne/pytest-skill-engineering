@@ -7,15 +7,15 @@ from pathlib import Path
 
 import pytest
 
-from pytest_skill_engineering.core.result import EvalResult, ToolCall, Turn, UsageInfo
-from pytest_skill_engineering.core.serialization import serialize_dataclass
-from pytest_skill_engineering.reporting import (
+from pytest_copilot.core.result import EvalResult, ToolCall, Turn, UsageInfo
+from pytest_copilot.core.serialization import serialize_dataclass
+from pytest_copilot.reporting import (
     SuiteReport,
     build_suite_report,
     generate_json,
     load_suite_report,
 )
-from pytest_skill_engineering.reporting import TestReport as CaseReport
+from pytest_copilot.reporting import TestReport as CaseReport
 
 
 def _suite() -> SuiteReport:
@@ -163,7 +163,7 @@ def test_failed_publication_preserves_previous_evidence(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from pytest_skill_engineering.reporting import generator
+    from pytest_copilot.reporting import generator
 
     path = tmp_path / "evidence.json"
     generate_json(_suite(), path)
@@ -194,17 +194,17 @@ def test_non_json_properties_are_not_silently_stringified(tmp_path: Path) -> Non
 def test_output_failure_is_explicit_and_cleanup_still_runs(pytester: pytest.Pytester) -> None:
     pytester.makeconftest("""
         from pathlib import Path
-        from pytest_skill_engineering.execution import rate_limiter
+        from pytest_copilot.execution import rate_limiter
 
         def pytest_sessionstart(session):
             rate_limiter.reset_rate_limiters = lambda: Path("cleaned.txt").write_text("cleaned")
     """)
     pytester.makepyfile("""
-        from pytest_skill_engineering.copilot import CopilotEval, CopilotResult
-        from pytest_skill_engineering.copilot.fixtures import stash_on_item
+        from pytest_copilot.copilot import CopilotTask, CopilotResult
+        from pytest_copilot.copilot.fixtures import stash_on_item
 
         def test_output(request):
-            stash_on_item(request.node, CopilotEval(name="test", model="recorded"),
+            stash_on_item(request.node, CopilotTask(name="test", model="recorded"),
                           CopilotResult(success=True))
     """)
     (pytester.path / "blocked").write_text("not a directory", encoding="utf-8")

@@ -4,20 +4,20 @@ from __future__ import annotations
 
 import pytest
 
-from pytest_skill_engineering.copilot.result import CopilotResult, ToolCall, Turn, UsageInfo
+from pytest_copilot.copilot.result import CopilotResult, ToolCall, Turn, UsageInfo
 
 
 def test_usage_and_stop_types_are_shared_without_core_importing_copilot_result() -> None:
-    from pytest_skill_engineering.copilot import UsageInfo as PublicUsageInfo
-    from pytest_skill_engineering.copilot.result import StopReason
-    from pytest_skill_engineering.core.result import EvalResult
-    from pytest_skill_engineering.core.result import StopReason as CoreStopReason
-    from pytest_skill_engineering.core.result import UsageInfo as CoreUsageInfo
-    from pytest_skill_engineering.core.serialization import serialize_dataclass
+    from pytest_copilot.copilot import UsageInfo as PublicUsageInfo
+    from pytest_copilot.copilot.result import StopReason
+    from pytest_copilot.core.result import EvalResult
+    from pytest_copilot.core.result import StopReason as CoreStopReason
+    from pytest_copilot.core.result import UsageInfo as CoreUsageInfo
+    from pytest_copilot.core.serialization import serialize_dataclass
 
     assert UsageInfo is PublicUsageInfo is CoreUsageInfo
     assert StopReason is CoreStopReason
-    assert UsageInfo.__module__ == "pytest_skill_engineering.core.result"
+    assert UsageInfo.__module__ == "pytest_copilot.core.result"
     usage = CoreUsageInfo(model="actual-model", input_tokens=7, reasoning_tokens=3)
     result = EvalResult(turns=[], success=False, usage=[usage], stop_reason="timeout")
     serialized = serialize_dataclass(result)
@@ -238,9 +238,9 @@ class TestFileHelpers:
     """Tests for file helper methods."""
 
     def _result_with_workdir(self, path) -> CopilotResult:
-        from pytest_skill_engineering.copilot.eval import CopilotEval
+        from pytest_copilot.copilot.task import CopilotTask
 
-        agent = CopilotEval(working_directory=str(path))
+        agent = CopilotTask(working_directory=str(path))
         result = CopilotResult()
         result.agent = agent
         return result

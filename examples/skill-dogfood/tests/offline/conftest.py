@@ -5,7 +5,7 @@ from typing import NoReturn
 import copilot
 import pytest
 
-import pytest_skill_engineering.copilot.client as framework_client
+import pytest_copilot.copilot.client as framework_client
 
 
 @pytest.fixture(autouse=True)

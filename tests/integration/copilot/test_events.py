@@ -7,7 +7,7 @@ SDK itself, not agent behavior.
 Covered properties:
     result.reasoning_traces     — reasoning effort configuration works
     result.usage                — token counts and cost are captured
-    result.token_usage          — pytest-skill-engineering compatible dict format
+    result.token_usage          — pytest-copilot compatible dict format
     result.raw_events           — full event stream captured for debugging
     result.model_used           — model selection is reflected in result
 """
@@ -20,16 +20,16 @@ from pathlib import Path
 import pytest
 from copilot.tools import Tool, ToolBinaryResult, ToolInvocation, ToolResult
 
-from pytest_skill_engineering.copilot.eval import CopilotEval
-from pytest_skill_engineering.copilot.fixtures import _convert_to_aitest
-from pytest_skill_engineering.reporting import build_suite_report, generate_json, load_suite_report
-from pytest_skill_engineering.reporting.collector import TestReport as CaseReport
+from pytest_copilot.copilot.fixtures import _convert_to_aitest
+from pytest_copilot.copilot.task import CopilotTask
+from pytest_copilot.reporting import build_suite_report, generate_json, load_suite_report
+from pytest_copilot.reporting.collector import TestReport as CaseReport
 
 from .conftest import DEFAULT_MODEL
 
 
 @pytest.mark.copilot
-async def test_image_receipt_and_runtime_overrides_are_captured(copilot_eval, tmp_path: Path):
+async def test_image_receipt_and_runtime_overrides_are_captured(copilot_run, tmp_path: Path):
     png = base64.b64decode(
         "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aJ6kAAAAASUVORK5CYII="
     )
@@ -44,7 +44,7 @@ async def test_image_receipt_and_runtime_overrides_are_captured(copilot_eval, tm
         )
 
     instructions = "Use the evidence_image tool exactly once to save receipt.png, then finish."
-    agent = CopilotEval(
+    agent = CopilotTask(
         name="image-evidence",
         model="configured-but-unused",
         client_mode="empty",
@@ -60,7 +60,7 @@ async def test_image_receipt_and_runtime_overrides_are_captured(copilot_eval, tm
             ],
         },
     )
-    result = await copilot_eval(agent, "Save receipt.png using evidence_image.")
+    result = await copilot_run(agent, "Save receipt.png using evidence_image.")
     assert result.success, result.error
     assert (tmp_path / "receipt.png").read_bytes() == png
     calls = result.tool_calls_for("evidence_image")
@@ -86,21 +86,21 @@ async def test_image_receipt_and_runtime_overrides_are_captured(copilot_eval, tm
 class TestReasoningEffort:
     """reasoning_effort configuration is accepted and run succeeds."""
 
-    async def test_reasoning_effort_high_does_not_break_run(self, copilot_eval, tmp_path):
+    async def test_reasoning_effort_high_does_not_break_run(self, copilot_run, tmp_path):
         """Eval configured with reasoning_effort='high' completes successfully.
 
         Reasoning traces are model-dependent — not all models emit them.
         This test verifies the configuration is accepted and the run
         produces a valid result. The reasoning_traces list may be empty.
         """
-        agent = CopilotEval(
+        agent = CopilotTask(
             name="high-reasoning",
             model=DEFAULT_MODEL,
             reasoning_effort="high",
             instructions="Think carefully before coding.",
             working_directory=str(tmp_path),
         )
-        result = await copilot_eval(
+        result = await copilot_run(
             agent,
             "Create search.py with a binary_search(arr, target) function.",
         )
@@ -114,34 +114,34 @@ class TestReasoningEffort:
 class TestUsageTracking:
     """Token usage and cost are captured from SDK events."""
 
-    async def test_usage_info_captured(self, copilot_eval, tmp_path):
+    async def test_usage_info_captured(self, copilot_run, tmp_path):
         """Usage info (tokens, cost) is populated from assistant.usage events."""
-        agent = CopilotEval(
+        agent = CopilotTask(
             name="usage-tracker",
             model=DEFAULT_MODEL,
             instructions="Create files as requested.",
             working_directory=str(tmp_path),
         )
-        result = await copilot_eval(agent, "Create echo.py that prints its sys.argv arguments.")
+        result = await copilot_run(agent, "Create echo.py that prints its sys.argv arguments.")
         assert result.success
         assert len(result.usage) > 0, "Expected at least one UsageInfo entry"
         assert result.usage[0].input_tokens > 0 or result.usage[0].output_tokens > 0, (
             "Expected non-zero token counts in usage"
         )
 
-    async def test_token_usage_dict_is_aitest_compatible(self, copilot_eval, tmp_path):
-        """token_usage property returns a pytest-skill-engineering compatible dict.
+    async def test_token_usage_dict_is_aitest_compatible(self, copilot_run, tmp_path):
+        """token_usage property returns a pytest-copilot compatible dict.
 
-        pytest-skill-engineering reads prompt/completion/total keys from this dict
+        pytest-copilot reads prompt/completion/total keys from this dict
         for saved execution evidence. The keys must match exactly.
         """
-        agent = CopilotEval(
+        agent = CopilotTask(
             name="token-dict",
             model=DEFAULT_MODEL,
             instructions="Create files as requested.",
             working_directory=str(tmp_path),
         )
-        result = await copilot_eval(agent, "Create hi.py with print('hi')")
+        result = await copilot_run(agent, "Create hi.py with print('hi')")
         assert result.success
         usage = result.token_usage
         assert set(usage.keys()) >= {"prompt", "completion", "total"}, (
@@ -149,15 +149,15 @@ class TestUsageTracking:
         )
         assert usage["total"] == usage["prompt"] + usage["completion"]
 
-    async def test_premium_requests_match_sdk_events(self, copilot_eval, tmp_path, record_property):
+    async def test_premium_requests_match_sdk_events(self, copilot_run, tmp_path, record_property):
         """Premium request totals must come from actual SDK shutdown events."""
-        agent = CopilotEval(
+        agent = CopilotTask(
             name="cost-check",
             model=DEFAULT_MODEL,
             instructions="Create files as requested.",
             working_directory=str(tmp_path),
         )
-        result = await copilot_eval(agent, "Create hello.py with print('hello')")
+        result = await copilot_run(agent, "Create hello.py with print('hello')")
         assert result.success
         shutdown_events = [
             event for event in result.raw_events if event.type.value == "session.shutdown"
@@ -169,15 +169,15 @@ class TestUsageTracking:
         else:
             assert result.total_premium_requests == 0.0
 
-    async def test_model_used_captured(self, copilot_eval, tmp_path):
+    async def test_model_used_captured(self, copilot_run, tmp_path):
         """model_used is populated from the SDK session or usage events."""
-        agent = CopilotEval(
+        agent = CopilotTask(
             name="model-check",
             model=DEFAULT_MODEL,
             instructions="Create files as requested.",
             working_directory=str(tmp_path),
         )
-        result = await copilot_eval(agent, "Create hi.py with print('hi')")
+        result = await copilot_run(agent, "Create hi.py with print('hi')")
         assert result.success
         assert result.model_used, "Expected model metadata from the session event stream"
 
@@ -186,15 +186,15 @@ class TestUsageTracking:
 class TestEventCapture:
     """Raw events and result metadata are captured for debugging and reporting."""
 
-    async def test_raw_events_populated(self, copilot_eval, tmp_path):
+    async def test_raw_events_populated(self, copilot_run, tmp_path):
         """raw_events captures the full SDK event stream."""
-        agent = CopilotEval(
+        agent = CopilotTask(
             name="event-capture",
             model=DEFAULT_MODEL,
             instructions="Create files as requested.",
             working_directory=str(tmp_path),
         )
-        result = await copilot_eval(agent, "Create note.txt with 'test note'")
+        result = await copilot_run(agent, "Create note.txt with 'test note'")
         assert result.success
         assert len(result.raw_events) > 0, "Expected raw events to be captured"
         event_types = {event.type.value for event in result.raw_events}
@@ -202,15 +202,15 @@ class TestEventCapture:
         event_ids = [event.id for event in result.raw_events]
         assert len(event_ids) == len(set(event_ids)), "Events must be recorded exactly once"
 
-    async def test_all_tool_calls_captured(self, copilot_eval, tmp_path):
+    async def test_all_tool_calls_captured(self, copilot_run, tmp_path):
         """Tool calls are captured in result.all_tool_calls."""
-        agent = CopilotEval(
+        agent = CopilotTask(
             name="tool-capture",
             model=DEFAULT_MODEL,
             instructions="Create files as requested.",
             working_directory=str(tmp_path),
         )
-        result = await copilot_eval(agent, "Create hello.py with print('hello')")
+        result = await copilot_run(agent, "Create hello.py with print('hello')")
         assert result.success
         assert len(result.all_tool_calls) > 0, "Expected at least one tool call captured"
         for tc in result.all_tool_calls:

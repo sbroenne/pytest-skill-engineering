@@ -1,6 +1,6 @@
 # Multi-step tasks and explicit context
 
-Every `copilot_eval` call starts a new Copilot session. The fixture does not
+Every `copilot_run` call starts a new Copilot session. The fixture does not
 retain conversation history across calls or pytest tests. Use one prompt for a
 task requiring several steps.
 
@@ -8,7 +8,7 @@ The following fragment assumes `agent` has your banking tools and an initialized
 test account:
 
 ```python
-result = await copilot_eval(
+result = await copilot_run(
     agent,
     "Transfer $100 from checking to savings, then retrieve the updated balances.",
 )
@@ -38,5 +38,5 @@ of a prior conversation.
 services or desktops. Own any external-state reset.
 
 The repository's
-[`test_06_sessions.py`](https://github.com/sbroenne/pytest-skill-engineering/blob/main/tests/integration/copilot/test_06_sessions.py)
+[`test_06_sessions.py`](https://github.com/sbroenne/pytest-copilot/blob/main/tests/integration/copilot/test_06_sessions.py)
 shows explicit-context and multi-step tasks.

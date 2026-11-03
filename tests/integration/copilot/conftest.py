@@ -6,7 +6,7 @@ import subprocess
 
 import pytest
 
-from pytest_skill_engineering.copilot.client import get_github_token
+from pytest_copilot.copilot.client import get_github_token
 
 # Default model for integration tests
 DEFAULT_MODEL: str = "gpt-5.6-sol"

@@ -12,7 +12,7 @@
 #   "model-key" = { input = <per_million_input>, output = <per_million_output>, cache_read = <per_million_cache_read> }
 #
 # cache_read is optional and defaults to 0.0.
-# The model key must match the string passed to CopilotEval(model=...).
+# The model key must match the string passed to CopilotTask(model=...).
 
 [models]
 "claude-opus-4.8" = { input = 5.00, output = 25.00, cache_read = 0.50 }

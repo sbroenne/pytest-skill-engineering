@@ -1,1 +1,1 @@
-# pytest-skill-engineering tests
+# pytest-copilot tests

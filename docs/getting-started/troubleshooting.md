@@ -1,6 +1,6 @@
 # Troubleshooting
 
-When a task cannot start, run `uv run pytest-skill-engineering doctor`. It checks
+When a task cannot start, run `uv run pytest-copilot doctor`. It checks
 installation, project configuration, authentication, SDK startup, and access to
 the starter model. When a task starts but fails an assertion, inspect its actual
 output before changing configuration.
@@ -33,7 +33,7 @@ explicitly. Skill discovery does not mean the skill was read.
 
 Version 1.0 removed HTML/Markdown, summary, analysis, and judge flags. Remove them from
 configuration and CI using the [migration guide](../migration.md).
-Old JSON schemas are rejected; rerun their producer with 1.x. Never hand-edit
+Old JSON schemas are rejected; rerun their producer with the current version. Never hand-edit
 JSON or invent missing fields.
 
 ## Saving evidence fails

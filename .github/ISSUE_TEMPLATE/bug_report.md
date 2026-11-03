@@ -22,7 +22,7 @@ What you expected to happen.
 What actually happened.
 
 ## Environment
-- pytest-skill-engineering version:
+- pytest-copilot version:
 - Python version:
 - OS:
 - Copilot model:

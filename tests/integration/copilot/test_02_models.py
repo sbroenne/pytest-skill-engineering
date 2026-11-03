@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import pytest
 
-from pytest_skill_engineering.copilot.eval import CopilotEval
+from pytest_copilot.copilot.task import CopilotTask
 
 from .conftest import MODELS
 
@@ -21,15 +21,15 @@ class TestModelComparison:
     """Compare models on the same coding task."""
 
     @pytest.mark.parametrize("model", MODELS)
-    async def test_simple_function(self, copilot_eval, tmp_path, model):
+    async def test_simple_function(self, copilot_run, tmp_path, model):
         """Each model should create a working Fibonacci function."""
-        agent = CopilotEval(
+        agent = CopilotTask(
             name=f"model-{model}",
             model=model,
             instructions="Create files as requested. Be concise.",
             working_directory=str(tmp_path),
         )
-        result = await copilot_eval(
+        result = await copilot_run(
             agent,
             "Create fibonacci.py with a function fibonacci(n) that returns "
             "the nth Fibonacci number.",
@@ -38,15 +38,15 @@ class TestModelComparison:
         assert (tmp_path / "fibonacci.py").exists()
 
     @pytest.mark.parametrize("model", MODELS)
-    async def test_error_handling(self, copilot_eval, tmp_path, model):
+    async def test_error_handling(self, copilot_run, tmp_path, model):
         """Each model should produce code with proper error handling."""
-        agent = CopilotEval(
+        agent = CopilotTask(
             name=f"model-{model}",
             model=model,
             instructions="Write production-quality code with proper error handling.",
             working_directory=str(tmp_path),
         )
-        result = await copilot_eval(
+        result = await copilot_run(
             agent,
             "Create a file parser.py that reads a JSON file and returns its contents. "
             "Handle FileNotFoundError and json.JSONDecodeError gracefully.",

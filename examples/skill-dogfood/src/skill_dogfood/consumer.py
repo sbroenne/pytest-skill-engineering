@@ -1,4 +1,4 @@
-"""Trusted consumer fixtures. All Copilot execution stays in copilot_eval."""
+"""Trusted consumer fixtures. All Copilot execution stays in copilot_run."""
 
 from __future__ import annotations
 
@@ -11,12 +11,12 @@ from typing import Any
 import pytest
 from copilot.tools import Tool, ToolInvocation, ToolResult
 
-from pytest_skill_engineering.copilot import CopilotEval
-from pytest_skill_engineering.copilot.result import CopilotResult
+from pytest_copilot.copilot import CopilotTask
+from pytest_copilot.copilot.result import CopilotResult
 from skill_dogfood.application import INVOICE_TASK, read_invoice, run_invoice
 
 MODEL = "gpt-5.6-luna"
-EvalRun = Callable[[CopilotEval, str], Awaitable[CopilotResult]]
+EvalRun = Callable[[CopilotTask, str], Awaitable[CopilotResult]]
 
 
 @pytest.fixture
@@ -44,7 +44,7 @@ def invoice_eval(
     request: pytest.FixtureRequest,
     invoice_state: list[dict[str, int]],
     record_property: Callable[[str, Any], None],
-) -> CopilotEval:
+) -> CopilotTask:
     project = Path(str(request.node.path)).parent
     return create_invoice_eval(project, invoice_state, record_property)
 
@@ -53,7 +53,7 @@ def create_invoice_eval(
     project: Path,
     invoice_state: list[dict[str, int]],
     record_property: Callable[[str, Any], None],
-) -> CopilotEval:
+) -> CopilotTask:
     used = False
 
     async def invoice(invocation: ToolInvocation) -> ToolResult:
@@ -84,7 +84,7 @@ def create_invoice_eval(
             "additionalProperties": False,
         },
     )
-    return CopilotEval(
+    return CopilotTask(
         name="invoice-consumer",
         model=MODEL,
         client_mode="empty",
@@ -98,14 +98,14 @@ def create_invoice_eval(
 
 
 @pytest.fixture
-def copilot_eval(copilot_eval: EvalRun, invoice_eval: CopilotEval) -> EvalRun:
-    return guard_execution(copilot_eval, invoice_eval, INVOICE_TASK)
+def copilot_run(copilot_run: EvalRun, invoice_eval: CopilotTask) -> EvalRun:
+    return guard_execution(copilot_run, invoice_eval, INVOICE_TASK)
 
 
-def guard_execution(execute: EvalRun, invoice_eval: CopilotEval, task: str) -> EvalRun:
+def guard_execution(execute: EvalRun, invoice_eval: CopilotTask, task: str) -> EvalRun:
     used = False
 
-    async def once(agent: CopilotEval, prompt: str) -> CopilotResult:
+    async def once(agent: CopilotTask, prompt: str) -> CopilotResult:
         nonlocal used
         if used or agent is not invoice_eval or prompt != task:
             raise ValueError("Use the supplied eval and task for exactly one framework execution")

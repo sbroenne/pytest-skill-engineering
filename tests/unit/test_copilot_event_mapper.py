@@ -9,7 +9,7 @@ from __future__ import annotations
 from types import SimpleNamespace
 from typing import Any
 
-from pytest_skill_engineering.copilot.events import EventMapper
+from pytest_copilot.copilot.events import EventMapper
 
 
 def _make_event(event_type: str, **data_fields) -> Any:

@@ -15,9 +15,9 @@ from typing import Any
 import pytest
 from copilot.tools import Tool, ToolInvocation, ToolResult
 
-from pytest_skill_engineering.copilot import (
+from pytest_copilot.copilot import (
     CommandCancelledError,
-    CopilotEval,
+    CopilotTask,
     commands,
     create_command_tool,
 )
@@ -373,7 +373,7 @@ async def test_failed_job_assignment_still_stops_the_started_command(
 
 def test_tool_is_wired_into_sdk_configuration_without_a_shell() -> None:
     tool = create_command_tool(sys.executable)
-    config = CopilotEval(
+    config = CopilotTask(
         client_mode="empty",
         allowed_tools=["run_command"],
         extra_config={"tools": [tool]},

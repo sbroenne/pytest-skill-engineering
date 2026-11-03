@@ -125,8 +125,8 @@ conclusion about guidance.
 ## Run a new observation
 
 The runnable project is
-[`examples/skill-dogfood`](https://github.com/sbroenne/pytest-skill-engineering/tree/main/examples/skill-dogfood).
-Its [README](https://github.com/sbroenne/pytest-skill-engineering/blob/main/examples/skill-dogfood/README.md)
+[`examples/skill-dogfood`](https://github.com/sbroenne/pytest-copilot/tree/main/examples/skill-dogfood).
+Its [README](https://github.com/sbroenne/pytest-copilot/blob/main/examples/skill-dogfood/README.md)
 explains setup and explicitly selected live comparisons.
 
 From the repository root, these commands run only the offline checks:

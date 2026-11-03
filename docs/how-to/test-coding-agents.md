@@ -4,7 +4,7 @@ description: "Run a verified coding task and configure isolation, budgets, guard
 
 # Test skills and custom agents
 
-Run a representative task with `CopilotEval` and verify its actual output.
+Run a representative task with `CopilotTask` and verify its actual output.
 Use skills or custom agents only when they are part of the interface you want
 to test. The framework manages sessions, controls, usage, and evidence; your
 fixtures own application state, guarded adapters, and independent verification.
@@ -19,17 +19,17 @@ from __future__ import annotations
 
 import ast
 
-from pytest_skill_engineering.copilot import CopilotEval
+from pytest_copilot.copilot import CopilotTask
 
 
-async def test_creates_module(copilot_eval, tmp_path):
-    agent = CopilotEval(
+async def test_creates_module(copilot_run, tmp_path):
+    agent = CopilotTask(
         name="calculator-module",
         model="gpt-5.6-sol",
         instructions="Create the requested Python module.",
         working_directory=str(tmp_path),
     )
-    result = await copilot_eval(
+    result = await copilot_run(
         agent, "Create calculator.py with functions add(a, b) and subtract(a, b)."
     )
 
@@ -43,11 +43,11 @@ This checks syntax and function presence, not arithmetic correctness. Add
 independent behavior tests in an environment approved for executing generated
 code. A model's statement that its tests passed is not independent verification.
 
-## Core CopilotEval fields
+## Core CopilotTask fields
 
 | Field | Use |
 |---|---|
-| `instructions` | Set the system prompt; the user task goes to `copilot_eval` |
+| `instructions` | Set the system prompt; the user task goes to `copilot_run` |
 | `working_directory` | Choose the workspace; this is not a security sandbox |
 | `model` / `reasoning_effort` | Choose an accessible model and supported effort |
 | `timeout_s` | Bound execution wall time, including startup |
@@ -78,11 +78,11 @@ exclude inherited configuration. This **illustrative test** requires your
 `guarded_tools` and `application` fixtures:
 
 ```python
-from pytest_skill_engineering.copilot import CopilotEval
+from pytest_copilot.copilot import CopilotTask
 
 
-async def test_application_task(copilot_eval, record_property, guarded_tools, application):
-    agent = CopilotEval(
+async def test_application_task(copilot_run, record_property, guarded_tools, application):
+    agent = CopilotTask(
         name="guarded-application",
         model="gpt-5.6-sol",
         instructions="Complete the task using only the supplied tools.",
@@ -96,7 +96,7 @@ async def test_application_task(copilot_eval, record_property, guarded_tools, ap
         allowed_tools=[tool.name for tool in guarded_tools],
         extra_config={"tools": guarded_tools},
     )
-    result = await copilot_eval(agent, "Save the application document with the required values.")
+    result = await copilot_run(agent, "Save the application document with the required values.")
     observed = await application.read_saved_document()
     passed = observed == application.expected_document
     record_property("verification", {"observed": observed, "passed": passed})
@@ -124,7 +124,7 @@ next attempted call is denied and aborts the session with
 the current session, not independently created sessions.
 `tool_calls_admitted` counts admissions; permissions can still deny a call.
 
-Each `copilot_eval` call makes one attempt. Startup, connection, timeout, and
+Each `copilot_run` call makes one attempt. Startup, connection, timeout, and
 budget failures are not silently retried. Rerun selected pytest cases
 explicitly after investigation.
 
@@ -226,6 +226,6 @@ Copilot access.
 ## Models
 
 The starter uses `gpt-5.6-sol`. Check availability with
-`uv run pytest-skill-engineering doctor`; configure another accessible model
+`uv run pytest-copilot doctor`; configure another accessible model
 explicitly when your task requires it. Live tests may consume premium requests.
 See [Cost estimation](cost-estimation.md) before running a case matrix.

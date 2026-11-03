@@ -4,7 +4,7 @@ description: "CopilotResult reference: tool calls, responses, token usage, files
 
 # CopilotResult
 
-`result = await copilot_eval(agent, prompt)` returns a `CopilotResult` describing
+`result = await copilot_run(agent, prompt)` returns a `CopilotResult` describing
 the execution. It is not a verdict on the requested task.
 
 ## Read a result in this order
@@ -178,7 +178,7 @@ Each `request_audit` record contains:
 For Responses requests the top-level `instructions` precedes system/developer
 messages; text blocks within a message are also joined with two newlines.
 An empty instruction sequence hashes the empty string. This hash is calculated
-from the final outgoing request, not from `CopilotEval.instructions`.
+from the final outgoing request, not from `CopilotTask.instructions`.
 
 For WebSocket Responses, there is one record per validated outgoing `response.create`
 message. `request_id` is the SDK's connection identifier, so it repeats when

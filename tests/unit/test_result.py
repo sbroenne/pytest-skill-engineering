@@ -1,8 +1,8 @@
-"""Tests for pytest-skill-engineering result models."""
+"""Tests for pytest-copilot result models."""
 
 from __future__ import annotations
 
-from pytest_skill_engineering.core.result import (
+from pytest_copilot.core.result import (
     CustomAgentInfo,
     EvalResult,
     MCPPrompt,

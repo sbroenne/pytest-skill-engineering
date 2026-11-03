@@ -6,8 +6,8 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from pytest_skill_engineering.copilot.eval import CopilotEval
-from pytest_skill_engineering.copilot.result import CopilotResult
+from pytest_copilot.copilot.result import CopilotResult
+from pytest_copilot.copilot.task import CopilotTask
 
 
 def _make_result(success: bool = True) -> CopilotResult:
@@ -20,17 +20,15 @@ class TestAbRunFixture:
     @pytest.fixture(autouse=True)
     def _no_stash(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Prevent ab_run from registering test reports in the plugin stash."""
-        monkeypatch.setattr(
-            "pytest_skill_engineering.copilot.fixtures.stash_on_item", lambda *a, **kw: None
-        )
+        monkeypatch.setattr("pytest_copilot.copilot.fixtures.stash_on_item", lambda *a, **kw: None)
 
     @pytest.fixture
-    def baseline_agent(self) -> CopilotEval:
-        return CopilotEval(name="baseline", instructions="Write plain Python.")
+    def baseline_agent(self) -> CopilotTask:
+        return CopilotTask(name="baseline", instructions="Write plain Python.")
 
     @pytest.fixture
-    def treatment_agent(self) -> CopilotEval:
-        return CopilotEval(name="treatment", instructions="Write Python with docstrings.")
+    def treatment_agent(self) -> CopilotTask:
+        return CopilotTask(name="treatment", instructions="Write Python with docstrings.")
 
     async def test_returns_tuple_of_two_results(
         self, ab_run, baseline_agent, treatment_agent, tmp_path
@@ -40,7 +38,7 @@ class TestAbRunFixture:
         treatment_result = _make_result(success=True)
 
         with patch(
-            "pytest_skill_engineering.copilot.fixtures.run_copilot",
+            "pytest_copilot.copilot.fixtures.run_copilot",
             new=AsyncMock(side_effect=[baseline_result, treatment_result]),
         ):
             b, t = await ab_run(baseline_agent, treatment_agent, "Write math.py")
@@ -60,7 +58,7 @@ class TestAbRunFixture:
             captured_agents.append(agent)
             return _make_result()
 
-        with patch("pytest_skill_engineering.copilot.fixtures.run_copilot", side_effect=_capture):
+        with patch("pytest_copilot.copilot.fixtures.run_copilot", side_effect=_capture):
             await ab_run(baseline_agent, treatment_agent, "some task")
 
         baseline_dir = tmp_path / "baseline"
@@ -70,16 +68,16 @@ class TestAbRunFixture:
 
     async def test_overrides_working_directory_on_both_agents(self, ab_run, tmp_path):
         """ab_run overrides working_directory regardless of original value."""
-        original_baseline = CopilotEval(name="b", working_directory="/original/b")
-        original_treatment = CopilotEval(name="t", working_directory="/original/t")
+        original_baseline = CopilotTask(name="b", working_directory="/original/b")
+        original_treatment = CopilotTask(name="t", working_directory="/original/t")
 
-        captured: list[CopilotEval] = []
+        captured: list[CopilotTask] = []
 
         async def _capture(agent, task):
             captured.append(agent)
             return _make_result()
 
-        with patch("pytest_skill_engineering.copilot.fixtures.run_copilot", side_effect=_capture):
+        with patch("pytest_copilot.copilot.fixtures.run_copilot", side_effect=_capture):
             await ab_run(original_baseline, original_treatment, "task")
 
         assert captured[0].working_directory == str(tmp_path / "baseline")
@@ -87,16 +85,16 @@ class TestAbRunFixture:
 
     async def test_agents_without_working_directory_get_isolated_dirs(self, ab_run, tmp_path):
         """Agents with no working_directory still get isolated dirs."""
-        baseline = CopilotEval(name="b")
-        treatment = CopilotEval(name="t")
+        baseline = CopilotTask(name="b")
+        treatment = CopilotTask(name="t")
 
-        captured: list[CopilotEval] = []
+        captured: list[CopilotTask] = []
 
         async def _capture(agent, task):
             captured.append(agent)
             return _make_result()
 
-        with patch("pytest_skill_engineering.copilot.fixtures.run_copilot", side_effect=_capture):
+        with patch("pytest_copilot.copilot.fixtures.run_copilot", side_effect=_capture):
             await ab_run(baseline, treatment, "task")
 
         assert captured[0].working_directory == str(tmp_path / "baseline")
@@ -110,21 +108,21 @@ class TestAbRunFixture:
             call_order.append(agent.name)
             return _make_result()
 
-        baseline = CopilotEval(name="baseline")
-        treatment = CopilotEval(name="treatment")
+        baseline = CopilotTask(name="baseline")
+        treatment = CopilotTask(name="treatment")
 
-        with patch("pytest_skill_engineering.copilot.fixtures.run_copilot", side_effect=_capture):
+        with patch("pytest_copilot.copilot.fixtures.run_copilot", side_effect=_capture):
             await ab_run(baseline, treatment, "task")
 
         assert call_order == ["baseline", "treatment"]
 
     async def test_does_not_mutate_original_agents(self, ab_run, tmp_path):
-        """ab_run does not mutate the original CopilotEval objects."""
-        original_baseline = CopilotEval(name="b", working_directory=None)
-        original_treatment = CopilotEval(name="t", working_directory=None)
+        """ab_run does not mutate the original CopilotTask objects."""
+        original_baseline = CopilotTask(name="b", working_directory=None)
+        original_treatment = CopilotTask(name="t", working_directory=None)
 
         with patch(
-            "pytest_skill_engineering.copilot.fixtures.run_copilot",
+            "pytest_copilot.copilot.fixtures.run_copilot",
             new=AsyncMock(return_value=_make_result()),
         ):
             await ab_run(original_baseline, original_treatment, "task")
@@ -137,16 +135,16 @@ class TestAbRunFixture:
         """ab_run stashes both results with report-only comparison roles."""
         baseline_result = _make_result(success=True)
         treatment_result = _make_result(success=True)
-        treatment = CopilotEval(name="treatment")
+        treatment = CopilotTask(name="treatment")
 
         with (
             patch(
-                "pytest_skill_engineering.copilot.fixtures.run_copilot",
+                "pytest_copilot.copilot.fixtures.run_copilot",
                 new=AsyncMock(side_effect=[baseline_result, treatment_result]),
             ),
-            patch("pytest_skill_engineering.copilot.fixtures.stash_on_item") as mock_stash,
+            patch("pytest_copilot.copilot.fixtures.stash_on_item") as mock_stash,
         ):
-            await ab_run(CopilotEval(name="baseline"), treatment, "task")
+            await ab_run(CopilotTask(name="baseline"), treatment, "task")
 
         assert mock_stash.call_count == 2
         baseline_call, treatment_call = mock_stash.call_args_list
@@ -163,7 +161,7 @@ class TestAbRunFixture:
             captured_tasks.append(task)
             return _make_result()
 
-        with patch("pytest_skill_engineering.copilot.fixtures.run_copilot", side_effect=_capture):
-            await ab_run(CopilotEval(), CopilotEval(), "my specific task")
+        with patch("pytest_copilot.copilot.fixtures.run_copilot", side_effect=_capture):
+            await ab_run(CopilotTask(), CopilotTask(), "my specific task")
 
         assert captured_tasks == ["my specific task", "my specific task"]

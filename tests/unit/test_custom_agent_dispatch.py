@@ -6,11 +6,11 @@ from pathlib import Path
 from types import SimpleNamespace
 from typing import Any, cast
 
-from pytest_skill_engineering.copilot.contracts import CopilotEvalConfig
-from pytest_skill_engineering.copilot.eval import CopilotEval
-from pytest_skill_engineering.copilot.events import EventMapper
-from pytest_skill_engineering.copilot.personas import _make_subagent_dispatch_tool
-from pytest_skill_engineering.copilot.result import CopilotResult, Turn
+from pytest_copilot.copilot.contracts import CopilotTaskConfig
+from pytest_copilot.copilot.events import EventMapper
+from pytest_copilot.copilot.personas import _make_subagent_dispatch_tool
+from pytest_copilot.copilot.result import CopilotResult, Turn
+from pytest_copilot.copilot.task import CopilotTask
 
 
 async def test_subagent_dispatch_preserves_exact_tools_and_merges_mcp_servers(
@@ -18,12 +18,12 @@ async def test_subagent_dispatch_preserves_exact_tools_and_merges_mcp_servers(
 ) -> None:
     captured: dict[str, object] = {}
 
-    async def fake_run_copilot(agent: CopilotEvalConfig, prompt: str) -> CopilotResult:
+    async def fake_run_copilot(agent: CopilotTaskConfig, prompt: str) -> CopilotResult:
         captured["agent"] = agent
         captured["prompt"] = prompt
         return CopilotResult(turns=[Turn(role="assistant", content="done")], success=True)
 
-    parent = CopilotEval(
+    parent = CopilotTask(
         name="orchestrator",
         model="gpt-5.4-mini",
         reasoning_effort="high",
@@ -67,7 +67,7 @@ async def test_subagent_dispatch_preserves_exact_tools_and_merges_mcp_servers(
     result = mapper.build()
 
     sub_agent = captured["agent"]
-    assert isinstance(sub_agent, CopilotEval)
+    assert isinstance(sub_agent, CopilotTask)
     assert captured["prompt"] == "Create hello.py"
     assert sub_agent.name == "file-writer"
     assert sub_agent.instructions == "Write the requested file."

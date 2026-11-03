@@ -72,6 +72,8 @@ jobs:
 
 
           pyproject = tomllib.loads(Path("pyproject.toml").read_text(encoding="utf-8"))
+          if pyproject["project"]["name"] != "pytest-copilot":
+              raise SystemExit("Release source must declare project.name=pytest-copilot")
           version = str(pyproject["project"]["version"])
           parse_semver(version)
           tag = f"v{version}"
@@ -117,8 +119,8 @@ jobs:
           else:
               print(f"Release tag {tag} is missing and will be created from HEAD")
 
-          pypi_exists = pypi_version_exists("pytest-skill-engineering", version)
-          print(f"PyPI already has pytest-skill-engineering {version}: {pypi_exists}")
+          pypi_exists = pypi_version_exists("pytest-copilot", version)
+          print(f"PyPI already has pytest-copilot {version}: {pypi_exists}")
           if pypi_exists and not tag_exists:
               raise SystemExit(
                   f"PyPI already has version {version}, but git tag {tag} is missing. "
@@ -216,9 +218,10 @@ jobs:
           from pathlib import Path
 
           expected = os.environ["EXPECTED_VERSION"]
+          expected_name = "pytest-copilot"
           dist = Path("dist")
-          wheel_paths = sorted(dist.glob("pytest_skill_engineering-*.whl"))
-          sdist_paths = sorted(dist.glob("pytest_skill_engineering-*.tar.gz"))
+          wheel_paths = sorted(dist.glob("pytest_copilot-*.whl"))
+          sdist_paths = sorted(dist.glob("pytest_copilot-*.tar.gz"))
           if len(wheel_paths) != 1 or len(sdist_paths) != 1:
               raise SystemExit(
                   f"Expected exactly one wheel and one sdist, found {wheel_paths!r} and {sdist_paths!r}"
@@ -248,6 +251,12 @@ jobs:
               raise SystemExit(
                   f"Artifact version mismatch: wheel={wheel_version}, sdist={sdist_version}, expected={expected}"
               )
+          wheel_name = wheel_metadata["Name"]
+          sdist_name = sdist_metadata["Name"]
+          if wheel_name != expected_name or sdist_name != expected_name:
+              raise SystemExit(
+                  f"Artifact name mismatch: wheel={wheel_name}, sdist={sdist_name}, expected={expected_name}"
+              )
           print(f"Validated artifact metadata for {expected}")
           PY
 
@@ -263,13 +272,13 @@ jobs:
           import os
           from importlib.metadata import version
 
-          import pytest_skill_engineering
+          import pytest_copilot
 
           expected = os.environ["EXPECTED_VERSION"]
-          installed_version = version("pytest-skill-engineering")
-          if installed_version != expected or pytest_skill_engineering.__version__ != expected:
+          installed_version = version("pytest-copilot")
+          if installed_version != expected or pytest_copilot.__version__ != expected:
               raise SystemExit(
-                  f"Installed wheel version mismatch: metadata={installed_version}, module={pytest_skill_engineering.__version__}, expected={expected}"
+                  f"Installed wheel version mismatch: metadata={installed_version}, module={pytest_copilot.__version__}, expected={expected}"
               )
           print(f"Verified installed wheel version {expected}")
           PY
@@ -288,7 +297,7 @@ jobs:
     if: ${{ !cancelled() && needs.build.result == 'success' && needs.validate-release.outputs.pypi_exists != 'true' }}
     environment:
       name: pypi
-      url: https://pypi.org/project/pytest-skill-engineering/
+      url: https://pypi.org/project/pytest-copilot/
     permissions:
       id-token: write
     steps:

@@ -4,7 +4,7 @@ description: "Inspect a configuration bundle, load it into Copilot, and verify a
 
 # How to Test Plugins
 
-Use `CopilotEval.from_plugin()` to run a task with a bundle of instructions,
+Use `CopilotTask.from_plugin()` to run a task with a bundle of instructions,
 skills, custom agents, and MCP server definitions. Inspect what the loader
 found first, then choose a task and output checks that exercise the components
 you care about.
@@ -31,7 +31,7 @@ The loader accepts these layouts:
 Manifest detection takes precedence. A root with only
 `.github/copilot-instructions.md` and no `.github/agents/` is not detected as a
 GitHub plugin root; pass the `.github` directory or use
-`CopilotEval.from_copilot_config(root)`.
+`CopilotTask.from_copilot_config(root)`.
 
 ### plugin.json (manifest bundles)
 
@@ -100,7 +100,7 @@ root and does not include the parent project's files.
 Inspect your bundle without starting Copilot:
 
 ```python
-from pytest_skill_engineering import load_plugin
+from pytest_copilot import load_plugin
 
 plugin = load_plugin("plugins/my-plugin")
 print(plugin.metadata.name)
@@ -127,16 +127,16 @@ from __future__ import annotations
 
 import json
 
-from pytest_skill_engineering.copilot import CopilotEval
+from pytest_copilot.copilot import CopilotTask
 
 
-async def test_plugin_output(copilot_eval, tmp_path, record_property):
-    agent = CopilotEval.from_plugin(
+async def test_plugin_output(copilot_run, tmp_path, record_property):
+    agent = CopilotTask.from_plugin(
         "plugins/my-plugin",
         model="gpt-5.6-sol",
         working_directory=str(tmp_path),
     )
-    result = await copilot_eval(agent, 'Write answer.json containing exactly {"total": 5}.')
+    result = await copilot_run(agent, 'Write answer.json containing exactly {"total": 5}.')
     path = tmp_path / "answer.json"
     observed = json.loads(path.read_text(encoding="utf-8")) if path.is_file() else None
     record_property("verification", {"observed": observed, "passed": observed == {"total": 5}})
@@ -156,7 +156,7 @@ explicitly. The factory's `instructions` argument **appends** to discovered
 instructions; it does not replace them:
 
 ```python
-agent = CopilotEval.from_plugin(
+agent = CopilotTask.from_plugin(
     "plugins/my-plugin",
     model="gpt-5.6-sol",
     instructions="Also keep the final reply brief.",
@@ -174,7 +174,7 @@ agent = replace(agent, instructions="Use only these replacement instructions.")
 This is separate from `system_message_mode`, which controls whether the eval
 instructions append to or replace Copilot's base system prompt.
 
-## Testing with Copilot SDK (CopilotEval)
+## Testing with Copilot SDK (CopilotTask)
 
 All task executions use GitHub Copilot. The loader selects `ClaudeCodePersona`
 for `.claude` paths or roots containing `.claude/`, otherwise `VSCodePersona`,
@@ -200,11 +200,11 @@ settings; duplicate resolved names are errors. See
 
 ## Claude Code Projects
 
-Use `CopilotEval.from_claude_config(project_root)` for explicit Claude-format
+Use `CopilotTask.from_claude_config(project_root)` for explicit Claude-format
 project loading:
 
 ```python
-agent = CopilotEval.from_claude_config(
+agent = CopilotTask.from_claude_config(
     "projects/my-claude-project",
     model="gpt-5.6-sol",
 )
@@ -220,10 +220,10 @@ force a Claude model.
 Load a server configuration independently:
 
 ```python
-from pytest_skill_engineering.copilot import load_mcp_config
+from pytest_copilot.copilot import load_mcp_config
 
 servers = load_mcp_config("projects/my-project/.mcp.json")
-agent = CopilotEval(name="project-tools", mcp_servers=servers)
+agent = CopilotTask(name="project-tools", mcp_servers=servers)
 ```
 
 Inspect safe server names rather than printing commands, environment variables,

@@ -5,7 +5,7 @@ description: "Discover an MCP prompt template, render it, and send its task text
 # MCP Server Prompts
 
 Use `MCPServerProcess` to discover and render server-provided prompt templates.
-Then pass the rendered task text to `copilot_eval`. These are two different
+Then pass the rendered task text to `copilot_run`. These are two different
 checks: template rendering can be tested without a model; task execution uses
 real Copilot and may consume premium requests.
 
@@ -24,14 +24,14 @@ from __future__ import annotations
 
 import sys
 
-from pytest_skill_engineering import MCPServer
-from pytest_skill_engineering.execution.servers import MCPServerProcess
+from pytest_copilot import MCPServer
+from pytest_copilot.execution.servers import MCPServerProcess
 
 
 async def test_prompts_are_discoverable():
     config = MCPServer(
         command=[sys.executable],
-        args=["-m", "pytest_skill_engineering.testing.banking_mcp"],
+        args=["-m", "pytest_copilot.testing.banking_mcp"],
     )
     async with MCPServerProcess(config) as server:
         prompts = await server.list_prompts()
@@ -51,7 +51,7 @@ Using the imports above:
 async def test_account_summary_template():
     config = MCPServer(
         command=[sys.executable],
-        args=["-m", "pytest_skill_engineering.testing.banking_mcp"],
+        args=["-m", "pytest_copilot.testing.banking_mcp"],
     )
     async with MCPServerProcess(config) as server:
         messages = await server.get_prompt("account_summary", {"account": "checking"})
@@ -61,7 +61,7 @@ async def test_account_summary_template():
 ```
 
 `get_prompt()` returns dictionaries containing `role` and `content`. Validate
-both before executing the task. `copilot_eval` accepts one prompt string, not
+both before executing the task. `copilot_run` accepts one prompt string, not
 a list of role-tagged messages. For a multi-message template, explicitly decide
 how to represent its context and roles; do not silently discard messages.
 
@@ -73,30 +73,30 @@ Copilot, and checks the returned account data:
 ```python
 import json
 
-from pytest_skill_engineering.copilot import CopilotEval
+from pytest_copilot.copilot import CopilotTask
 
 
-async def test_account_summary_prompt(copilot_eval):
+async def test_account_summary_prompt(copilot_run):
     config = MCPServer(
         command=[sys.executable],
-        args=["-m", "pytest_skill_engineering.testing.banking_mcp"],
+        args=["-m", "pytest_copilot.testing.banking_mcp"],
     )
     async with MCPServerProcess(config) as server:
         messages = await server.get_prompt("account_summary", {"account": "checking"})
     assert len(messages) == 1 and messages[0]["role"] == "user"
-    agent = CopilotEval(
+    agent = CopilotTask(
         name="account-summary",
         model="gpt-5.6-sol",
         instructions="Use banking tools for account data.",
         mcp_servers={
             "banking": {
                 "command": sys.executable,
-                "args": ["-m", "pytest_skill_engineering.testing.banking_mcp"],
+                "args": ["-m", "pytest_copilot.testing.banking_mcp"],
                 "tools": ["*"],
             }
         },
     )
-    result = await copilot_eval(agent, messages[0]["content"])
+    result = await copilot_run(agent, messages[0]["content"])
 
     assert result.success, result.error
     calls = result.tool_calls_for("banking-get_balance")
@@ -118,7 +118,7 @@ does not assess the quality of Copilot's prose summary.
 ## Naming tests
 
 Use test names or parameter IDs to identify templates. `CopilotResult` does not
-expose discovered prompts or a `prompt_name` field; `copilot_eval` has no
+expose discovered prompts or a `prompt_name` field; `copilot_run` has no
 `prompt_name` keyword.
 
 ## Next Steps

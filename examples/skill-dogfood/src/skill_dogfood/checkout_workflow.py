@@ -10,7 +10,7 @@ from importlib.metadata import version
 from pathlib import Path
 from uuid import uuid4
 
-from pytest_skill_engineering.reporting import load_suite_report
+from pytest_copilot.reporting import load_suite_report
 from skill_dogfood.checkout import criteria_digest, inspect_checkout, seed_checkout, workflow_checks
 from skill_dogfood.consumer import MODEL
 from skill_dogfood.workflow import (
@@ -32,7 +32,7 @@ SYSTEM_PROMPT = (
 )
 AUTHOR_TASK = (
     "Write test_checkout.py to test this imported-order checkout workflow using "
-    "pytest-skill-engineering and the supplied fixtures. Check the customer's "
+    "pytest-copilot and the supplied fixtures. Check the customer's "
     "requirements and record your observations. Author the test only; the customer runs it."
 )
 REPAIR_TASK = (
@@ -44,9 +44,9 @@ REPAIR_TASK = (
 API = """# Consumer API
 
 Request these separate pytest fixtures as test parameters:
-- checkout_eval: the preconfigured CopilotEval for the project's checkout tool.
+- checkout_eval: the preconfigured CopilotTask for the project's checkout tool.
 - checkout_task: the user's request to run the supplied imported-order workflow.
-- copilot_eval: async framework execution; await copilot_eval(checkout_eval, checkout_task).
+- copilot_run: async framework execution; await copilot_run(checkout_eval, checkout_task).
 - checkout_observation: a no-argument callable returning the actual workflow data
   after execution. Keys: preview, post, repeat, conflict, second, read.
 - checkout_inputs: dictionary keyed by order.csv, other.csv, and conflict.csv.
@@ -58,10 +58,10 @@ Each observation contains exit_code, output (parsed command stdout), stderr, and
 disk (parsed actual ledger file, or None when it does not exist). SDK session
 completion is in result.success; result.evidence_complete describes capture.
 The checkout tool runs all six CLI operations from the README, exactly once.
-One async test function and one copilot_eval execution are permitted.
+One async test function and one copilot_run execution are permitted.
 Plain assertion helpers are allowed, but no extra test cases or fixture overrides.
 Allowed imports are __future__.annotations, decimal, hashlib, json, pytest, and
-CopilotEval/CopilotResult from pytest_skill_engineering.copilot.
+CopilotTask/CopilotResult from pytest_copilot.copilot.
 Do not use pathlib, direct file I/O, subprocesses, dynamic imports, skips, xfail,
 or parametrization in the generated test. All application access is via fixtures.
 """
@@ -98,7 +98,7 @@ def check_checkout_consumer(
 
 async def run_checkout_workflow(
     *,
-    copilot_eval: EvalRun,
+    copilot_run: EvalRun,
     record_property: RecordProperty,
     root: Path,
     workspace: Path,
@@ -185,7 +185,7 @@ async def run_checkout_workflow(
         system_prompt=SYSTEM_PROMPT,
         name_prefix=f"checkout-trial-{trial}",
     )
-    result = await copilot_eval(agent, AUTHOR_TASK)
+    result = await copilot_run(agent, AUTHOR_TASK)
     record_property("author_guidance_reads", author_reads)
     assert result.success and result.evidence_complete, result.error
     milestones.append("author-session-completed")
@@ -225,7 +225,7 @@ async def run_checkout_workflow(
         system_prompt=SYSTEM_PROMPT,
         name_prefix=f"checkout-trial-{trial}",
     )
-    result = await copilot_eval(agent, REPAIR_TASK)
+    result = await copilot_run(agent, REPAIR_TASK)
     record_property("repair_guidance_reads", repair_reads)
     assert result.success and result.evidence_complete, result.error
     milestones.append("repair-session-completed")

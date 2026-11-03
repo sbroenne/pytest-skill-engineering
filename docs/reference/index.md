@@ -1,5 +1,5 @@
 ---
-description: "Configuration, CLI, result, and assertion reference for pytest-skill-engineering."
+description: "Configuration, CLI, result, and assertion reference for pytest-copilot."
 ---
 
 # Reference

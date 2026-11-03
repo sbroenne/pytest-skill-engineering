@@ -10,9 +10,9 @@ from skill_dogfood.workflow import run_workflow
 pytestmark = pytest.mark.copilot
 
 
-async def test_customer_workflow(copilot_eval, tmp_path, record_property):
+async def test_customer_workflow(copilot_run, tmp_path, record_property):
     await run_workflow(
-        copilot_eval=copilot_eval,
+        copilot_run=copilot_run,
         record_property=record_property,
         root=Path(__file__).resolve().parents[3],
         workspace=tmp_path,

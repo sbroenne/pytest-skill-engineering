@@ -13,7 +13,7 @@ from typing import Any
 import pytest
 from copilot.tools import Tool, ToolInvocation, ToolResult
 
-from pytest_skill_engineering.copilot import CopilotEval
+from pytest_copilot.copilot import CopilotTask
 from skill_dogfood.checkout import TASK, observe_checkout
 from skill_dogfood.consumer import MODEL, EvalRun, guard_execution
 
@@ -56,7 +56,7 @@ def checkout_eval(
     request: pytest.FixtureRequest,
     checkout_state: list[dict[str, Any]],
     record_property: Callable[[str, Any], None],
-) -> CopilotEval:
+) -> CopilotTask:
     project = Path(str(request.node.path)).parent
     used = False
 
@@ -84,7 +84,7 @@ def checkout_eval(
             "additionalProperties": False,
         },
     )
-    return CopilotEval(
+    return CopilotTask(
         name="checkout-consumer",
         model=MODEL,
         client_mode="empty",
@@ -98,5 +98,5 @@ def checkout_eval(
 
 
 @pytest.fixture
-def copilot_eval(copilot_eval: EvalRun, checkout_eval: CopilotEval) -> EvalRun:
-    return guard_execution(copilot_eval, checkout_eval, TASK)
+def copilot_run(copilot_run: EvalRun, checkout_eval: CopilotTask) -> EvalRun:
+    return guard_execution(copilot_run, checkout_eval, TASK)

@@ -5,30 +5,30 @@ description: "Public configuration, result, loader, and native evidence APIs gen
 # API reference
 
 Signatures and type documentation below are generated from the current source.
-Most tests start with `CopilotEval` and the `copilot_eval` pytest fixture. Use the
+Most tests start with `CopilotTask` and the `copilot_run` pytest fixture. Use the
 [configuration guide](configuration.md) for settings and the
 [result reference](result.md) for interpreting returned evidence.
 
 ## Session configuration and result
 
-::: pytest_skill_engineering.copilot.eval.CopilotEval
+::: pytest_copilot.copilot.task.CopilotTask
     options:
       show_source: false
       heading_level: 3
 
-::: pytest_skill_engineering.copilot.result.CopilotResult
+::: pytest_copilot.copilot.result.CopilotResult
     options:
       show_source: false
       heading_level: 3
 
 ## Direct command tools
 
-::: pytest_skill_engineering.copilot.commands.create_command_tool
+::: pytest_copilot.copilot.commands.create_command_tool
     options:
       show_source: false
       heading_level: 3
 
-::: pytest_skill_engineering.copilot.commands.CommandCancelledError
+::: pytest_copilot.copilot.commands.CommandCancelledError
     options:
       show_source: false
       heading_level: 3
@@ -37,37 +37,37 @@ Most tests start with `CopilotEval` and the `copilot_eval` pytest fixture. Use t
 
 These types describe captured execution. They are not independent task verdicts.
 
-::: pytest_skill_engineering.core.result.EvalResult
+::: pytest_copilot.core.result.EvalResult
     options:
       show_source: false
       heading_level: 3
 
-::: pytest_skill_engineering.core.result.Turn
+::: pytest_copilot.core.result.Turn
     options:
       show_source: false
       heading_level: 3
 
-::: pytest_skill_engineering.core.result.ToolCall
+::: pytest_copilot.core.result.ToolCall
     options:
       show_source: false
       heading_level: 3
 
-::: pytest_skill_engineering.core.result.ClarificationStats
+::: pytest_copilot.core.result.ClarificationStats
     options:
       show_source: false
       heading_level: 3
 
-::: pytest_skill_engineering.core.result.ToolInfo
+::: pytest_copilot.core.result.ToolInfo
     options:
       show_source: false
       heading_level: 3
 
-::: pytest_skill_engineering.core.result.SkillInfo
+::: pytest_copilot.core.result.SkillInfo
     options:
       show_source: false
       heading_level: 3
 
-::: pytest_skill_engineering.core.result.SubagentInvocation
+::: pytest_copilot.core.result.SubagentInvocation
     options:
       show_source: false
       heading_level: 3
@@ -78,17 +78,17 @@ Load skill test cases to parametrize ordinary pytest tests. Free-text expectatio
 are descriptions that your test must translate into checks. `export_grading`
 formats supplied booleans and evidence; it does not run a judge.
 
-::: pytest_skill_engineering.core.skill_evals.load_skill_evals
+::: pytest_copilot.core.skill_evals.load_skill_evals
     options:
       show_source: false
       heading_level: 3
 
-::: pytest_skill_engineering.core.skill_evals.SkillEvalCase
+::: pytest_copilot.core.skill_evals.SkillEvalCase
     options:
       show_source: false
       heading_level: 3
 
-::: pytest_skill_engineering.core.skill_grading.export_grading
+::: pytest_copilot.core.skill_grading.export_grading
     options:
       show_source: false
       heading_level: 3
@@ -99,75 +99,75 @@ formats supplied booleans and evidence; it does not run a judge.
 `generate_json` saves it; `load_suite_report` reads schema-4.0 JSON without
 starting Copilot. These APIs do not interpret or render the evidence.
 
-::: pytest_skill_engineering.reporting.collector.TestReport
+::: pytest_copilot.reporting.collector.TestReport
     options:
       show_source: false
       heading_level: 3
 
-::: pytest_skill_engineering.reporting.collector.SuiteReport
+::: pytest_copilot.reporting.collector.SuiteReport
     options:
       show_source: false
       heading_level: 3
 
-::: pytest_skill_engineering.reporting.generator.generate_json
+::: pytest_copilot.reporting.generator.generate_json
     options:
       show_source: false
       heading_level: 3
 
-::: pytest_skill_engineering.reporting.generator.load_suite_report
+::: pytest_copilot.reporting.generator.load_suite_report
     options:
       show_source: false
       heading_level: 3
 
 ## Skill files
 
-::: pytest_skill_engineering.core.skill.Skill
+::: pytest_copilot.core.skill.Skill
     options:
       show_source: false
       heading_level: 3
 
-::: pytest_skill_engineering.core.skill.SkillMetadata
+::: pytest_copilot.core.skill.SkillMetadata
     options:
       show_source: false
       heading_level: 3
 
-::: pytest_skill_engineering.core.skill.load_skill
+::: pytest_copilot.core.skill.load_skill
     options:
       show_source: false
       heading_level: 3
 
 ## Custom agent files
 
-::: pytest_skill_engineering.core.evals.load_custom_agent
+::: pytest_copilot.core.evals.load_custom_agent
     options:
       show_source: false
       heading_level: 3
 
-::: pytest_skill_engineering.core.evals.load_custom_agents
+::: pytest_copilot.core.evals.load_custom_agents
     options:
       show_source: false
       heading_level: 3
 
 ## Plugin records
 
-::: pytest_skill_engineering.core.plugin.Plugin
+::: pytest_copilot.core.plugin.Plugin
     options:
       show_source: false
       heading_level: 3
 
-::: pytest_skill_engineering.core.plugin.PluginMetadata
+::: pytest_copilot.core.plugin.PluginMetadata
     options:
       show_source: false
       heading_level: 3
 
-::: pytest_skill_engineering.core.plugin.HookDefinition
+::: pytest_copilot.core.plugin.HookDefinition
     options:
       show_source: false
       heading_level: 3
 
 ## Plugin loading
 
-::: pytest_skill_engineering.core.plugin.load_plugin
+::: pytest_copilot.core.plugin.load_plugin
     options:
       show_source: false
       heading_level: 3

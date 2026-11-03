@@ -1,11 +1,11 @@
-# Copilot instructions for pytest-skill-engineering
+# Copilot instructions for pytest-copilot
 
 ## Product boundary
 
 This repository serves people working with coding agents. It provides reliable
 Copilot task execution, controls, ordinary pytest output, and saved JSON evidence.
 
-- Use `CopilotEval` and the `copilot_eval` pytest fixture.
+- Use `CopilotTask` and the `copilot_run` pytest fixture.
 - Consumers own application fixtures, guarded tool adapters, and independent
   output verification. The framework owns SDK sessions, request controls, usage,
   evidence, and native JSON. The coding agent interprets results.
@@ -38,8 +38,8 @@ Copilot task execution, controls, ordinary pytest output, and saved JSON evidenc
 
 ## Terminology
 
-- **System prompt**: instructions configuring behavior (`CopilotEval.instructions`).
-- **Prompt**: the user task passed to `copilot_eval`.
+- **System prompt**: instructions configuring behavior (`CopilotTask.instructions`).
+- **Prompt**: the user task passed to `copilot_run`.
 - **Custom agent**: a `.agent.md` definition, not inherently a subagent.
 - **Custom agent dispatch**: the runtime routing under test.
 - **Subagent**: only an actual runtime invocation such as `result.subagent_invocations`.

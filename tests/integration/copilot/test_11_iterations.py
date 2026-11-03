@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import pytest
 
-from pytest_skill_engineering.copilot.eval import CopilotEval
+from pytest_copilot.copilot.task import CopilotTask
 
 pytestmark = [pytest.mark.copilot, pytest.mark.iterations, pytest.mark.slow]
 
@@ -23,14 +23,14 @@ class TestIterationBaseline:
     Each repetition has its own pytest outcome and saved execution record.
     """
 
-    async def test_file_creation_reliability(self, copilot_eval, tmp_path):
+    async def test_file_creation_reliability(self, copilot_run, tmp_path):
         """Create a single file — should be 100% reliable."""
-        agent = CopilotEval(
+        agent = CopilotTask(
             name="reliable-creator",
             instructions="Create Python files as requested. Be precise and concise.",
             working_directory=str(tmp_path),
         )
-        result = await copilot_eval(
+        result = await copilot_run(
             agent,
             "Create hello.py with a main() function that prints 'hello'.",
         )
@@ -40,7 +40,7 @@ class TestIterationBaseline:
         content = (tmp_path / "hello.py").read_text()
         assert "def main" in content, "main() function not found in hello.py"
 
-    async def test_refactor_reliability(self, copilot_eval, tmp_path):
+    async def test_refactor_reliability(self, copilot_run, tmp_path):
         """Refactor existing code — may show flakiness across iterations."""
         original = tmp_path / "messy.py"
         original.write_text(
@@ -52,14 +52,14 @@ class TestIterationBaseline:
             "        return False\n"
         )
 
-        agent = CopilotEval(
+        agent = CopilotTask(
             name="reliable-refactorer",
             instructions=(
                 "Refactor code for clarity: use descriptive names, add type hints, simplify logic."
             ),
             working_directory=str(tmp_path),
         )
-        result = await copilot_eval(
+        result = await copilot_run(
             agent,
             "Read messy.py and refactor it for clarity. Save the improved version.",
         )
@@ -75,16 +75,16 @@ class TestIterationBaseline:
             "        return False\n"
         ), "File was not modified — refactor had no effect"
 
-    async def test_multi_file_reliability(self, copilot_eval, tmp_path):
+    async def test_multi_file_reliability(self, copilot_run, tmp_path):
         """Create multiple related files — checks stability of complex operations."""
-        agent = CopilotEval(
+        agent = CopilotTask(
             name="reliable-multi",
             instructions=(
                 "Create Python files as requested. Create all files specified. Be precise."
             ),
             working_directory=str(tmp_path),
         )
-        result = await copilot_eval(
+        result = await copilot_run(
             agent,
             "Create two files: 1) math_ops.py with add(a, b) and subtract(a, b) "
             "functions, and 2) test_math_ops.py with pytest tests for both functions.",

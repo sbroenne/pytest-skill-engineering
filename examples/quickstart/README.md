@@ -21,7 +21,7 @@ cd examples/quickstart
 ```bash
 gh auth login --hostname github.com
 uv sync
-uv run python -m pytest tests/test_copilot_eval.py -v
+uv run python -m pytest tests/test_copilot_run.py -v
 ```
 
 ## Read the result
@@ -36,7 +36,7 @@ checks that the SDK's display and structured representations agree.
 
 ## Adapt it to your application
 
-Replace `TODO_MCP` in `tests/test_copilot_eval.py` with your server mapping and
+Replace `TODO_MCP` in `tests/test_copilot_run.py` with your server mapping and
 replace the task and assertions together. Check your application's actual
 output, not just whether the tool was called.
 
@@ -47,9 +47,9 @@ comparison.
 To generate this starter in an existing Python project:
 
 ```bash
-uv add "pytest-skill-engineering>=1.0.0,<2"
-uv run pytest-skill-engineering init
-uv run pytest-skill-engineering doctor
+uv add "pytest-copilot>=2.0.0,<3"
+uv run pytest-copilot init
+uv run pytest-copilot doctor
 ```
 
 `init` requires a `pyproject.toml` and reports existing-file or settings conflicts

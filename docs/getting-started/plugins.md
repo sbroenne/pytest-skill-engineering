@@ -1,10 +1,10 @@
 ---
-description: "Load a plugin or project configuration into a CopilotEval."
+description: "Load a plugin or project configuration into a CopilotTask."
 ---
 
 # Plugin Testing
 
-Use `CopilotEval.from_plugin()` when a task needs a bundle of instructions,
+Use `CopilotTask.from_plugin()` when a task needs a bundle of instructions,
 skills, custom agents, and MCP server definitions. The loader assembles
 configuration; your test verifies what Copilot produces with it.
 
@@ -28,16 +28,16 @@ This test requires your own plugin at `plugins/my-plugin`:
 ```python
 import json
 
-from pytest_skill_engineering.copilot import CopilotEval
+from pytest_copilot.copilot import CopilotTask
 
 
-async def test_plugin_writes_json(copilot_eval, tmp_path):
-    agent = CopilotEval.from_plugin(
+async def test_plugin_writes_json(copilot_run, tmp_path):
+    agent = CopilotTask.from_plugin(
         "plugins/my-plugin",
         model="gpt-5.6-sol",
         working_directory=str(tmp_path),
     )
-    result = await copilot_eval(agent, 'Write hello.json containing exactly {"message": "hello"}.')
+    result = await copilot_run(agent, 'Write hello.json containing exactly {"message": "hello"}.')
 
     assert result.success, result.error
     assert json.loads((tmp_path / "hello.json").read_text(encoding="utf-8")) == {"message": "hello"}

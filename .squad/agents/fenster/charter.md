@@ -11,10 +11,10 @@
 
 ## What I Own
 
-- `src/pytest_skill_engineering/core/` — Skill, errors, and core types
-- `src/pytest_skill_engineering/copilot/` — CopilotEval, runner, controls, fixtures, result
-- `src/pytest_skill_engineering/execution/` — MCPServer, MCPServerProcess
-- `src/pytest_skill_engineering/fixtures/` — factories and repetition support
+- `src/pytest_copilot/core/` — Skill, errors, and core types
+- `src/pytest_copilot/copilot/` — CopilotTask, runner, controls, fixtures, result
+- `src/pytest_copilot/execution/` — MCPServer, MCPServerProcess
+- `src/pytest_copilot/fixtures/` — factories and repetition support
 - Plugin mechanics (`plugin.py`, markers, hooks)
 
 ## How I Work

@@ -25,7 +25,7 @@ def test_historical_guidance_is_exact_and_not_distributed_as_a_skill(tmp_path: P
     for name, expected in hashes.items():
         assert hashlib.sha256((fixture / name).read_bytes()).hexdigest() == expected
     assert not (fixture / "SKILL.md").exists()
-    assert not (root / "skills" / "pytest-skill-engineering" / "SKILL.md").exists()
+    assert not (root / "skills" / "pytest-copilot" / "SKILL.md").exists()
     skill = prepare_historical_skill(root, tmp_path)
     assert (
         hashlib.sha256((skill / "SKILL.md").read_bytes()).hexdigest() == hashes["instructions.txt"]
@@ -61,8 +61,8 @@ def test_authored_test_can_use_standard_future_annotations(tmp_path: Path) -> No
     test = tmp_path / "test_invoice.py"
     test.write_text(
         "from __future__ import annotations\n\n"
-        "async def test_invoice(copilot_eval, invoice_eval, invoice_task, invoice_output):\n"
-        "    result = await copilot_eval(invoice_eval, invoice_task)\n"
+        "async def test_invoice(copilot_run, invoice_eval, invoice_task, invoice_output):\n"
+        "    result = await copilot_run(invoice_eval, invoice_task)\n"
         "    assert result.success\n"
         "    assert invoice_output()['total_cents'] == 6\n",
         encoding="utf-8",
@@ -78,8 +78,8 @@ def test_authored_test_allows_fingerprint_checks_and_plain_assertion_helpers(
         "from hashlib import sha256\n\n"
         "def assert_money(actual, expected):\n"
         "    assert actual == expected\n\n"
-        "async def test_checkout(copilot_eval, checkout_eval, checkout_task, checkout_inputs):\n"
-        "    result = await copilot_eval(checkout_eval, checkout_task)\n"
+        "async def test_checkout(copilot_run, checkout_eval, checkout_task, checkout_inputs):\n"
+        "    result = await copilot_run(checkout_eval, checkout_task)\n"
         "    assert_money(result.success, True)\n"
         "    assert sha256(checkout_inputs['order.csv']['csv_text'].encode()).hexdigest()\n",
         encoding="utf-8",
@@ -91,16 +91,16 @@ def test_authored_test_allows_fingerprint_checks_and_plain_assertion_helpers(
     "source",
     [
         "import pytest\n@pytest.mark.parametrize('amount', [1, 2])\n"
-        "async def test_checkout(copilot_eval, checkout_eval, checkout_task, amount):\n"
-        "    await copilot_eval(checkout_eval, checkout_task)\n",
+        "async def test_checkout(copilot_run, checkout_eval, checkout_task, amount):\n"
+        "    await copilot_run(checkout_eval, checkout_task)\n",
         "from pathlib import Path\n"
-        "async def test_checkout(copilot_eval, checkout_eval, checkout_task):\n"
-        "    await copilot_eval(checkout_eval, checkout_task)\n"
+        "async def test_checkout(copilot_run, checkout_eval, checkout_task):\n"
+        "    await copilot_run(checkout_eval, checkout_task)\n"
         "    Path('order.csv').read_bytes()\n",
         "import pytest\n@pytest.fixture\n"
         "def checkout_eval():\n    return None\n"
-        "async def test_checkout(copilot_eval, checkout_eval, checkout_task):\n"
-        "    await copilot_eval(checkout_eval, checkout_task)\n",
+        "async def test_checkout(copilot_run, checkout_eval, checkout_task):\n"
+        "    await copilot_run(checkout_eval, checkout_task)\n",
     ],
 )
 def test_authored_tests_cannot_add_paid_cases_or_override_trusted_inputs(

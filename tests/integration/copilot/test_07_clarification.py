@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import pytest
 
-from pytest_skill_engineering.copilot.eval import CopilotEval
+from pytest_copilot.copilot.task import CopilotTask
 
 pytestmark = [pytest.mark.copilot]
 
@@ -37,16 +37,16 @@ def _has_clarification(response: str) -> bool:
 class TestClarificationDetection:
     """Clear requests should produce action, not questions."""
 
-    async def test_no_clarification_on_clear_request(self, copilot_eval, tmp_path):
+    async def test_no_clarification_on_clear_request(self, copilot_run, tmp_path):
         """A fully-specified request should not trigger clarification."""
-        agent = CopilotEval(
+        agent = CopilotTask(
             name="no-clarify",
             instructions=(
                 "Create files as requested. Never ask for permission or clarification — just do it."
             ),
             working_directory=str(tmp_path),
         )
-        result = await copilot_eval(
+        result = await copilot_run(
             agent,
             "Create hello.py with print('hello world')",
         )
@@ -59,16 +59,16 @@ class TestClarificationDetection:
             f"Response: {response}"
         )
 
-    async def test_no_clarification_on_multi_step_clear_request(self, copilot_eval, tmp_path):
+    async def test_no_clarification_on_multi_step_clear_request(self, copilot_run, tmp_path):
         """A multi-step but fully-specified request should not trigger clarification."""
-        agent = CopilotEval(
+        agent = CopilotTask(
             name="no-clarify-multi",
             instructions=(
                 "Complete all requested steps without asking for confirmation. Act immediately."
             ),
             working_directory=str(tmp_path),
         )
-        result = await copilot_eval(
+        result = await copilot_run(
             agent,
             "Create two files:\n"
             "1. utils.py with a function greet(name) that returns f'Hello, {name}!'\n"
@@ -85,15 +85,15 @@ class TestClarificationDetection:
         assert (tmp_path / "main.py").exists(), "main.py was not created"
 
     async def test_ambiguous_request_preserves_evidence(
-        self, copilot_eval, tmp_path, record_property
+        self, copilot_run, tmp_path, record_property
     ):
         """Record an ambiguous response without claiming it is a sensible design."""
-        agent = CopilotEval(
+        agent = CopilotTask(
             name="ambiguous-task",
             instructions="You are a helpful developer.",
             working_directory=str(tmp_path),
         )
-        result = await copilot_eval(
+        result = await copilot_run(
             agent,
             "Create a web app.",
         )
@@ -114,9 +114,9 @@ class TestClarificationDetection:
         assert result.turns
         assert response or created_files, "No response or files were captured."
 
-    async def test_actionable_instructions_suppress_clarification(self, copilot_eval, tmp_path):
+    async def test_actionable_instructions_suppress_clarification(self, copilot_run, tmp_path):
         """Strong 'just do it' instructions should suppress clarification even on vague prompts."""
-        agent = CopilotEval(
+        agent = CopilotTask(
             name="action-oriented",
             instructions=(
                 "You are a decisive developer. NEVER ask questions. "
@@ -126,7 +126,7 @@ class TestClarificationDetection:
             ),
             working_directory=str(tmp_path),
         )
-        result = await copilot_eval(
+        result = await copilot_run(
             agent,
             "Create a utility module.",
         )

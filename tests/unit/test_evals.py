@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from pytest_skill_engineering.core.evals import (
+from pytest_copilot.core.evals import (
     load_custom_agents,
     load_instruction_file,
     load_instruction_files,

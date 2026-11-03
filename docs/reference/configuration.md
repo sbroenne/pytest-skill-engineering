@@ -1,11 +1,11 @@
 ---
-description: "Configure CopilotEval, MCP servers, execution controls, and JSON evidence."
+description: "Configure CopilotTask, MCP servers, execution controls, and JSON evidence."
 ---
 
 # Configuration
 
-`CopilotEval` configures a session; the task is passed separately to
-`copilot_eval`. This page covers the common settings. The
+`CopilotTask` configures a session; the task is passed separately to
+`copilot_run`. This page covers the common settings. The
 [API reference](api.md) contains the full signature.
 
 ## Authentication
@@ -15,19 +15,19 @@ Supported authentication paths:
 - `gh auth login --hostname github.com`
 - `GITHUB_TOKEN` or `GH_TOKEN` in CI or automation
 
-Eval sessions select `GITHUB_TOKEN` first, then `GH_TOKEN`. If neither
+Task sessions select `GITHUB_TOKEN` first, then `GH_TOKEN`. If neither
 is set, the SDK uses its signed-in user. Tokens must authorize the intended
 GitHub account and Copilot access.
 
 The framework uses GitHub Copilot. There is no separate provider configuration.
 
-## CopilotEval
+## CopilotTask
 
 ```python
-from pytest_skill_engineering.copilot import CopilotEval
+from pytest_copilot.copilot import CopilotTask
 
 
-agent = CopilotEval(
+agent = CopilotTask(
     name="my-task",
     model="gpt-5.6-sol",
     instructions="Use the supplied tools to complete the user's task.",
@@ -73,7 +73,7 @@ filesystem or network access.
 
 ### One attempt per call
 
-Each `copilot_eval` call makes one execution attempt. Startup, connection, and
+Each `copilot_run` call makes one execution attempt. Startup, connection, and
 task failures are recorded without automatically starting another session.
 Rerun a selected pytest case explicitly when appropriate.
 
@@ -98,17 +98,17 @@ See [Skills](../getting-started/skills.md) for input and evidence details.
 
 ## MCP server mappings
 
-Attach servers directly to `CopilotEval(mcp_servers={...})`.
+Attach servers directly to `CopilotTask(mcp_servers={...})`.
 
 SDK configuration discovery is disabled by default. Personal or ambient MCP
-configuration is not automatically attached to eval sessions. Supply servers,
+configuration is not automatically attached to task sessions. Supply servers,
 skills, and custom agents explicitly, or use the configuration loaders for the
 project under test.
 
 To test SDK discovery deliberately, opt in:
 
 ```python
-agent = CopilotEval(
+agent = CopilotTask(
     name="configuration-discovery",
     extra_config={"enable_config_discovery": True},
 )
@@ -125,7 +125,7 @@ import sys
 BANKING_MCP = {
     "banking": {
         "command": sys.executable,
-        "args": ["-m", "pytest_skill_engineering.testing.banking_mcp"],
+        "args": ["-m", "pytest_copilot.testing.banking_mcp"],
         "tools": ["*"],
     }
 }
@@ -146,7 +146,7 @@ REMOTE_MCP = {
 
 ## Command-line tools
 
-Use `create_command_tool` from `pytest_skill_engineering.copilot` for direct
+Use `create_command_tool` from `pytest_copilot.copilot` for direct
 executable calls with separate arguments, including native help, setup, and
 supporting commands. Attach tools through `extra_config={"tools": [tool]}`;
 use `client_mode="empty"` and `allowed_tools` to expose only the intended tools.
@@ -164,7 +164,7 @@ addopts = """
 """
 ```
 
-`pytest-skill-engineering init` adds these settings to an existing
+`pytest-copilot init` adds these settings to an existing
 project. It reports conflicting values instead of replacing them.
 
 ## Related references

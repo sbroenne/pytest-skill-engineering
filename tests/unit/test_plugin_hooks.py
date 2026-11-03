@@ -13,8 +13,8 @@ import pytest
 from _pytest.config import Config
 from _pytest.pytester import Pytester
 
-from pytest_skill_engineering.core.result import EvalResult, SkillInfo, ToolCall, Turn
-from pytest_skill_engineering.plugin import (
+from pytest_copilot.core.result import EvalResult, SkillInfo, ToolCall, Turn
+from pytest_copilot.plugin import (
     COLLECTOR_KEY,
     SESSION_MESSAGES_KEY,
     _add_junit_properties,
@@ -28,13 +28,13 @@ pytest_plugins = ["pytester"]
 def _parse_config(pytester: Pytester, *args: str) -> Config:
     """Parse pytest config with only the aitest plugin explicitly loaded."""
 
-    return pytester.parseconfig("-p", "no:aitest", "-p", "pytest_skill_engineering.plugin", *args)
+    return pytester.parseconfig("-p", "no:aitest", "-p", "pytest_copilot.plugin", *args)
 
 
 def _run_pytest(pytester: Pytester, *args: str):
     """Run pytest with only the aitest plugin explicitly loaded."""
 
-    return pytester.runpytest("-p", "no:aitest", "-p", "pytest_skill_engineering.plugin", *args)
+    return pytester.runpytest("-p", "no:aitest", "-p", "pytest_copilot.plugin", *args)
 
 
 def _load_json(path: Path) -> Any:
@@ -98,12 +98,12 @@ def broken(manual_aitest, record_property):
 def test_unknown_model_is_not_invented_in_native_or_junit_reports(pytester: Pytester) -> None:
     pytester.makepyfile(
         """
-        from pytest_skill_engineering.copilot import CopilotEval, CopilotResult
-        from pytest_skill_engineering.copilot.fixtures import stash_on_item
+        from pytest_copilot.copilot import CopilotTask, CopilotResult
+        from pytest_copilot.copilot.fixtures import stash_on_item
 
         def test_unknown(request):
             result = CopilotResult(success=False, error="startup failed")
-            stash_on_item(request.node, CopilotEval(name="unknown"), result)
+            stash_on_item(request.node, CopilotTask(name="unknown"), result)
             assert result.error == "startup failed"
         """
     )
@@ -200,10 +200,10 @@ from dataclasses import dataclass
 
 import pytest
 
-from pytest_skill_engineering.copilot.eval import CopilotEval
-from pytest_skill_engineering.copilot.result import CopilotResult
-from pytest_skill_engineering.core.result import EvalResult, SkillInfo, ToolCall, Turn
-from pytest_skill_engineering.plugin import COLLECTOR_KEY
+from pytest_copilot.copilot.task import CopilotTask
+from pytest_copilot.copilot.result import CopilotResult
+from pytest_copilot.core.result import EvalResult, SkillInfo, ToolCall, Turn
+from pytest_copilot.plugin import COLLECTOR_KEY
 
 
 @dataclass(slots=True)
@@ -233,7 +233,7 @@ class Agent:
 
 @pytest.fixture
 def auto_result() -> CopilotResult:
-    agent = CopilotEval(name="auto-agent", model="copilot/gpt-4.1", instructions="Do things.")
+    agent = CopilotTask(name="auto-agent", model="copilot/gpt-4.1", instructions="Do things.")
     return CopilotResult(
         turns=[Turn(role="assistant", content="Used search", tool_calls=[ToolCall("search", {"q": "boom"})])],
         success=True,
@@ -306,7 +306,7 @@ from dataclasses import dataclass
 
 import pytest
 
-from pytest_skill_engineering.core.result import EvalResult, ToolCall, Turn
+from pytest_copilot.core.result import EvalResult, ToolCall, Turn
 
 
 @dataclass(slots=True)
@@ -407,7 +407,7 @@ class TestPytestConfigure:
         config = _parse_config(pytester)
         pytest_configure(config)
 
-        assert not hasattr(config.pluginmanager.hook, "pytest_skill_engineering_analysis_prompt")
+        assert not hasattr(config.pluginmanager.hook, "pytest_copilot_analysis_prompt")
         assert config.stash[COLLECTOR_KEY] == []
         assert config.stash[SESSION_MESSAGES_KEY] == {}
 
@@ -458,8 +458,8 @@ class TestPytestGenerateTests:
 class TestPytestCollectionModifyItems:
     """Tests for automatic aitest marker injection."""
 
-    def test_auto_marks_only_tests_using_copilot_eval(self, pytester: Pytester) -> None:
-        """Only copilot_eval-consuming tests gain the aitest marker, without duplicates."""
+    def test_auto_marks_only_tests_using_copilot_run(self, pytester: Pytester) -> None:
+        """Only copilot_run-consuming tests gain the aitest marker, without duplicates."""
 
         pytester.makeconftest(
             """
@@ -471,7 +471,7 @@ class TestPytestCollectionModifyItems:
 
 
             @pytest.fixture
-            def copilot_eval():
+            def copilot_run():
                 return object()
 
 
@@ -491,13 +491,13 @@ class TestPytestCollectionModifyItems:
             import pytest
 
 
-            def test_uses_fixture(copilot_eval):
-                assert copilot_eval is not None
+            def test_uses_fixture(copilot_run):
+                assert copilot_run is not None
 
 
             @pytest.mark.aitest
-            def test_already_marked(copilot_eval):
-                assert copilot_eval is not None
+            def test_already_marked(copilot_run):
+                assert copilot_run is not None
 
 
             def test_plain():

@@ -104,4 +104,4 @@ jobs:
 
       - name: Verify package imports
         run: |
-          uv run --frozen python -c "from pytest_skill_engineering import plugin; print('Import successful')"
+          uv run --frozen python -c "from pytest_copilot import plugin; print('Import successful')"

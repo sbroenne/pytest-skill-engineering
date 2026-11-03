@@ -10,8 +10,8 @@ from typing import Any
 
 import pytest
 
-from pytest_skill_engineering import load_skill
-from pytest_skill_engineering.core.skill import Skill, SkillError, SkillMetadata
+from pytest_copilot import load_skill
+from pytest_copilot.core.skill import Skill, SkillError, SkillMetadata
 
 
 @pytest.fixture

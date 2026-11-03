@@ -656,8 +656,8 @@ wheels = [
 ]
 
 [[package]]
-name = "pytest-skill-engineering"
-version = "1.0.7"
+name = "pytest-copilot"
+version = "2.0.0"
 source = { editable = "../../" }
 dependencies = [
     { name = "github-copilot-sdk" },
@@ -679,7 +679,7 @@ requires-dist = [
     { name = "httpx", specifier = ">=0.28.1" },
     { name = "mcp", specifier = ">=2.3.0" },
     { name = "mkdocs", marker = "extra == 'docs'", specifier = ">=1.6.1" },
-    { name = "mkdocs-material", marker = "extra == 'docs'", specifier = ">=9.7.7,<9.8" },
+    { name = "mkdocs-material", marker = "extra == 'docs'", specifier = ">=9.7.7,<9.9" },
     { name = "mkdocstrings", extras = ["python"], marker = "extra == 'docs'", specifier = ">=1.0.8" },
     { name = "pillow", marker = "extra == 'docs'", specifier = ">=13.0.0" },
     { name = "pre-commit", marker = "extra == 'dev'", specifier = ">=4.7.0" },
@@ -701,20 +701,20 @@ provides-extras = ["dev", "test", "docs"]
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "pytest-skill-engineering", extras = ["dev", "test", "docs"] },
-    { name = "pytest-skill-engineering-dogfood", editable = "." },
+    { name = "pytest-copilot", extras = ["dev", "test", "docs"] },
+    { name = "pytest-copilot-dogfood", editable = "." },
 ]
 
 [[package]]
-name = "pytest-skill-engineering-dogfood"
+name = "pytest-copilot-dogfood"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
-    { name = "pytest-skill-engineering" },
+    { name = "pytest-copilot" },
 ]
 
 [package.metadata]
-requires-dist = [{ name = "pytest-skill-engineering", editable = "../../" }]
+requires-dist = [{ name = "pytest-copilot", editable = "../../" }]
 
 [[package]]
 name = "python-dateutil"

@@ -5,7 +5,7 @@ description: "Prepare a version and publish it through the release workflow."
 # Releasing
 
 Releases are published through
-[the Release workflow](https://github.com/sbroenne/pytest-skill-engineering/actions/workflows/release.yml).
+[the Release workflow](https://github.com/sbroenne/pytest-copilot/actions/workflows/release.yml).
 The checked-in `project.version` in `pyproject.toml` determines the version.
 The workflow creates its matching tag; no manual tagging is required.
 
@@ -17,6 +17,67 @@ failed release.
 
 ## Before dispatching
 
+### First release under the new name
+
+Version 2.0.0 changes the package name from `pytest-skill-engineering` to
+`pytest-copilot`. The existing GitHub repository should be renamed to
+`sbroenne/pytest-copilot`, not replaced. Leave existing tags, GitHub releases,
+and PyPI distributions intact.
+
+Before merging this version into `main`, the owner must configure a PyPI
+pending trusted publisher for the new package with:
+
+- PyPI project: `pytest-copilot`
+- GitHub owner: `sbroenne`
+- GitHub repository: `pytest-copilot`
+- Workflow filename: `release.yml`
+- Environment: `pypi`
+
+The old package's publisher does not publish to the new package. A missing PyPI
+project page does not guarantee that the new name can be registered. Resolve
+name or publisher setup problems before merging; otherwise Auto Release can
+create a tag and build artifacts before publication fails.
+
+Update local remote URLs and the Copilot app's repository association using
+supported settings after the repository rename. Do not manually move its
+managed checkouts. GitHub redirects normal repository links and Git operations,
+but the GitHub Pages project address changes: deploy and verify
+`https://sbroenne.github.io/pytest-copilot/`. Do not reuse the former repository
+name for another project, as that removes the repository redirect.
+
+### Retire the old PyPI package
+
+After the new package is published and its installation has been verified,
+publish a final `pytest-skill-engineering` 1.0.8 release from the last 1.x source.
+Keep that release's existing implementation and dependency names intact; change
+only the version, release notes, description, links, and development status.
+Use `Development Status :: 7 - Inactive` and place this notice at the top of
+its README:
+
+> This package has moved to **pytest-copilot** and will receive no further
+> updates under this name. Install `pytest-copilot>=2.0.0,<3`; update imports
+> to `pytest_copilot`, `CopilotEval` to `CopilotTask`, and `copilot_eval` to
+> `copilot_run`. See the [migration guide](https://sbroenne.github.io/pytest-copilot/migration/).
+
+Do not publish renamed 2.x code under the old distribution name or add a package
+that silently installs the replacement. Do not reuse the new package's release
+workflow to publish the final old-name release: it deliberately accepts only
+`pytest-copilot` artifacts. Build the final 1.x release separately and use an
+authorized publisher for the old PyPI project.
+If the old project's trusted publisher still names the former GitHub repository,
+update it through the PyPI owner settings before using it after the repository
+rename. GitHub's repository redirects do not update a PyPI publisher identity.
+
+Once its final description is visible on PyPI, the owner can archive
+`pytest-skill-engineering` in its PyPI project settings. Archiving displays a
+notice and blocks new uploads, but preserves downloads of existing releases.
+Do not delete the project or yank working releases merely for a rename.
+See [PyPI's archival guidance](https://blog.pypi.org/posts/2025-01-30-archival/).
+Installing an archived package does not necessarily print a warning, so the
+final description must clearly identify the replacement.
+
+### Source checks
+
 Confirm that the intended release commit contains:
 
 1. The reviewed source and intended `project.version`, using plain `X.Y.Z`.
@@ -24,7 +85,7 @@ Confirm that the intended release commit contains:
 3. Passing validation for the changed behavior, plus a strict docs build and package build.
 4. Evidence contracts that preserve current schema-4.0 fields and failure paths.
 
-Use the [contribution guide](https://github.com/sbroenne/pytest-skill-engineering/blob/main/CONTRIBUTING.md)
+Use the [contribution guide](https://github.com/sbroenne/pytest-copilot/blob/main/CONTRIBUTING.md)
 for the applicable source and execution checks. For docs and packaging:
 
 ```bash

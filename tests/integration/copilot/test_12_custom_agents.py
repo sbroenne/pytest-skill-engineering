@@ -1,6 +1,6 @@
 """Level 12 — Custom agents: test custom agent dispatch and subagent routing.
 
-Tests that CopilotEval custom agents produce expected outcomes (file creation)
+Tests that CopilotTask custom agents produce expected outcomes (file creation)
 and that forced subagent dispatch works when write tools are excluded.
 
 Run with: uv run python -m pytest tests/integration/copilot/test_12_custom_agents.py -v
@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import pytest
 
-from pytest_skill_engineering.copilot.eval import CopilotEval
+from pytest_copilot.copilot.task import CopilotTask
 
 pytestmark = [pytest.mark.copilot]
 CUSTOM_AGENT_MODEL = "gpt-5.6-sol"
@@ -37,9 +37,9 @@ _WRITE_TOOLS = [
 class TestCustomAgentOutcomes:
     """Custom agents produce their expected file-based outcomes."""
 
-    async def test_test_writer_agent_creates_test_file(self, copilot_eval, tmp_path):
+    async def test_test_writer_agent_creates_test_file(self, copilot_run, tmp_path):
         """Custom test-writer agent produces a pytest test file alongside code."""
-        agent = CopilotEval(
+        agent = CopilotTask(
             name="with-test-writer",
             model=CUSTOM_AGENT_MODEL,
             instructions=(
@@ -61,7 +61,7 @@ class TestCustomAgentOutcomes:
                 }
             ],
         )
-        result = await copilot_eval(
+        result = await copilot_run(
             agent,
             "Create calculator.py with add, subtract, multiply, and divide functions "
             "(divide raises ValueError on division by zero). Then have tests written for it.",
@@ -93,13 +93,13 @@ class TestCustomAgentOutcomes:
             if usage.input_tokens is not None and usage.output_tokens is not None
         )
 
-    async def test_docs_writer_agent_creates_readme(self, copilot_eval, tmp_path):
+    async def test_docs_writer_agent_creates_readme(self, copilot_run, tmp_path):
         """Custom docs-writer agent produces a README.md for the project."""
         (tmp_path / "greeting.py").write_text(
             'def greet(name: str) -> str:\n    return f"Hello, {name}!"\n',
             encoding="utf-8",
         )
-        agent = CopilotEval(
+        agent = CopilotTask(
             name="with-docs-writer",
             model=CUSTOM_AGENT_MODEL,
             instructions=(
@@ -122,7 +122,7 @@ class TestCustomAgentOutcomes:
                 }
             ],
         )
-        result = await copilot_eval(
+        result = await copilot_run(
             agent,
             "Have the docs-writer document the existing greeting.py project.",
         )
@@ -135,7 +135,7 @@ class TestCustomAgentOutcomes:
             "README.md was not created — docs-writer agent may not have been invoked"
         )
 
-    async def test_subagent_lifecycle_captured_when_invoked(self, copilot_eval, tmp_path):
+    async def test_subagent_lifecycle_captured_when_invoked(self, copilot_run, tmp_path):
         """When a custom agent is invoked, lifecycle events are captured correctly."""
         (tmp_path / "sort.py").write_text(
             "def bubble_sort(arr):\n"
@@ -144,7 +144,7 @@ class TestCustomAgentOutcomes:
             "    return sorted(arr)\n",
             encoding="utf-8",
         )
-        agent = CopilotEval(
+        agent = CopilotTask(
             name="with-code-reviewer",
             model=CUSTOM_AGENT_MODEL,
             instructions=(
@@ -166,7 +166,7 @@ class TestCustomAgentOutcomes:
                 }
             ],
         )
-        result = await copilot_eval(
+        result = await copilot_run(
             agent,
             "Have the code-reviewer review sort.py and summarize whether the "
             "implementation looks correct.",
@@ -189,9 +189,9 @@ class TestCustomAgentOutcomes:
 class TestForcedSubagentDispatch:
     """When write tools are excluded, the orchestrator must delegate to a subagent."""
 
-    async def test_subagent_invocations_non_empty(self, copilot_eval, tmp_path):
+    async def test_subagent_invocations_non_empty(self, copilot_run, tmp_path):
         """Orchestrator with excluded write tools dispatches to a subagent."""
-        agent = CopilotEval(
+        agent = CopilotTask(
             name="forced-orchestrator",
             model=FORCED_SUBAGENT_MODEL,
             instructions=(
@@ -216,7 +216,7 @@ class TestForcedSubagentDispatch:
                 }
             ],
         )
-        result = await copilot_eval(
+        result = await copilot_run(
             agent,
             "Use the file-writer agent to create hello.py containing: print('hello world')",
         )
@@ -226,9 +226,9 @@ class TestForcedSubagentDispatch:
             "to implement directly despite excluded write tools"
         )
 
-    async def test_subagent_file_created(self, copilot_eval, tmp_path):
+    async def test_subagent_file_created(self, copilot_run, tmp_path):
         """File created by subagent exists in the workspace."""
-        agent = CopilotEval(
+        agent = CopilotTask(
             name="forced-orchestrator-file",
             model=FORCED_SUBAGENT_MODEL,
             instructions=(
@@ -251,7 +251,7 @@ class TestForcedSubagentDispatch:
                 }
             ],
         )
-        result = await copilot_eval(
+        result = await copilot_run(
             agent,
             "Use the file-writer agent to create output.py containing: x = 42",
         )
@@ -260,9 +260,9 @@ class TestForcedSubagentDispatch:
             "output.py not created — subagent did not write the file"
         )
 
-    async def test_subagent_invocation_fields(self, copilot_eval, tmp_path):
+    async def test_subagent_invocation_fields(self, copilot_run, tmp_path):
         """SubagentInvocation objects have valid name and status fields."""
-        agent = CopilotEval(
+        agent = CopilotTask(
             name="forced-orchestrator-fields",
             model=FORCED_SUBAGENT_MODEL,
             instructions=(
@@ -285,7 +285,7 @@ class TestForcedSubagentDispatch:
                 }
             ],
         )
-        result = await copilot_eval(
+        result = await copilot_run(
             agent,
             "Use the file-writer agent to create result.py containing: done = True",
         )

@@ -8,7 +8,7 @@ from typing import Any
 
 from copilot.tools import Tool, ToolInvocation, ToolResult
 
-from pytest_skill_engineering.copilot import CopilotEval
+from pytest_copilot.copilot import CopilotTask
 
 ROOT = Path(__file__).resolve().parent
 
@@ -108,7 +108,7 @@ def cli_tool(directory: Path, pipe: str) -> Tool:
     )
 
 
-def agent(transport: str, directory: Path, pipe: str, skill: Path | None) -> CopilotEval:
+def agent(transport: str, directory: Path, pipe: str, skill: Path | None) -> CopilotTask:
     tools = [workspace(directory, skill)]
     servers: dict[str, Any] = {}
     allowed = ["builtin:skill", "builtin:tool_search_tool", "custom:workspace"]
@@ -123,7 +123,7 @@ def agent(transport: str, directory: Path, pipe: str, skill: Path | None) -> Cop
             "tools": ["*"],
         }
         allowed.append("mcp:*")
-    return CopilotEval(
+    return CopilotTask(
         name=f"excel-{transport}-{'skill' if skill else 'baseline'}",
         model="gpt-6.1-sol",
         client_mode="empty",

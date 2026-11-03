@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-11-03
+
+### Changed
+
+- Renamed the project, Python distribution, and command to `pytest-copilot`.
+  Python imports now use `pytest_copilot`.
+- Replaced `CopilotEval` with `CopilotTask` and the `copilot_eval` fixture with
+  `copilot_run`. Old names have no compatibility aliases.
+- Execution behavior, ordinary pytest assertions, and native schema-4.0 JSON
+  evidence remain unchanged. The framework runs tasks; it does not judge answers.
+
 ## [1.0.7] - 2026-11-02
 
 ### Fixed

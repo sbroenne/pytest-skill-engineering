@@ -10,17 +10,17 @@ from typing import Any
 
 import pytest
 
-from pytest_skill_engineering import Skill, load_custom_agent, load_plugin
-from pytest_skill_engineering.copilot import CopilotEval
-from pytest_skill_engineering.copilot.config import load_mcp_config
-from pytest_skill_engineering.core.evals import (
+from pytest_copilot import Skill, load_custom_agent, load_plugin
+from pytest_copilot.copilot import CopilotTask
+from pytest_copilot.copilot.config import load_mcp_config
+from pytest_copilot.core.evals import (
     load_custom_agents,
     load_instruction_file,
     load_instruction_files,
     load_prompt_file,
     load_prompt_files,
 )
-from pytest_skill_engineering.core.skill import SkillError
+from pytest_copilot.core.skill import SkillError
 
 from .conftest import DEFAULT_MODEL
 
@@ -325,9 +325,9 @@ def test_project_factories_reject_invalid_custom_agents(
     suffix = ".agent.md" if format_name == "copilot" else ".md"
     target = _write(tmp_path / directory / "agents" / f"broken{suffix}", content)
     factory = (
-        CopilotEval.from_copilot_config
+        CopilotTask.from_copilot_config
         if format_name == "copilot"
-        else CopilotEval.from_claude_config
+        else CopilotTask.from_claude_config
     )
     with pytest.raises(ValueError, match=re.escape(str(target))):
         factory(tmp_path, model=DEFAULT_MODEL)
@@ -341,9 +341,9 @@ def test_project_factories_validate_present_instructions(tmp_path: Path, format_
         else tmp_path / "CLAUDE.md"
     )
     factory = (
-        CopilotEval.from_copilot_config
+        CopilotTask.from_copilot_config
         if format_name == "copilot"
-        else CopilotEval.from_claude_config
+        else CopilotTask.from_claude_config
     )
     for content in ("", "---\napplyTo: [broken\n---\nBody"):
         _write(target, content)
@@ -355,7 +355,7 @@ def test_project_factories_validate_present_instructions(tmp_path: Path, format_
 def test_claude_factory_rejects_invalid_mcp(tmp_path: Path, content: str) -> None:
     target = _write(tmp_path / ".mcp.json", content)
     with pytest.raises(ValueError, match=re.escape(str(target))):
-        CopilotEval.from_claude_config(tmp_path, model=DEFAULT_MODEL)
+        CopilotTask.from_claude_config(tmp_path, model=DEFAULT_MODEL)
 
 
 def test_claude_factory_validates_discovered_skills(tmp_path: Path) -> None:
@@ -364,7 +364,7 @@ def test_claude_factory_validates_discovered_skills(tmp_path: Path) -> None:
         "---\nname: broken\ndescription: 123\n---\nBody",
     )
     with pytest.raises(SkillError, match=re.escape(str(target))):
-        CopilotEval.from_claude_config(tmp_path, model=DEFAULT_MODEL)
+        CopilotTask.from_claude_config(tmp_path, model=DEFAULT_MODEL)
 
 
 @pytest.mark.parametrize("format_name", ["copilot", "claude"])
@@ -374,9 +374,9 @@ def test_project_factories_preserve_optional_absence_and_agent_names(
     directory = ".github" if format_name == "copilot" else ".claude"
     suffix = ".agent.md" if format_name == "copilot" else ".md"
     factory = (
-        CopilotEval.from_copilot_config
+        CopilotTask.from_copilot_config
         if format_name == "copilot"
-        else CopilotEval.from_claude_config
+        else CopilotTask.from_claude_config
     )
     assert factory(tmp_path, model=DEFAULT_MODEL).custom_agents == []
     target = _write(
@@ -392,7 +392,7 @@ def test_project_factories_preserve_optional_absence_and_agent_names(
 
 @pytest.mark.parametrize("format_name", ["copilot", "claude"])
 async def test_validated_plugin_runs_real_banking_workflow(
-    copilot_eval: Any, tmp_path: Path, format_name: str
+    copilot_run: Any, tmp_path: Path, format_name: str
 ) -> None:
     """Valid Copilot/Claude definitions still execute a real MCP banking tool."""
     root = tmp_path / format_name
@@ -405,7 +405,7 @@ async def test_validated_plugin_runs_real_banking_workflow(
             key: {
                 "banking": {
                     "command": sys.executable,
-                    "args": ["-m", "pytest_skill_engineering.testing.banking_mcp"],
+                    "args": ["-m", "pytest_copilot.testing.banking_mcp"],
                     "tools": ["*"],
                 }
             }
@@ -429,14 +429,14 @@ async def test_validated_plugin_runs_real_banking_workflow(
     assert plugin.skills[0].name == "banking"
     config_key = "servers" if format_name == "copilot" else "mcpServers"
     mcp_file = _write(root / "mcp.json", json.dumps({config_key: plugin.mcp_servers}))
-    eval_config = CopilotEval.from_plugin(
+    eval_config = CopilotTask.from_plugin(
         root,
         model=DEFAULT_MODEL,
         working_directory=str(root),
         mcp_servers=load_mcp_config(mcp_file),
         excluded_tools=["runSubagent", "task"],
     )
-    result = await copilot_eval(
+    result = await copilot_run(
         eval_config,
         "Use the banking get_balance tool to get my checking balance, then report the amount.",
     )

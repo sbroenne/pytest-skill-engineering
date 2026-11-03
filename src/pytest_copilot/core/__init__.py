@@ -1,0 +1,77 @@
+"""Core module - result types and skill management."""
+
+from pytest_copilot.core.errors import AITestError, EngineTimeoutError, ServerStartError
+from pytest_copilot.core.evals import (
+    load_custom_agent,
+    load_custom_agents,
+    load_instruction_file,
+    load_instruction_files,
+    load_prompt_file,
+    load_prompt_files,
+)
+from pytest_copilot.core.plugin import HookDefinition, Plugin, PluginMetadata, load_plugin
+from pytest_copilot.core.prompt import (
+    Prompt,
+    load_prompt,
+    load_prompts,
+    load_system_prompts,
+)
+from pytest_copilot.core.result import (
+    DiscoveredSkill,
+    EvalResult,
+    ImageContent,
+    MCPPrompt,
+    MCPPromptArgument,
+    SkillDiscovery,
+    SkillInfo,
+    SubagentInvocation,
+    ToolCall,
+    ToolInfo,
+    Turn,
+)
+from pytest_copilot.core.skill import Skill, SkillError, SkillMetadata, load_skill
+from pytest_copilot.core.skill_evals import (
+    SkillEvalCase,
+    has_skill_evals,
+    load_skill_evals,
+)
+from pytest_copilot.core.skill_grading import export_grading
+
+__all__ = [
+    "AITestError",
+    "EvalResult",
+    "DiscoveredSkill",
+    "EngineTimeoutError",
+    "HookDefinition",
+    "ImageContent",
+    "MCPPrompt",
+    "MCPPromptArgument",
+    "Plugin",
+    "PluginMetadata",
+    "Prompt",
+    "ServerStartError",
+    "Skill",
+    "SkillDiscovery",
+    "SkillError",
+    "SkillInfo",
+    "SkillMetadata",
+    "SubagentInvocation",
+    "ToolCall",
+    "ToolInfo",
+    "Turn",
+    "load_custom_agent",
+    "load_custom_agents",
+    "load_instruction_file",
+    "load_instruction_files",
+    "load_plugin",
+    "load_prompt_file",
+    "load_prompt_files",
+    "load_prompt",
+    "load_prompts",
+    "load_skill",
+    "load_system_prompts",
+    "SkillEvalCase",
+    "has_skill_evals",
+    "load_skill_evals",
+    "export_grading",
+]

@@ -1,7 +1,7 @@
 """Level 06 — Sessions: context retention via single-prompt embedding.
 
-**Harness behavior:** CopilotEval does not reuse message history — each
-``copilot_eval()`` call starts a fresh Copilot session with a string
+**Harness behavior:** CopilotTask does not reuse message history — each
+``copilot_run()`` call starts a fresh Copilot session with a string
 prompt. The SDK supports persistent sessions, but this fixture keeps
 individual eval calls independent.
 
@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import pytest
 
-from pytest_skill_engineering.copilot.eval import CopilotEval
+from pytest_copilot.copilot.task import CopilotTask
 
 pytestmark = [pytest.mark.copilot]
 
@@ -25,9 +25,9 @@ pytestmark = [pytest.mark.copilot]
 class TestContextRetention:
     """Verify the agent uses embedded context to inform its output."""
 
-    async def test_context_referenced_in_code(self, copilot_eval, tmp_path):
+    async def test_context_referenced_in_code(self, copilot_run, tmp_path):
         """Agent embeds contextual project name when given prior context."""
-        agent = CopilotEval(
+        agent = CopilotTask(
             name="context-code",
             instructions=(
                 "You are a Python developer. When the user gives you context "
@@ -36,7 +36,7 @@ class TestContextRetention:
             ),
             working_directory=str(tmp_path),
         )
-        result = await copilot_eval(
+        result = await copilot_run(
             agent,
             "Context: I'm building a FastAPI app called 'SkyTracker' that "
             "monitors airline flight statuses.\n\n"
@@ -52,14 +52,14 @@ class TestContextRetention:
             f"Generated content:\n{content}"
         )
 
-    async def test_followup_uses_embedded_context(self, copilot_eval, tmp_path):
+    async def test_followup_uses_embedded_context(self, copilot_run, tmp_path):
         """Agent uses 'earlier discussion' context embedded in the prompt."""
-        agent = CopilotEval(
+        agent = CopilotTask(
             name="context-followup",
             instructions="You are a helpful Python developer.",
             working_directory=str(tmp_path),
         )
-        result = await copilot_eval(
+        result = await copilot_run(
             agent,
             "Earlier we agreed on these conventions:\n"
             "- All functions use Google-style docstrings\n"
@@ -82,14 +82,14 @@ class TestContextRetention:
             f"Generated content:\n{content}"
         )
 
-    async def test_domain_context_steers_implementation(self, copilot_eval, tmp_path):
+    async def test_domain_context_steers_implementation(self, copilot_run, tmp_path):
         """Domain context (healthcare) steers naming and structure choices."""
-        agent = CopilotEval(
+        agent = CopilotTask(
             name="context-domain",
             instructions="You are a Python developer. Follow any domain context the user provides.",
             working_directory=str(tmp_path),
         )
-        result = await copilot_eval(
+        result = await copilot_run(
             agent,
             "Context: This is a healthcare system. We use FHIR terminology. "
             "A 'Patient' has a given_name, family_name, and birth_date. "
@@ -111,14 +111,14 @@ class TestContextRetention:
 class TestSinglePromptMultiStep:
     """Multi-step tasks in a single prompt — no session state needed."""
 
-    async def test_create_then_refactor(self, copilot_eval, tmp_path):
+    async def test_create_then_refactor(self, copilot_run, tmp_path):
         """Single prompt asks to create, then refactor — both steps complete."""
-        agent = CopilotEval(
+        agent = CopilotTask(
             name="multi-step",
             instructions="You are a Python developer. Complete all steps in order.",
             working_directory=str(tmp_path),
         )
-        result = await copilot_eval(
+        result = await copilot_run(
             agent,
             "Step 1: Create math_ops.py with functions add(a, b) and multiply(a, b). "
             "Keep them simple — no docstrings, no type hints.\n"

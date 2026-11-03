@@ -1,15 +1,17 @@
-# pytest-skill-engineering
+# pytest-copilot
 
 **Test whether GitHub Copilot can complete tasks with your tools and instructions.**
 
-pytest-skill-engineering runs real Copilot sessions from pytest and saves their
+Independently maintained; not an official GitHub product or endorsed by GitHub.
+
+pytest-copilot runs real Copilot sessions from pytest and saves their
 execution as JSON. Use it for MCP servers, CLI tools, skills, system prompts,
 plugins, and custom agents.
 
 Each test has three parts:
 
-1. Configure a session with `CopilotEval`.
-2. Send a user task through the `copilot_eval` fixture.
+1. Configure a session with `CopilotTask`.
+2. Send a user task through the `copilot_run` fixture.
 3. Check the actual output with ordinary assertions.
 
 The framework manages sessions, limits, usage, and captured evidence. You supply
@@ -33,7 +35,7 @@ Copilot access. Live tests may consume premium requests.
 | Investigate a failure | [Inspect evidence](how-to/inspect-evidence.md) |
 | Look up a setting or result field | [Reference](reference/index.md) |
 | Understand execution and verification | [Explanation](explanation/index.md) |
-| Upgrade from 0.6.x | [1.0 migration](migration.md) |
+| Upgrade from an earlier version | [Upgrading to 2.0](migration.md) |
 
 ## Learn from recorded experiments
 

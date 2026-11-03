@@ -4,7 +4,7 @@ description: "Attach MCP tools to a Copilot task and check completed calls and r
 
 # How to test MCP servers
 
-Attach servers with `CopilotEval(mcp_servers={...})`. Ask for a task that needs
+Attach servers with `CopilotTask(mcp_servers={...})`. Ask for a task that needs
 their tools, then assert on completed operation data or application state.
 Use the server's ordinary unit tests for implementation behavior that does not
 need Copilot.
@@ -20,25 +20,25 @@ from __future__ import annotations
 import json
 import sys
 
-from pytest_skill_engineering.copilot import CopilotEval
+from pytest_copilot.copilot import CopilotTask
 
 BANKING_MCP = {
     "banking": {
         "command": sys.executable,
-        "args": ["-m", "pytest_skill_engineering.testing.banking_mcp"],
+        "args": ["-m", "pytest_copilot.testing.banking_mcp"],
         "tools": ["*"],
     }
 }
 
 
-async def test_balance(copilot_eval):
-    agent = CopilotEval(
+async def test_balance(copilot_run):
+    agent = CopilotTask(
         name="banking-balance",
         model="gpt-5.6-sol",
         instructions="Use banking tools for account requests.",
         mcp_servers=BANKING_MCP,
     )
-    result = await copilot_eval(agent, "Use get_balance to retrieve the checking balance.")
+    result = await copilot_run(agent, "Use get_balance to retrieve the checking balance.")
 
     assert result.success, result.error
     calls = result.tool_calls_for("banking-get_balance")
@@ -104,7 +104,7 @@ ASSISTANT_MCP = {
     **BANKING_MCP,
     "todo": {
         "command": sys.executable,
-        "args": ["-m", "pytest_skill_engineering.testing.todo_mcp"],
+        "args": ["-m", "pytest_copilot.testing.todo_mcp"],
         "tools": ["*"],
     },
 }
@@ -131,7 +131,7 @@ application-level permissions.
 Use `MCPServer`, `Wait`, and `MCPServerProcess` for direct process control,
 readiness checks, or [prompt-template discovery](../getting-started/mcp-prompts.md).
 Their configuration shape differs from the SDK's `mcp_servers` dictionary.
-A Copilot-facing test should still show the final `CopilotEval` configuration
+A Copilot-facing test should still show the final `CopilotTask` configuration
 and its output assertions.
 
 See [Compare server variants](../getting-started/ab-testing-servers.md) when

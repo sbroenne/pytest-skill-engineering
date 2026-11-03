@@ -4,16 +4,16 @@ description: "Configure instructions and compare system prompts against fixed ou
 
 # System prompts
 
-The **system prompt** is `CopilotEval.instructions`: instructions configuring
-behavior. The **prompt** is the user task passed to `copilot_eval`. Keep them
+The **system prompt** is `CopilotTask.instructions`: instructions configuring
+behavior. The **prompt** is the user task passed to `copilot_run`. Keep them
 separate so the same task can exercise several instruction variants.
 
 ## Basic pattern
 
 ```python
-from pytest_skill_engineering.copilot import CopilotEval
+from pytest_copilot.copilot import CopilotTask
 
-agent = CopilotEval(
+agent = CopilotTask(
     name="file-writer",
     model="gpt-5.6-sol",
     instructions="Write the requested files. Do not add unrequested fields.",
@@ -32,7 +32,7 @@ import json
 
 import pytest
 
-from pytest_skill_engineering.copilot import CopilotEval
+from pytest_copilot.copilot import CopilotTask
 
 SYSTEM_PROMPTS = {
     "brief": "Write requested files. Keep the final reply brief.",
@@ -41,14 +41,14 @@ SYSTEM_PROMPTS = {
 
 
 @pytest.mark.parametrize("variant,instructions", SYSTEM_PROMPTS.items())
-async def test_saved_total(copilot_eval, tmp_path, variant, instructions):
-    agent = CopilotEval(
+async def test_saved_total(copilot_run, tmp_path, variant, instructions):
+    agent = CopilotTask(
         name=f"total-{variant}",
         model="gpt-5.6-sol",
         instructions=instructions,
         working_directory=str(tmp_path),
     )
-    result = await copilot_eval(
+    result = await copilot_run(
         agent, "Write total.json containing only the numeric field total, equal to 2 + 3."
     )
 

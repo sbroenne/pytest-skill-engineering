@@ -1,0 +1,546 @@
+"""CopilotTask configuration for testing GitHub Copilot."""
+
+from __future__ import annotations
+
+from dataclasses import dataclass, field, replace
+from pathlib import Path
+from typing import Any, Literal, cast
+
+from pytest_copilot.copilot.contracts import (
+    CopilotCustomAgentConfig,
+    CopilotMCPServerConfig,
+    CopilotPersona,
+    CopilotReasoningEffort,
+    CopilotSessionHooks,
+    require_custom_agent_name,
+)
+from pytest_copilot.copilot.personas import ClaudeCodePersona, VSCodePersona
+from pytest_copilot.core.evals import load_custom_agent, load_instruction_file
+from pytest_copilot.core.plugin import (
+    _discover_skills,
+    _validate_skill_reference_names,
+)
+
+
+def _empty_session_hooks() -> CopilotSessionHooks:
+    return cast(CopilotSessionHooks, {})
+
+
+def _parse_agent_file(path: Path) -> CopilotCustomAgentConfig:
+    """Parse a ``.agent.md`` file into a ``CustomAgentConfig`` dict.
+
+    Handles optional YAML frontmatter for the current SDK-backed custom-agent
+    fields and uses the Markdown body as the custom agent's system prompt.
+    Parsing and metadata errors retain the definition's file path.
+    """
+    return cast(CopilotCustomAgentConfig, load_custom_agent(path))
+
+
+def _parse_agent_files(paths: list[Path]) -> list[CopilotCustomAgentConfig]:
+    agents: list[CopilotCustomAgentConfig] = []
+    names: set[str] = set()
+    for path in paths:
+        agent = _parse_agent_file(path)
+        name = require_custom_agent_name(agent)
+        if name in names:
+            raise ValueError(f"{path}: Duplicate custom agent name '{name}'")
+        names.add(name)
+        agents.append(agent)
+    return agents
+
+
+def _default_persona() -> CopilotPersona:
+    """Return the default persona (VSCodePersona)."""
+    return VSCodePersona()
+
+
+@dataclass(slots=True, frozen=True)
+class CopilotTask:
+    """Configuration for a GitHub Copilot agent test.
+
+    Maps to the Copilot SDK's ``SessionConfig``. User-facing field names
+    are kept intuitive (e.g. ``instructions``), while
+    ``build_session_config()`` maps them to the SDK's actual
+    ``system_message`` TypedDict.
+
+    The SDK's ``SessionConfig`` has no ``maxTurns`` field. The runner
+    enforces a hard wall-clock limit via ``timeout_s``; ``max_turns`` is
+    advisory for the top-level session (it is *not* hard-enforced mid-run)
+    and is used when configuring subagent turn caps.
+
+    Example:
+        # Minimal
+        CopilotTask()
+
+        # With instructions and model
+        CopilotTask(
+            name="security-reviewer",
+            model="claude-sonnet-4",
+            instructions="Review code for security vulnerabilities.",
+        )
+
+        # With custom tools and references
+        CopilotTask(
+            name="file-creator",
+            instructions="Create files as requested.",
+            working_directory="/tmp/workspace",
+            allowed_tools=["create_file", "read_file"],
+        )
+    """
+
+    # Identity
+    name: str = "copilot"
+
+    # Model selection (None = Copilot's default)
+    model: str | None = None
+    reasoning_effort: CopilotReasoningEffort | None = None
+    client_mode: Literal["copilot-cli", "empty"] = "copilot-cli"
+    image_detail: Literal["auto", "low", "high"] | None = None
+    audit_requests: bool = False
+
+    # System message content — maps to SDK's system_message.content
+    # In the Copilot SDK, this is NOT a "system prompt" — it's instructions
+    # appended to (or replacing) the CLI's built-in system message.
+    instructions: str | None = None
+    system_message_mode: Literal["append", "replace"] = "append"
+
+    # Context
+    working_directory: str | None = None
+
+    # Tool control
+    allowed_tools: list[str] | None = None  # Allowlist (None = all)
+    excluded_tools: list[str] | None = None  # Blocklist
+
+    # Limits — the runner enforces timeout_s (hard wall-clock limit).
+    # max_turns is advisory for the top-level session (not hard-enforced
+    # mid-run) and is used to cap subagent turns.
+    max_turns: int = 25
+    timeout_s: float = 300.0
+    max_tool_calls: int | None = None
+
+    # Permissions — auto-approve by default for deterministic testing
+    auto_confirm: bool = True
+
+    # MCP servers to attach to the session
+    mcp_servers: dict[str, CopilotMCPServerConfig] = field(default_factory=dict)
+
+    # Custom agents (SDK CustomAgentConfig: name, prompt, description,
+    # display_name, tools, mcp_servers, infer)
+    custom_agents: list[CopilotCustomAgentConfig] = field(default_factory=list)
+
+    # Explicit skills are enabled and checked before model execution.
+    skill_directories: list[str] = field(default_factory=list)
+    disabled_skills: list[str] = field(default_factory=list)
+
+    # SDK passthrough for unmapped fields
+    extra_config: dict[str, Any] = field(default_factory=dict)
+
+    # SDK passthrough: activate a specific custom agent at session start.
+    # Maps to the SDK's ``agent`` parameter on ``create_session()``.
+    active_agent: str | None = None
+
+    # SDK passthrough: lifecycle hooks (SessionHooks).
+    # Maps to the SDK's ``hooks`` parameter on ``create_session()``.
+    hooks: CopilotSessionHooks = field(default_factory=_empty_session_hooks)
+
+    # IDE persona — controls which polyfill tools are injected to simulate
+    # the target runtime environment (VS Code, Claude Code, Copilot CLI, etc.)
+    # VSCodePersona is the default: it polyfills runSubagent when custom_agents
+    # are present, matching VS Code's native behaviour.
+    persona: CopilotPersona = field(default_factory=_default_persona)
+
+    def __post_init__(self) -> None:
+        if self.client_mode not in ("copilot-cli", "empty"):
+            raise ValueError("client_mode must be 'copilot-cli' or 'empty'")
+        if self.image_detail not in (None, "auto", "low", "high"):
+            raise ValueError("image_detail must be 'auto', 'low', 'high', or None")
+        if self.max_tool_calls is not None and (
+            type(self.max_tool_calls) is not int or self.max_tool_calls < 0
+        ):
+            raise ValueError("max_tool_calls must be a nonnegative integer or None")
+
+    def build_session_config(self) -> dict[str, Any]:
+        """Build a SessionConfig dict for the Copilot SDK.
+
+        Returns a dict compatible with ``CopilotClient.create_session()``.
+        Only includes non-None/non-default fields to avoid overriding
+        SDK defaults.
+
+        SDK field mapping (Python snake_case TypedDict keys):
+            instructions → system_message: {mode, content}
+            allowed_tools → available_tools
+            excluded_tools → excluded_tools
+            reasoning_effort → reasoning_effort
+            working_directory → working_directory
+            mcp_servers → mcp_servers
+            custom_agents → custom_agents
+            skill_directories → skill_directories
+            disabled_skills → disabled_skills
+
+        Note: ``max_turns`` is NOT part of ``SessionConfig``. The runner
+        enforces ``timeout_s`` as the hard limit; ``max_turns`` is advisory
+        (not hard-enforced mid-run) and used only to cap subagent turns.
+        """
+        config: dict[str, Any] = {"enable_config_discovery": False}
+
+        if self.model is not None:
+            config["model"] = self.model
+
+        if self.reasoning_effort is not None:
+            config["reasoning_effort"] = self.reasoning_effort
+
+        # Map instructions + system_message_mode → SDK's system_message
+        if self.instructions:
+            config["system_message"] = {
+                "mode": self.system_message_mode,
+                "content": self.instructions,
+            }
+
+        if self.working_directory is not None:
+            config["working_directory"] = self.working_directory
+
+        if self.allowed_tools is not None:
+            config["available_tools"] = self.allowed_tools
+
+        if self.excluded_tools is not None:
+            config["excluded_tools"] = self.excluded_tools
+
+        if self.mcp_servers:
+            config["mcp_servers"] = self.mcp_servers
+
+        if self.custom_agents:
+            config["custom_agents"] = self.custom_agents
+
+        if self.skill_directories:
+            config["skill_directories"] = self.skill_directories
+
+        if self.disabled_skills:
+            config["disabled_skills"] = self.disabled_skills
+
+        if self.active_agent is not None:
+            config["agent"] = self.active_agent
+
+        if self.hooks:
+            config["hooks"] = self.hooks
+
+        # Apply extra_config passthrough
+        if (
+            self.skill_directories
+            and "skill_directories" in self.extra_config
+            and self.extra_config["skill_directories"] != self.skill_directories
+        ):
+            raise ValueError("extra_config must not override explicitly supplied skill_directories")
+        config.update(self.extra_config)
+
+        if config.get("skill_directories"):
+            if config.get("enable_skills") is False:
+                raise ValueError(
+                    "Explicit skill_directories conflict with enable_skills=False; "
+                    "remove the directories for a no-skill baseline, or enable skills"
+                )
+            if config.get("enable_skills") is not None and config["enable_skills"] is not True:
+                raise ValueError("enable_skills must be a boolean or None")
+            config["enable_skills"] = True
+
+        if self.client_mode == "empty":
+            isolated = {
+                "enable_config_discovery": False,
+                "enable_file_hooks": False,
+                "enable_on_demand_instruction_discovery": False,
+                "skip_custom_instructions": True,
+                "enable_managed_settings": False,
+            }
+            for key, value in isolated.items():
+                if key in config and config[key] != value:
+                    raise ValueError(f"client_mode='empty' requires {key}={value}")
+            config.update(isolated)
+            if config.get("available_tools") is None:
+                config["available_tools"] = []
+
+        return config
+
+    def create_subagent(
+        self,
+        *,
+        name: str,
+        model: str | None,
+        reasoning_effort: CopilotReasoningEffort | None,
+        instructions: str,
+        timeout_s: float,
+        max_turns: int,
+        allowed_tools: list[str] | None,
+        mcp_servers: dict[str, CopilotMCPServerConfig],
+    ) -> CopilotTask:
+        """Create the exact nested eval configuration for a custom agent."""
+        return replace(
+            self,
+            name=name,
+            model=model,
+            reasoning_effort=reasoning_effort,
+            instructions=instructions,
+            timeout_s=timeout_s,
+            max_turns=max_turns,
+            allowed_tools=allowed_tools,
+            excluded_tools=None,
+            mcp_servers=mcp_servers,
+            active_agent=None,
+            custom_agents=[
+                agent for agent in self.custom_agents if require_custom_agent_name(agent) != name
+            ],
+        )
+
+    @classmethod
+    def from_copilot_config(
+        cls,
+        path: str | Path = ".",
+        **overrides: Any,
+    ) -> "CopilotTask":
+        """Load a ``CopilotTask`` from a directory containing Copilot config files.
+
+        Looks for the following files under ``path``:
+
+        * ``.github/copilot-instructions.md`` → ``instructions``
+        * ``.github/agents/*.agent.md`` → ``custom_agents``
+
+        Point ``path`` at any directory — your production project, a dedicated
+        test fixture project, or a shared team config repo.  Any keyword
+        argument overrides the loaded value.
+
+        Args:
+            path: Root directory to load config from. Defaults to the current
+                working directory.
+            **overrides: Override any ``CopilotTask`` field after loading,
+                e.g. ``model="claude-opus-4.5"``.
+
+        Returns:
+            A ``CopilotTask`` initialised from the discovered config files.
+
+        Example::
+
+            # Load from the current project (production config as baseline)
+            baseline = CopilotTask.from_copilot_config()
+
+            # A/B test: same config, one instruction changed
+            treatment = CopilotTask.from_copilot_config(
+                instructions="Always add type hints.",
+            )
+
+            # Load from a dedicated test-fixture project
+            agent = CopilotTask.from_copilot_config("tests/fixtures/strict-agent")
+
+            # Load from a shared team agent library
+            agent = CopilotTask.from_copilot_config("/shared/team/copilot-config")
+        """
+        root = Path(path).resolve()
+        github_dir = root / ".github"
+        if not root.is_dir():
+            raise FileNotFoundError(f"Copilot config root is not a directory: {root}")
+        if github_dir.exists() and not github_dir.is_dir():
+            raise ValueError(f"{github_dir}: Copilot config path must be a directory")
+
+        # Load repository-wide instructions
+        instructions: str | None = None
+        instructions_file = github_dir / "copilot-instructions.md"
+        if instructions_file.exists():
+            instructions = load_instruction_file(instructions_file)["content"]
+
+        # Load custom agents — recursive so subagents/ subdirectories are included
+        agents: list[CopilotCustomAgentConfig] = []
+        agents_dir = github_dir / "agents"
+        if agents_dir.exists():
+            if not agents_dir.is_dir():
+                raise ValueError(f"{agents_dir}: custom agents path must be a directory")
+            agents = _parse_agent_files(sorted(agents_dir.rglob("*.agent.md")))
+
+        config: dict[str, Any] = {
+            "instructions": instructions,
+            "custom_agents": agents,
+        }
+        config.update(overrides)
+        return cls(**config)
+
+    @classmethod
+    def from_plugin(
+        cls,
+        path: str | Path,
+        *,
+        model: str = "",
+        persona: CopilotPersona | None = None,
+        instructions: str = "",
+        working_directory: str = "",
+        name: str = "",
+        **overrides: Any,
+    ) -> "CopilotTask":
+        """Create a CopilotTask from a plugin directory.
+
+        Loads the plugin's agents, skills, MCP servers, and instructions,
+        then constructs a CopilotTask with all components wired together.
+
+        Uses :func:`~pytest_copilot.core.plugin.load_plugin` to
+        discover the plugin structure.  The persona is auto-detected from the
+        plugin path (``ClaudeCodePersona`` for ``.claude/`` paths,
+        ``VSCodePersona`` otherwise) unless explicitly overridden.
+
+        Args:
+            path: Path to the plugin directory (may contain ``plugin.json``,
+                or be a ``.github/`` / ``.claude/`` project config directory).
+            model: Model override for the eval.
+            persona: IDE persona override.  Auto-detected when ``None``.
+            instructions: Additional instructions to **append** to the
+                plugin's discovered instructions.
+            working_directory: Override the working directory.
+            name: Override the eval name (defaults to plugin metadata name).
+            **overrides: Override any additional ``CopilotTask`` fields such as
+                ``max_turns`` or ``timeout_s``.
+
+        Returns:
+            A ``CopilotTask`` initialised from the plugin.
+
+        Example::
+
+            agent = CopilotTask.from_plugin("my-plugin/")
+
+            agent = CopilotTask.from_plugin(
+                ".claude/",
+                model="claude-sonnet-4",
+                instructions="Focus on security reviews.",
+            )
+        """
+        from pytest_copilot.core.plugin import load_plugin  # noqa: PLC0415
+
+        plugin = load_plugin(path)
+
+        # Build combined instructions: plugin base + caller override
+        combined_instructions = plugin.instructions
+        if instructions:
+            if combined_instructions:
+                combined_instructions = combined_instructions + "\n\n" + instructions
+            else:
+                combined_instructions = instructions
+
+        # Map plugin.skills to skill directory paths
+        skill_dirs = [str(s.path) for s in plugin.skills]
+
+        # Auto-detect persona from plugin path
+        if persona is None:
+            resolved = Path(path).resolve()
+            if resolved.name == ".claude" or (resolved / ".claude").is_dir():
+                persona = ClaudeCodePersona()
+            else:
+                persona = _default_persona()
+
+        config: dict[str, Any] = {
+            "name": name or plugin.metadata.name,
+            "model": model or None,
+            "instructions": combined_instructions or None,
+            "custom_agents": plugin.agents,
+            "skill_directories": skill_dirs,
+            "mcp_servers": plugin.mcp_servers,
+            "working_directory": working_directory or None,
+            "persona": persona,
+        }
+        config.update(overrides)
+        return cls(
+            **config,
+        )
+
+    @classmethod
+    def from_claude_config(
+        cls,
+        path: str | Path = ".",
+        *,
+        model: str = "",
+        persona: CopilotPersona | None = None,
+        instructions: str = "",
+        working_directory: str = "",
+        name: str = "claude-code-eval",
+        **overrides: Any,
+    ) -> "CopilotTask":
+        """Create a CopilotTask from a Claude Code project directory.
+
+        Scans for:
+
+        * ``CLAUDE.md`` (project root) and ``.claude/CLAUDE.md`` → instructions
+        * ``.claude/agents/*.md`` → custom agents
+        * ``.claude/skills/`` → skill directories (subdirs with ``SKILL.md``)
+        * ``.mcp.json`` → MCP server configs
+
+        Args:
+            path: Root of the Claude Code project (default: current directory).
+            model: Model override for the eval.
+            persona: IDE persona override.  Defaults to ``ClaudeCodePersona``.
+            instructions: Additional instructions to **append** to the
+                discovered ``CLAUDE.md`` content.
+            working_directory: Override the working directory.
+            name: Override the eval name.
+            **overrides: Override any additional ``CopilotTask`` fields such as
+                ``max_turns`` or ``timeout_s``.
+
+        Returns:
+            A ``CopilotTask`` initialised from the discovered config files.
+
+        Example::
+
+            # Load from the current project
+            agent = CopilotTask.from_claude_config()
+
+            # Load from a specific directory with model override
+            agent = CopilotTask.from_claude_config(
+                "tests/fixtures/claude-project",
+                model="claude-sonnet-4",
+            )
+        """
+        from pytest_copilot.copilot.config import load_mcp_config  # noqa: PLC0415
+
+        root = Path(path).resolve()
+        claude_dir = root / ".claude"
+        if not root.is_dir():
+            raise FileNotFoundError(f"Claude config root is not a directory: {root}")
+        if claude_dir.exists() and not claude_dir.is_dir():
+            raise ValueError(f"{claude_dir}: Claude config path must be a directory")
+
+        # 1. Concatenate instructions from CLAUDE.md files
+        instruction_parts: list[str] = []
+        for md_path in [root / "CLAUDE.md", claude_dir / "CLAUDE.md"]:
+            if md_path.exists():
+                instruction_parts.append(load_instruction_file(md_path)["content"])
+        if instructions:
+            instruction_parts.append(instructions)
+        combined_instructions = "\n\n".join(instruction_parts) or None
+
+        # 2. Load custom agents from .claude/agents/
+        agents: list[CopilotCustomAgentConfig] = []
+        agents_dir = claude_dir / "agents"
+        if agents_dir.exists():
+            if not agents_dir.is_dir():
+                raise ValueError(f"{agents_dir}: custom agents path must be a directory")
+            # Claude Code uses plain .md files for agents
+            agents = _parse_agent_files(sorted(agents_dir.glob("*.md")))
+
+        # 3. Discover skill directories from .claude/skills/
+        skills = _discover_skills(claude_dir)
+        _validate_skill_reference_names(skills)
+        skill_dirs = [str(skill.path) for skill in skills]
+
+        # 4. Parse .mcp.json if it exists
+        mcp_servers: dict[str, dict[str, Any]] = {}
+        mcp_config_path = root / ".mcp.json"
+        if mcp_config_path.exists():
+            mcp_servers = load_mcp_config(mcp_config_path)
+
+        # 5. Default persona to ClaudeCodePersona
+        if persona is None:
+            persona = ClaudeCodePersona()
+
+        config: dict[str, Any] = {
+            "name": name,
+            "model": model or None,
+            "instructions": combined_instructions,
+            "custom_agents": agents,
+            "skill_directories": skill_dirs,
+            "mcp_servers": mcp_servers,
+            "working_directory": working_directory or None,
+            "persona": persona,
+        }
+        config.update(overrides)
+        return cls(**config)
