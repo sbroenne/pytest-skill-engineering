@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import base64
 import json
+import os
 from inspect import isawaitable
 from pathlib import Path
 from typing import Any, get_type_hints
@@ -343,8 +344,11 @@ def test_all_usage_models_contribute_pricing_warnings(
         [CaseReport("pricing", "passed", 1, converted[0], model="last-model")], "Pricing"
     )
     assert suite.models_without_pricing == ["first-model"]
+    stat = pricing.stat()
     pricing.write_text(
         "[models.first-model]\ninput = 3\noutput = 4\n[models.last-model]\ninput = 1\noutput = 2\n",
         encoding="utf-8",
     )
+    os.utime(pricing, ns=(stat.st_atime_ns, stat.st_mtime_ns))
+    assert pricing.stat().st_mtime_ns == stat.st_mtime_ns
     assert build_suite_report(suite.tests, "Updated pricing").models_without_pricing == []

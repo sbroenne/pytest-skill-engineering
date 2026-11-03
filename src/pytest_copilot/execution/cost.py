@@ -30,23 +30,30 @@ models_without_pricing: set[str] = set()
 
 Pricing = tuple[float, float, float]
 PricingTable = dict[str, Pricing]
-PricingCacheKey = tuple[Path, int | None]
+PricingCacheKey = tuple[Path, str | None]
 
 
 @dataclass(slots=True)
 class _PricingCache:
-    """Pricing tables keyed by resolved file identity and modification time."""
+    """Parsed pricing tables keyed by resolved file identity and contents."""
 
     tables: dict[PricingCacheKey, PricingTable] = field(default_factory=dict)
 
     def load(self, current_dir: Path) -> PricingTable:
         toml_path = _find_pricing_toml(current_dir)
-        cache_key = _pricing_cache_key(current_dir, toml_path)
+        if toml_path is None:
+            return self.tables.setdefault((current_dir, None), {})
+        try:
+            content = toml_path.read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError):
+            _logger.warning("Failed to read %s; ignoring", toml_path, exc_info=True)
+            return {}
+        cache_key = (toml_path.resolve(), content)
         cached = self.tables.get(cache_key)
         if cached is not None:
             return cached
 
-        overrides = _read_pricing_file(toml_path)
+        overrides = _parse_pricing_file(toml_path, content)
         self.tables[cache_key] = overrides
         return overrides
 
@@ -68,16 +75,14 @@ def _load_user_overrides() -> PricingTable:
     return _pricing_cache.load(current_dir)
 
 
-def _read_pricing_file(toml_path: Path | None) -> PricingTable:
-    """Parse a pricing file into per-million-token rates."""
+def _parse_pricing_file(toml_path: Path, content: str) -> PricingTable:
+    """Parse the pricing contents used to identify the cached table."""
     overrides: PricingTable = {}
-    if toml_path is None:
-        return overrides
 
     import tomllib
 
     try:
-        raw = tomllib.loads(toml_path.read_text(encoding="utf-8"))
+        raw = tomllib.loads(content)
         models_section: dict[str, Any] = raw.get("models", {})
         for key, value in models_section.items():
             if isinstance(value, dict):
@@ -93,8 +98,6 @@ def _read_pricing_file(toml_path: Path | None) -> PricingTable:
             )
     except (
         AttributeError,
-        OSError,
-        UnicodeDecodeError,
         ValueError,
         TypeError,
         tomllib.TOMLDecodeError,
@@ -102,14 +105,6 @@ def _read_pricing_file(toml_path: Path | None) -> PricingTable:
         _logger.warning("Failed to parse %s; ignoring", toml_path, exc_info=True)
 
     return overrides
-
-
-def _pricing_cache_key(current_dir: Path, toml_path: Path | None) -> PricingCacheKey:
-    """Build a cache key scoped to the active cwd and pricing file version."""
-    if toml_path is None:
-        return current_dir, None
-    stat = toml_path.stat()
-    return toml_path.resolve(), stat.st_mtime_ns
 
 
 def _find_pricing_toml(current_dir: Path) -> Path | None:

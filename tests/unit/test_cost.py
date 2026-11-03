@@ -65,7 +65,7 @@ def reset_pricing_cache() -> None:
     cost._pricing_cache.clear()
 
 
-def test_pricing_cache_isolated_by_resolved_file_and_mtime(
+def test_pricing_cache_isolated_by_resolved_file(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, reset_pricing_cache: None
 ) -> None:
     repo_a = tmp_path / "repo-a"
@@ -82,26 +82,35 @@ def test_pricing_cache_isolated_by_resolved_file_and_mtime(
 
     monkeypatch.chdir(repo_b)
     assert cost._load_user_overrides()["model"] == (4.0, 5.0, 6.0)
-    assert set(path for path, _mtime in cost._pricing_cache.tables) == {
+    assert set(path for path, _content in cost._pricing_cache.tables) == {
         pricing_a.resolve(),
         pricing_b.resolve(),
     }
 
 
+@pytest.mark.parametrize("preserve_mtime", [False, True])
 def test_pricing_cache_invalidates_when_pricing_file_changes(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, reset_pricing_cache: None
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    reset_pricing_cache: None,
+    preserve_mtime: bool,
 ) -> None:
     pricing = tmp_path / "pricing.toml"
     pricing.write_text('[models]\n"model" = { input = 1, output = 2, cache_read = 3 }\n')
     monkeypatch.chdir(tmp_path)
 
     assert cost._load_user_overrides()["model"] == (1.0, 2.0, 3.0)
+    assert cost.estimate_cost("model", 1_000_000, 1_000_000) == pytest.approx(3.0)
+    stat = pricing.stat()
 
     pricing.write_text('[models]\n"model" = { input = 7, output = 8, cache_read = 9 }\n')
-    stat = pricing.stat()
-    os.utime(pricing, ns=(stat.st_atime_ns, stat.st_mtime_ns + 1_000_000_000))
+    mtime_ns = stat.st_mtime_ns if preserve_mtime else stat.st_mtime_ns + 1_000_000_000
+    os.utime(pricing, ns=(stat.st_atime_ns, mtime_ns))
+    assert pricing.stat().st_mtime_ns == mtime_ns
+    assert pricing.stat().st_size == stat.st_size
 
     assert cost._load_user_overrides()["model"] == (7.0, 8.0, 9.0)
+    assert cost.estimate_cost("model", 1_000_000, 1_000_000) == pytest.approx(15.0)
     assert len(cost._pricing_cache.tables) == 2
 
 
@@ -121,3 +130,48 @@ def test_pricing_cache_key_uses_cwd_when_no_file_exists(
         (repo_a.resolve(), None),
         (repo_b.resolve(), None),
     }
+
+
+@pytest.mark.parametrize("content", [b"\xff", b"[models"])
+def test_invalid_pricing_file_does_not_reuse_cached_prices(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    reset_pricing_cache: None,
+    caplog: pytest.LogCaptureFixture,
+    content: bytes,
+) -> None:
+    pricing = tmp_path / "pricing.toml"
+    pricing.write_text('[models]\n"model" = { input = 1, output = 2 }\n')
+    monkeypatch.chdir(tmp_path)
+    assert cost.unpriced_models({"model"}) == []
+
+    pricing.write_bytes(content)
+    assert cost.unpriced_models({"model"}) == ["model"]
+    assert "Failed to" in caplog.text
+    assert str(pricing) in caplog.text
+
+    pricing.write_text('[models]\n"model" = { input = 7, output = 8 }\n')
+    assert cost.unpriced_models({"model"}) == []
+    assert cost.estimate_cost("model", 1_000_000, 1_000_000) == pytest.approx(15.0)
+
+
+def test_pricing_read_failure_does_not_reuse_cached_prices(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    reset_pricing_cache: None,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    pricing = tmp_path / "pricing.toml"
+    pricing.write_text('[models]\n"model" = { input = 1, output = 2 }\n')
+    monkeypatch.chdir(tmp_path)
+    assert cost.unpriced_models({"model"}) == []
+
+    def deny_read(self: Path, encoding: str = "utf-8") -> str:
+        raise PermissionError("pricing read denied")
+
+    with monkeypatch.context() as context:
+        context.setattr(Path, "read_text", deny_read)
+        assert cost.unpriced_models({"model"}) == ["model"]
+    assert "Failed to read" in caplog.text
+    assert "pricing read denied" in caplog.text
+    assert cost.unpriced_models({"model"}) == []

@@ -17,7 +17,8 @@ basis includes cached-input tokens. The current estimator treats an omitted
 rate as zero; that is not evidence that those tokens were free.
 
 Pricing is searched upward from the process working directory, using the first
-`pricing.toml` found. Tables are cached by file identity and modification time.
+`pricing.toml` found. Parsed tables are cached by file identity and contents,
+so changing prices is detected even if the file's modification time is unchanged.
 The generated starter writes explicit rates without replacing existing ones.
 
 ## Missing pricing and usage
