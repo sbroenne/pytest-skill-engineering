@@ -6,6 +6,8 @@ from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any, Literal, cast
 
+from pydantic import BaseModel
+
 from pytest_copilot.copilot.contracts import (
     CopilotCustomAgentConfig,
     CopilotMCPServerConfig,
@@ -68,6 +70,10 @@ class CopilotTask:
     advisory for the top-level session (it is *not* hard-enforced mid-run)
     and is used when configuring subagent turn caps.
 
+    ``response_schema`` is an optional Pydantic model class checked by the
+    SDK when sending the task. It is not a session-creation setting and
+    is not inherited by framework-owned child sessions.
+
     Example:
         # Minimal
         CopilotTask()
@@ -103,6 +109,7 @@ class CopilotTask:
     # appended to (or replacing) the CLI's built-in system message.
     instructions: str | None = None
     system_message_mode: Literal["append", "replace"] = "append"
+    response_schema: type[BaseModel] | None = None
 
     # Context
     working_directory: str | None = None
@@ -150,6 +157,11 @@ class CopilotTask:
     persona: CopilotPersona = field(default_factory=_default_persona)
 
     def __post_init__(self) -> None:
+        if self.response_schema is not None and (
+            not isinstance(self.response_schema, type)
+            or not issubclass(self.response_schema, BaseModel)
+        ):
+            raise TypeError("response_schema must be a Pydantic model class or None")
         if self.client_mode not in ("copilot-cli", "empty"):
             raise ValueError("client_mode must be 'copilot-cli' or 'empty'")
         if self.image_detail not in (None, "auto", "low", "high"):
@@ -283,6 +295,7 @@ class CopilotTask:
             allowed_tools=allowed_tools,
             excluded_tools=None,
             mcp_servers=mcp_servers,
+            response_schema=None,
             active_agent=None,
             custom_agents=[
                 agent for agent in self.custom_agents if require_custom_agent_name(agent) != name

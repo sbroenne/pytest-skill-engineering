@@ -102,6 +102,11 @@ result.final_response
 result.all_responses
 ```
 
+With [`response_schema`](configuration.md#json-answers-with-a-required-shape),
+`final_response` remains the original JSON text. A response that fails the
+requested model check produces `success=False` and `stop_reason="execution_error"`;
+captured answer text and the requested schema remain available for inspection.
+
 ## Tool helpers
 
 ```python
@@ -147,6 +152,10 @@ captured session in the execution tree has no usage; `token_usage` omits those
 totals. Known zero remains zero.
 Cost is an estimate from reported input/output counts, not a claim of complete
 billing evidence; unknown cache reads receive no cache discount in that estimate.
+
+`total_premium_requests` uses cumulative SDK usage checkpoints and, when emitted,
+the final shutdown total. Repeated snapshots are not added together. Missing
+accounting events do not prove that the run was free.
 
 ## Configuration snapshot
 

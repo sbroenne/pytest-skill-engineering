@@ -21,8 +21,9 @@ failed release.
 
 Version 2.0.0 changes the package name from `pytest-skill-engineering` to
 `pytest-copilot`. The existing GitHub repository should be renamed to
-`sbroenne/pytest-copilot`, not replaced. Leave existing tags, GitHub releases,
-and PyPI distributions intact.
+`sbroenne/pytest-copilot`, not replaced. Existing Git tags and PyPI distributions
+are preserved. GitHub releases older than 2.0.0 and their attached downloads were
+removed after the rename; their source remains available through the Git tags.
 
 Before merging this version into `main`, the owner must configure a PyPI
 pending trusted publisher for the new package with:
@@ -127,6 +128,12 @@ already be configured.
 | Publish to PyPI | Use trusted publishing; skip an already published version with valid provenance |
 | Create GitHub release | Create the release or refresh its attached artifacts |
 | Deploy docs | Build and deploy from the same release tag |
+
+Every GitHub release includes the wheel (`.whl`) and source archive (`.tar.gz`),
+not just links to PyPI. Both newly created releases and release retries attach
+the built packages. Users can
+[install the downloaded wheel directly](../getting-started/index.md#install-from-a-release-download)
+without downloading pytest-copilot itself from PyPI.
 
 An existing matching tag must point to the workflow commit. The workflow
 rejects a reused version on a different commit. Pre-release and special

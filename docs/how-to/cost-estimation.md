@@ -4,6 +4,10 @@ Add explicit model rates to `pricing.toml` to estimate USD cost from captured
 token usage. These estimates are separate from Copilot's premium-request
 accounting and are not an invoice or a comparison of output quality.
 
+Premium-request totals come from SDK usage checkpoints and, when available,
+the final shutdown event. These are cumulative snapshots, not separate charges
+to add together. Framework-owned child sessions are included once.
+
 ```toml title="pricing.toml"
 [models]
 "gpt-5.6-sol" = { input = 5.00, output = 30.00, cache_read = 0.50 }
@@ -17,7 +21,8 @@ basis includes cached-input tokens. The current estimator treats an omitted
 rate as zero; that is not evidence that those tokens were free.
 
 Pricing is searched upward from the process working directory, using the first
-`pricing.toml` found. Tables are cached by file identity and modification time.
+`pricing.toml` found. Parsed tables are cached by file identity and contents,
+so changing prices is detected even if the file's modification time is unchanged.
 The generated starter writes explicit rates without replacing existing ones.
 
 ## Missing pricing and usage

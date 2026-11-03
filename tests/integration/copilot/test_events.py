@@ -14,11 +14,14 @@ Covered properties:
 
 from __future__ import annotations
 
+import ast
 import base64
+import json
 from pathlib import Path
 
 import pytest
 from copilot.tools import Tool, ToolBinaryResult, ToolInvocation, ToolResult
+from pydantic import BaseModel, ConfigDict
 
 from pytest_copilot.copilot.fixtures import _convert_to_aitest
 from pytest_copilot.copilot.task import CopilotTask
@@ -26,6 +29,48 @@ from pytest_copilot.reporting import build_suite_report, generate_json, load_sui
 from pytest_copilot.reporting.collector import TestReport as CaseReport
 
 from .conftest import DEFAULT_MODEL
+
+
+@pytest.mark.copilot
+async def test_structured_answer_matches_tool_output(copilot_run, tmp_path: Path):
+    class Inventory(BaseModel):
+        model_config = ConfigDict(extra="forbid", strict=True)
+        count: int
+        color: str
+
+    receipt = tmp_path / "inventory.json"
+
+    async def inventory(invocation: ToolInvocation) -> ToolResult:
+        receipt.write_text(json.dumps({"count": 42, "color": "red"}), encoding="utf-8")
+        return ToolResult(text_result_for_llm="There are 42 red widgets in stock.")
+
+    agent = CopilotTask(
+        name="structured-inventory",
+        model=DEFAULT_MODEL,
+        client_mode="empty",
+        working_directory=str(tmp_path),
+        instructions="Call read_inventory exactly once, then report its count and color.",
+        response_schema=Inventory,
+        allowed_tools=["read_inventory"],
+        extra_config={
+            "tools": [
+                Tool(
+                    name="read_inventory",
+                    description="Read the widget inventory and save inventory.json.",
+                    handler=inventory,
+                )
+            ]
+        },
+    )
+    result = await copilot_run(agent, "Read the inventory and report the count and color.")
+    assert result.success, result.error
+    assert result.final_response is not None
+    assert len(result.tool_calls_for("read_inventory")) == 1
+    actual_inventory = json.loads(receipt.read_text(encoding="utf-8"))
+    assert actual_inventory == {"count": 42, "color": "red"}
+    assert json.loads(result.final_response) == actual_inventory
+    assert result.configuration is not None
+    assert result.configuration["response_schema"] == Inventory.model_json_schema()
 
 
 @pytest.mark.copilot
@@ -150,7 +195,7 @@ class TestUsageTracking:
         assert usage["total"] == usage["prompt"] + usage["completion"]
 
     async def test_premium_requests_match_sdk_events(self, copilot_run, tmp_path, record_property):
-        """Premium request totals must come from actual SDK shutdown events."""
+        """Premium request totals must match actual SDK accounting events."""
         agent = CopilotTask(
             name="cost-check",
             model=DEFAULT_MODEL,
@@ -159,15 +204,20 @@ class TestUsageTracking:
         )
         result = await copilot_run(agent, "Create hello.py with print('hello')")
         assert result.success
-        shutdown_events = [
-            event for event in result.raw_events if event.type.value == "session.shutdown"
+        accounting_events = [
+            event
+            for event in result.raw_events
+            if event.type.value in {"session.usage_checkpoint", "session.shutdown"}
+            and not event.agent_id
+            and event.data._total_premium_requests is not None
         ]
-        record_property("shutdown_events_seen", len(shutdown_events))
-        if shutdown_events:
-            reported = shutdown_events[-1].data._total_premium_requests
-            assert result.total_premium_requests == float(reported or 0)
-        else:
-            assert result.total_premium_requests == 0.0
+        record_property("accounting_events_seen", len(accounting_events))
+        assert accounting_events, "Expected usage accounting from the SDK"
+        reported = max(event.data._total_premium_requests for event in accounting_events)
+        assert result.total_premium_requests == reported
+        assert ast.dump(ast.parse((tmp_path / "hello.py").read_text(encoding="utf-8"))) == ast.dump(
+            ast.parse("print('hello')")
+        )
 
     async def test_model_used_captured(self, copilot_run, tmp_path):
         """model_used is populated from the SDK session or usage events."""

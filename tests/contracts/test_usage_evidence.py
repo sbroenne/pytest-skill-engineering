@@ -30,6 +30,26 @@ def event(kind: str, **data: Any) -> SessionEvent:
     )
 
 
+def test_usage_checkpoint_survives_conversion_and_json_reload(tmp_path: Path) -> None:
+    mapper = EventMapper()
+    for count in (1.0, 2.0, 2.0):
+        mapper.handle(
+            event(
+                "session.usage_checkpoint", totalNanoAiu=1_000_000_000, totalPremiumRequests=count
+            )
+        )
+    result = mapper.build()
+    assert result.total_premium_requests == 2.0
+    converted = _convert_to_aitest(CopilotTask(), result)
+    assert converted is not None
+    suite = build_suite_report([Report("usage", "passed", 1, converted[0])], "Usage")
+    output = tmp_path / "usage.json"
+    generate_json(suite, output)
+    saved = load_suite_report(output).tests[0].eval_result
+    assert saved is not None
+    assert saved.premium_requests == 2.0
+
+
 def request() -> SessionEvent:
     return event(
         "assistant.message",

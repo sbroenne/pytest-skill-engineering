@@ -38,6 +38,25 @@ to the starter model.
 It refuses to overwrite the starter test or replace conflicting report settings.
 Resolve the named conflict and run it again.
 
+### Install from a release download
+
+To install pytest-copilot without downloading it from PyPI, open
+[GitHub Releases](https://github.com/sbroenne/pytest-copilot/releases) and download
+the `.whl` file attached to the version you want. Each release includes both a
+wheel (`.whl`) and a source archive (`.tar.gz`).
+
+From your project's directory, install the downloaded wheel using its local path.
+For example, if the 2.0.0 wheel is in the current directory:
+
+```powershell
+uv add .\pytest_copilot-2.0.0-py3-none-any.whl
+```
+
+Then run the authentication, `init`, and `doctor` commands above. This installs
+pytest-copilot itself from the local file; dependencies still need to be installed
+from a package source or already available locally. A wheel download alone is
+not a complete offline installation.
+
 ## Run the first eval
 
 ```bash

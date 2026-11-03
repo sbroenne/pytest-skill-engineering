@@ -9,6 +9,8 @@ from __future__ import annotations
 from types import SimpleNamespace
 from typing import Any
 
+import pytest
+
 from pytest_copilot.copilot.events import EventMapper
 
 
@@ -396,6 +398,30 @@ class TestEventMapperSessionEvents:
         result = mapper.build()
         assert result.error == "Rate limit exceeded"
         assert not result.success
+
+    @pytest.mark.parametrize("with_shutdown", [False, True])
+    def test_usage_checkpoints_are_cumulative_not_additive(self, with_shutdown):
+        mapper = EventMapper()
+        for count in (1.0, 2.5, 2.5, 1.0):
+            mapper.handle(_make_event("session.usage_checkpoint", _total_premium_requests=count))
+        if with_shutdown:
+            mapper.handle(_make_event("session.shutdown", _total_premium_requests=2.5))
+        assert mapper.build().total_premium_requests == 2.5
+
+    def test_missing_shutdown_usage_does_not_erase_checkpoint(self):
+        mapper = EventMapper()
+        mapper.handle(_make_event("session.usage_checkpoint", _total_premium_requests=1.0))
+        mapper.handle(_make_event("session.shutdown", _total_premium_requests=None))
+        assert mapper.build().total_premium_requests == 1.0
+
+    @pytest.mark.parametrize("event_type", ["session.usage_checkpoint", "session.shutdown"])
+    def test_child_accounting_does_not_replace_parent_total(self, event_type):
+        mapper = EventMapper()
+        mapper.handle(_make_event("session.usage_checkpoint", _total_premium_requests=1.0))
+        child = _make_event(event_type, _total_premium_requests=5.0)
+        child.agent_id = "native-child"
+        mapper.handle(child)
+        assert mapper.build().total_premium_requests == 1.0
 
 
 class TestEventMapperBuild:

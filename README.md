@@ -40,6 +40,9 @@ and adds starter-model rates to `pricing.toml`. It reports conflicts rather than
 overwriting existing files or settings. `doctor` checks setup and Copilot access.
 Real task execution may consume Copilot premium requests.
 
+For installation from a downloaded package instead of PyPI, see
+[install from a release download](docs/getting-started/index.md#install-from-a-release-download).
+
 The test checks the tool's arguments and returned task state. pytest prints the
 result; `aitest-reports/results.json` preserves the execution. See the
 [setup guide](docs/getting-started/index.md) or the standalone

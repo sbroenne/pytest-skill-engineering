@@ -3,7 +3,7 @@
 Converts the raw event stream from the Copilot SDK into structured
 Turn/ToolCall objects for assertion and reporting.
 
-SDK Event Types (38 values) grouped by what they map to:
+SDK event types grouped by what they map to:
 
     Tool lifecycle:
         tool.execution_start     → Start tracking a ToolCall
@@ -32,7 +32,8 @@ SDK Event Types (38 values) grouped by what they map to:
         session.resume           → Session resumed
         session.idle             → Eval finished processing
         session.error            → Error occurred
-        session.shutdown         → Session terminated; carries premium request count
+        session.usage_checkpoint → Cumulative premium request count
+        session.shutdown         → Final cumulative premium request count, when emitted
         session.info             → Informational message
         session.model_change     → Model changed mid-session
         session.usage_info       → Context-window usage (tokens/limit; no premium requests)
@@ -558,27 +559,16 @@ class EventMapper:
         SDK 1.x's ``session.usage_info`` no longer carries a premium-request
         count (it's context-window stats only). Retained as a documented
         no-op handler so the event isn't logged as unhandled; see
-        ``_handle_session_shutdown`` for premium requests.
+        ``_handle_session_accounting`` for premium requests.
         """
 
-    def _handle_session_shutdown(self, event: SessionEvent) -> None:
-        """Handle session shutdown — capture the total premium request count.
-
-        KNOWN GAP (verified with SDK 1.0.13): ``_total_premium_requests`` exists on
-        ``SessionShutdownData`` per the generated schema, but empirically
-        ``session.shutdown`` is never delivered to ``session.on()`` listeners
-        via the ``client.stop()`` teardown path this runner uses. The live
-        event integration test recorded zero shutdown events even with
-        its listener registered before session creation. So ``premium_requests``
-        stays 0.0 in practice today. This handler is kept because it's
-        schema-correct and harmless, in case a future SDK version emits the
-        event (or an alternate teardown path does). If this still reads 0.0
-        after upgrading github-copilot-sdk, check whether the SDK now
-        exposes a public usage/metrics RPC instead of relying on this event.
-        """
-        self._total_premium_requests = float(
-            _get_data_field(event, "_total_premium_requests", 0) or 0
-        )
+    def _handle_session_accounting(self, event: SessionEvent) -> None:
+        """Capture cumulative totals without adding repeated checkpoints."""
+        if getattr(event, "agent_id", None):
+            return
+        reported = _get_data_field(event, "_total_premium_requests", None)
+        if reported is not None:
+            self._total_premium_requests = max(self._total_premium_requests, float(reported))
 
     def _handle_session_error(self, event: SessionEvent) -> None:
         """Handle session error."""
@@ -786,7 +776,8 @@ _EVENT_HANDLERS: dict[str, Any] = {
     "session.start": EventMapper._handle_session_start,
     "session.error": EventMapper._handle_session_error,
     "session.usage_info": EventMapper._handle_session_usage_info,
-    "session.shutdown": EventMapper._handle_session_shutdown,
+    "session.usage_checkpoint": EventMapper._handle_session_accounting,
+    "session.shutdown": EventMapper._handle_session_accounting,
     "abort": EventMapper._handle_abort,
     # User
     "user.message": EventMapper._handle_user_message,

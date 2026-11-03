@@ -27,6 +27,9 @@ def snapshot_session_configuration(
         "model": session_config.get("model"),
         "instructions": system.get("content"),
         "system_message_mode": system.get("mode"),
+        "response_schema": (
+            agent.response_schema.model_json_schema() if agent.response_schema is not None else None
+        ),
         "reasoning_effort": session_config.get("reasoning_effort"),
         "client_mode": agent.client_mode,
         "image_detail": agent.image_detail,

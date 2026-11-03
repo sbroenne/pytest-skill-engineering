@@ -65,18 +65,23 @@ is current with `pyproject.toml`; dependency changes must regenerate and validat
 the lock explicitly. Use `--frozen` on local validation commands when consuming
 the existing lock in an environment with a different default registry.
 
-This development environment intentionally uses
-`https://packagefeedproxy.microsoft.io/pypi/simple/`. Resolve updates through the
-configured proxy rather than overriding it with the public PyPI index. The
-committed lock records proxy artifact URLs and hashes; installations from it
-have succeeded locally and on GitHub-hosted CI runners. Direct access to
-`files.pythonhosted.org` is not required for this verified installation path.
+Resolve dependency updates through public PyPI (`https://pypi.org/simple/`).
+Both committed locks use PyPI and record artifact URLs and hashes from
+`files.pythonhosted.org`. A package proxy can lag PyPI and may not contain
+versions this project already requires.
 
-Package availability on the proxy may lag public PyPI. An update therefore uses
-the newest compatible releases available through the configured source, not
-necessarily the newest public releases. Refresh the lock through the proxy when
-newer versions become available. Do not rewrite lock URLs by hand or disable
-certificate verification.
+Refresh both locks when updating dependencies, then install from the main lock:
+
+```bash
+uv lock --upgrade --default-index https://pypi.org/simple/
+uv lock --upgrade --project examples/skill-dogfood --default-index https://pypi.org/simple/
+uv lock --check --default-index https://pypi.org/simple/
+uv lock --check --project examples/skill-dogfood --default-index https://pypi.org/simple/
+uv sync --frozen --all-extras
+```
+
+Keep dependency requirements consistent with the updated locks. Do not rewrite
+lock URLs by hand or disable certificate verification.
 
 ### Deterministic checks
 
