@@ -1,4 +1,4 @@
-# pytest-copilot
+# pytest-copilot - pytest for GitHub Copilot
 
 [![PyPI version](https://img.shields.io/pypi/v/pytest-copilot)](https://pypi.org/project/pytest-copilot/)
 [![CI](https://github.com/sbroenne/pytest-copilot/actions/workflows/ci.yml/badge.svg)](https://github.com/sbroenne/pytest-copilot/actions/workflows/ci.yml)
@@ -8,13 +8,13 @@
 
 Independently maintained; not an official GitHub product or endorsed by GitHub.
 
-pytest-copilot runs real Copilot sessions from pytest. Give Copilot a
+pytest-copilot runs real GitHub Copilot sessions from pytest. Give GitHub Copilot a
 task, check the actual output with ordinary assertions, and save the execution
 as JSON.
 
 Use it to test MCP servers, CLI tools, skills, system prompts, plugins, and custom
 agents. It answers a different question from your tool's unit tests: **can
-Copilot use the interface correctly?** A working tool can still have confusing
+GitHub Copilot use the interface correctly?** A working tool can still have confusing
 descriptions or arguments that lead the agent to the wrong result.
 
 You define what correctness means. The framework manages the Copilot session,
