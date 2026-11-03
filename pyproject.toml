@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "pytest-copilot"
-version = "2.0.0"
+version = "2.1.0"
 description = "Run GitHub Copilot tasks in pytest. Check results with your own assertions."
 readme = "README.md"
 license = { text = "MIT" }

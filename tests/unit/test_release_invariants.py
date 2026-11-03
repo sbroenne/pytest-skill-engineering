@@ -9,9 +9,9 @@ from pathlib import Path
 ROOT = Path(__file__).parents[2]
 
 
-def test_project_version_is_pinned_to_2_0_0() -> None:
+def test_project_version_is_pinned_to_2_1_0() -> None:
     pyproject = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
-    assert pyproject["project"]["version"] == "2.0.0"
+    assert pyproject["project"]["version"] == "2.1.0"
 
 
 def test_release_workflow_builds_and_validates_artifact_version() -> None:
@@ -42,7 +42,7 @@ def test_distribution_registers_only_current_command_and_plugin() -> None:
 
 def test_docs_workflow_examples_reference_current_release_tag() -> None:
     workflow = (ROOT / ".github" / "workflows" / "docs.yml").read_text(encoding="utf-8")
-    assert "v2.0.0" in workflow
+    assert "v2.1.0" in workflow
 
 
 def test_github_release_job_selects_repository_without_checkout() -> None:

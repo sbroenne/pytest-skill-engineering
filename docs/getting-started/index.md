@@ -46,10 +46,10 @@ the `.whl` file attached to the version you want. Each release includes both a
 wheel (`.whl`) and a source archive (`.tar.gz`).
 
 From your project's directory, install the downloaded wheel using its local path.
-For example, if the 2.0.0 wheel is in the current directory:
+For example, if the 2.1.0 wheel is in the current directory:
 
 ```powershell
-uv add .\pytest_copilot-2.0.0-py3-none-any.whl
+uv add .\pytest_copilot-2.1.0-py3-none-any.whl
 ```
 
 Then run the authentication, `init`, and `doctor` commands above. This installs
